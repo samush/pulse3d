@@ -3,3 +3,6 @@
 secrets/*.env
 secrets/*.key
 .local/**
+tools/out/
+node_modules/
+package*.json
