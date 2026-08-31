@@ -6,3 +6,4 @@ secrets/*.key
 tools/out/
 node_modules/
 package*.json
+__pycache__/
