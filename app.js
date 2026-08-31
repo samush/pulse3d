@@ -384,7 +384,7 @@ function resize(){
 }
 addEventListener('resize',resize);resize();
 var resizeReady=true;
-setView('iso');
+setView('top');
 
 // остекление и виды за окнами
 var glassGroup=new THREE.Group();
