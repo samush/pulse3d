@@ -56,12 +56,17 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 /* кнопки прогулки — только для сенсорных экранов */
 @media (pointer:coarse){
   #walkpad:not([hidden]){display:block}
-  #walkpad button{position:fixed;bottom:12vh;width:58px;height:58px;border-radius:50%;
-    border:1.5px solid var(--accent);background:rgba(253,252,249,.75);color:var(--accent);
-    font-size:26px;line-height:1;touch-action:none;-webkit-user-select:none;user-select:none;z-index:4}
+  /* --wk — диаметр кнопки, --off — отступ пары от центра (человечка).
+     Viewport meta нет — телефон рендерит страницу в ~980 виртуальных px, отсюда крупные значения */
+  #walkpad{--wk:min(200px,20vw);--off:min(56px,6vw)}
+  #walkpad button{position:fixed;bottom:10vh;width:var(--wk);height:var(--wk);border-radius:50%;
+    border:2px solid var(--accent);background:rgba(253,252,249,.75);color:var(--accent);
+    font-size:calc(var(--wk)*.45);line-height:1;touch-action:none;-webkit-user-select:none;user-select:none;z-index:4}
   #walkpad button:active{background:var(--accent-soft)}
-  #wkL{left:calc(50% - 176px)}#wkR{left:calc(50% - 106px)}
-  #wkD{left:calc(50% + 48px)}#wkU{left:calc(50% + 118px)}
+  #wkL{left:calc(50% - var(--off) - 2*var(--wk) - 10px)}
+  #wkR{left:calc(50% - var(--off) - var(--wk))}
+  #wkD{left:calc(50% + var(--off))}
+  #wkU{left:calc(50% + var(--off) + var(--wk) + 10px)}
 }
 </style>
 
@@ -92,8 +97,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 <canvas id="map" width="230" height="196"></canvas>
 
 <div id="walkpad" hidden>
-  <button id="wkL" data-key="ArrowLeft" aria-label="Повернуться влево">&#8634;</button>
-  <button id="wkR" data-key="ArrowRight" aria-label="Повернуться вправо">&#8635;</button>
+  <button id="wkL" data-key="ArrowLeft" aria-label="Повернуться влево">&#8592;</button>
+  <button id="wkR" data-key="ArrowRight" aria-label="Повернуться вправо">&#8594;</button>
   <button id="wkD" data-key="ArrowDown" aria-label="Назад">&#8595;</button>
   <button id="wkU" data-key="ArrowUp" aria-label="Вперёд">&#8593;</button>
 </div>
