@@ -349,7 +349,7 @@ document.getElementById('cubes').addEventListener('change',e=>cubeGroup.visible=
 document.getElementById('labels').addEventListener('change',e=>labelGroup.visible=e.target.checked);
 document.getElementById('kwall').addEventListener('change',e=>{wallGroupR.visible=e.target.checked; if(window.kitchenFrame)window.kitchenFrame.visible=e.target.checked;});
 document.getElementById('ceil').addEventListener('change',e=>ceilGroup.visible=e.target.checked);
-document.getElementById('wgrid').addEventListener('change',e=>wallGridGroup.visible=e.target.checked);
+document.getElementById('wgrid').addEventListener('change',e=>{wallGridGroup.visible=e.target.checked;addrGroup.visible=e.target.checked;});
 document.getElementById('finish').addEventListener('change',e=>finishGroup.visible=e.target.checked);
 const wop=document.getElementById('wop'),wov=document.getElementById('wov');
 wop.addEventListener('input',()=>{
@@ -493,6 +493,80 @@ var wallGridGroup=new THREE.Group();
   wallGridGroup.add(new THREE.LineSegments(g,mat));
 })();
 scene.add(wallGridGroup);
+
+// сетка-адресация: метровые клетки A1..O12 (буквы с запада, цифры с севера) + дециметровая сетка.
+// Адрес квадратика: D7+26 = угол клетки D7, 2 дм на восток, 6 дм на юг; высота — H в дм от пола (H0–H27)
+var addrGroup=new THREE.Group();
+(function(){
+  // пол: один канвас на всю квартиру — дециметровая сетка, метровые линии и подписи клеток
+  const SC=64, W=maxX-minX, D=maxZ-minZ;
+  const c=document.createElement('canvas');
+  c.width=Math.ceil(W*SC); c.height=Math.ceil(D*SC);
+  const g=c.getContext('2d');
+  g.beginPath();
+  PLAN.outer.forEach((p,i)=>{const X=(p[0]-minX)*SC,Y=(p[1]-minZ)*SC;i?g.lineTo(X,Y):g.moveTo(X,Y);});
+  g.closePath(); g.clip();
+  g.strokeStyle='rgba(120,118,112,0.30)'; g.lineWidth=1;
+  g.beginPath();
+  for(let x=0;x<=W;x+=0.1){g.moveTo(x*SC,0);g.lineTo(x*SC,c.height);}
+  for(let z=0;z<=D;z+=0.1){g.moveTo(0,z*SC);g.lineTo(c.width,z*SC);}
+  g.stroke();
+  g.strokeStyle='rgba(80,78,72,0.75)'; g.lineWidth=2;
+  g.beginPath();
+  for(let x=0;x<=W;x+=1){g.moveTo(x*SC,0);g.lineTo(x*SC,c.height);}
+  for(let z=0;z<=D;z+=1){g.moveTo(0,z*SC);g.lineTo(c.width,z*SC);}
+  g.stroke();
+  g.fillStyle='rgba(60,58,54,0.85)'; g.font='600 13px system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='top';
+  for(let i=0;i<Math.ceil(W);i++)
+    for(let j=0;j<Math.ceil(D);j++)
+      g.fillText(String.fromCharCode(65+i)+(j+1), i*SC+4, j*SC+3);
+  const tex=new THREE.CanvasTexture(c);
+  const pg=new THREE.PlaneGeometry(W,D);
+  pg.rotateX(-Math.PI/2);
+  const m=new THREE.Mesh(pg,new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false}));
+  m.position.set(cx,0.118,cz); // чуть выше чистового пола (0.115)
+  addrGroup.add(m);
+
+  // стены: дециметровые линии тем же обходом, что и метровая сетка, но от глобального нуля квартиры
+  const mat=new THREE.LineBasicMaterial({color:0xa8a6a0,transparent:true,opacity:0.4});
+  const pts=[];
+  PLAN.rooms.forEach(r=>{
+    const poly=r.poly;
+    let area=0;
+    for(let i=0;i<poly.length;i++){const j=(i+1)%poly.length;area+=poly[i][0]*poly[j][1]-poly[j][0]*poly[i][1];}
+    const ccw=area>0;
+    for(let i=0;i<poly.length;i++){
+      const a=poly[i], b=poly[(i+1)%poly.length];
+      const ex=b[0]-a[0], ez=b[1]-a[1];
+      const len=Math.hypot(ex,ez); if(len<0.3) continue;
+      let nx=-ez/len, nz=ex/len;
+      if(!ccw){nx=-nx;nz=-nz;}
+      const off=0.02;
+      const ax=a[0]+nx*off, az=a[1]+nz*off, bx=b[0]+nx*off, bz=b[1]+nz*off;
+      // горизонтали каждые 10 см (метровые уже есть в wallGridGroup)
+      for(let y=0.1;y<H-0.01;y+=0.1){
+        if(Math.abs(y-Math.round(y))<0.01) continue;
+        pts.push(new THREE.Vector3(ax,y,az), new THREE.Vector3(bx,y,bz));
+      }
+      const horiz=Math.abs(ex)>Math.abs(ez);
+      const start=horiz?minX:minZ;
+      const a1=horiz?a[0]:a[1], b1=horiz?b[0]:b[1];
+      const lo=Math.min(a1,b1), hi=Math.max(a1,b1);
+      for(let k=Math.ceil((lo-start)/0.1);;k++){
+        const v=start+k*0.1;
+        if(v>hi-0.03) break;
+        if(v<lo+0.03) continue;
+        const t=(v-a1)/(b1-a1);
+        const px=ax+(bx-ax)*t, pz=az+(bz-az)*t;
+        pts.push(new THREE.Vector3(px,0,pz), new THREE.Vector3(px,H,pz));
+      }
+    }
+  });
+  const lg=new THREE.BufferGeometry().setFromPoints(pts);
+  addrGroup.add(new THREE.LineSegments(lg,mat));
+})();
+scene.add(addrGroup);
 
 // виртуальный человек (рост 1,8 м)
 var walkKeys={ArrowUp:false,ArrowDown:false,ArrowLeft:false,ArrowRight:false,
