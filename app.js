@@ -805,11 +805,11 @@ var finishGroup=new THREE.Group();
         segs=out;
       });
       // рёбра на съёмной Г-образной стене коридор-кухня (slabsR): их отделка прячется вместе со стеной.
-      // Горизонтальное колено: z 6.287/6.464 при x<10.96; вертикальное: x 8.066/8.23 при z>5.1
+      // Горизонтальное колено: z 6.287/6.464 при x<10.96; вертикальное: x 8.066/8.23 при z>5.516 (I4+09)
       const onKwallH = horiz && (Math.abs(fixed-6.287)<0.1 || Math.abs(fixed-6.464)<0.1);
       const onKwallV = !horiz && (Math.abs(fixed-8.066)<0.04 || Math.abs(fixed-8.23)<0.04);
       if(onKwallH||onKwallV){
-        const cut=onKwallH?10.96:5.1; // граница съёмной части — разрезать сегменты на ней
+        const cut=onKwallH?10.96:5.516; // граница съёмной части — разрезать сегменты на ней
         const out=[];
         segs.forEach(sg=>{
           if(sg[0]<cut&&sg[1]>cut){out.push([sg[0],cut],[cut,sg[1]]);}
@@ -817,13 +817,7 @@ var finishGroup=new THREE.Group();
         });
         segs=out;
       }
-      if(onKwallV){
-        // стена срезана до I4+09 (z=5.516) — южнее неё отделка не кладётся
-        const out=[];
-        segs.forEach(sg=>{ if(sg[0]<5.516) out.push([sg[0],Math.min(sg[1],5.516)]); });
-        segs=out;
-      }
-      const grpFor=mid=>((onKwallH&&mid<10.96)||(onKwallV&&mid>5.1))?window.kitchenFrame:finishGroup;
+      const grpFor=mid=>((onKwallH&&mid<10.96)||(onKwallV&&mid>5.516))?window.kitchenFrame:finishGroup;
       // оконные проёмы на этой стене: обои только под и над окном
       const winSpans=[];
       if(!horiz) PLAN.windows.forEach(w=>{
