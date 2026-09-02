@@ -614,10 +614,11 @@ var finishGroup=new THREE.Group();
 
   // белые обои под покраску: почти белые, мелкое зерно
   const wpTex=canvasTex(g=>{
-    g.fillStyle='#f6f5f1'; g.fillRect(0,0,256,256);
-    for(let i=0;i<2600;i++){
-      g.fillStyle=Math.random()<0.5?'rgba(210,207,200,0.28)':'rgba(255,255,255,0.4)';
-      g.fillRect(Math.random()*256,Math.random()*256,1.2,1.2);
+    g.fillStyle='#fbfaf6'; g.fillRect(0,0,256,256);
+    for(let i=0;i<1500;i++){
+      g.fillStyle=Math.random()<0.55?'rgba(180,177,170,0.4)':'rgba(255,255,255,0.6)';
+      const s=1+Math.random()*1.4;
+      g.fillRect(Math.random()*256,Math.random()*256,s,s);
     }
   });
   wpTex.repeat.set(1/1.2,1/1.2);
@@ -693,7 +694,8 @@ var finishGroup=new THREE.Group();
 
   // белый плинтус 10 см и обои вдоль стен (кроме санузлов и дверных проёмов)
   const plinthMat=new THREE.MeshBasicMaterial({color:0xffffff});
-  const DOORS2=DOORS;
+  // + дверь кухни: она не в DOORS (коробка живёт в kitchenFrame), но проём вырезать надо
+  const DOORS2=DOORS.concat([[9.30,6.37,'h',0.90]]);
   PLAN.rooms.forEach(r=>{
     if(r.id===8||r.id===9) return;
     const poly=r.poly;
@@ -728,6 +730,18 @@ var finishGroup=new THREE.Group();
         });
         segs=out;
       });
+      // рёбра на съёмной стене коридор-кухня (slabsR): их отделка прячется вместе со стеной
+      const onKwall = horiz && (Math.abs(fixed-6.287)<0.1 || Math.abs(fixed-6.464)<0.1);
+      if(onKwall){
+        // стена съёмная только при x<10.96 — разрезать сегменты на границе
+        const out=[];
+        segs.forEach(sg=>{
+          if(sg[0]<10.96&&sg[1]>10.96){out.push([sg[0],10.96],[10.96,sg[1]]);}
+          else out.push(sg);
+        });
+        segs=out;
+      }
+      const grpFor=mid=>(onKwall&&mid<10.96)?window.kitchenFrame:finishGroup;
       // проход на балкон в комнате 4
       if(!horiz&&Math.abs(13.72-fixed)<0.45){
         const out=[];
@@ -747,7 +761,7 @@ var finishGroup=new THREE.Group();
         const px=horiz?mid:fixed+nx*0.028, pz=horiz?fixed+nz*0.028:mid;
         m.position.set(horiz?mid:px, 0.165, horiz?pz:mid);
         if(horiz) m.position.set(mid,0.165,fixed+nz*0.028); else m.position.set(fixed+nx*0.028,0.165,mid);
-        finishGroup.add(m);
+        grpFor(mid).add(m);
       });
       // обои: панели между проёмами (от плинтуса до потолка) и перемычки над дверями
       if(r.id!==10){
@@ -760,7 +774,7 @@ var finishGroup=new THREE.Group();
           // 0.015 — за сеткой стен (0.02), но перед самой стеной
           if(horiz) m.position.set(mid,(y0+y1)/2,fixed+nz*0.015);
           else m.position.set(fixed+nx*0.015,(y0+y1)/2,mid);
-          finishGroup.add(m);
+          grpFor(mid).add(m);
         }
         segs.forEach(sg=>wpPanel(0.215,H,sg[0],sg[1]));
         doorSpans.forEach(sp=>wpPanel(2.1,H,sp[0],sp[1]));
