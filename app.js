@@ -612,6 +612,17 @@ var finishGroup=new THREE.Group();
   const whiteMat=new THREE.MeshBasicMaterial({map:whiteM});
   const greyMat=new THREE.MeshBasicMaterial({map:greyM});
 
+  // белые обои под покраску: почти белые, мелкое зерно
+  const wpTex=canvasTex(g=>{
+    g.fillStyle='#f6f5f1'; g.fillRect(0,0,256,256);
+    for(let i=0;i<2600;i++){
+      g.fillStyle=Math.random()<0.5?'rgba(210,207,200,0.28)':'rgba(255,255,255,0.4)';
+      g.fillRect(Math.random()*256,Math.random()*256,1.2,1.2);
+    }
+  });
+  wpTex.repeat.set(1/1.2,1/1.2);
+  const wpMat=new THREE.MeshBasicMaterial({map:wpTex});
+
   function scaleUV(g,sx,sy){const uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*sx,uv.getY(i)*sy);}
 
   // полы: ламинат везде, кроме санузлов 8 и 9 (там белый мрамор)
@@ -680,7 +691,7 @@ var finishGroup=new THREE.Group();
     }
   });
 
-  // белый плинтус 10 см вдоль стен (кроме санузлов и дверных проёмов)
+  // белый плинтус 10 см и обои вдоль стен (кроме санузлов и дверных проёмов)
   const plinthMat=new THREE.MeshBasicMaterial({color:0xffffff});
   const DOORS2=DOORS;
   PLAN.rooms.forEach(r=>{
@@ -702,11 +713,13 @@ var finishGroup=new THREE.Group();
       const fixed=horiz?a[1]:a[0];
       // вычесть дверные проёмы на этой стене
       let segs=[[lo,hi]];
+      const doorSpans=[]; // проёмы на этом ребре — над ними обойная перемычка
       DOORS2.forEach(d=>{
         const [cx,cz,o,w]=d;
         const near = horiz ? (o==='h'&&Math.abs(cz-fixed)<0.45) : (o==='v'&&Math.abs(cx-fixed)<0.45);
         if(!near) return;
         const c = horiz?cx:cz, d0=c-w/2-0.1, d1=c+w/2+0.1;
+        if(d1>lo&&d0<hi) doorSpans.push([Math.max(d0,lo),Math.min(d1,hi)]);
         const out=[];
         segs.forEach(sg=>{
           if(d1<=sg[0]||d0>=sg[1]){out.push(sg);return;}
@@ -736,6 +749,22 @@ var finishGroup=new THREE.Group();
         if(horiz) m.position.set(mid,0.165,fixed+nz*0.028); else m.position.set(fixed+nx*0.028,0.165,mid);
         finishGroup.add(m);
       });
+      // обои: панели между проёмами (от плинтуса до потолка) и перемычки над дверями
+      if(r.id!==10){
+        function wpPanel(y0,y1,s0,s1){
+          const L=s1-s0; if(L<0.08) return;
+          const g=new THREE.PlaneGeometry(L,y1-y0); scaleUV(g,L,y1-y0);
+          g.rotateY(Math.atan2(nx,nz));
+          const m=new THREE.Mesh(g,wpMat);
+          const mid=(s0+s1)/2;
+          // 0.015 — за сеткой стен (0.02), но перед самой стеной
+          if(horiz) m.position.set(mid,(y0+y1)/2,fixed+nz*0.015);
+          else m.position.set(fixed+nx*0.015,(y0+y1)/2,mid);
+          finishGroup.add(m);
+        }
+        segs.forEach(sg=>wpPanel(0.215,H,sg[0],sg[1]));
+        doorSpans.forEach(sp=>wpPanel(2.1,H,sp[0],sp[1]));
+      }
     }
   });
 })();
