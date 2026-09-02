@@ -517,8 +517,7 @@ var tpRay=new THREE.Raycaster();
 var colRay=new THREE.Raycaster();
 function moveFPV(delta){ // горизонтальное перемещение с проверкой стен
   const len=delta.length(); if(len<1e-6) return;
-  const cb=document.getElementById('collide');
-  if(cb&&cb.checked&&typeof wallGroup!=='undefined'){
+  if(typeof wallGroup!=='undefined'){
     const dirN=delta.clone().normalize();
     const objs=wallGroup.children.concat(wallGroupR.visible?wallGroupR.children:[]).concat(glassGroup.children).filter(o=>o.isMesh);
     let allowed=len;
