@@ -817,6 +817,12 @@ var finishGroup=new THREE.Group();
         });
         segs=out;
       }
+      if(onKwallV){
+        // стена срезана до I4+09 (z=5.516) — южнее неё отделка не кладётся
+        const out=[];
+        segs.forEach(sg=>{ if(sg[0]<5.516) out.push([sg[0],Math.min(sg[1],5.516)]); });
+        segs=out;
+      }
       const grpFor=mid=>((onKwallH&&mid<10.96)||(onKwallV&&mid>5.1))?window.kitchenFrame:finishGroup;
       // оконные проёмы на этой стене: обои только под и над окном
       const winSpans=[];
