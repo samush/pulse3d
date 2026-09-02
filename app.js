@@ -631,7 +631,7 @@ var finishGroup=new THREE.Group();
   PLAN.rooms.forEach(r=>{
     const g=new THREE.ShapeGeometry(toShape(r.poly));
     g.rotateX(-Math.PI/2); g.translate(0,0.115,0);
-    finishGroup.add(new THREE.Mesh(g,(r.id===8||r.id===9)?whiteMat:lamMat));
+    finishGroup.add(new THREE.Mesh(g,(r.id===7||r.id===8||r.id===9)?whiteMat:lamMat));
   });
 
   // пол общего коридора: белый мрамор
@@ -771,27 +771,31 @@ var finishGroup=new THREE.Group();
         segs=out;
       }
       segs.forEach(sg=>{
-        const L=sg[1]-sg[0]; if(L<0.08) return;
-        const mid=(sg[0]+sg[1])/2;
-        const g=horiz?new THREE.BoxGeometry(L,0.1,0.03):new THREE.BoxGeometry(0.03,0.1,L);
-        const m=new THREE.Mesh(g,plinthMat);
-        const px=horiz?mid:fixed+nx*0.028, pz=horiz?fixed+nz*0.028:mid;
-        m.position.set(horiz?mid:px, 0.165, horiz?pz:mid);
-        if(horiz) m.position.set(mid,0.165,fixed+nz*0.028); else m.position.set(fixed+nx*0.028,0.165,mid);
-        grpFor(mid).add(m);
+        if(sg[1]-sg[0]<0.08) return;
+        // по реальным концам ребра — работает и для слегка косых стен
+        const pt=s=>{const t=(s-a1)/(b1-a1);return [a[0]+ex*t+nx*0.028,a[1]+ez*t+nz*0.028];};
+        const p0=pt(sg[0]), p1=pt(sg[1]);
+        const L=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]);
+        const m=new THREE.Mesh(new THREE.BoxGeometry(L,0.1,0.03),plinthMat);
+        m.rotation.y=Math.atan2(nx,nz);
+        m.position.set((p0[0]+p1[0])/2,0.165,(p0[1]+p1[1])/2);
+        grpFor((sg[0]+sg[1])/2).add(m);
       });
       // обои: панели между проёмами (от плинтуса до потолка) и перемычки над дверями
       if(r.id!==10){
         function wpPanel(y0,y1,s0,s1){
-          const L=s1-s0; if(L<0.08) return;
+          if(s1-s0<0.08) return;
+          // класть по реальным концам ребра: бывают слегка косые стены (север комнаты 2),
+          // где панель по оси утонула бы в стене. 0.015 — за сеткой стен (0.02)
+          const pt=s=>{const t=(s-a1)/(b1-a1);return [a[0]+ex*t+nx*0.015,a[1]+ez*t+nz*0.015];};
+          const p0=pt(s0), p1=pt(s1);
+          const L=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]);
           const g=new THREE.PlaneGeometry(L,y1-y0); scaleUV(g,L,y1-y0);
           g.rotateY(Math.atan2(nx,nz));
-          const m=new THREE.Mesh(g,wpMat);
-          const mid=(s0+s1)/2;
-          // 0.015 — за сеткой стен (0.02), но перед самой стеной
-          if(horiz) m.position.set(mid,(y0+y1)/2,fixed+nz*0.015);
-          else m.position.set(fixed+nx*0.015,(y0+y1)/2,mid);
-          grpFor(mid).add(m);
+          // в постирочной 7 вместо обоев белая плитка, как в санузлах
+          const m=new THREE.Mesh(g,r.id===7?whiteMat:wpMat);
+          m.position.set((p0[0]+p1[0])/2,(y0+y1)/2,(p0[1]+p1[1])/2);
+          grpFor((s0+s1)/2).add(m);
         }
         segs.forEach(sg=>wpPanel(0.215,H,sg[0],sg[1]));
         doorSpans.forEach(sp=>wpPanel(2.1,H,sp[0],sp[1]));
@@ -821,6 +825,10 @@ mapBase.width=mapC.width; mapBase.height=mapC.height;
   tracePoly(PLAN.outer); g.fillStyle='#b8b5ae'; g.fill();
   PLAN.rooms.forEach(r=>{tracePoly(r.poly); g.fillStyle='#f7f6f2'; g.fill();});
   tracePoly(PLAN.outer); g.strokeStyle='#8b877f'; g.lineWidth=1; g.stroke();
+  // номера помещений, как на плане БТИ
+  g.fillStyle='#6b6862'; g.font='600 11px system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle';
+  PLAN.rooms.forEach(r=>g.fillText(r.id,mx(r.label[0]),mz(r.label[1])));
 })();
 const camDir=new THREE.Vector3();
 function drawMap(){
