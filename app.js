@@ -375,7 +375,18 @@ zoom.addEventListener('input',()=>{
 document.getElementById('vTop').addEventListener('click',()=>setView('top'));
 document.getElementById('vFP').addEventListener('click',()=>setView('door'));
 const fpvhint=document.getElementById('fpvhint');
-['vTop','vFP'].forEach(id=>document.getElementById(id).addEventListener('click',()=>{fpvhint.hidden=!controls.fpv;}));
+const walkpad=document.getElementById('walkpad');
+['vTop','vFP'].forEach(id=>document.getElementById(id).addEventListener('click',()=>{
+  fpvhint.hidden=!controls.fpv; walkpad.hidden=!controls.fpv;
+}));
+// экранные кнопки прогулки ставят те же флаги, что и клавиатура
+walkpad.querySelectorAll('button').forEach(b=>{
+  const set=v=>e=>{e.preventDefault();walkKeys[b.dataset.key]=v;};
+  b.addEventListener('pointerdown',set(true));
+  b.addEventListener('pointerup',set(false));
+  b.addEventListener('pointercancel',set(false));
+  b.addEventListener('contextmenu',e=>e.preventDefault());
+});
 
 function resize(){
   const w=innerWidth,h=innerHeight;
