@@ -305,6 +305,7 @@ PLAN.rooms.forEach(r=>{
   dots.push(sp); labelGroup.add(sp);
 });
 scene.add(labelGroup);
+labelGroup.visible=false; // по умолчанию выключено, как и галочка #labels
 
 // tooltip
 const tip=document.createElement('div');
@@ -730,18 +731,34 @@ var finishGroup=new THREE.Group();
         });
         segs=out;
       });
-      // рёбра на съёмной стене коридор-кухня (slabsR): их отделка прячется вместе со стеной
-      const onKwall = horiz && (Math.abs(fixed-6.287)<0.1 || Math.abs(fixed-6.464)<0.1);
-      if(onKwall){
-        // стена съёмная только при x<10.96 — разрезать сегменты на границе
+      // рёбра на съёмной Г-образной стене коридор-кухня (slabsR): их отделка прячется вместе со стеной.
+      // Горизонтальное колено: z 6.287/6.464 при x<10.96; вертикальное: x 8.066/8.23 при z>5.1
+      const onKwallH = horiz && (Math.abs(fixed-6.287)<0.1 || Math.abs(fixed-6.464)<0.1);
+      const onKwallV = !horiz && (Math.abs(fixed-8.066)<0.04 || Math.abs(fixed-8.23)<0.04);
+      if(onKwallH||onKwallV){
+        const cut=onKwallH?10.96:5.1; // граница съёмной части — разрезать сегменты на ней
         const out=[];
         segs.forEach(sg=>{
-          if(sg[0]<10.96&&sg[1]>10.96){out.push([sg[0],10.96],[10.96,sg[1]]);}
+          if(sg[0]<cut&&sg[1]>cut){out.push([sg[0],cut],[cut,sg[1]]);}
           else out.push(sg);
         });
         segs=out;
       }
-      const grpFor=mid=>(onKwall&&mid<10.96)?window.kitchenFrame:finishGroup;
+      const grpFor=mid=>((onKwallH&&mid<10.96)||(onKwallV&&mid>5.1))?window.kitchenFrame:finishGroup;
+      // оконные проёмы на этой стене: обои только под и над окном
+      const winSpans=[];
+      if(!horiz) PLAN.windows.forEach(w=>{
+        if(Math.abs(w.x-fixed)>0.45) return;
+        if(w.z1<=lo||w.z0>=hi) return;
+        winSpans.push(w);
+        const out=[];
+        segs.forEach(sg=>{
+          if(w.z1<=sg[0]||w.z0>=sg[1]){out.push(sg);return;}
+          if(w.z0>sg[0]+0.05) out.push([sg[0],w.z0]);
+          if(w.z1<sg[1]-0.05) out.push([w.z1,sg[1]]);
+        });
+        segs=out;
+      });
       // проход на балкон в комнате 4
       if(!horiz&&Math.abs(13.72-fixed)<0.45){
         const out=[];
@@ -778,6 +795,10 @@ var finishGroup=new THREE.Group();
         }
         segs.forEach(sg=>wpPanel(0.215,H,sg[0],sg[1]));
         doorSpans.forEach(sp=>wpPanel(2.1,H,sp[0],sp[1]));
+        winSpans.forEach(w=>{
+          if(w.y0>0.25) wpPanel(0.215,w.y0,Math.max(w.z0,lo),Math.min(w.z1,hi)); // под окном
+          if(w.y1<H-0.05) wpPanel(w.y1,H,Math.max(w.z0,lo),Math.min(w.z1,hi));  // над окном
+        });
       }
     }
   });
