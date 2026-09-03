@@ -24,7 +24,13 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .panel{width:236px;background:var(--panel);
   border:1px solid var(--line);border-radius:10px;padding:14px 16px;
   box-shadow:0 6px 24px rgba(0,0,0,.10);user-select:none}
-.panel h1{font-size:16px;font-weight:800;margin:0 0 2px;letter-spacing:-.01em}
+.panel h1{font-size:16px;font-weight:800;margin:0 0 2px;letter-spacing:-.01em;cursor:pointer}
+.panel h1::after{content:' \25BE';color:var(--muted);font-size:12px}
+/* свёрнутая панель — только маленький краешек с заголовком */
+.panel.collapsed{width:auto;padding:6px 12px}
+.panel.collapsed>:not(h1){display:none}
+.panel.collapsed h1{margin:0;font-size:13px}
+.panel.collapsed h1::after{content:' \25B8'}
 .panel .sub{color:var(--muted);font-size:12px;margin:0 0 12px}
 .row{display:flex;align-items:center;gap:8px;margin:8px 0}
 .row label{flex:1;cursor:pointer}
@@ -73,7 +79,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 <canvas id="c"></canvas>
 <div id="ui">
 <div class="panel">
-  <h1>Квартира в кубах</h1>
+  <h1 onclick="this.parentElement.classList.toggle('collapsed')" title="Свернуть/развернуть">Квартира в кубах</h1>
   <p class="sub">потолок 2,7 м · куб = 1 × 1 × 1 м</p>
   <div class="row"><input type="checkbox" id="cubes"><label for="cubes">Кубы 1 м³</label></div>
   <div class="row"><input type="checkbox" id="labels"><label for="labels">Точки с размерами</label></div>
