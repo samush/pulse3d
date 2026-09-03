@@ -761,6 +761,31 @@ var finishGroup=new THREE.Group();
     panel(whiteMat, b.dz1-b.dz0, H-2.1, ex, 2.1+(H-2.1)/2, (b.dz0+b.dz1)/2, -Math.PI/2);
   });
 
+  // проём на балкон (кухня 4 → лоджия 10, x 13.47–13.91, z 2.8–4.6, высота 2.1): откосы, верх и порог — светлое дерево
+  const woodTex=canvasTex(g=>{
+    const tones=['#e4d2ad','#dcc8a1','#e9d8b6','#d9c49c','#e1cfa9'];
+    const rowH=26; // ~0.1 м доска при канвасе 1 м
+    for(let r=0;r<10;r++){
+      const y=r*rowH; g.fillStyle=tones[(r*3)%tones.length]; g.fillRect(0,y,256,rowH);
+      g.strokeStyle='rgba(120,95,60,0.25)'; g.beginPath(); g.moveTo(0,y+0.5); g.lineTo(256,y+0.5); g.stroke();
+      for(let i=0;i<3;i++){
+        g.strokeStyle='rgba(120,95,60,'+(0.05+0.05*Math.random())+')';
+        const gy=y+3+Math.random()*(rowH-6);
+        g.beginPath(); g.moveTo(0,gy); g.bezierCurveTo(64,gy+2,192,gy-2,256,gy+1); g.stroke();
+      }
+    }
+  });
+  const woodMat=new THREE.MeshBasicMaterial({map:woodTex});
+  {
+    const x0=13.47, x1=13.91, z0=2.8, z1=4.6, y0=0.115, y1=2.1, d=x1-x0, w=z1-z0, in_=0.01;
+    panel(woodMat, d, y1-y0, (x0+x1)/2, (y0+y1)/2, z0+in_, 0);        // откос слева (смотрит внутрь проёма)
+    panel(woodMat, d, y1-y0, (x0+x1)/2, (y0+y1)/2, z1-in_, Math.PI);  // откос справа
+    const top=new THREE.PlaneGeometry(d,w); scaleUV(top,d,w); top.rotateX(Math.PI/2);
+    const tm=new THREE.Mesh(top,woodMat); tm.position.set((x0+x1)/2,y1-in_,(z0+z1)/2); finishGroup.add(tm);
+    const flr=new THREE.PlaneGeometry(d,w); scaleUV(flr,d,w); flr.rotateX(-Math.PI/2);
+    const fm=new THREE.Mesh(flr,woodMat); fm.position.set((x0+x1)/2,y0,(z0+z1)/2); finishGroup.add(fm);
+  }
+
   // белые дверные коробки
   const DOORS=[
     [5.52,4.42,'v',0.88],[6.50,3.94,'h',0.80],[7.50,3.94,'h',0.80],
@@ -856,8 +881,9 @@ var finishGroup=new THREE.Group();
       // проход на балкон в комнате 4
       if(!horiz&&Math.abs(13.72-fixed)<0.45){
         const out=[];
+        const d0=3.70-0.9-0.1, d1=3.70+0.9+0.1;
+        if(d1>lo&&d0<hi) doorSpans.push([Math.max(d0,lo),Math.min(d1,hi)]); // перемычка над проёмом
         segs.forEach(sg=>{
-          const d0=3.70-0.9-0.1, d1=3.70+0.9+0.1;
           if(d1<=sg[0]||d0>=sg[1]){out.push(sg);return;}
           if(d0>sg[0]+0.05) out.push([sg[0],d0]);
           if(d1<sg[1]-0.05) out.push([d1,sg[1]]);
