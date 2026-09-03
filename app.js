@@ -390,6 +390,13 @@ const fpvhint=document.getElementById('fpvhint');
 const walkpad=document.getElementById('walkpad');
 const panbtn=document.getElementById('panbtn');
 panbtn.addEventListener('click',()=>panbtn.classList.toggle('on'));
+// размер сенсорных кнопок ~80 физических px экрана: страница без viewport meta рендерится в ~980
+// виртуальных px и масштабируется под screen.width (iPhone 390 → крупно, iPad 810 → вдвое меньше)
+function sizeTouchButtons(){
+  const wk=Math.max(60,Math.min(220,Math.round(80*innerWidth/screen.width)));
+  document.documentElement.style.setProperty('--wkjs',wk+'px');
+}
+sizeTouchButtons(); addEventListener('resize',sizeTouchButtons);
 ['vTop','vFP'].forEach(id=>document.getElementById(id).addEventListener('click',()=>{
   fpvhint.hidden=!controls.fpv; walkpad.hidden=!controls.fpv;
   panbtn.hidden=controls.fpv; panbtn.classList.remove('on');

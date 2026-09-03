@@ -66,7 +66,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   #panbtn.on{background:var(--accent);color:#fff}
   /* --wk — диаметр кнопки, --off — отступ пары от центра (человечка).
      Viewport meta нет — телефон рендерит страницу в ~980 виртуальных px, отсюда крупные значения */
-  #walkpad,#panbtn{--wk:min(200px,20vw);--off:min(56px,6vw)}
+  #walkpad,#panbtn{--wk:var(--wkjs,min(200px,20vw));--off:min(56px,6vw)}
   #walkpad button,#panbtn{position:fixed;bottom:10vh;width:var(--wk);height:var(--wk);border-radius:50%;
     border:2px solid var(--accent);background:rgba(253,252,249,.75);color:var(--accent);
     font-size:calc(var(--wk)*.45);line-height:1;touch-action:none;-webkit-user-select:none;user-select:none;z-index:4}
