@@ -58,14 +58,16 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .hint{position:fixed;left:16px;bottom:14px;color:var(--muted);font-size:12px;
   background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px}
 @media (max-width:560px){.panel{width:auto;right:16px}.hint{display:none}}
-#walkpad{display:none}
+#walkpad,#panbtn{display:none}
 /* кнопки прогулки — только для сенсорных экранов */
 @media (pointer:coarse){
   #walkpad:not([hidden]){display:block}
+  #panbtn:not([hidden]){display:block;left:calc(50% - var(--wk)/2)}
+  #panbtn.on{background:var(--accent);color:#fff}
   /* --wk — диаметр кнопки, --off — отступ пары от центра (человечка).
      Viewport meta нет — телефон рендерит страницу в ~980 виртуальных px, отсюда крупные значения */
-  #walkpad{--wk:min(200px,20vw);--off:min(56px,6vw)}
-  #walkpad button{position:fixed;bottom:10vh;width:var(--wk);height:var(--wk);border-radius:50%;
+  #walkpad,#panbtn{--wk:min(200px,20vw);--off:min(56px,6vw)}
+  #walkpad button,#panbtn{position:fixed;bottom:10vh;width:var(--wk);height:var(--wk);border-radius:50%;
     border:2px solid var(--accent);background:rgba(253,252,249,.75);color:var(--accent);
     font-size:calc(var(--wk)*.45);line-height:1;touch-action:none;-webkit-user-select:none;user-select:none;z-index:4}
   #walkpad button:active{background:var(--accent-soft)}
@@ -107,6 +109,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <button id="wkD" data-key="ArrowDown" aria-label="Назад">&#8595;</button>
   <button id="wkU" data-key="ArrowUp" aria-label="Вперёд">&#8593;</button>
 </div>
+<button id="panbtn" title="Сдвиг сцены одним пальцем">&#10021;</button>
 <div class="hint">ЛКМ — вращать · колесо — зум · ПКМ или пробел — сдвиг</div>
 
 <div id="err" hidden style="position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);max-width:420px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 20px;font-size:13px;z-index:9"></div>

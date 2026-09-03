@@ -90,7 +90,8 @@ const controls={
   update(){}
 };
 (function(){
-  const ptrs=new Map(); let mode=null, px=0, py=0, pinch=0, space=false;
+  const ptrs=new Map(); let mode=null, px=0, py=0, pinch=0, space=false, pmx=0, pmy=0;
+  const panbtn=document.getElementById('panbtn'); // сенсорный аналог зажатого пробела
   addEventListener('keydown',e=>{
     if(e.code==='Space'){ space=true; if(e.target===document.body)e.preventDefault(); }
     if(controls.fpv && walkKeys.hasOwnProperty(e.code)){ walkKeys[e.code]=true; e.preventDefault(); }
@@ -107,8 +108,9 @@ const controls={
     if(ptrs.size===2){
       const [a,b]=[...ptrs.values()];
       pinch=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+      pmx=(a.clientX+b.clientX)/2; pmy=(a.clientY+b.clientY)/2;
       mode='pinch';
-    } else { mode=(e.button===2||e.shiftKey||space)?'pan':'rot'; px=e.clientX; py=e.clientY; }
+    } else { mode=(e.button===2||e.shiftKey||space||panbtn.classList.contains('on'))?'pan':'rot'; px=e.clientX; py=e.clientY; }
   });
   canvas.addEventListener('pointermove',e=>{
     if(!ptrs.has(e.pointerId))return;
@@ -120,6 +122,15 @@ const controls={
         if(controls.fpv){ const w=controls.dir(); w.y=0; w.normalize(); moveFPV(w.multiplyScalar((d-pinch)*0.01)); }
         else controls.r*=pinch/d;
       }
+      // двумя пальцами тянуть = сдвиг сцены (вид сверху)
+      const mx=(a.clientX+b.clientX)/2, my=(a.clientY+b.clientY)/2;
+      if(!controls.fpv){
+        const s=controls.r*0.0013;
+        const right=new THREE.Vector3().setFromMatrixColumn(camera.matrix,0);
+        const up=new THREE.Vector3().setFromMatrixColumn(camera.matrix,1);
+        controls.target.addScaledVector(right,-(mx-pmx)*s).addScaledVector(up,(my-pmy)*s);
+      }
+      pmx=mx; pmy=my;
       pinch=d; controls.apply(); return;
     }
     const dx=e.clientX-px, dy=e.clientY-py; px=e.clientX; py=e.clientY;
@@ -377,8 +388,11 @@ document.getElementById('vTop').addEventListener('click',()=>setView('top'));
 document.getElementById('vFP').addEventListener('click',()=>setView('door'));
 const fpvhint=document.getElementById('fpvhint');
 const walkpad=document.getElementById('walkpad');
+const panbtn=document.getElementById('panbtn');
+panbtn.addEventListener('click',()=>panbtn.classList.toggle('on'));
 ['vTop','vFP'].forEach(id=>document.getElementById(id).addEventListener('click',()=>{
   fpvhint.hidden=!controls.fpv; walkpad.hidden=!controls.fpv;
+  panbtn.hidden=controls.fpv; panbtn.classList.remove('on');
 }));
 // экранные кнопки прогулки ставят те же флаги, что и клавиатура
 walkpad.querySelectorAll('button').forEach(b=>{
