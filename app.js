@@ -903,6 +903,65 @@ var finishGroup=new THREE.Group();
 })();
 scene.add(finishGroup);
 
+// слой «Мебель (концепт)»: кухня-гостиная 4 по эскизу .local/R1.jpg — серые упрощённые объёмы.
+// Кухонный блок вдоль западной стены (колонка I), стол торцом к северной стене (K2), ТВ на северной
+// стене (L–M), диван у южной стены (L5–M5). Всё в одной группе — отключается галочкой #furn.
+var furnGroup=new THREE.Group();
+(function(){
+  const M=c=>new THREE.MeshLambertMaterial({color:c});
+  const mBase=M(0x8c8c8c), mUpper=M(0xa4a4a4), mTop=M(0x6e6e6e), mDark=M(0x4a4a4a),
+        mTable=M(0x9a9a9a), mChair=M(0x7e7e7e), mSofa=M(0x8a8a8a), mLamp=M(0xd8d8d8);
+  // box(x0,x1,y0,y1,z0,z1) — параллелепипед по границам в метрах
+  function box(x0,x1,y0,y1,z0,z1,mat){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0),mat);
+    m.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); furnGroup.add(m); return m;
+  }
+  const W=8.23, N=1.915, S=6.287, E=13.47; // стены кухни-гостиной
+
+  // --- кухонный блок вдоль западной стены: холодильник, рабочая зона, пенал с духовкой
+  box(W,W+0.66,0,2.69,N,N+0.66,mBase);                 // колонна с холодильником
+  box(W+0.66,W+0.68,0.3,2.0,N+0.02,N+0.64,mDark);       // дверь холодильника (тёмный фасад)
+  box(W,W+0.6,0.1,0.87,N+0.66,N+2.99,mBase);           // нижние шкафы
+  box(W,W+0.62,0.87,0.91,N+0.66,N+2.99,mTop);          // столешница
+  box(W+0.06,W+0.56,0.91,0.925,N+1.1,N+1.7,mDark);     // варочная панель
+  box(W+0.1,W+0.5,0.905,0.93,N+2.2,N+2.65,mDark);      // мойка
+  (()=>{ const f=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.015,0.3,8),mLamp);
+         f.position.set(W+0.08,1.06,N+2.42); furnGroup.add(f); })(); // смеситель
+  box(W,W+0.36,1.45,2.69,N+0.66,N+2.99,mUpper);        // навесные шкафы до потолка
+  box(W,W+0.6,0,2.69,N+2.99,N+3.59,mBase);             // пенал
+  box(W+0.6,W+0.62,0.8,1.4,N+3.04,N+3.54,mDark);       // духовка в пенале
+
+  // --- стол на 6 мест: торцом к северной стене, колонка K
+  const tx0=10.5, tx1=11.3, tz0=N+0.04, tz1=N+1.84;
+  box(tx0,tx1,0.72,0.76,tz0,tz1,mTable);
+  [[tx0+0.05,tz0+0.05],[tx1-0.1,tz0+0.05],[tx0+0.05,tz1-0.1],[tx1-0.1,tz1-0.1]]
+    .forEach(([x,z])=>box(x,x+0.05,0,0.72,z,z+0.05,mTable));
+  function chair(cx,cz,backEast){
+    box(cx-0.21,cx+0.21,0.42,0.46,cz-0.21,cz+0.21,mChair);
+    const bx=backEast?cx+0.17:cx-0.21;
+    box(bx,bx+0.04,0.46,0.9,cz-0.21,cz+0.21,mChair);
+    [[-0.18,-0.18],[0.14,-0.18],[-0.18,0.14],[0.14,0.14]].forEach(([dx,dz])=>box(cx+dx,cx+dx+0.04,0,0.42,cz+dz,cz+dz+0.04,mChair));
+  }
+  [0.35,0.94,1.53].forEach(dz=>{ chair(tx0-0.32,tz0+dz,false); chair(tx1+0.32,tz0+dz,true); });
+  // настенный светильник над столом: кронштейн из северной стены и плафон
+  box(10.88,10.92,1.9,1.94,N,N+0.5,mLamp);
+  (()=>{ const sh=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.16,16,1,true),mLamp);
+         sh.position.set(10.9,1.82,N+0.5); furnGroup.add(sh); })();
+
+  // --- ТВ-зона на северной стене: телевизор и подвесная консоль под ним
+  box(11.85,13.15,1.0,1.75,N+0.02,N+0.06,mDark);        // ТВ ~58"
+  box(11.9,13.1,0.45,0.75,N,N+0.38,mBase);              // консоль (ящик на стене)
+
+  // --- диван у южной стены, ~2 м, лицом к ТВ
+  const sx0=11.35, sx1=13.35, sz0=S-0.9, sz1=S-0.02;
+  box(sx0,sx1,0.1,0.42,sz0,sz1,mSofa);                  // основание
+  box(sx0,sx1,0.42,0.85,sz1-0.25,sz1,mSofa);            // спинка
+  box(sx0,sx0+0.15,0.42,0.6,sz0,sz1,mSofa);             // подлокотники
+  box(sx1-0.15,sx1,0.42,0.6,sz0,sz1,mSofa);
+})();
+scene.add(furnGroup);
+document.getElementById('furn').addEventListener('change',e=>furnGroup.visible=e.target.checked);
+
 // мини-карта
 const mapC=document.getElementById('map');
 const mapCtx=mapC.getContext('2d');
