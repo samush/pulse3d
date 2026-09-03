@@ -988,6 +988,37 @@ var furnGroup=new THREE.Group();
 scene.add(furnGroup);
 document.getElementById('furn').addEventListener('change',e=>furnGroup.visible=e.target.checked);
 
+// слой «Интерьер коридор (слой 1)»: шкаф в нише коридора у стены санузла 9 (клетки I7–J7, эскиз .local/R2_0.png).
+// Снизу открытая полка под обувь, посередине две дверцы для верхней одежды, сверху два ящика-антресоли.
+var hallGroup=new THREE.Group();
+(function(){
+  const M=c=>new THREE.MeshLambertMaterial({color:c});
+  const mBody=M(0x9a9a9a), mDoor=M(0xa8a8a8), mDark=M(0x5a5a5a), mHandle=M(0x3c3c3c);
+  function box(x0,x1,y0,y1,z0,z1,mat){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0),mat);
+    m.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); hallGroup.add(m); return m;
+  }
+  const x0=8.20, x1=9.97, zb=7.984-0.01, zf=zb-0.45, H0=0.45, H1=1.95, H2=2.65; // ниша: x 8.161–10.008, стена z=7.984
+  const t=0.02, mid=(x0+x1)/2, gap=0.004;
+  // корпус: боковины, задняя стенка, дно, крыша
+  box(x0,x0+t,0,H2,zf,zb,mBody); box(x1-t,x1,0,H2,zf,zb,mBody);
+  box(x0,x1,0,H2,zb-t,zb,mBody);
+  box(x0,x1,H2-t,H2,zf,zb,mBody);
+  // низ под обувь: открытая ниша с полкой, тёмная глубина
+  box(x0+t,x1-t,0.02,0.04,zf+0.05,zb-t,mBody);      // цоколь-полка
+  box(x0+t,x1-t,H0-t,H0,zf,zb-t,mBody);              // полка над обувью
+  box(x0+t,x1-t,0.04,H0-t,zb-0.10,zb-t,mDark);       // тень глубины ниши
+  // две дверцы для верхней одежды + ручки
+  box(x0+t,mid-gap,H0,H1,zf,zf+t,mDoor); box(mid+gap,x1-t,H0,H1,zf,zf+t,mDoor);
+  box(mid-0.06,mid-0.045,1.0,1.3,zf-0.02,zf,mHandle); box(mid+0.045,mid+0.06,1.0,1.3,zf-0.02,zf,mHandle);
+  // антресоли: два ящика-дверцы над одеждой
+  box(x0+t,x1-t,H1,H1+t,zf,zb-t,mBody);              // полка между ярусами
+  box(x0+t,mid-gap,H1+t,H2-t,zf,zf+t,mDoor); box(mid+gap,x1-t,H1+t,H2-t,zf,zf+t,mDoor);
+  box(mid-0.06,mid-0.045,H1+0.12,H1+0.28,zf-0.02,zf,mHandle); box(mid+0.045,mid+0.06,H1+0.12,H1+0.28,zf-0.02,zf,mHandle);
+})();
+scene.add(hallGroup);
+document.getElementById('furnHall').addEventListener('change',e=>hallGroup.visible=e.target.checked);
+
 // мини-карта
 const mapC=document.getElementById('map');
 const mapCtx=mapC.getContext('2d');
