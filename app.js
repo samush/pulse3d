@@ -358,6 +358,7 @@ applyTheme();
 // UI
 document.getElementById('cubes').addEventListener('change',e=>cubeGroup.visible=e.target.checked);
 document.getElementById('labels').addEventListener('change',e=>labelGroup.visible=e.target.checked);
+wallGroupR.visible=false; // стена коридор-кухня по умолчанию выключена, как и галочка #kwall
 document.getElementById('kwall').addEventListener('change',e=>{wallGroupR.visible=e.target.checked; if(window.kitchenFrame)window.kitchenFrame.visible=e.target.checked;});
 document.getElementById('ceil').addEventListener('change',e=>ceilGroup.visible=e.target.checked);
 document.getElementById('wgrid').addEventListener('change',e=>{wallGridGroup.visible=e.target.checked;addrGroup.visible=e.target.checked;});
@@ -588,6 +589,7 @@ var addrGroup=new THREE.Group();
   addrGroup.add(new THREE.LineSegments(lg,mat));
 })();
 scene.add(addrGroup);
+wallGridGroup.visible=addrGroup.visible=document.getElementById('wgrid').checked; // по умолчанию выключена
 
 // виртуальный человек (рост 1,8 м)
 var walkKeys={ArrowUp:false,ArrowDown:false,ArrowLeft:false,ArrowRight:false,
@@ -794,6 +796,7 @@ var finishGroup=new THREE.Group();
   ];
   const frameMat2=new THREE.MeshBasicMaterial({color:0xffffff});
   window.kitchenFrame=new THREE.Group(); finishGroup.add(window.kitchenFrame);
+  window.kitchenFrame.visible=document.getElementById('kwall').checked;
   DOORS.concat([[9.30,6.37,'h',0.90,'K']]).forEach(d=>{
     const [cx,cz,o,w,tag]=d, jw=0.07, dep=0.32, hD=2.1;
     const parent = tag==='K' ? window.kitchenFrame : finishGroup;
@@ -1031,6 +1034,27 @@ var hallGroup=new THREE.Group();
 })();
 scene.add(hallGroup);
 document.getElementById('furnHall').addEventListener('change',e=>hallGroup.visible=e.target.checked);
+
+// слой «Интерьер постирочная (слой 1)»: стиральная и сушильная машины колонной в нише помещения 7
+// (ниша x 6.995–7.713, z 2.417–3.028, вход с юга). Светло-серые, детали позже.
+var laundryGroup=new THREE.Group();
+(function(){
+  const M=c=>new THREE.MeshLambertMaterial({color:c});
+  const mBody=M(0xc9c9c9), mDoor=M(0x6f6f6f), mPanel=M(0x9c9c9c);
+  function box(x0,x1,y0,y1,z0,z1,mat){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0),mat);
+    m.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); laundryGroup.add(m); return m;
+  }
+  const x0=7.05, x1=7.65, z0=2.43, z1=3.03; // 0.6 × 0.6, фасад на юг (+z)
+  [[0,0.85],[0.87,1.72]].forEach(([y0,y1])=>{
+    box(x0,x1,y0,y1,z0,z1,mBody);
+    const d=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.24,0.02,32),mDoor); // круглый люк
+    d.rotation.x=Math.PI/2; d.position.set((x0+x1)/2,(y0+y1)/2-0.05,z1+0.01); laundryGroup.add(d);
+    box(x0+0.05,x1-0.05,y1-0.12,y1-0.04,z1,z1+0.01,mPanel);                    // панель управления
+  });
+})();
+scene.add(laundryGroup);
+document.getElementById('furnLaundry').addEventListener('change',e=>laundryGroup.visible=e.target.checked);
 
 // мини-карта
 const mapC=document.getElementById('map');
