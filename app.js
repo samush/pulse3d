@@ -958,7 +958,7 @@ var furnGroup=new THREE.Group();
   box(W+0.6,W+0.62,0.8,1.4,N+3.04,N+3.54,mDark);       // духовка в пенале
 
   // --- стол на 6 мест: торцом к северной стене, колонка K
-  const tx0=10.5, tx1=11.3, tz0=N+0.04, tz1=N+1.84;
+  const tx0=9.85, tx1=10.65, tz0=N+0.04, tz1=N+1.84; // сдвинут на 6.5 дм к кухне, чтобы освободить ТВ-зону
   box(tx0,tx1,0.72,0.76,tz0,tz1,mTable);
   [[tx0+0.05,tz0+0.05],[tx1-0.1,tz0+0.05],[tx0+0.05,tz1-0.1],[tx1-0.1,tz1-0.1]]
     .forEach(([x,z])=>box(x,x+0.05,0,0.72,z,z+0.05,mTable));
@@ -968,11 +968,11 @@ var furnGroup=new THREE.Group();
     box(bx,bx+0.04,0.46,0.9,cz-0.21,cz+0.21,mChair);
     [[-0.18,-0.18],[0.14,-0.18],[-0.18,0.14],[0.14,0.14]].forEach(([dx,dz])=>box(cx+dx,cx+dx+0.04,0,0.42,cz+dz,cz+dz+0.04,mChair));
   }
-  [0.35,0.94,1.53].forEach(dz=>{ chair(tx0-0.32,tz0+dz,false); chair(tx1+0.32,tz0+dz,true); });
+  [0.35,0.94,1.53].forEach(dz=>{ chair(tx0-0.10,tz0+dz,false); chair(tx1+0.10,tz0+dz,true); }); // сиденья задвинуты под стол
   // настенный светильник над столом: кронштейн из северной стены и плафон
-  box(10.88,10.92,1.9,1.94,N,N+0.5,mLamp);
+  box(10.23,10.27,1.9,1.94,N,N+0.5,mLamp);
   (()=>{ const sh=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.16,16,1,true),mLamp);
-         sh.position.set(10.9,1.82,N+0.5); furnGroup.add(sh); })();
+         sh.position.set(10.25,1.82,N+0.5); furnGroup.add(sh); })();
 
   // --- ТВ-зона на северной стене: телевизор и подвесная консоль под ним
   box(11.85,13.15,1.0,1.75,N+0.02,N+0.06,mDark);        // ТВ ~58"
