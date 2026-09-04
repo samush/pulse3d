@@ -1015,6 +1015,17 @@ var hallGroup=new THREE.Group();
   box(x0+t,x1-t,H1,H1+t,zf,zb-t,mBody);              // полка между ярусами
   box(x0+t,mid-gap,H1+t,H2-t,zf,zf+t,mDoor); box(mid+gap,x1-t,H1+t,H2-t,zf,zf+t,mDoor);
   box(mid-0.06,mid-0.045,H1+0.12,H1+0.28,zf-0.02,zf,mHandle); box(mid+0.045,mid+0.06,H1+0.12,H1+0.28,zf-0.02,zf,mHandle);
+
+  // прихожая у входной двери на западной стене коридора (x=6.336, клетка G6, эскиз .local/R2_1_*):
+  // подвесная полочка с двумя ящиками, рядом большое зеркало, перед полкой пуфик
+  const wx=6.336+0.01, mGlass=M(0xc3cbd2), mFrame=M(0x2e2e2e), mPouf=M(0x8a8683);
+  box(wx,wx+0.30,0.80,0.92,6.55,7.35,mBody);                       // корпус полки
+  box(wx+0.30,wx+0.315,0.81,0.91,6.56,6.945,mDoor); box(wx+0.30,wx+0.315,0.81,0.91,6.955,7.34,mDoor); // фасады ящиков
+  box(wx+0.315,wx+0.325,0.855,0.865,6.70,6.80,mHandle); box(wx+0.315,wx+0.325,0.855,0.865,7.10,7.20,mHandle);
+  box(wx,wx+0.02,0.15,2.40,5.50,6.40,mFrame);                      // рама зеркала
+  box(wx+0.02,wx+0.025,0.17,2.38,5.52,6.38,mGlass);                // зеркало (полотно)
+  box(wx+0.15,wx+0.75,0.12,0.45,6.65,7.05,mPouf);                  // пуфик
+  [[0.18,6.68],[0.68,6.68],[0.18,6.98],[0.68,6.98]].forEach(([dx,z])=>box(wx+dx,wx+dx+0.03,0,0.12,z,z+0.03,mFrame)); // ножки
 })();
 scene.add(hallGroup);
 document.getElementById('furnHall').addEventListener('change',e=>hallGroup.visible=e.target.checked);
