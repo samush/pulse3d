@@ -1056,6 +1056,39 @@ var laundryGroup=new THREE.Group();
 scene.add(laundryGroup);
 document.getElementById('furnLaundry').addEventListener('change',e=>laundryGroup.visible=e.target.checked);
 
+// слой «Интерьер детская (слой 1)»: кровать-платформа в комнате 1 (эскизы .local/bed_*).
+// Платформа 1.2 м шириной вдоль северной стены (z=1.874), торцом к восточной стене (x=5.445), на 4 высоких ногах,
+// спальное место на 1.8 м; у восточного торца блок хранения-«ступенька» с крышей на 0.4 м ниже потолка;
+// вдоль южного края полупрозрачный борт; западнее — лестница из 3 равных ступеней 0.6 м от стены с ящиками.
+var kidGroup=new THREE.Group();
+(function(){
+  const M=c=>new THREE.MeshLambertMaterial({color:c});
+  const mBody=M(0xdadad6), mLeg=M(0xbdbdb8), mMat=M(0xf0ede6), mKnob=M(0x4a4a4a),
+        mRail=new THREE.MeshLambertMaterial({color:0xbfd7e6,transparent:true,opacity:0.35});
+  function box(x0,x1,y0,y1,z0,z1,mat){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0),mat);
+    m.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); kidGroup.add(m); return m;
+  }
+  const N=1.874, E=5.445, W=1.2, PL=1.8, TOP=2.7-0.4;        // стена север, стена восток, ширина, уровень платформы, крыша блока
+  const bx0=E-2.0, bx1=E-0.01, bz0=N+0.01, bz1=N+W;          // платформа 2.0 × 1.2
+  box(bx0,bx1,PL-0.1,PL,bz0,bz1,mBody);                       // плита платформы
+  [[bx0,bz0],[bx1-0.08,bz0],[bx0,bz1-0.08],[bx1-0.08,bz1-0.08]].forEach(([x,z])=>box(x,x+0.08,0,PL-0.1,z,z+0.08,mLeg)); // 4 ноги
+  const sx1=bx1-0.6;                                          // блок хранения занимает восточные 0.6 м
+  box(sx1,bx1,PL,TOP,bz0,bz1,mBody);                          // блок хранения-«ступенька»
+  box(sx1-0.02,sx1,PL+0.2,PL+0.25,(bz0+bz1)/2-0.03,(bz0+bz1)/2+0.03,mKnob); // ручка-точка
+  box(bx0+0.05,sx1-0.05,PL,PL+0.15,bz0+0.03,bz1-0.05,mMat);   // матрас
+  box(bx0,sx1,PL,TOP,bz1-0.02,bz1,mRail);                     // полупрозрачный борт по южному краю
+  // лестница: 3 ступени равной высоты (PL/3=0.6), каждая 0.6 м от северной стены, треть метра по длине, ящики с ручками
+  const st=PL/3, L=1.0/3, lx1=bx0;
+  for(let i=0;i<3;i++){
+    const x0=lx1-L*(3-i), x1=lx1-L*(2-i), h=st*(i+1);
+    box(x0,x1,0,h,bz0,bz0+0.6,mBody);
+    for(let k=0;k<=i;k++) box((x0+x1)/2-0.03,(x0+x1)/2+0.03,st*k+st/2-0.03,st*k+st/2+0.03,bz0+0.6,bz0+0.62,mKnob); // ручки ящиков
+  }
+})();
+scene.add(kidGroup);
+document.getElementById('furnKid').addEventListener('change',e=>kidGroup.visible=e.target.checked);
+
 // мини-карта
 const mapC=document.getElementById('map');
 const mapCtx=mapC.getContext('2d');
