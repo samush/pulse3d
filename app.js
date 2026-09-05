@@ -848,6 +848,9 @@ var finishGroup=new THREE.Group();
   window.wallFinMats=[wpMat,whiteWall,greyMat,woodMat,frameMat2,plinthMat]; // гасятся ползунком «Стены»
   window.finishMats={lam:lamMat,white:whiteMat,whiteWall,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
+  // room 1, M30: sage accent block on the south wall, 0.1–2.1 (door lintel height), x 1.70–4.20; sits 0.02 in front of the wallpaper
+  const accentMat=new THREE.MeshBasicMaterial({color:0xa3b39a}); wallFinMats.push(accentMat); finishMats.accent=accentMat;
+  (()=>{ const g=new THREE.PlaneGeometry(2.5,2.0); g.rotateY(Math.PI); const m=new THREE.Mesh(g,accentMat); m.position.set(2.95,1.1,4.864-0.02); wallFin.add(m); })();
   PLAN.rooms.forEach(r=>{
     if(r.id===8||r.id===9) return;
     const poly=r.poly;

@@ -54,17 +54,20 @@
     const w=[]; const u=ITEM_GROUPS[id].userData; const c=itemCorners(id); const b=aabb(id);
     const room=PLAN.rooms.find(r=>r.id===u.room);
     if(room&&!c.every(q=>inPoly([Math.min(Math.max(q[0],b[0]+0.001),b[2]-0.001),Math.min(Math.max(q[1],b[1]+0.001),b[3]-0.001)],room.poly))) w.push('выходит за границы помещения '+u.room);
-    ITEMS.filter(it=>it.id!==id&&it.attach!==id&&u.attach!==it.id).forEach(it=>{
-      const o=aabb(it.id), ou=ITEM_GROUPS[it.id].userData;
+    ITEMS.filter(it=>it.id!==id&&it.attach!==id&&u.attach!==it.id&&!passive(it.id)&&!passive(id)).forEach(it=>{
+      const o=aabb(it.id);
       const ox=Math.min(b[2],o[2])-Math.max(b[0],o[0]), oz=Math.min(b[3],o[3])-Math.max(b[1],o[1]);
-      const yOverlap=!(u.size[1]<=0||ou.size[1]<=0)&&true; // heights: hanging items (bottom above 1.9) do not block floor-standing ones
-      const lowA=lowEdge(id), lowB=lowEdge(it.id);
-      if(ox>0.005&&oz>0.005&&!(lowA>=1.9||lowB>=1.9)) w.push('пересекается с '+it.id+' ('+it.type+')');
-      else if(ox>-PASS&&oz>-PASS&&(ox<=0.005||oz<=0.005)&&!(lowA>=1.9||lowB>=1.9)){ const gap=Math.max(-ox,-oz); if(gap>0.005&&gap<PASS) w.push('проход до '+it.id+' '+gap.toFixed(2)+' м (< '+PASS+')'); }
+      if(ox>0.005&&oz>0.005){ if(hits3d(id,it.id)) w.push('пересекается с '+it.id+' ('+it.type+')'); }
+      else if(onFloor(id)&&onFloor(it.id)&&ox>-PASS&&oz>-PASS){ const gap=Math.max(-ox,-oz); if(gap>0.005&&gap<PASS) w.push('проход до '+it.id+' '+gap.toFixed(2)+' м (< '+PASS+')'); }
     });
     return w;
   }
-  function lowEdge(id){ const bb=new THREE.Box3().setFromObject(ITEM_GROUPS[id]); return bb.min.y; }
+  const bbox=id=>new THREE.Box3().setFromObject(ITEM_GROUPS[id]);
+  const passive=id=>{ const bb=bbox(id); return bb.min.y>=1.9||bb.max.y<=0.02; }; // hanging (above head) or flat (rug) items block nothing
+  const onFloor=id=>bbox(id).min.y<0.05; // passage matters only between floor-standing items
+  // real overlap: per-mesh boxes (a sofa under a loft bed sits between the legs, a socket above a desk is fine)
+  function hits3d(a,b){ const A=PHYS[a].map(m=>new THREE.Box3().setFromObject(m)), B=PHYS[b].map(m=>new THREE.Box3().setFromObject(m)); const e=0.005;
+    return A.some(x=>B.some(y=>x.min.x<y.max.x-e&&x.max.x>y.min.x+e&&x.min.y<y.max.y-e&&x.max.y>y.min.y+e&&x.min.z<y.max.z-e&&x.max.z>y.min.z+e)); }
   LAY.warnings=warnings;
 
   // ---------- UI ----------

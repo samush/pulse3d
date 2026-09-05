@@ -272,8 +272,8 @@ const { chromium } = require('playwright');
     const stopped = a.z < sofaN - 0.25 && a.z > sofaN - 0.6;
     controls.setFPV(12.3, 4.6, 0); moveFPV(new THREE.Vector3(0, 0, 3)); const big = controls.pos.z < sofaN - 0.25; // «большой шаг» колесом
     furnGroup.visible = false; const h = await walkTo(12.3, 4.6, 0, 1500); furnGroup.visible = true; const hidden = h.z < sofaN - 0.25;
-    const u = await walkTo(4.8, 4.4, Math.PI, 1500);              // под кроватью между ногами на север
-    const under = u.z < 3.3;
+    const u = await walkTo(4.8, 4.4, Math.PI, 1500);              // под кроватью между ногами на север — до диванчика kidsofa
+    const sofaS = ITEM_GROUPS.kidsofa.userData.pos[1] + ITEM_GROUPS.kidsofa.userData.size[2]; const under = u.z > sofaS && u.z < sofaS + 0.6;
     const p0 = ITEM_GROUPS.sofa.userData.pos.slice(); setItemPose('sofa', [8.4, 4.6]); const m = await walkTo(12.3, 4.6, 0, 1500); setItemPose('sofa', p0); const moved = m.z > sofaN;
     return { stopped, big, hidden, under, moved, z: a.z.toFixed(2) };
   });
@@ -344,6 +344,33 @@ const { chromium } = require('playwright');
   if (!scen.placed) problems.push('сценарий: предмет не встал по координатам из текста метки');
   if (!scen2.kept) problems.push('сценарий: вариант или метка не восстановились после перезагрузки');
   if (!scen2.stopped) problems.push('сценарий: прогулка не упёрлась в диван на новом месте (z=' + scen2.z + ')');
+  // room1-kid: all kid-layer items sit inside room 1, none intersects the loft platform (kidsofa goes under it),
+  // the layout gives no warnings (overlaps, passage door→desk ≥ 0.7), the stair-chest has 5 steps of 0.30
+  const kid = await page.evaluate(() => {
+    const kids = ITEMS.filter(it => it.layer === 'kid'), bb = o => new THREE.Box3().setFromObject(o);
+    const room = PLAN.rooms.find(r => r.id === 1), xs = room.poly.map(q => q[0]), zs = room.poly.map(q => q[1]);
+    const inside = kids.filter(it => { const b = bb(ITEM_GROUPS[it.id]); return b.min.x < Math.min(...xs) - 0.001 || b.max.x > Math.max(...xs) + 0.001 || b.min.z < Math.min(...zs) - 0.001 || b.max.z > Math.max(...zs) + 0.001; }).map(it => it.id);
+    const plat = new THREE.Box3(new THREE.Vector3(4.235, 1.7, 1.884), new THREE.Vector3(5.435, 1.8, 3.884));
+    const hitPlat = kids.filter(it => it.id !== 'kidbed' && bb(ITEM_GROUPS[it.id]).intersectsBox(plat)).map(it => it.id);
+    const warn = kids.map(it => [it.id, LAY.warnings(it.id)]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
+    const tops = ITEM_GROUPS.kidbed.children.map(o => bb(o)).filter(b => b.min.y < 0.001 && b.max.y <= 1.51 && b.max.z - b.min.z > 0.4).map(b => Math.round(b.max.y * 100) / 100).sort();
+    const sofaTop = bb(ITEM_GROUPS.kidsofa).max.y;
+    return { n: kids.length, inside, hitPlat, warn, tops, sofaTop, bedPos: ITEM_GROUPS.kidbed.userData.pos };
+  });
+  if (kid.n < 29) problems.push('комната 1: предметов слоя kid ' + kid.n + ' (< 29)');
+  if (kid.inside.length) problems.push('комната 1: предметы вне помещения: ' + kid.inside.join(', '));
+  if (kid.hitPlat.length) problems.push('комната 1: пересекают платформу кровати: ' + kid.hitPlat.join(', '));
+  if (kid.sofaTop > 1.7) problems.push('комната 1: диванчик выше низа платформы: ' + kid.sofaTop);
+  if (kid.warn.length) problems.push('комната 1: предупреждения расстановки:\n    ' + kid.warn.join('\n    '));
+  if (kid.tops.join() !== '0.3,0.6,0.9,1.2,1.5') problems.push('комната 1: ступени не 5 × 0.30: ' + kid.tops.join());
+  if (Math.abs(kid.bedPos[0] + 1.4 - 4.235) > 1e-9) problems.push('комната 1: платформа кровати сдвинулась: pos.x=' + kid.bedPos[0]);
+  // screenshots of room 1: plan, from the door, from the desk to the gallery wall, from under the bed to the window
+  await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 2.4; controls.r = hh / TAN22; controls.target.set(3.17 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 3.37); controls.apply(); });
+  await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'room1-top.png') });
+  for (const [name, x, z, th] of [['room1-door', 4.5, 4.55, -Math.PI / 2 + 0.45], ['room1-gallery', 1.9, 3.0, Math.PI * 0.3], ['room1-bed', 4.95, 3.3, -Math.PI / 2 - 0.15]]) {
+    await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(outDir, name + '.png') });
+  }
   console.log(`  кадров/с: план ${fpsPlain}, визуализация ${fpsViz} (viewport 1400×1000, прогулка в кухне)`);
   await browser.close();
 
