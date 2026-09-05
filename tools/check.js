@@ -133,6 +133,26 @@ const { chromium } = require('playwright');
     return { ortho: !!camera.isOrthographicCamera, m0: dx(0), m25: dx(2.5),
       moved: controls.target.distanceTo(new THREE.Vector3().fromArray(b.t)), tilt: Math.abs(controls.theta - b.th) + Math.abs(controls.phi - b.ph) };
   }, before);
+  // разметка: клик ставит точку ровно в спроецированную координату, зум/сдвиг её не меняют,
+  // отрезок между известными точками имеет верную длину, текст для агента содержит поворот и шаг
+  await page.click('#mkBtn'); await page.click('[data-tool=point]');
+  const expPt = await page.evaluate(() => MK.snapPt(MK.pickPoint({ clientX: 700, clientY: 450 })));
+  await page.mouse.click(700, 450); await page.waitForTimeout(100);
+  await page.mouse.move(640, 420); await page.mouse.wheel(0, -300); await page.mouse.down(); await page.mouse.move(700, 470, { steps: 3 }); await page.mouse.up();
+  const mk = await page.evaluate((exp) => {
+    const p = MK.marks[0] && MK.marks[0].pts[0];
+    const seg = MK.addSeg([9, 4], [12, 8]);
+    const rect = MK.addRect([1.5, 2.5], 1.2, 0.45, 90); MK.edit(rect, { y1: 0.9 });
+    const txt = MK.describe(rect);
+    const out = { pt: p && Math.abs(p[0] - exp[0]) < 1e-6 && Math.abs(p[1] - exp[1]) < 1e-6, len: Math.abs(Math.hypot(3, 4) - Math.hypot(seg.pts[1][0] - seg.pts[0][0], seg.pts[1][1] - seg.pts[0][1])) < 1e-9,
+      txt: /поворот 90°/.test(txt) && /Шаг сетки/.test(txt) && /помещение 1/.test(txt) && /x=1\.50, z=2\.50/.test(txt) };
+    MK.marks.slice().forEach(m => MK.remove(m)); MK.toggle(false);
+    return out;
+  }, expPt);
+  if (!mk.pt) problems.push('разметка: точка не совпала с координатой клика после зума и сдвига');
+  if (!mk.len) problems.push('разметка: длина отрезка неверна');
+  if (!mk.txt) problems.push('разметка: текст для агента без поворота/шага/помещения/координат');
+
   if (!plan.ortho) problems.push('вид сверху не ортографический');
   if (Math.abs(plan.m0 - plan.m25) > 0.5) problems.push(`план: метр на полу ${plan.m0.toFixed(1)}px, на 2.5 м ${plan.m25.toFixed(1)}px`);
   if (plan.moved < 0.05) problems.push('план: перетаскивание не сдвинуло цель');
