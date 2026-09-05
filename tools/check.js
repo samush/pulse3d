@@ -49,7 +49,7 @@ const { chromium } = require('playwright');
 
   await page.goto(url);
   await page.waitForTimeout(3500);
-  await page.evaluate(() => { try { localStorage.removeItem('pulse3d.marks'); localStorage.removeItem('pulse3d.layout'); } catch (e) {} }); // чистый старт разметки и вариантов
+  await page.evaluate(() => { try { localStorage.removeItem('pulse3d.marks'); localStorage.removeItem('pulse3d.layout'); localStorage.removeItem('pulse3d.viz'); } catch (e) {} }); // чистый старт разметки, вариантов и режима
   await page.screenshot({ path: path.join(outDir, 'default.png') });
 
   const report = await page.evaluate(() => {
@@ -250,6 +250,32 @@ const { chromium } = require('playwright');
   if (await page.evaluate(() => !!camera.isOrthographicCamera)) problems.push('после «От первого лица» камера осталась ортографической');
   else if (walk.moved < 0.3) problems.push('прогулка: шаг вперёд не сдвинул человечка (' + walk.moved.toFixed(2) + ' м)');
   await page.screenshot({ path: path.join(outDir, 'walk.png') });
+  // T11: визуализация — PBR-материалы, тени, масштаб рисунка в метрах, геометрия не меняется; замер кадров в обоих режимах
+  const fps = async () => page.evaluate(() => new Promise(r => { let n = 0; const t0 = performance.now(); const f = () => { n++; if (performance.now() - t0 < 1500) requestAnimationFrame(f); else r(Math.round(n / 1.5)); }; requestAnimationFrame(f); }));
+  const planJson = await page.evaluate(() => JSON.stringify(PLAN));
+  await page.evaluate(() => { controls.setFPV(10.6, 3.9, Math.PI / 2 + 0.25); });
+  const fpsPlain = await fps();
+  await page.screenshot({ path: path.join(outDir, 'viz-off.png') });
+  await page.click('#viz'); await page.waitForTimeout(800);
+  const viz = await page.evaluate((pj) => {
+    const floor = finishGroup.children.find(o => o.geometry && o.geometry.type === 'ShapeGeometry');
+    const sofa = ITEM_GROUPS.sofa.children[0];
+    const lam = floor.material;
+    return { std: lam.isMeshStandardMaterial && sofa.material.isMeshStandardMaterial, shadows: renderer.shadowMap.enabled && sun.castShadow && sofa.castShadow,
+      maps: !!(lam.roughnessMap && lam.normalMap), scale: Math.abs(lam.map.repeat.x - 1 / MATERIALS.lam.size[0]) < 1e-9 && Math.abs(lam.roughnessMap.repeat.x - lam.map.repeat.x) < 1e-9,
+      tone: renderer.toneMapping === THREE.ACESFilmicToneMapping && renderer.outputEncoding === THREE.sRGBEncoding, geom: JSON.stringify(PLAN) === pj && Math.abs(ITEM_GROUPS.sofa.userData.pos[0] - 11.35) < 1e-9 };
+  }, planJson);
+  const fpsViz = await fps();
+  await page.screenshot({ path: path.join(outDir, 'viz-on.png') });
+  await page.reload(); await page.waitForTimeout(2500);
+  const vizKept = await page.evaluate(() => { const ok = VIZ.on && document.getElementById('viz').checked; VIZ.set(false); return ok; });
+  if (!viz.std) problems.push('визуализация: материалы не PBR');
+  if (!viz.shadows) problems.push('визуализация: тени не включены');
+  if (!viz.maps || !viz.scale) problems.push('визуализация: карты шероховатости/рельефа отсутствуют или масштаб не совпадает');
+  if (!viz.tone) problems.push('визуализация: tone mapping / sRGB не включены');
+  if (!viz.geom) problems.push('визуализация: изменилась геометрия или позы');
+  if (!vizKept) problems.push('визуализация: режим не восстановился после перезагрузки');
+  console.log(`  кадров/с: план ${fpsPlain}, визуализация ${fpsViz} (viewport 1400×1000, прогулка в кухне)`);
   await browser.close();
 
   if (problems.length) {

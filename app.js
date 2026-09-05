@@ -847,6 +847,7 @@ var finishGroup=new THREE.Group();
   // белый плинтус 10 см (от чистового пола) и обои вдоль стен (кроме санузлов и дверных проёмов)
   const plinthMat=new THREE.MeshBasicMaterial({color:0xffffff});
   window.wallFinMats=[wpMat,whiteWall,greyMat,woodMat,frameMat2,plinthMat]; // гасятся ползунком «Стены»
+  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,grey:greyMat,wp:wpMat,wood:woodMat,plinth:plinthMat,frame:frameMat2}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
   PLAN.rooms.forEach(r=>{
     if(r.id===8||r.id===9) return;
