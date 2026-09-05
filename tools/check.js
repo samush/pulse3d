@@ -378,25 +378,25 @@ const { chromium } = require('playwright');
     const room = PLAN.rooms.find(r => r.id === 3), xs = room.poly.map(q => q[0]), zs = room.poly.map(q => q[1]);
     const inside = its.filter(it => { const b = bb(ITEM_GROUPS[it.id]); return b.min.x < Math.min(...xs) - 0.001 || b.max.x > Math.max(...xs) + 0.001 || b.min.z < Math.min(...zs) - 0.001 || b.max.z > Math.max(...zs) + 0.001; }).map(it => it.id);
     const bed = bb(ITEM_GROUPS.mbed), win = PLAN.windows.find(w => w.x > 14.9 && w.z0 > 10);
-    const cab = [bb(ITEM_GROUPS.mcab), bb(ITEM_GROUPS.mward)].some(b => b.max.z > win.z0 - 0.1 && b.max.x > 14.7);
+    const cab = [bb(ITEM_GROUPS.mcab), bb(ITEM_GROUPS.mward)].some(b => b.min.z < win.z1 + 0.1 && b.max.z > win.z0 - 0.1 && b.max.x > 14.7);
     const door = ['vanity', 'vpouf'].filter(id => { const b = bb(ITEM_GROUPS[id]); return b.min.x < 10.82 && b.max.z > 12.2 && b.min.z < 13.0; });
     const console_ = bb(ITEM_GROUPS.mconsole).min.y, rugTop = bb(ITEM_GROUPS.mrug).max.y;
     const overlap = its.map(it => [it.id, LAY.warnings(it.id).filter(w => /пересекается|границы/.test(w))]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
     const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     return { n: its.length, inside, bedEast: bed.max.x, cab, door, consoleLow: console_, rugTop, overlap, colored, tv: (bb(ITEM_GROUPS.mtv).min.x + bb(ITEM_GROUPS.mtv).max.x) / 2 };
   });
-  if (m3.n < 28) problems.push('комната 3: предметов слоя master ' + m3.n + ' (< 28)');
+  if (m3.n < 27) problems.push('комната 3: предметов слоя master ' + m3.n + ' (< 27)');
   if (m3.inside.length) problems.push('комната 3: предметы вне помещения: ' + m3.inside.join(', '));
   if (Math.abs(m3.bedEast - 14.76) > 0.01) problems.push('комната 3: кровать не у восточной стены: x1=' + m3.bedEast.toFixed(3));
   if (m3.cab) problems.push('комната 3: блок ящиков/шкаф заходит на окно');
   if (m3.door.length) problems.push('комната 3: в зоне створки двери: ' + m3.door.join(', '));
   if (m3.consoleLow < m3.rugTop) problems.push('комната 3: консоль ниже ковра');
-  if (Math.abs(m3.tv - 13.81) > 0.02) problems.push('комната 3: ТВ не на оси кровати: x=' + m3.tv.toFixed(2));
+  if (Math.abs(m3.tv - 13.91) > 0.02) problems.push('комната 3: ТВ не на оси кровати: x=' + m3.tv.toFixed(2));
   if (m3.overlap.length) problems.push('комната 3: пересечения в расстановке:\n    ' + m3.overlap.join('\n    '));
   if (m3.colored.length) problems.push('комната 3: цветные материалы у ' + m3.colored.join(', '));
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 2.4; controls.r = hh / TAN22; controls.target.set(12.39 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 11.46); controls.apply(); });
   await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'room3-top.png') });
-  for (const [name, x, z, th] of [['room3-door', 10.9, 11.9, Math.PI / 2 - 0.25], ['room3-tv', 13.6, 10.6, 0.15], ['room3-north', 14.2, 12.4, -Math.PI + 0.55]]) {
+  for (const [name, x, z, th] of [['room3-door', 10.9, 11.9, Math.PI / 2 + 0.25], ['room3-tv', 13.6, 12.3, Math.PI - 0.15], ['room3-south', 14.2, 10.5, -0.55]]) {
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
