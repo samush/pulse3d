@@ -49,7 +49,7 @@ const { chromium } = require('playwright');
 
   await page.goto(url);
   await page.waitForTimeout(3500);
-  await page.evaluate(() => { try { localStorage.removeItem('pulse3d.marks'); } catch (e) {} }); // чистый старт разметки
+  await page.evaluate(() => { try { localStorage.removeItem('pulse3d.marks'); localStorage.removeItem('pulse3d.layout'); } catch (e) {} }); // чистый старт разметки и вариантов
   await page.screenshot({ path: path.join(outDir, 'default.png') });
 
   const report = await page.evaluate(() => {
@@ -184,6 +184,24 @@ const { chromium } = require('playwright');
     const e0 = ext(c0), e1 = ext(c1);
     return { uniq, moved, tvSame, rotated: Math.abs(e0[0] - e1[1]) < 1e-6 && Math.abs(e0[1] - e1[0]) < 1e-6, n: ids.length };
   });
+  // T09: варианты расстановки — стулья едут за столом, копия варианта изолирована, предупреждение о пересечении
+  const lay = await page.evaluate(() => {
+    window.prompt = () => 'проверка';
+    const c0 = ITEM_GROUPS.chair1.userData.pos.slice();
+    LAY.setPose('table', [ITEM_GROUPS.table.userData.pos[0] + 0.3, ITEM_GROUPS.table.userData.pos[1]], null);
+    const follow = Math.abs(ITEM_GROUPS.chair1.userData.pos[0] - c0[0] - 0.3) < 1e-9; LAY.undo();
+    const sofa0 = ITEM_GROUPS.sofa.userData.pos.slice(); const n0 = LAY.variants.length;
+    LAY.copyVariant(); const vi = LAY.cur; LAY.setPose('sofa', [8.4, 3.0], null);
+    const overlap = LAY.warnings('sofa').some(w => /kitchen/.test(w));
+    LAY.applyVariant(0); const orig = ITEM_GROUPS.sofa.userData.pos.join() === sofa0.join();
+    LAY.applyVariant(vi); const kept = ITEM_GROUPS.sofa.userData.pos.join() === '8.4,3';
+    LAY.variants.splice(vi, 1); LAY.applyVariant(0);
+    return { follow, overlap, orig, kept, cleaned: LAY.variants.length === n0 };
+  });
+  if (!lay.follow) problems.push('расстановка: стулья не поехали за столом');
+  if (!lay.overlap) problems.push('расстановка: нет предупреждения о пересечении с кухней');
+  if (!lay.orig || !lay.kept) problems.push('расстановка: варианты не изолированы');
+
   if (!items.uniq) problems.push('предметы: ID не уникальны');
   if (!items.moved) problems.push('предметы: перенос дивана не сдвинул все детали');
   if (!items.tvSame) problems.push('предметы: перенос дивана задел телевизор');
