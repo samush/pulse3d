@@ -126,6 +126,11 @@ const { chromium } = require('playwright');
   await page.screenshot({ path: path.join(outDir, 'top.png') });
   // режим плана: ортографическая камера, метр на полу и на высоте 2.5 м занимает одинаково пикселей,
   // перетаскивание сдвигает цель и не меняет наклон
+  // ЛКМ в чистом плане вращает (изометрия), при включённой разметке — сдвигает без наклона
+  const th0 = await page.evaluate(() => controls.theta);
+  await page.mouse.move(700, 500); await page.mouse.down(); await page.mouse.move(760, 540, { steps: 4 }); await page.mouse.up();
+  if (await page.evaluate((t) => Math.abs(controls.theta - t) < 1e-6, th0)) problems.push('план: ЛКМ не вращает сцену');
+  await page.click('#mkBtn'); await page.waitForTimeout(100);
   const before = await page.evaluate(() => ({ t: controls.target.toArray(), th: controls.theta, ph: controls.phi }));
   await page.mouse.move(700, 500); await page.mouse.down(); await page.mouse.move(760, 540, { steps: 4 }); await page.mouse.up();
   const plan = await page.evaluate((b) => {
@@ -134,6 +139,7 @@ const { chromium } = require('playwright');
     return { ortho: !!camera.isOrthographicCamera, m0: dx(0), m25: dx(2.5),
       moved: controls.target.distanceTo(new THREE.Vector3().fromArray(b.t)), tilt: Math.abs(controls.theta - b.th) + Math.abs(controls.phi - b.ph) };
   }, before);
+  await page.evaluate(() => MK.toggle(false)); // разметка была включена для проверки сдвига
   // разметка: клик ставит точку ровно в спроецированную координату, зум/сдвиг её не меняют,
   // отрезок между известными точками имеет верную длину, текст для агента содержит поворот и шаг
   await page.click('#mkBtn'); await page.click('[data-tool=point]');

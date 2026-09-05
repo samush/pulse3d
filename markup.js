@@ -300,7 +300,7 @@
   function toggle(on){
     MK.on=on==null?!MK.on:on;
     ui.hidden=!MK.on; btn.classList.toggle('on',MK.on);
-    if(MK.on){ if(!controls.plan) setView('top'); setTool(null); } else { setTool(null); select(null); }
+    if(MK.on){ if(!controls.plan) setView('top'); controls.lookDown(); setTool(null); } else { setTool(null); select(null); }
   }
   MK.toggle=toggle;
   btn.addEventListener('click',()=>toggle());

@@ -61,6 +61,7 @@ const controls={
     this.target.set(cx-((PANEL_W-MAP_W)/2)*(2*hh/innerHeight),0,cz); // центр квартиры — в центре свободной области
     this.apply();
   },
+  lookDown(){ this.theta=0; this.phi=this.minPhi; this.apply(); }, // ровный план для разметки и расстановки
   setFPV(x,z,theta){
     this.fpv=true; this.plan=false;
     persp.fov=60; persp.updateProjectionMatrix();
@@ -100,7 +101,6 @@ const controls={
       return;
     }
     if(typeof ceilGroup!=='undefined') ceilGroup.visible=!this.plan&&document.getElementById('ceil').checked; // в плане потолок не мешает
-    if(this.plan){ this.theta=0; this.phi=this.minPhi; }
     this.phi=Math.min(this.maxPhi,Math.max(this.minPhi,this.phi));
     this.r=Math.min(this.maxR,Math.max(this.minR,this.r));
     if(this.plan){
@@ -137,7 +137,7 @@ const controls={
       pinch=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
       pmx=(a.clientX+b.clientX)/2; pmy=(a.clientY+b.clientY)/2;
       mode='pinch';
-    } else { mode=(e.button===2||e.shiftKey||space||panbtn.classList.contains('on')||controls.plan)?'pan':'rot'; px=e.clientX; py=e.clientY; }
+    } else { const tools=(window.MK&&MK.on)||(window.LAY&&LAY.on); mode=(e.button===2||e.shiftKey||space||panbtn.classList.contains('on')||(controls.plan&&tools))?'pan':'rot'; /* в плане ЛКМ вращает, при разметке/расстановке — сдвигает */ px=e.clientX; py=e.clientY; }
   });
   canvas.addEventListener('pointermove',e=>{
     if(!ptrs.has(e.pointerId))return;
@@ -430,8 +430,8 @@ function sizeTouchButtons(){
 sizeTouchButtons(); addEventListener('resize',sizeTouchButtons);
 ['vTop','vFP'].forEach(id=>document.getElementById(id).addEventListener('click',()=>{
   fpvhint.hidden=!controls.fpv; walkpad.hidden=!controls.fpv;
-  panbtn.hidden=controls.fpv||controls.plan; panbtn.classList.remove('on');
-  document.querySelector('.hint').textContent=controls.plan?'ЛКМ — сдвиг плана · колесо — масштаб':'ЛКМ — вращать · колесо — зум · ПКМ или пробел — сдвиг';
+  panbtn.hidden=controls.fpv; panbtn.classList.remove('on');
+  document.querySelector('.hint').textContent=controls.plan?'ЛКМ — вращать · колесо — масштаб · ПКМ или пробел — сдвиг':'ЛКМ — вращать · колесо — зум · ПКМ или пробел — сдвиг';
 }));
 // экранные кнопки прогулки ставят те же флаги, что и клавиатура
 walkpad.querySelectorAll('button').forEach(b=>{

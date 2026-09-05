@@ -122,7 +122,7 @@
   LAY.dump=dump; LAY.validate=validate; LAY.importText=importText; LAY.exportText=()=>JSON.stringify(dump(),null,1); LAY.persist=persist;
 
   // ---------- события ----------
-  function toggle(on){ LAY.on=on==null?!LAY.on:on; ui.hidden=!LAY.on; btn.classList.toggle('on',LAY.on); if(LAY.on){ if(!controls.plan) setView('top'); if(window.MK&&MK.on) MK.toggle(false); setHint('Кликните предмет на плане'); } else { LAY.tool=null; select(null); } }
+  function toggle(on){ LAY.on=on==null?!LAY.on:on; ui.hidden=!LAY.on; btn.classList.toggle('on',LAY.on); if(LAY.on){ if(!controls.plan) setView('top'); controls.lookDown(); if(window.MK&&MK.on) MK.toggle(false); setHint('Кликните предмет на плане'); } else { LAY.tool=null; select(null); } }
   LAY.toggle=toggle;
   btn.addEventListener('click',()=>toggle());
   ui.querySelector('[data-k=variant]').addEventListener('change',e=>applyVariant(parseInt(e.target.value)));
