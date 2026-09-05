@@ -7,6 +7,10 @@
 var furnGroup=new THREE.Group(), hallGroup=new THREE.Group(), laundryGroup=new THREE.Group(), kidGroup=new THREE.Group();
 const LAYERS={kitchen:furnGroup,hall:hallGroup,laundry:laundryGroup,kid:kidGroup};
 const ITEM_GROUPS={}; // id → группа
+// Препятствия для прогулки: по одному осевому боксу на каждый меш предмета (ноги кровати мешают, платформа над
+// головой — нет). Живут отдельно от слоёв видимости: скрытый слой всё равно физически на месте.
+const physGroup=new THREE.Group(); physGroup.visible=false;
+const PHYS={}; // id → боксы
 (function(){
   const M=c=>new THREE.MeshLambertMaterial({color:c});
   const mat={
@@ -103,12 +107,19 @@ const ITEM_GROUPS={}; // id → группа
     g.userData={id:it.id,type:it.type,room:it.room,layer:it.layer,pos:it.pos.slice(),rot:it.rot||0,size:it.size.slice(),fixed:it.fixed||null,attach:it.attach||null};
     const b=(x0,x1,y0,y1,z0,z1,m)=>{ const mesh=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0),m); mesh.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); g.add(mesh); return mesh; };
     it.build(b,g);
-    poseGroup(g);
     LAYERS[it.layer].add(g); ITEM_GROUPS[it.id]=g;
+    poseGroup(g);
     return g;
   }
-  function poseGroup(g){ const u=g.userData; g.position.set(u.pos[0],0,u.pos[1]); g.rotation.y=-u.rot*Math.PI/180; }
+  function poseGroup(g){ const u=g.userData; g.position.set(u.pos[0],0,u.pos[1]); g.rotation.y=-u.rot*Math.PI/180; g.updateMatrixWorld(true); rebuildPhys(g.userData.id); }
+  const physMat=new THREE.MeshBasicMaterial({visible:false});
+  function rebuildPhys(id){
+    (PHYS[id]||[]).forEach(m=>physGroup.remove(m)); PHYS[id]=[];
+    ITEM_GROUPS[id].traverse(o=>{ if(!o.isMesh) return; const bb=new THREE.Box3().setFromObject(o); const sz=new THREE.Vector3(); bb.getSize(sz);
+      const m=new THREE.Mesh(new THREE.BoxGeometry(sz.x,sz.y,sz.z),physMat); bb.getCenter(m.position); m.userData.item=id; physGroup.add(m); PHYS[id].push(m); });
+  }
   ITEMS.forEach(buildItem);
+  physGroup.updateMatrixWorld(true);
   window.ITEMS=ITEMS;
   // углы предмета на плане (вид сверху) с учётом поворота — для разметки, привязок и столкновений
   window.itemCorners=function(id){
@@ -116,9 +127,9 @@ const ITEM_GROUPS={}; // id → группа
     return [[0,0],[w,0],[w,d],[0,d]].map(([p,q])=>[x+p*c-q*s, z+p*s+q*c]);
   };
   // перестановка: новая опорная точка и/или поворот; детали едут вместе с группой, соседи не трогаются
-  window.setItemPose=function(id,pos,rot){ const g=ITEM_GROUPS[id]; if(!g) return null; if(pos) g.userData.pos=pos.slice(); if(rot!=null) g.userData.rot=rot; poseGroup(g); g.updateMatrixWorld(true); return g; };
+  window.setItemPose=function(id,pos,rot){ const g=ITEM_GROUPS[id]; if(!g) return null; if(pos) g.userData.pos=pos.slice(); if(rot!=null) g.userData.rot=rot; poseGroup(g); physGroup.updateMatrixWorld(true); return g; };
 })();
-Object.values(LAYERS).forEach(g=>scene.add(g));
+Object.values(LAYERS).forEach(g=>scene.add(g)); scene.add(physGroup);
 document.getElementById('furn').addEventListener('change',e=>furnGroup.visible=e.target.checked);
 document.getElementById('furnHall').addEventListener('change',e=>hallGroup.visible=e.target.checked);
 document.getElementById('furnLaundry').addEventListener('change',e=>laundryGroup.visible=e.target.checked);

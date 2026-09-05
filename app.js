@@ -87,8 +87,8 @@ const controls={
       let back=2.4;
       if(typeof wallGroup!=='undefined'){
         tpRay.set(head, dh.clone().negate());
-        const hits=tpRay.intersectObjects(wallGroup.children.concat(wallGroupR.visible?wallGroupR.children:[]),false)
-          .filter(h=>h.object.isMesh);
+        const hits=tpRay.intersectObjects(wallGroup.children.concat(wallGroupR.visible?wallGroupR.children:[]).concat(typeof physGroup!=='undefined'?physGroup.children.filter(o=>{const bb=new THREE.Box3().setFromObject(o);return bb.min.y<1.6&&bb.max.y>1.4;}):[]),false)
+          .filter(h=>h.object.isMesh); // камера не заходит в стену и в мебель на высоте головы
         if(hits.length) back=Math.max(0.9,Math.min(back,hits[0].distance-0.12));
       if(typeof avatarMat!=='undefined') avatarMat.opacity = back<1.3 ? 0.45 : 0.92;
       }
@@ -648,9 +648,9 @@ function moveFPV(delta){ // горизонтальное перемещение 
   const len=delta.length(); if(len<1e-6) return;
   if(typeof wallGroup!=='undefined'){
     const dirN=delta.clone().normalize();
-    const objs=wallGroup.children.concat(wallGroupR.visible?wallGroupR.children:[]).concat(glassGroup.children).filter(o=>o.isMesh);
+    const objs=wallGroup.children.concat(wallGroupR.visible?wallGroupR.children:[]).concat(glassGroup.children).concat(typeof physGroup!=='undefined'?physGroup.children:[]).filter(o=>o.isMesh); // стены, окна и мебель (физика не зависит от видимости слоёв)
     let allowed=len;
-    for(const h of [0.5,1.4]){
+    for(const h of [0.25,0.5,1.4]){ // колено, пояс, грудь: низкая мебель (сиденье 0.42) тоже препятствие
       colRay.set(new THREE.Vector3(controls.pos.x,h,controls.pos.z),dirN);
       colRay.far=len+0.30;
       const hits=colRay.intersectObjects(objs,false);

@@ -228,6 +228,25 @@ const { chromium } = require('playwright');
     return { fpv: true, moved: controls.pos.distanceTo(p0) };
   });
   if (!walk.fpv) problems.push('режим прогулки не включился');
+  // T10: мебель — препятствие во всех способах движения, скрытый слой тоже; под кроватью проход свободен;
+  // после перестановки препятствия обновляются
+  const col = await page.evaluate(async () => {
+    const walkTo = async (x, z, theta, ms) => { controls.setFPV(x, z, theta); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp' })); await new Promise(r => setTimeout(r, ms)); window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowUp' })); return controls.pos.clone(); };
+    const sofaN = ITEM_GROUPS.sofa.userData.pos[1];               // северный край дивана
+    const a = await walkTo(12.3, 4.6, 0, 1500);                    // на юг к дивану
+    const stopped = a.z < sofaN - 0.25 && a.z > sofaN - 0.6;
+    controls.setFPV(12.3, 4.6, 0); moveFPV(new THREE.Vector3(0, 0, 3)); const big = controls.pos.z < sofaN - 0.25; // «большой шаг» колесом
+    furnGroup.visible = false; const h = await walkTo(12.3, 4.6, 0, 1500); furnGroup.visible = true; const hidden = h.z < sofaN - 0.25;
+    const u = await walkTo(4.8, 4.4, Math.PI, 1500);              // под кроватью между ногами на север
+    const under = u.z < 3.3;
+    const p0 = ITEM_GROUPS.sofa.userData.pos.slice(); setItemPose('sofa', [8.4, 4.6]); const m = await walkTo(12.3, 4.6, 0, 1500); setItemPose('sofa', p0); const moved = m.z > sofaN;
+    return { stopped, big, hidden, under, moved, z: a.z.toFixed(2) };
+  });
+  if (!col.stopped) problems.push('столкновения: стрелка не остановила перед диваном (z=' + col.z + ')');
+  if (!col.big) problems.push('столкновения: большой шаг прошёл сквозь диван');
+  if (!col.hidden) problems.push('столкновения: скрытый слой мебели пропускает');
+  if (!col.under) problems.push('столкновения: под кроватью нет прохода');
+  if (!col.moved) problems.push('столкновения: после переноса дивана препятствие осталось');
   if (await page.evaluate(() => !!camera.isOrthographicCamera)) problems.push('после «От первого лица» камера осталась ортографической');
   else if (walk.moved < 0.3) problems.push('прогулка: шаг вперёд не сдвинул человечка (' + walk.moved.toFixed(2) + ' м)');
   await page.screenshot({ path: path.join(outDir, 'walk.png') });
