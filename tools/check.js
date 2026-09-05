@@ -1,9 +1,13 @@
 // Smoke-тест сцены: страница грузится без ошибок, PLAN согласован,
 // скриншоты сохраняются в tools/out/. Гонять перед каждым пушем.
 //
-// Требует playwright (один раз на окружение: npm i --no-save playwright).
+// Требует playwright и Chromium (один раз на окружение):
+//   npm i --no-save playwright && npx playwright install chromium
+//   (системные библиотеки, нужен root: npx playwright install-deps chromium)
 // Запуск:  node tools/check.js            — файл из рабочей копии
 //          node tools/check.js <url>      — например, страница на Pages
+// Проверяет: загрузку без ошибок страницы, 10 помещений и их площади, вид «Сверху»,
+// переход в прогулку и движение вперёд. Скриншоты: default.png, top.png, walk.png.
 const path = require('path');
 const fs = require('fs');
 const { chromium } = require('playwright');
@@ -14,9 +18,24 @@ const { chromium } = require('playwright');
   const outDir = path.join(__dirname, 'out');
   fs.mkdirSync(outDir, { recursive: true });
 
-  // в облачном окружении Claude Code хром лежит по фиксированному пути
-  const browser = await chromium.launch().catch(() =>
-    chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium' }));
+  // в облачном окружении Claude Code хром лежит по фиксированному пути; обе ошибки запуска сохраняем —
+  // без браузера smoke-тест не выполнен, а не «прошёл»
+  let browser;
+  try {
+    browser = await chromium.launch();
+  } catch (e1) {
+    const alt = process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium';
+    try {
+      browser = await chromium.launch({ executablePath: alt });
+    } catch (e2) {
+      console.error('ПРОВАЛ: браузер не запустился, проверка сцены НЕ выполнена.\n' +
+        '  1) chromium.launch(): ' + e1.message.split('\n')[0] + '\n' +
+        '  2) ' + alt + ': ' + e2.message.split('\n')[0] + '\n' +
+        '  Установка: npm i --no-save playwright && npx playwright install chromium\n' +
+        '  Системные библиотеки (root): npx playwright install-deps chromium');
+      process.exit(2);
+    }
+  }
   const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
   const problems = [];
   page.on('pageerror', e => problems.push('pageerror: ' + e.message));
@@ -61,11 +80,26 @@ const { chromium } = require('playwright');
   await page.click('text=Сверху').catch(() => problems.push('нет кнопки «Сверху»'));
   await page.waitForTimeout(1200);
   await page.screenshot({ path: path.join(outDir, 'top.png') });
+
+  // прогулка: переход в режим и шаг вперёд стрелкой должны сдвинуть человечка
+  await page.click('text=От первого лица').catch(() => problems.push('нет кнопки «От первого лица»'));
+  await page.waitForTimeout(300);
+  const walk = await page.evaluate(async () => {
+    if (typeof controls === 'undefined' || !controls.fpv) return { fpv: false, moved: 0 };
+    const p0 = controls.pos.clone();
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp' }));
+    await new Promise(r => setTimeout(r, 600));
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowUp' }));
+    return { fpv: true, moved: controls.pos.distanceTo(p0) };
+  });
+  if (!walk.fpv) problems.push('режим прогулки не включился');
+  else if (walk.moved < 0.3) problems.push('прогулка: шаг вперёд не сдвинул человечка (' + walk.moved.toFixed(2) + ' м)');
+  await page.screenshot({ path: path.join(outDir, 'walk.png') });
   await browser.close();
 
   if (problems.length) {
     console.error('ПРОВАЛ:\n  ' + problems.join('\n  '));
     process.exit(1);
   }
-  console.log(`ОК: ${url}\n  10 комнат, площади согласованы; скриншоты в tools/out/`);
+  console.log(`ОК: ${url}\n  10 комнат, площади согласованы; сверху и прогулка (${walk.moved.toFixed(2)} м) работают; скриншоты в tools/out/`);
 })().catch(e => { console.error('ПРОВАЛ:', e.message); process.exit(1); });

@@ -11,7 +11,9 @@
 - Задачи в чате ставятся по номерам помещений («в комнате 3…») — эталон
   номеров, площадей и размеров: `APARTMENT.md`.
 - Перед пушем прогнать smoke-тест: `node tools/check.js`
-  (один раз на окружение: `npm i --no-save playwright`).
+  (один раз на окружение: `npm i --no-save playwright && npx playwright install chromium`;
+  системные библиотеки Chromium ставятся от root: `npx playwright install-deps chromium`).
+  Без браузера тест завершается кодом 2 с текстом обеих ошибок запуска — это не «прошёл».
   После деплоя можно проверить и живую страницу:
   `node tools/check.js https://samush.github.io/pulse3d/`.
 
