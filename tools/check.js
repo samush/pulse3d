@@ -82,7 +82,7 @@ const { chromium } = require('playwright');
       plinth: plinth ? [bb(plinth).min.y, bb(plinth).max.y] : null,
       ceil: ceil ? bb(ceil).min.y : null,
       furnitureMin: Math.min(...[furnGroup, hallGroup, laundryGroup, kidGroup].map(minY)),
-      doorTop: (() => { const m = finishGroup.children.filter(o => o.geometry && o.geometry.type === 'BoxGeometry').map(o => bb(o).max.y); return m.filter(y => Math.abs(y - 2.17) < 0.02).length; })(),
+      doorTop: (() => { let n = 0; finishGroup.traverse(o => { if (o.isMesh && o.geometry.type === 'BoxGeometry' && Math.abs(bb(o).max.y - 2.17) < 0.02) n++; }); return n; })(),
     };
   });
   if (hts.floor == null || hts.floor < 0 || hts.floor > 0.02) problems.push('отделка пола не у чистового пола: y=' + hts.floor);
@@ -90,6 +90,27 @@ const { chromium } = require('playwright');
   if (hts.ceil == null || Math.abs(hts.ceil - 2.7) > 0.01) problems.push('потолок не на 2.7: ' + hts.ceil);
   if (hts.furnitureMin < -0.001) problems.push('мебель утоплена ниже пола: min y=' + hts.furnitureMin);
   if (!hts.doorTop) problems.push('дверные коробки: верх перемычки не на 2.1+0.07');
+
+  // ползунок «Стены»: настенная отделка гаснет и прячется вместе со стенами, пол остаётся; съёмная стена и её коробка согласованы
+  const vis = await page.evaluate(() => {
+    const set = v => { const s = document.getElementById('wop'); s.value = v; s.dispatchEvent(new Event('input')); };
+    const floor = finishGroup.children.find(o => o.geometry && o.geometry.type === 'ShapeGeometry');
+    const wp = window.wallFinMats[0];
+    set(50); const half = { wall: wallMat.opacity, wp: wp.opacity, fin: window.wallFin.visible };
+    set(0);  const off = { walls: wallGroup.visible, fin: window.wallFin.visible, floor: floor.visible && finishGroup.visible };
+    const k = document.getElementById('kwall'); k.checked = true; k.dispatchEvent(new Event('change'));
+    const kOn0 = { wallR: wallGroupR.visible, frame: window.kitchenFrame.visible && window.wallFin.visible };
+    set(100); const kOn100 = { wallR: wallGroupR.visible, frame: window.kitchenFrame.visible && window.wallFin.visible };
+    k.checked = false; k.dispatchEvent(new Event('change'));
+    const kOff = { wallR: wallGroupR.visible, frame: window.kitchenFrame.visible };
+    return { half, off, kOn0, kOn100, kOff, back: wallMat.opacity };
+  });
+  if (Math.abs(vis.half.wall - 0.5) > 0.01 || Math.abs(vis.half.wp - 0.5) > 0.01 || !vis.half.fin) problems.push('стены 50%: отделка не следует за стенами ' + JSON.stringify(vis.half));
+  if (vis.off.walls || vis.off.fin || !vis.off.floor) problems.push('стены 0%: ' + JSON.stringify(vis.off));
+  if (vis.kOn0.wallR || vis.kOn0.frame) problems.push('стены 0% + съёмная стена включена: стена/коробка видны');
+  if (!vis.kOn100.wallR || !vis.kOn100.frame) problems.push('стены 100% + съёмная стена включена: стена/коробка скрыты');
+  if (vis.kOff.wallR || vis.kOff.frame) problems.push('съёмная стена выключена: стена/коробка видны');
+  if (Math.abs(vis.back - 1) > 0.01) problems.push('стены не вернулись к 100%');
 
   if (!report.canvas) problems.push('канвас сцены не создан');
   if (report.nRooms !== 10) problems.push('ожидалось 10 комнат, получено ' + report.nRooms);

@@ -386,7 +386,7 @@ applyTheme();
 document.getElementById('cubes').addEventListener('change',e=>cubeGroup.visible=e.target.checked);
 document.getElementById('labels').addEventListener('change',e=>labelGroup.visible=e.target.checked);
 wallGroupR.visible=false; // стена коридор-кухня по умолчанию выключена, как и галочка #kwall
-document.getElementById('kwall').addEventListener('change',e=>{wallGroupR.visible=e.target.checked; if(window.kitchenFrame)window.kitchenFrame.visible=e.target.checked;});
+document.getElementById('kwall').addEventListener('change',e=>{wallGroupR.visible=e.target.checked&&wop.value/100>0.01; if(window.kitchenFrame)window.kitchenFrame.visible=e.target.checked;}); // стена появляется только если ползунок «Стены» не на нуле
 document.getElementById('ceil').addEventListener('change',e=>ceilGroup.visible=e.target.checked&&!controls.plan);
 document.getElementById('wgrid').addEventListener('change',e=>{wallGridGroup.visible=e.target.checked;addrGroup.visible=e.target.checked;});
 document.getElementById('finish').addEventListener('change',e=>finishGroup.visible=e.target.checked);
@@ -400,6 +400,9 @@ wop.addEventListener('input',()=>{
   wallGroup.visible=v>0.01;
   wallGroupR.visible=v>0.01&&document.getElementById('kwall').checked;
   wallEdgeMat.opacity=1;
+  // настенная отделка следует за стенами: та же прозрачность, скрывается вместе с ними; пол не трогаем
+  if(window.wallFinMats) window.wallFinMats.forEach(m=>{m.opacity=v;m.transparent=v<0.999;m.depthWrite=v>=0.5;m.needsUpdate=true;});
+  if(window.wallFin) window.wallFin.visible=v>0.01;
   wov.textContent=wop.value+'%';
 });
 const zoom=document.getElementById('zoom'),zov=document.getElementById('zov');
@@ -734,8 +737,11 @@ var finishGroup=new THREE.Group();
   const whiteM=marble('#f1f0ec','#d5d4d0','rgba(140,142,148,0.28)');
   const greyM =marble('#9b9b9e','#7e7e81','rgba(230,230,235,0.30)');
   whiteM.repeat.set(1/0.6,1/0.6); greyM.repeat.set(1/0.6,1/0.6);
+  // настенная отделка — отдельная подгруппа и отдельные материалы: ползунок «Стены» гасит её вместе со стенами, пол остаётся
+  const wallFin=new THREE.Group(); finishGroup.add(wallFin); window.wallFin=wallFin;
   const lamMat=new THREE.MeshBasicMaterial({map:lamTex});
   const whiteMat=new THREE.MeshBasicMaterial({map:whiteM});
+  const whiteWall=new THREE.MeshBasicMaterial({map:whiteM}); // та же плитка, но на стенах
   const greyMat=new THREE.MeshBasicMaterial({map:greyM});
 
   // белые обои под покраску: почти белые, мелкое зерно
@@ -775,18 +781,18 @@ var finishGroup=new THREE.Group();
     g.rotateY(rotY);
     const m=new THREE.Mesh(g,mat);
     m.position.set(cx,cy,cz);
-    finishGroup.add(m);
+    wallFin.add(m);
   }
   BATHS.forEach(b=>{
     const off=0.02, midY=H/2, dep=b.z1-b.z0, wid=b.x1-b.x0;
-    panel(greyM===undefined?whiteMat:greyMat, dep,H, b.x0+off, midY, (b.z0+b.z1)/2, Math.PI/2);   // запад: серый мрамор
-    panel(whiteMat, wid,H, (b.x0+b.x1)/2, midY, b.z0+off, 0);                                     // север
-    panel(whiteMat, wid,H, (b.x0+b.x1)/2, midY, b.z1-off, Math.PI);                               // юг
+    panel(greyM===undefined?whiteWall:greyMat, dep,H, b.x0+off, midY, (b.z0+b.z1)/2, Math.PI/2);   // запад: серый мрамор
+    panel(whiteWall, wid,H, (b.x0+b.x1)/2, midY, b.z0+off, 0);                                     // север
+    panel(whiteWall, wid,H, (b.x0+b.x1)/2, midY, b.z1-off, Math.PI);                               // юг
     // восток (стена со входом): сегменты вокруг двери + перемычка
     const ex=b.x1-off;
-    if(b.dz0-b.z0>0.05) panel(whiteMat, b.dz0-b.z0, H, ex, midY, (b.z0+b.dz0)/2, -Math.PI/2);
-    if(b.z1-b.dz1>0.05) panel(whiteMat, b.z1-b.dz1, H, ex, midY, (b.dz1+b.z1)/2, -Math.PI/2);
-    panel(whiteMat, b.dz1-b.dz0, H-2.1, ex, 2.1+(H-2.1)/2, (b.dz0+b.dz1)/2, -Math.PI/2);
+    if(b.dz0-b.z0>0.05) panel(whiteWall, b.dz0-b.z0, H, ex, midY, (b.z0+b.dz0)/2, -Math.PI/2);
+    if(b.z1-b.dz1>0.05) panel(whiteWall, b.z1-b.dz1, H, ex, midY, (b.dz1+b.z1)/2, -Math.PI/2);
+    panel(whiteWall, b.dz1-b.dz0, H-2.1, ex, 2.1+(H-2.1)/2, (b.dz0+b.dz1)/2, -Math.PI/2);
   });
 
   // проём на балкон (кухня 4 → лоджия 10, x 13.47–13.91, z 2.8–4.6, высота 2.1): откосы, верх и порог — светлое дерево
@@ -810,7 +816,7 @@ var finishGroup=new THREE.Group();
     panel(woodMat, d, y1-y0, (x0+x1)/2, (y0+y1)/2, z0+in_, 0);        // откос слева (смотрит внутрь проёма)
     panel(woodMat, d, y1-y0, (x0+x1)/2, (y0+y1)/2, z1-in_, Math.PI);  // откос справа
     const top=new THREE.PlaneGeometry(d,w); scaleUV(top,d,w); top.rotateX(Math.PI/2);
-    const tm=new THREE.Mesh(top,woodMat); tm.position.set((x0+x1)/2,y1-in_,(z0+z1)/2); finishGroup.add(tm);
+    const tm=new THREE.Mesh(top,woodMat); tm.position.set((x0+x1)/2,y1-in_,(z0+z1)/2); wallFin.add(tm);
     const flr=new THREE.PlaneGeometry(d,w); scaleUV(flr,d,w); flr.rotateX(-Math.PI/2);
     const fm=new THREE.Mesh(flr,woodMat); fm.position.set((x0+x1)/2,y0,(z0+z1)/2); finishGroup.add(fm);
   }
@@ -818,11 +824,11 @@ var finishGroup=new THREE.Group();
   // белые дверные коробки
   const DOORS=PLAN.doors; // [cx,cz,'h'|'v',ширина,(tag 'K' — дверь в съёмной стене кухни)]
   const frameMat2=new THREE.MeshBasicMaterial({color:0xffffff});
-  window.kitchenFrame=new THREE.Group(); finishGroup.add(window.kitchenFrame);
+  window.kitchenFrame=new THREE.Group(); wallFin.add(window.kitchenFrame);
   window.kitchenFrame.visible=document.getElementById('kwall').checked;
   DOORS.forEach(d=>{
     const [cx,cz,o,w,tag]=d, jw=0.07, dep=0.32, hD=2.1;
-    const parent = tag==='K' ? window.kitchenFrame : finishGroup;
+    const parent = tag==='K' ? window.kitchenFrame : wallFin;
     function bx(sx,sy,sz,px,py,pz){
       const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),frameMat2);
       m.position.set(px,py,pz); parent.add(m);
@@ -840,6 +846,7 @@ var finishGroup=new THREE.Group();
 
   // белый плинтус 10 см (от чистового пола) и обои вдоль стен (кроме санузлов и дверных проёмов)
   const plinthMat=new THREE.MeshBasicMaterial({color:0xffffff});
+  window.wallFinMats=[wpMat,whiteWall,greyMat,woodMat,frameMat2,plinthMat]; // гасятся ползунком «Стены»
   const DOORS2=DOORS;
   PLAN.rooms.forEach(r=>{
     if(r.id===8||r.id===9) return;
@@ -888,7 +895,7 @@ var finishGroup=new THREE.Group();
         });
         segs=out;
       }
-      const grpFor=mid=>((onKwallH&&mid<10.96)||(onKwallV&&mid>5.516))?window.kitchenFrame:finishGroup;
+      const grpFor=mid=>((onKwallH&&mid<10.96)||(onKwallV&&mid>5.516))?window.kitchenFrame:wallFin;
       // оконные проёмы на этой стене: обои только под и над окном
       const winSpans=[];
       if(!horiz) PLAN.windows.forEach(w=>{
@@ -938,7 +945,7 @@ var finishGroup=new THREE.Group();
           const g=new THREE.PlaneGeometry(L,y1-y0); scaleUV(g,L,y1-y0);
           g.rotateY(Math.atan2(nx,nz));
           // в постирочной 7 вместо обоев белая плитка, как в санузлах
-          const m=new THREE.Mesh(g,r.id===7?whiteMat:wpMat);
+          const m=new THREE.Mesh(g,r.id===7?whiteWall:wpMat);
           m.position.set((p0[0]+p1[0])/2,(y0+y1)/2,(p0[1]+p1[1])/2);
           grpFor((s0+s1)/2).add(m);
         }
