@@ -347,7 +347,7 @@ const { chromium } = require('playwright');
   // room1-kid: all kid-layer items sit inside room 1, none intersects the loft platform (kidsofa goes under it),
   // the layout gives no warnings (overlaps, passage door→desk ≥ 0.7), the stair-chest has 5 steps of 0.30
   const kid = await page.evaluate(() => {
-    const kids = ITEMS.filter(it => it.layer === 'kid'), bb = o => new THREE.Box3().setFromObject(o);
+    const kids = ITEMS.filter(it => it.layer === 'kid' && it.room === 1), bb = o => new THREE.Box3().setFromObject(o);
     const room = PLAN.rooms.find(r => r.id === 1), xs = room.poly.map(q => q[0]), zs = room.poly.map(q => q[1]);
     const inside = kids.filter(it => { const b = bb(ITEM_GROUPS[it.id]); return b.min.x < Math.min(...xs) - 0.001 || b.max.x > Math.max(...xs) + 0.001 || b.min.z < Math.min(...zs) - 0.001 || b.max.z > Math.max(...zs) + 0.001; }).map(it => it.id);
     const plat = new THREE.Box3(new THREE.Vector3(4.235, 1.7, 1.884), new THREE.Vector3(5.435, 1.8, 3.884));
@@ -368,6 +368,40 @@ const { chromium } = require('playwright');
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 2.4; controls.r = hh / TAN22; controls.target.set(3.17 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 3.37); controls.apply(); });
   await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'room1-top.png') });
   for (const [name, x, z, th] of [['room1-door', 4.5, 4.55, -Math.PI / 2 + 0.45], ['room1-gallery', 1.9, 3.0, Math.PI * 0.3], ['room1-bed', 4.95, 3.3, -Math.PI / 2 - 0.15]]) {
+    await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(outDir, name + '.png') });
+  }
+  // room2-kid: kid items of room 2 inside the room (niche: south wall 9.519 east of 13.477), desk fully under the platform,
+  // shelf post clear of the door opening, open door leaf (x ≤ 11.97, z 7.65–7.70) clear of the bed legs, pull-up bar under
+  // the ceiling, no overlaps, grey materials
+  const r2 = await page.evaluate(() => {
+    const its = ITEMS.filter(it => it.layer === 'kid' && it.room === 2), bb = o => new THREE.Box3().setFromObject(o);
+    const inside = its.filter(it => { const b = bb(ITEM_GROUPS[it.id]); const zs = b.min.x > 13.477 ? 9.519 : 9.614; return b.min.x < 11.066 || b.max.x > 14.775 || b.min.z < 6.517 || b.max.z > zs + 0.001; }).map(it => it.id);
+    const parts = ITEM_GROUPS.kidbed2.children.map(o => bb(o));
+    const plat = parts.filter(b => Math.abs(b.min.y - 1.7) < 0.01 && b.max.x - b.min.x > 1.1)[0];
+    const desk = bb(ITEM_GROUPS.kiddesk2), lamp = bb(ITEM_GROUPS.desklamp2);
+    const deskUnder = plat && desk.min.x >= plat.min.x - 0.001 && desk.max.x <= plat.max.x + 0.001 && desk.min.z >= plat.min.z - 0.001 && desk.max.z <= plat.max.z + 0.001 && Math.max(desk.max.y, lamp.max.y) < 1.7;
+    const post = parts.filter(b => b.max.y > 2.1 && b.min.y < 0.01 && b.max.x - b.min.x < 0.1)[0];
+    const postClear = post && (post.max.z <= 6.75 || post.min.z >= 7.65);
+    const leaf = new THREE.Box3(new THREE.Vector3(11.067, 0, 7.65), new THREE.Vector3(11.97, 2.0, 7.70));
+    const leafHit = parts.some(b => b.min.y < 1.7 && b.intersectsBox(leaf));
+    const bar = bb(ITEM_GROUPS.pullup).max.y;
+    const overlap = its.map(it => [it.id, LAY.warnings(it.id).filter(w => /пересекается|границы/.test(w))]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
+    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
+    return { n: its.length, inside, deskUnder, postClear, leafHit, bar, overlap, colored, platLen: plat ? plat.max.z - plat.min.z : null };
+  });
+  if (r2.n < 21) problems.push('комната 2: предметов слоя kid ' + r2.n + ' (< 21)');
+  if (r2.inside.length) problems.push('комната 2: предметы вне помещения: ' + r2.inside.join(', '));
+  if (!r2.deskUnder) problems.push('комната 2: стол не целиком под платформой или выше 1.70');
+  if (!r2.postClear) problems.push('комната 2: ножка полки кровати в дверном проёме');
+  if (r2.leafHit) problems.push('комната 2: открытая створка двери упирается в кровать');
+  if (Math.abs(r2.platLen - 1.85) > 0.01) problems.push('комната 2: платформа не 1.85: ' + r2.platLen);
+  if (r2.bar > 2.7) problems.push('комната 2: турник выше потолка');
+  if (r2.overlap.length) problems.push('комната 2: пересечения в расстановке:\n    ' + r2.overlap.join('\n    '));
+  if (r2.colored.length) problems.push('комната 2: цветные материалы у ' + r2.colored.join(', '));
+  await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 2.2; controls.r = hh / TAN22; controls.target.set(12.92 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 8.07); controls.apply(); });
+  await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'room2-top.png') });
+  for (const [name, x, z, th] of [['room2-door', 11.9, 7.35, Math.PI / 2 + 0.15], ['room2-desk', 12.0, 8.8, Math.PI * 0.75], ['room2-gym', 14.0, 8.1, -Math.PI * 0.75]]) {
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }

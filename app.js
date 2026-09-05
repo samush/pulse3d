@@ -848,6 +848,9 @@ var finishGroup=new THREE.Group();
   window.wallFinMats=[wpMat,whiteWall,greyMat,woodMat,frameMat2,plinthMat]; // гасятся ползунком «Стены»
   window.finishMats={lam:lamMat,white:whiteMat,whiteWall,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
+  // room 2, M10: finish block on the north wall behind the gym wall, 0.1–2.40, x 12.15–13.75; grey until the palette stage
+  const accent2Mat=new THREE.MeshBasicMaterial({color:0xd6d6d3}); wallFinMats.push(accent2Mat); finishMats.accent2=accent2Mat;
+  (()=>{ const g=new THREE.PlaneGeometry(1.6,2.3); const m=new THREE.Mesh(g,accent2Mat); m.position.set(12.95,1.25,6.518+0.017); wallFin.add(m); })();
   PLAN.rooms.forEach(r=>{
     if(r.id===8||r.id===9) return;
     const poly=r.poly;
