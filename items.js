@@ -120,27 +120,28 @@ const PHYS={}; // id → boxes
        b(0.02,0.43,0,0.68,0,0.02,mat.kbody); b(1.214,1.234,0,0.68,1.81,2.37,mat.kbody);               // end panels: north (at the shelf unit) and east
        b(0.05,0.43,0,0.68,0.98,1.0,mat.kbody);                                                        // middle support under the west wing, clear of the chair
        b(0.10,0.20,0.72,0.725,0.59,1.19,mat.knob);                                                     // vent grille over the radiator, 0.60 × 0.10
-       b(0.10,0.52,0.03,0.63,1.83,2.33,mat.kbody);                                                     // mobile pedestal 0.42 × 0.50 × 0.60 under the corner
-       [0.06,0.24,0.42].forEach(y=>{ b(0.52,0.53,y,y+0.16,1.84,2.32,mat.oak); b(0.53,0.545,y+0.1,y+0.12,2.0,2.16,mat.knob); }); // 3 drawers
      }},
+    {id:'kidped',type:'тумба с 3 ящиками у торца стола, столешница вровень',room:1,layer:'kid',pos:[2.13,4.364],rot:0,size:[0.42,0.72,0.50],fixed:'wall',
+     build(b){ b(0.02,0.40,0,0.68,0.02,0.50,mat.kbody); b(0,0.42,0.68,0.72,0,0.50,mat.hpl);
+       [0.06,0.26,0.46].forEach(y=>{ b(0.02,0.40,y,y+0.18,0,0.02,mat.oak); b(0.135,0.285,y+0.11,y+0.13,-0.015,0,mat.knob); }); }}, // drawer fronts to the room
     {id:'kidchair',type:'рабочее кресло, регулируемое',room:1,layer:'kid',pos:[1.30,3.60],rot:0,size:[0.55,0.85,0.55],
      build(b,g){
        b(0.05,0.50,0.42,0.47,0.05,0.50,mat.terra); b(0.50,0.55,0.47,0.85,0.08,0.47,mat.terra);      // seat and back, faces the window
        const c=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.39,10),mat.knob); c.position.set(0.275,0.225,0.275); g.add(c); // gas lift
        b(0.03,0.52,0,0.03,0.26,0.29,mat.knob); b(0.26,0.29,0,0.03,0.03,0.52,mat.knob);                // base cross
      }},
-    {id:'kidshelf',type:'стеллаж узкий в углу, фасадом к двери',room:1,layer:'kid',pos:[0.896,2.474],rot:270,size:[0.60,2.50,0.43],fixed:'wall',
+    {id:'kidshelf',type:'стеллаж узкий в углу, фасадом к двери',room:1,layer:'kid',pos:[0.896,2.474],rot:270,size:[0.60,2.70,0.43],fixed:'wall',
      build(b){
        const W=0.60, D=0.40, t=0.02;
-       b(0,W,0,t,0,D,mat.kbody); b(0,W,2.5-t,2.5,0,D,mat.kbody); b(0,W,t,2.5-t,0,t,mat.oak);           // bottom, top, oak back
-       b(0,t,t,2.5-t,t,D,mat.kbody); b(W-t,W,t,2.5-t,t,D,mat.kbody);                                  // sides
-       [0.90,1.27,1.63,2.00].forEach(y=>b(t,W-t,y-t,y,t,D,mat.kbody));                                 // shelves: closed 0–0.9, open cells 0.9–2.0, attic 2.0–2.5
+       b(0,W,0,t,0,D,mat.kbody); b(0,W,2.7-t,2.7,0,D,mat.kbody); b(0,W,t,2.7-t,0,t,mat.oak);           // bottom, top, oak back
+       b(0,t,t,2.7-t,t,D,mat.kbody); b(W-t,W,t,2.7-t,t,D,mat.kbody);                                  // sides
+       [0.90,1.27,1.63,2.00].forEach(y=>b(t,W-t,y-t,y,t,D,mat.kbody));                                 // shelves: closed 0–0.9, open cells 0.9–2.0, attic 2.0–2.7
        b(t+0.003,W-t-0.003,t+0.003,0.90-t-0.003,D,D+0.018,mat.oak); b(W/2-0.005,W/2+0.005,0.78,0.86,D+0.018,D+0.03,mat.knob);   // lower door
-       b(t+0.003,W-t-0.003,2.0+0.003,2.5-t-0.003,D,D+0.018,mat.oak); b(W/2-0.005,W/2+0.005,2.05,2.13,D+0.018,D+0.03,mat.knob); // attic door
+       b(t+0.003,W-t-0.003,2.0+0.003,2.7-t-0.003,D,D+0.018,mat.oak); b(W/2-0.005,W/2+0.005,2.05,2.13,D+0.018,D+0.03,mat.knob); // attic door
      }},
-    {id:'kidshelf2',type:'стеллаж узкий с открытыми полками в юго-западном углу, от стола до потолка',room:1,layer:'kid',pos:[0.896,4.864],rot:270,size:[0.60,2.70,0.40],fixed:'wall',
+    {id:'kidshelf2',type:'стеллаж узкий с открытыми полками в юго-западном углу, от стола до потолка',room:1,layer:'kid',pos:[0.896,4.864],rot:270,size:[0.60,2.70,0.25],fixed:'wall',
      build(b){
-       const W=0.60, D=0.40, t=0.02, Y0=0.72;
+       const W=0.60, D=0.25, t=0.02, Y0=0.72; // shallow: 0.20 of the desk stays usable in front of it
        b(0,W,Y0,Y0+t,0,D,mat.kbody); b(0,W,2.7-t,2.7,0,D,mat.kbody); b(0,W,Y0+t,2.7-t,0,t,mat.oak);   // bottom on the desk, top, oak back
        b(0,t,Y0+t,2.7-t,t,D,mat.kbody); b(W-t,W,Y0+t,2.7-t,t,D,mat.kbody);                        // sides
        [1.20,1.70,2.20].forEach(y=>b(t,W-t,y-t,y,t,D,mat.kbody));                                  // 4 open cells
