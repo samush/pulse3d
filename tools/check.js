@@ -149,6 +149,27 @@ const { chromium } = require('playwright');
     MK.marks.slice().forEach(m => MK.remove(m)); MK.toggle(false);
     return out;
   }, expPt);
+  // предметы: перенос дивана двигает все его детали на ту же дельту, соседи на месте; поворот стола меняет контур
+  const items = await page.evaluate(() => {
+    const bbs = id => { const L = []; ITEM_GROUPS[id].traverse(o => { if (o.isMesh) L.push(new THREE.Box3().setFromObject(o)); }); return L; };
+    const ids = ITEMS.map(i => i.id), uniq = new Set(ids).size === ids.length;
+    const sofa0 = bbs('sofa'), tv0 = bbs('tv').map(b => b.clone());
+    const pos0 = ITEM_GROUPS.sofa.userData.pos.slice();
+    setItemPose('sofa', [pos0[0] - 0.5, pos0[1] - 0.3]);
+    const sofa1 = bbs('sofa');
+    const moved = sofa1.every((b, i) => Math.abs(b.min.x - sofa0[i].min.x + 0.5) < 1e-6 && Math.abs(b.min.z - sofa0[i].min.z + 0.3) < 1e-6 && Math.abs(b.min.y - sofa0[i].min.y) < 1e-6);
+    const tvSame = bbs('tv').every((b, i) => b.equals(tv0[i]));
+    setItemPose('sofa', pos0);
+    const c0 = itemCorners('table'); setItemPose('table', null, 90); const c1 = itemCorners('table'); setItemPose('table', null, 0);
+    const ext = c => [Math.max(...c.map(p => p[0])) - Math.min(...c.map(p => p[0])), Math.max(...c.map(p => p[1])) - Math.min(...c.map(p => p[1]))];
+    const e0 = ext(c0), e1 = ext(c1);
+    return { uniq, moved, tvSame, rotated: Math.abs(e0[0] - e1[1]) < 1e-6 && Math.abs(e0[1] - e1[0]) < 1e-6, n: ids.length };
+  });
+  if (!items.uniq) problems.push('предметы: ID не уникальны');
+  if (!items.moved) problems.push('предметы: перенос дивана не сдвинул все детали');
+  if (!items.tvSame) problems.push('предметы: перенос дивана задел телевизор');
+  if (!items.rotated) problems.push('предметы: поворот стола на 90° не поменял контур');
+
   if (!mk.pt) problems.push('разметка: точка не совпала с координатой клика после зума и сдвига');
   if (!mk.len) problems.push('разметка: длина отрезка неверна');
   if (!mk.txt) problems.push('разметка: текст для агента без поворота/шага/помещения/координат');

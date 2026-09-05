@@ -156,9 +156,19 @@
     const rid=ids.length===1?ids[0]:null;
     const wd=rid!=null?wallDist(m.type==='rect'?p:m.pts[0],rid):null;
     if(wd){ L.push('Расстояния от '+(m.type==='rect'?'опорной точки':'точки')+' до стен помещения: '+['N','S','W','E'].filter(k=>wd[k]!=null).map(k=>DIRS[k]+' '+fmt(wd[k])+' м').join(', ')+'.'); }
+    const near=itemsAt(m); if(near.length) L.push('Предметы в этом месте (по контуру на плане): '+near.map(i=>i.id+' ('+i.type+')').join(', ')+'.');
     L.push('Шаг сетки при разметке: '+Math.round(MK.step*100)+' см'+(MK.snap?', привязка к стенам включена':'')+'.');
     return L.join('\n');
   }
+  // предметы, чей контур на плане пересекает метку (точка/концы отрезка/прямоугольник) — по осевым габаритам
+  function itemsAt(m){
+    if(typeof ITEMS==='undefined') return [];
+    const pts=m.type==='rect'?rectCorners(m):m.pts;
+    const box=pts.reduce((b,p)=>[Math.min(b[0],p[0]),Math.min(b[1],p[1]),Math.max(b[2],p[0]),Math.max(b[3],p[1])],[1e9,1e9,-1e9,-1e9]);
+    return ITEMS.filter(it=>{ const c=itemCorners(it.id); const ib=c.reduce((b,p)=>[Math.min(b[0],p[0]),Math.min(b[1],p[1]),Math.max(b[2],p[0]),Math.max(b[3],p[1])],[1e9,1e9,-1e9,-1e9]);
+      return ib[0]<=box[2]+1e-6&&ib[2]>=box[0]-1e-6&&ib[1]<=box[3]+1e-6&&ib[3]>=box[1]-1e-6; });
+  }
+  MK.itemsAt=itemsAt;
   MK.describe=describe;
 
   // ---------- карточка ----------
