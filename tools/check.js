@@ -102,6 +102,20 @@ const { chromium } = require('playwright');
   await page.click('text=Сверху').catch(() => problems.push('нет кнопки «Сверху»'));
   await page.waitForTimeout(1200);
   await page.screenshot({ path: path.join(outDir, 'top.png') });
+  // режим плана: ортографическая камера, метр на полу и на высоте 2.5 м занимает одинаково пикселей,
+  // перетаскивание сдвигает цель и не меняет наклон
+  const before = await page.evaluate(() => ({ t: controls.target.toArray(), th: controls.theta, ph: controls.phi }));
+  await page.mouse.move(700, 500); await page.mouse.down(); await page.mouse.move(760, 540, { steps: 4 }); await page.mouse.up();
+  const plan = await page.evaluate((b) => {
+    const px = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return [v.x * innerWidth / 2, v.y * innerHeight / 2]; };
+    const dx = (y) => { const a = px(cx, y, cz), c = px(cx + 1, y, cz); return Math.hypot(c[0] - a[0], c[1] - a[1]); };
+    return { ortho: !!camera.isOrthographicCamera, m0: dx(0), m25: dx(2.5),
+      moved: controls.target.distanceTo(new THREE.Vector3().fromArray(b.t)), tilt: Math.abs(controls.theta - b.th) + Math.abs(controls.phi - b.ph) };
+  }, before);
+  if (!plan.ortho) problems.push('вид сверху не ортографический');
+  if (Math.abs(plan.m0 - plan.m25) > 0.5) problems.push(`план: метр на полу ${plan.m0.toFixed(1)}px, на 2.5 м ${plan.m25.toFixed(1)}px`);
+  if (plan.moved < 0.05) problems.push('план: перетаскивание не сдвинуло цель');
+  if (plan.tilt > 1e-6) problems.push('план: перетаскивание наклонило камеру');
 
   // прогулка: переход в режим и шаг вперёд стрелкой должны сдвинуть человечка
   await page.click('text=От первого лица').catch(() => problems.push('нет кнопки «От первого лица»'));
@@ -115,6 +129,7 @@ const { chromium } = require('playwright');
     return { fpv: true, moved: controls.pos.distanceTo(p0) };
   });
   if (!walk.fpv) problems.push('режим прогулки не включился');
+  if (await page.evaluate(() => !!camera.isOrthographicCamera)) problems.push('после «От первого лица» камера осталась ортографической');
   else if (walk.moved < 0.3) problems.push('прогулка: шаг вперёд не сдвинул человечка (' + walk.moved.toFixed(2) + ' м)');
   await page.screenshot({ path: path.join(outDir, 'walk.png') });
   await browser.close();

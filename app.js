@@ -23,7 +23,12 @@ const cx=(minX+maxX)/2, cz=(minZ+maxZ)/2, span=Math.max(maxX-minX,maxZ-minZ);
 // начало координат адресации (клетки A1, D7+26) зафиксировано в плане: изменение контура не меняет смысл старых адресов
 const ORG=(PLAN.meta&&PLAN.meta.origin)||[minX,minZ];
 
-const camera=new THREE.PerspectiveCamera(45,1,0.5,300);
+const persp=new THREE.PerspectiveCamera(45,1,0.5,300);
+// режим плана («Сверху»): ортографическая камера строго вниз, север вверху — одинаковые размеры на любой высоте
+const ortho=new THREE.OrthographicCamera(-1,1,1,-1,0.1,300);
+let camera=persp; // текущая камера: persp в прогулке и 3D, ortho в плане
+const PANEL_W=320, MAP_W=200; // панель слева и мини-карта справа с полями — план вписывается между ними
+const TAN22=Math.tan(45/2*Math.PI/180); // при равном r видимая высота в ортографии равна перспективной у цели
 
 // Встроенное орбитальное управление (без внешних зависимостей)
 const controls={
@@ -31,7 +36,8 @@ const controls={
   r:20, theta:0.8, phi:1.0,
   minPhi:0.012, maxPhi:Math.PI/2-0.02, minR:2, maxR:120,
   setPose(px,py,pz,tx,ty,tz){
-    if(camera.fov!==45){camera.fov=45;camera.updateProjectionMatrix();}
+    this.plan=false;
+    if(persp.fov!==45){persp.fov=45;persp.updateProjectionMatrix();}
     const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
     this.target.set(tx,ty,tz);
     const dx=px-tx, dy=py-ty, dz=pz-tz;
@@ -41,20 +47,30 @@ const controls={
     this.theta=Math.atan2(dx,dz);
     this.apply();
   },
-  fpv:false, pos:new THREE.Vector3(),
+  fpv:false, plan:false, pos:new THREE.Vector3(),
   dir(){
     const sp=Math.sin(this.phi);
     return new THREE.Vector3(sp*Math.sin(this.theta),Math.cos(this.phi),sp*Math.cos(this.theta));
   },
+  setPlan(){ // вид сверху: план вписывается в область правее панели, север вверху
+    this.plan=true; this.fpv=false;
+    const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
+    const aw=Math.max(200,innerWidth-PANEL_W-MAP_W), ah=innerHeight-32;
+    const hh=Math.max((maxZ-minZ)/2*1.08, (maxX-minX)/2*1.08*innerHeight/aw); // половина видимой высоты, м
+    this.r=hh/TAN22; this.r0=this.r; this.theta=0; this.phi=this.minPhi;
+    this.target.set(cx-((PANEL_W-MAP_W)/2)*(2*hh/innerHeight),0,cz); // центр квартиры — в центре свободной области
+    this.apply();
+  },
   setFPV(x,z,theta){
-    this.fpv=true;
-    camera.fov=60; camera.updateProjectionMatrix();
+    this.fpv=true; this.plan=false;
+    persp.fov=60; persp.updateProjectionMatrix();
     const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
     this.pos.set(x,1.57,z);
     this.theta=theta; this.phi=Math.PI/2+0.03;
     this.apply();
   },
   apply(){
+    camera=this.plan?ortho:persp;
     if(typeof avatar!=='undefined'){ avatar.visible=this.fpv; }
     if(typeof backdropGroup!=='undefined'){ backdropGroup.visible=this.fpv; }
     if(this.fpv){
@@ -83,8 +99,14 @@ const controls={
       camera.lookAt(head.clone().addScaledVector(d,Math.max(back,1.5)));
       return;
     }
+    if(typeof ceilGroup!=='undefined') ceilGroup.visible=!this.plan&&document.getElementById('ceil').checked; // в плане потолок не мешает
+    if(this.plan){ this.theta=0; this.phi=this.minPhi; }
     this.phi=Math.min(this.maxPhi,Math.max(this.minPhi,this.phi));
     this.r=Math.min(this.maxR,Math.max(this.minR,this.r));
+    if(this.plan){
+      const hh=this.r*TAN22, a=innerWidth/innerHeight;
+      ortho.top=hh; ortho.bottom=-hh; ortho.left=-hh*a; ortho.right=hh*a; ortho.updateProjectionMatrix();
+    }
     const sp=Math.sin(this.phi);
     camera.position.set(
       this.target.x+this.r*sp*Math.sin(this.theta),
@@ -108,14 +130,14 @@ const controls={
   canvas.style.touchAction='none';
   canvas.addEventListener('contextmenu',e=>e.preventDefault());
   canvas.addEventListener('pointerdown',e=>{
-    canvas.setPointerCapture(e.pointerId);
+    try{canvas.setPointerCapture(e.pointerId);}catch(_){} // синтетические события без активного указателя
     ptrs.set(e.pointerId,e);
     if(ptrs.size===2){
       const [a,b]=[...ptrs.values()];
       pinch=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
       pmx=(a.clientX+b.clientX)/2; pmy=(a.clientY+b.clientY)/2;
       mode='pinch';
-    } else { mode=(e.button===2||e.shiftKey||space||panbtn.classList.contains('on'))?'pan':'rot'; px=e.clientX; py=e.clientY; }
+    } else { mode=(e.button===2||e.shiftKey||space||panbtn.classList.contains('on')||controls.plan)?'pan':'rot'; px=e.clientX; py=e.clientY; }
   });
   canvas.addEventListener('pointermove',e=>{
     if(!ptrs.has(e.pointerId))return;
@@ -130,7 +152,7 @@ const controls={
       // двумя пальцами тянуть = сдвиг сцены (вид сверху)
       const mx=(a.clientX+b.clientX)/2, my=(a.clientY+b.clientY)/2;
       if(!controls.fpv){
-        const s=controls.r*0.0013;
+        const s=controls.plan?2*ortho.top/innerHeight:controls.r*0.0013;
         const right=new THREE.Vector3().setFromMatrixColumn(camera.matrix,0);
         const up=new THREE.Vector3().setFromMatrixColumn(camera.matrix,1);
         controls.target.addScaledVector(right,-(mx-pmx)*s).addScaledVector(up,(my-pmy)*s);
@@ -149,7 +171,7 @@ const controls={
         const right=new THREE.Vector3(d.z,0,-d.x);
         moveFPV(right.multiplyScalar(dx*0.004).addScaledVector(d,dy*0.004));
       } else {
-        const s=controls.r*0.0013;
+        const s=controls.plan?2*ortho.top/innerHeight:controls.r*0.0013;
         const right=new THREE.Vector3().setFromMatrixColumn(camera.matrix,0);
         const up=new THREE.Vector3().setFromMatrixColumn(camera.matrix,1);
         controls.target.addScaledVector(right,-dx*s).addScaledVector(up,dy*s);
@@ -175,13 +197,13 @@ const controls={
 function fitDist(mult){
   const fov=45*Math.PI/180;
   const dv=((maxZ-minZ)/2)/Math.tan(fov/2);
-  const dh=((maxX-minX)/2)/(Math.tan(fov/2)*Math.max(camera.aspect,0.5));
+  const dh=((maxX-minX)/2)/(Math.tan(fov/2)*Math.max(persp.aspect,0.5));
   return Math.max(dv,dh)*(mult||1.12);
 }
 function setView(kind){
   if(typeof resizeReady!=='undefined')resize();
   controls.fpv=false;
-  if(kind==='top'){controls.setPose(cx,fitDist(1.22),cz+0.001,cx,0,cz);}
+  if(kind==='top'){controls.setPlan();}
   else if(kind==='eye'){controls.setPose(cx+span*0.62,1.7,cz+span*0.72,cx,1.3,cz);}
   else if(kind==='door'){controls.setFPV(7.35,8.6,Math.PI);}
   else if(kind==='room4'){controls.setFPV(11.0,3.4,-0.75);}
@@ -365,7 +387,7 @@ document.getElementById('cubes').addEventListener('change',e=>cubeGroup.visible=
 document.getElementById('labels').addEventListener('change',e=>labelGroup.visible=e.target.checked);
 wallGroupR.visible=false; // стена коридор-кухня по умолчанию выключена, как и галочка #kwall
 document.getElementById('kwall').addEventListener('change',e=>{wallGroupR.visible=e.target.checked; if(window.kitchenFrame)window.kitchenFrame.visible=e.target.checked;});
-document.getElementById('ceil').addEventListener('change',e=>ceilGroup.visible=e.target.checked);
+document.getElementById('ceil').addEventListener('change',e=>ceilGroup.visible=e.target.checked&&!controls.plan);
 document.getElementById('wgrid').addEventListener('change',e=>{wallGridGroup.visible=e.target.checked;addrGroup.visible=e.target.checked;});
 document.getElementById('finish').addEventListener('change',e=>finishGroup.visible=e.target.checked);
 const wop=document.getElementById('wop'),wov=document.getElementById('wov');
@@ -384,8 +406,8 @@ const zoom=document.getElementById('zoom'),zov=document.getElementById('zov');
 zoom.addEventListener('input',()=>{
   zov.textContent=zoom.value+'%';
   if(controls.fpv){
-    camera.fov=Math.min(85,Math.max(25,60*Math.sqrt(100/zoom.value)));
-    camera.updateProjectionMatrix();
+    persp.fov=Math.min(85,Math.max(25,60*Math.sqrt(100/zoom.value)));
+    persp.updateProjectionMatrix();
   } else {
     controls.r=(controls.r0||controls.r)*100/zoom.value; controls.apply();
   }
@@ -405,7 +427,8 @@ function sizeTouchButtons(){
 sizeTouchButtons(); addEventListener('resize',sizeTouchButtons);
 ['vTop','vFP'].forEach(id=>document.getElementById(id).addEventListener('click',()=>{
   fpvhint.hidden=!controls.fpv; walkpad.hidden=!controls.fpv;
-  panbtn.hidden=controls.fpv; panbtn.classList.remove('on');
+  panbtn.hidden=controls.fpv||controls.plan; panbtn.classList.remove('on');
+  document.querySelector('.hint').textContent=controls.plan?'ЛКМ — сдвиг плана · колесо — масштаб':'ЛКМ — вращать · колесо — зум · ПКМ или пробел — сдвиг';
 }));
 // экранные кнопки прогулки ставят те же флаги, что и клавиатура
 walkpad.querySelectorAll('button').forEach(b=>{
@@ -419,7 +442,8 @@ walkpad.querySelectorAll('button').forEach(b=>{
 function resize(){
   const w=innerWidth,h=innerHeight;
   renderer.setSize(w,h,false);
-  camera.aspect=w/h;camera.updateProjectionMatrix();
+  persp.aspect=w/h;persp.updateProjectionMatrix();
+  if(controls.plan) controls.apply(); // ортографический фрустум пересчитывается от нового соотношения сторон
 }
 addEventListener('resize',resize);resize();
 var resizeReady=true;
