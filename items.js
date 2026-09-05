@@ -116,14 +116,14 @@ const PHYS={}; // id → boxes
      }},
     {id:'kiddesk',type:'угловой стол: вдоль окна 2.39 м и вдоль южной стены 1.23 м',room:1,layer:'kid',pos:[0.896,2.474],rot:0,size:[1.234,0.72,2.39],fixed:'wall',
      build(b){
-       b(0,0.75,0.68,0.72,0,2.39,mat.hpl); b(0.75,1.234,0.68,0.72,1.79,2.39,mat.hpl);                 // worktop: west wing and south wing (depth 0.60)
-       b(0.02,0.73,0,0.68,0,0.02,mat.kbody); b(1.214,1.234,0,0.68,1.81,2.37,mat.kbody);               // end panels: north (at the shelf unit) and east
-       b(0.05,0.73,0,0.68,0.98,1.0,mat.kbody);                                                        // middle support under the west wing, clear of the chair
+       b(0,0.45,0.68,0.72,0,2.39,mat.hpl); b(0.45,1.234,0.68,0.72,1.79,2.39,mat.hpl);                 // worktop: west wing (depth 0.45, like the shelf unit) and south wing (depth 0.60)
+       b(0.02,0.43,0,0.68,0,0.02,mat.kbody); b(1.214,1.234,0,0.68,1.81,2.37,mat.kbody);               // end panels: north (at the shelf unit) and east
+       b(0.05,0.43,0,0.68,0.98,1.0,mat.kbody);                                                        // middle support under the west wing, clear of the chair
        b(0.10,0.20,0.72,0.725,0.59,1.19,mat.knob);                                                     // vent grille over the radiator, 0.60 × 0.10
        b(0.10,0.52,0.03,0.63,1.83,2.33,mat.kbody);                                                     // mobile pedestal 0.42 × 0.50 × 0.60 under the corner
        [0.06,0.24,0.42].forEach(y=>{ b(0.52,0.53,y,y+0.16,1.84,2.32,mat.oak); b(0.53,0.545,y+0.1,y+0.12,2.0,2.16,mat.knob); }); // 3 drawers
      }},
-    {id:'kidchair',type:'рабочее кресло, регулируемое',room:1,layer:'kid',pos:[1.58,3.60],rot:0,size:[0.55,0.85,0.55],
+    {id:'kidchair',type:'рабочее кресло, регулируемое',room:1,layer:'kid',pos:[1.30,3.60],rot:0,size:[0.55,0.85,0.55],
      build(b,g){
        b(0.05,0.50,0.42,0.47,0.05,0.50,mat.terra); b(0.50,0.55,0.47,0.85,0.08,0.47,mat.terra);      // seat and back, faces the window
        const c=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.39,10),mat.knob); c.position.set(0.275,0.225,0.275); g.add(c); // gas lift
@@ -156,7 +156,7 @@ const PHYS={}; // id → boxes
      build(b,g){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.25,0.04,32),mat.lamp); c.position.set(0.25,2.68,0.25); g.add(c); }},
     {id:'track',type:'трек с 2 спотами на галерейную стену',room:1,layer:'kid',pos:[1.90,4.22],rot:0,size:[2.20,2.70,0.06],fixed:'wall',
      build(b){ b(0,2.2,2.67,2.70,0.015,0.045,mat.knob); [0.6,1.6].forEach(x=>b(x,x+0.06,2.55,2.67,0,0.06,mat.knob)); }},
-    {id:'desklamp',type:'настольная лампа на струбцине, 3000–4000 K',room:1,layer:'kid',pos:[1.45,4.05],rot:0,size:[0.20,1.20,0.20],
+    {id:'desklamp',type:'настольная лампа на струбцине, 3000–4000 K',room:1,layer:'kid',pos:[1.30,4.35],rot:0,size:[0.20,1.20,0.20],
      build(b,g){ b(0.07,0.13,0.72,0.77,0.07,0.13,mat.knob); const a=new THREE.Mesh(new THREE.CylinderGeometry(0.012,0.012,0.36,8),mat.knob); a.position.set(0.10,0.95,0.10); g.add(a);
        const s=new THREE.Mesh(new THREE.ConeGeometry(0.08,0.10,16,1,true),mat.lamp); s.position.set(0.10,1.15,0.10); g.add(s); }},
     {id:'bra1',type:'бра над диванчиком, поворотное',room:1,layer:'kid',pos:[5.20,2.79],rot:0,size:[0.245,1.35,0.16],fixed:'wall',
