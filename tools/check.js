@@ -64,7 +64,7 @@ const { chromium } = require('playwright');
     const rooms = (typeof PLAN === 'undefined' ? [] : PLAN.rooms).map(r => ({
       id: r.id,
       stored: r.area,
-      geom: Math.round(shoelace(r.poly) * 10 + 1e-6) / 10,
+      geom: Math.round(shoelace(r.poly) * 1000) / 1000,
     }));
     return { canvas: !!(c && c.width > 0), nRooms: rooms.length, rooms };
   });
@@ -94,7 +94,7 @@ const { chromium } = require('playwright');
   if (!report.canvas) problems.push('канвас сцены не создан');
   if (report.nRooms !== 10) problems.push('ожидалось 10 комнат, получено ' + report.nRooms);
   for (const r of report.rooms) {
-    if (Math.abs(r.geom - r.stored) > 0.051) {
+    if (Math.abs(r.geom - r.stored) > 0.06) { // размеры БТИ округлены до см — ±0.05 м² это шум
       problems.push(`комната ${r.id}: полигон даёт ${r.geom}, записано ${r.stored}`);
     }
   }

@@ -20,6 +20,8 @@ const scene=new THREE.Scene();
 let minX=1e9,maxX=-1e9,minZ=1e9,maxZ=-1e9;
 PLAN.outer.forEach(p=>{minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minZ=Math.min(minZ,p[1]);maxZ=Math.max(maxZ,p[1]);});
 const cx=(minX+maxX)/2, cz=(minZ+maxZ)/2, span=Math.max(maxX-minX,maxZ-minZ);
+// начало координат адресации (клетки A1, D7+26) зафиксировано в плане: изменение контура не меняет смысл старых адресов
+const ORG=(PLAN.meta&&PLAN.meta.origin)||[minX,minZ];
 
 const camera=new THREE.PerspectiveCamera(45,1,0.5,300);
 
@@ -524,12 +526,12 @@ scene.add(wallGridGroup);
 var addrGroup=new THREE.Group();
 (function(){
   // пол: один канвас на всю квартиру — дециметровая сетка, метровые линии и подписи клеток
-  const SC=64, W=maxX-minX, D=maxZ-minZ;
+  const SC=64, W=maxX-ORG[0], D=maxZ-ORG[1];
   const c=document.createElement('canvas');
   c.width=Math.ceil(W*SC); c.height=Math.ceil(D*SC);
   const g=c.getContext('2d');
   g.beginPath();
-  PLAN.outer.forEach((p,i)=>{const X=(p[0]-minX)*SC,Y=(p[1]-minZ)*SC;i?g.lineTo(X,Y):g.moveTo(X,Y);});
+  PLAN.outer.forEach((p,i)=>{const X=(p[0]-ORG[0])*SC,Y=(p[1]-ORG[1])*SC;i?g.lineTo(X,Y):g.moveTo(X,Y);});
   g.closePath(); g.clip();
   g.strokeStyle='rgba(120,118,112,0.30)'; g.lineWidth=1;
   g.beginPath();
@@ -550,7 +552,7 @@ var addrGroup=new THREE.Group();
   const pg=new THREE.PlaneGeometry(W,D);
   pg.rotateX(-Math.PI/2);
   const m=new THREE.Mesh(pg,new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false}));
-  m.position.set(cx,FLOOR+0.003,cz); // чуть выше отделки пола
+  m.position.set(ORG[0]+W/2,FLOOR+0.003,ORG[1]+D/2); // чуть выше отделки пола
   addrGroup.add(m);
 
   // стены: дециметровые линии тем же обходом, что и метровая сетка, но от глобального нуля квартиры
@@ -575,7 +577,7 @@ var addrGroup=new THREE.Group();
         pts.push(new THREE.Vector3(ax,y,az), new THREE.Vector3(bx,y,bz));
       }
       const horiz=Math.abs(ex)>Math.abs(ez);
-      const start=horiz?minX:minZ;
+      const start=horiz?ORG[0]:ORG[1];
       const a1=horiz?a[0]:a[1], b1=horiz?b[0]:b[1];
       const lo=Math.min(a1,b1), hi=Math.max(a1,b1);
       for(let k=Math.ceil((lo-start)/0.1);;k++){
@@ -743,10 +745,7 @@ var finishGroup=new THREE.Group();
     finishGroup.add(m);
   }
   // плитка на стенах санузлов; стена напротив входа (западная) — серый мрамор
-  const BATHS=[
-    {x0:8.202,z0:8.161,x1:9.872,z1:9.872,dz0:8.55,dz1:9.35},
-    {x0:8.215,z0:11.406,x1:9.872,z1:13.144,dz0:12.20,dz1:13.00}
-  ];
+  const BATHS=PLAN.baths; // контуры санузлов и их дверей — в плане, двигаются вместе со стенами (remap)
   function panel(mat,w,h,cx,cy,cz,rotY){
     const g=new THREE.PlaneGeometry(w,h); scaleUV(g,w,h);
     g.rotateY(rotY);
@@ -781,8 +780,9 @@ var finishGroup=new THREE.Group();
     }
   });
   const woodMat=new THREE.MeshBasicMaterial({map:woodTex});
+  const BALC=PLAN.openings.find(o=>o.tag==='balcony');
   {
-    const x0=13.47, x1=13.91, z0=2.8, z1=4.6, y0=FLOOR, y1=2.1, d=x1-x0, w=z1-z0, in_=0.01;
+    const x0=BALC.x0, x1=BALC.x1, z0=BALC.z0, z1=BALC.z1, y0=FLOOR, y1=BALC.h, d=x1-x0, w=z1-z0, in_=0.01;
     panel(woodMat, d, y1-y0, (x0+x1)/2, (y0+y1)/2, z0+in_, 0);        // откос слева (смотрит внутрь проёма)
     panel(woodMat, d, y1-y0, (x0+x1)/2, (y0+y1)/2, z1-in_, Math.PI);  // откос справа
     const top=new THREE.PlaneGeometry(d,w); scaleUV(top,d,w); top.rotateX(Math.PI/2);
@@ -792,15 +792,11 @@ var finishGroup=new THREE.Group();
   }
 
   // белые дверные коробки
-  const DOORS=[
-    [5.52,4.42,'v',0.88],[6.50,3.94,'h',0.80],[7.50,3.94,'h',0.80],
-    [10.99,7.20,'v',0.90],[10.50,9.69,'h',0.90],
-    [9.95,8.95,'v',0.80],[9.95,12.60,'v',0.80],[7.35,7.61,'h',1.25]
-  ];
+  const DOORS=PLAN.doors; // [cx,cz,'h'|'v',ширина,(tag 'K' — дверь в съёмной стене кухни)]
   const frameMat2=new THREE.MeshBasicMaterial({color:0xffffff});
   window.kitchenFrame=new THREE.Group(); finishGroup.add(window.kitchenFrame);
   window.kitchenFrame.visible=document.getElementById('kwall').checked;
-  DOORS.concat([[9.30,6.37,'h',0.90,'K']]).forEach(d=>{
+  DOORS.forEach(d=>{
     const [cx,cz,o,w,tag]=d, jw=0.07, dep=0.32, hD=2.1;
     const parent = tag==='K' ? window.kitchenFrame : finishGroup;
     function bx(sx,sy,sz,px,py,pz){
@@ -820,8 +816,7 @@ var finishGroup=new THREE.Group();
 
   // белый плинтус 10 см (от чистового пола) и обои вдоль стен (кроме санузлов и дверных проёмов)
   const plinthMat=new THREE.MeshBasicMaterial({color:0xffffff});
-  // + дверь кухни: она не в DOORS (коробка живёт в kitchenFrame), но проём вырезать надо
-  const DOORS2=DOORS.concat([[9.30,6.37,'h',0.90]]);
+  const DOORS2=DOORS;
   PLAN.rooms.forEach(r=>{
     if(r.id===8||r.id===9) return;
     const poly=r.poly;
@@ -885,9 +880,9 @@ var finishGroup=new THREE.Group();
         segs=out;
       });
       // проход на балкон в комнате 4
-      if(!horiz&&Math.abs(13.72-fixed)<0.45){
+      if(!horiz&&Math.abs((BALC.x0+BALC.x1)/2-fixed)<0.45){
         const out=[];
-        const d0=3.70-0.9-0.1, d1=3.70+0.9+0.1;
+        const d0=BALC.z0-0.1, d1=BALC.z1+0.1;
         if(d1>lo&&d0<hi) doorSpans.push([Math.max(d0,lo),Math.min(d1,hi)]); // перемычка над проёмом
         segs.forEach(sg=>{
           if(d1<=sg[0]||d0>=sg[1]){out.push(sg);return;}
