@@ -158,7 +158,7 @@
     else if(u.op==='edit'){ Object.assign(u.m,u.prev); }
     select(MK.sel);
   }
-  function edit(m,patch){ const prev={}; Object.keys(patch).forEach(k=>prev[k]=JSON.parse(JSON.stringify(m[k]))); MK.hist.push({op:'edit',m,prev}); Object.assign(m,patch); select(m); }
+  function edit(m,patch){ const prev={}; Object.keys(patch).forEach(k=>prev[k]=structuredClone(m[k])); MK.hist.push({op:'edit',m,prev}); Object.assign(m,patch); select(m); }
   function select(m){ MK.sel=m; redraw(); renderCard(); persist(); }
   function rooms(m){ // помещения под меткой; для прямоугольника — по углам
     const pts=m.type==='rect'?rectCorners(m):m.pts;
@@ -265,15 +265,20 @@
     const err=[]; if(!d||typeof d!=='object') return ['не объект'];
     if(d.format!==FORMAT) err.push('формат '+d.format+' вместо '+FORMAT);
     if(!Array.isArray(d.marks)) err.push('нет списка marks');
-    else d.marks.forEach((m,i)=>{
-      const ok=m&&/^M\d+$/.test(m.id)&&['point','seg','rect'].includes(m.type)&&Array.isArray(m.pts)&&m.pts.length===(m.type==='seg'?2:1)
-        &&m.pts.every(q=>Array.isArray(q)&&q.length===2&&q.every(Number.isFinite))&&(m.type!=='rect'||(m.w>0&&m.d>0&&Number.isFinite(m.rot)));
-      if(!ok) err.push('метка #'+(i+1)+' повреждена');
-    });
+    else { const ids=new Set(); const num=Number.isFinite, str=v=>typeof v==='string', side=v=>['N','S','W','E'].includes(v), obj=v=>!!v&&typeof v==='object';
+      const und=(v,ok)=>v===undefined||ok(v), nul=(v,ok)=>v==null||ok(v); // optional fields: absent is fine, present must be valid
+      if(!und(d.next,num)) err.push('next не число');
+      d.marks.forEach((m,i)=>{
+        const ok=obj(m)&&/^M\d+$/.test(m.id)&&['point','seg','rect'].includes(m.type)&&Array.isArray(m.pts)&&m.pts.length===(m.type==='seg'?2:1)
+          &&m.pts.every(q=>Array.isArray(q)&&q.length===2&&q.every(num))&&(m.type!=='rect'||(m.w>0&&m.d>0&&num(m.rot)))
+          &&und(m.name,str)&&und(m.y0,num)&&und(m.y1,num)&&und(m.dir,side)
+          &&nul(m.wall,w=>obj(w)&&side(w.side)&&side(w.from)&&num(w.dist)&&num(w.h))&&nul(m.bind,b=>obj(b)&&str(b.item)&&side(b.side));
+        if(!ok) err.push('метка #'+(i+1)+' повреждена'); else if(ids.has(m.id)) err.push('метка #'+(i+1)+': повтор ID '+m.id); if(ok) ids.add(m.id);
+      }); }
     return err;
   }
   function restore(d,source){ // подставить данные; вернуть текст статуса
-    MK.marks=d.marks.map(m=>Object.assign({},m)); MK.next=Math.max(d.next||1,...MK.marks.map(m=>parseInt(m.id.slice(1))+1),1); MK.hist=[]; MK.sel=null;
+    MK.marks=d.marks.map(m=>Object.assign({name:'',y0:0,y1:m.type==='rect'?0.9:0,dir:'S'},m)); // defaults for optional fields the card reads MK.next=Math.max(d.next||1,...MK.marks.map(m=>parseInt(m.id.slice(1))+1),1); MK.hist=[]; MK.sel=null;
     const notes=[]; if(d.plan!==planVer()) notes.push('план v'+d.plan+' → v'+planVer()+': координаты оставлены как есть, проверьте метки');
     let moved=0; MK.marks.forEach(m=>{ if(m.bind){ const e=bindEdge(m.bind); const p=m.pts[0]; const cur=(m.bind.side==='W'||m.bind.side==='E')?p[0]:p[1];
       if(e==null){ m.conflict='предмета нет'; moved++; } else if(Math.abs(e-cur)>0.001){ m.conflict='предмет сдвинулся'; moved++; } } });
@@ -300,7 +305,7 @@
   function toggle(on){
     MK.on=on==null?!MK.on:on;
     ui.hidden=!MK.on; btn.classList.toggle('on',MK.on);
-    if(MK.on){ if(!controls.plan) setView('top'); controls.lookDown(); setTool(null); } else { setTool(null); select(null); }
+    if(MK.on){ if(!controls.plan) setView('top'); controls.lookDown(); setTool(null); if(window.LAY&&LAY.on) LAY.toggle(false); } else { setTool(null); select(null); }
   }
   MK.toggle=toggle;
   btn.addEventListener('click',()=>toggle());

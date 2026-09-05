@@ -25,7 +25,9 @@
   function deleteVariant(){ if(variant().locked||LAY.variants.length<=1) return; if(!confirm('Удалить вариант «'+variant().name+'»?')) return; LAY.variants.splice(LAY.cur,1); applyVariant(Math.max(0,LAY.cur-1)); }
 
   // ---------- перестановка ----------
-  function setPose(id,pos,rot){ // с историей, с привязанными предметами (стулья за столом)
+  function ensureEditable(){ if(!variant().locked) return; LAY.variants.push({name:'Вариант '+LAY.variants.length,poses:{}}); applyVariant(LAY.variants.length-1); setHint('«Исходная» только для чтения — создан вариант «'+variant().name+'»'); }
+  function setPose(id,pos,rot){ // with history and attached items (chairs follow the table)
+    ensureEditable();
     const before={id,pose:poseOf(id),att:[]};
     const u=ITEM_GROUPS[id].userData; const d=pos?[pos[0]-u.pos[0],pos[1]-u.pos[1]]:[0,0];
     setItemPose(id,pos||null,rot);
@@ -87,7 +89,7 @@
   function renderCard(){
     const g=LAY.sel; if(!g){ card.hidden=true; return; }
     card.hidden=false; const u=g.userData; const ws=warnings(u.id); LAY.warn=ws;
-    const num=(k,v,st)=>'<label>'+k+' <input type="number" step="'+(st||0.01)+'" data-k="'+v+'" value="'+(Math.round(v==='rot'?u.rot:v==='x'?u.pos[0]:u.pos[1])*1000/1000)+'"'+(u.fixed==='wall'&&v==='rot'?' disabled':'')+'></label>';
+    const num=(k,v,st)=>'<label>'+k+' <input type="number" step="'+(st||0.01)+'" data-k="'+v+'" value="'+(Math.round((v==='rot'?u.rot:v==='x'?u.pos[0]:u.pos[1])*1000)/1000)+'"'+(u.fixed==='wall'&&v==='rot'?' disabled':'')+'></label>';
     let h='<div class="mk-head"><b>'+u.id+'</b> <span>'+u.type+'</span></div>';
     h+='<div class="mk-row">Помещение '+u.room+' · '+fmt(u.size[0])+' × '+fmt(u.size[2])+' × '+fmt(u.size[1])+' м'+(u.fixed==='wall'?' · пристенный (только вдоль стены)':'')+(u.attach?' · привязан к '+u.attach:'')+'</div>';
     h+='<div class="mk-row">'+num('x','x')+num('z','z')+num('поворот°','rot',90)+'</div>';

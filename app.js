@@ -74,6 +74,7 @@ const controls={
     camera=this.plan?ortho:persp;
     if(typeof avatar!=='undefined'){ avatar.visible=this.fpv; }
     if(typeof backdropGroup!=='undefined'){ backdropGroup.visible=this.fpv; }
+    if(typeof ceilGroup!=='undefined') ceilGroup.visible=!this.plan&&document.getElementById('ceil').checked; // hidden in plan; set before the fpv return so walk mode restores it
     if(this.fpv){
       this.phi=Math.min(Math.PI-0.25,Math.max(0.25,this.phi));
       const d=this.dir();
@@ -100,7 +101,6 @@ const controls={
       camera.lookAt(head.clone().addScaledVector(d,Math.max(back,1.5)));
       return;
     }
-    if(typeof ceilGroup!=='undefined') ceilGroup.visible=!this.plan&&document.getElementById('ceil').checked; // в плане потолок не мешает
     this.phi=Math.min(this.maxPhi,Math.max(this.minPhi,this.phi));
     this.r=Math.min(this.maxR,Math.max(this.minR,this.r));
     if(this.plan){
@@ -391,17 +391,15 @@ document.getElementById('ceil').addEventListener('change',e=>ceilGroup.visible=e
 document.getElementById('wgrid').addEventListener('change',e=>{wallGridGroup.visible=e.target.checked;addrGroup.visible=e.target.checked;});
 document.getElementById('finish').addEventListener('change',e=>finishGroup.visible=e.target.checked);
 const wop=document.getElementById('wop'),wov=document.getElementById('wov');
+const fade=(m,v)=>{ m.opacity=v; m.transparent=v<0.999; m.depthWrite=v>=0.5; m.needsUpdate=true; const s=window.VIZ&&VIZ.std.get(m); if(s) fade(s,v); }; // PBR twin follows the basic material
 wop.addEventListener('input',()=>{
   const v=wop.value/100;
-  wallMat.opacity=v;
-  wallMat.transparent=v<0.999;
-  wallMat.depthWrite=v>=0.5;
-  wallMat.needsUpdate=true;
+  fade(wallMat,v);
   wallGroup.visible=v>0.01;
   wallGroupR.visible=v>0.01&&document.getElementById('kwall').checked;
   wallEdgeMat.opacity=1;
   // настенная отделка следует за стенами: та же прозрачность, скрывается вместе с ними; пол не трогаем
-  if(window.wallFinMats) window.wallFinMats.forEach(m=>{m.opacity=v;m.transparent=v<0.999;m.depthWrite=v>=0.5;m.needsUpdate=true;});
+  if(window.wallFinMats) window.wallFinMats.forEach(m=>fade(m,v));
   if(window.wallFin) window.wallFin.visible=v>0.01;
   wov.textContent=wop.value+'%';
 });
@@ -810,6 +808,7 @@ var finishGroup=new THREE.Group();
     }
   });
   const woodMat=new THREE.MeshBasicMaterial({map:woodTex});
+  const woodFloor=new THREE.MeshBasicMaterial({map:woodTex}); // same wood on the threshold floor; not faded by the wall slider
   const BALC=PLAN.openings.find(o=>o.tag==='balcony');
   {
     const x0=BALC.x0, x1=BALC.x1, z0=BALC.z0, z1=BALC.z1, y0=FLOOR, y1=BALC.h, d=x1-x0, w=z1-z0, in_=0.01;
@@ -818,7 +817,7 @@ var finishGroup=new THREE.Group();
     const top=new THREE.PlaneGeometry(d,w); scaleUV(top,d,w); top.rotateX(Math.PI/2);
     const tm=new THREE.Mesh(top,woodMat); tm.position.set((x0+x1)/2,y1-in_,(z0+z1)/2); wallFin.add(tm);
     const flr=new THREE.PlaneGeometry(d,w); scaleUV(flr,d,w); flr.rotateX(-Math.PI/2);
-    const fm=new THREE.Mesh(flr,woodMat); fm.position.set((x0+x1)/2,y0,(z0+z1)/2); finishGroup.add(fm);
+    const fm=new THREE.Mesh(flr,woodFloor); fm.position.set((x0+x1)/2,y0,(z0+z1)/2); finishGroup.add(fm);
   }
 
   // белые дверные коробки
@@ -847,7 +846,7 @@ var finishGroup=new THREE.Group();
   // белый плинтус 10 см (от чистового пола) и обои вдоль стен (кроме санузлов и дверных проёмов)
   const plinthMat=new THREE.MeshBasicMaterial({color:0xffffff});
   window.wallFinMats=[wpMat,whiteWall,greyMat,woodMat,frameMat2,plinthMat]; // гасятся ползунком «Стены»
-  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,grey:greyMat,wp:wpMat,wood:woodMat,plinth:plinthMat,frame:frameMat2}; // для PBR-двойников (materials.js)
+  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
   PLAN.rooms.forEach(r=>{
     if(r.id===8||r.id===9) return;

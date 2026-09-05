@@ -195,7 +195,7 @@ const { chromium } = require('playwright');
     window.prompt = () => 'проверка';
     const c0 = ITEM_GROUPS.chair1.userData.pos.slice();
     LAY.setPose('table', [ITEM_GROUPS.table.userData.pos[0] + 0.3, ITEM_GROUPS.table.userData.pos[1]], null);
-    const follow = Math.abs(ITEM_GROUPS.chair1.userData.pos[0] - c0[0] - 0.3) < 1e-9; LAY.undo();
+    const follow = Math.abs(ITEM_GROUPS.chair1.userData.pos[0] - c0[0] - 0.3) < 1e-9; LAY.undo(); LAY.variants.splice(LAY.cur, 1); LAY.applyVariant(0); // правка «Исходной» создаёт вариант — убрать
     const sofa0 = ITEM_GROUPS.sofa.userData.pos.slice(); const n0 = LAY.variants.length;
     LAY.copyVariant(); const vi = LAY.cur; LAY.setPose('sofa', [8.4, 3.0], null);
     const overlap = LAY.warnings('sofa').some(w => /kitchen/.test(w));
@@ -207,6 +207,30 @@ const { chromium } = require('playwright');
   if (!lay.follow) problems.push('расстановка: стулья не поехали за столом');
   if (!lay.overlap) problems.push('расстановка: нет предупреждения о пересечении с кухней');
   if (!lay.orig || !lay.kept) problems.push('расстановка: варианты не изолированы');
+  // ревью 2026-09-05: правка «Исходной» создаёт вариант и сохраняется; поля карточки в мм; режимы взаимоисключающие;
+  // «на стене» у новой точки и снятие привязки не падают; импорт проверяет все поля и повтор ID
+  const rev = await page.evaluate(() => {
+    const out = {};
+    LAY.applyVariant(0); LAY.setPose('sofa', [10.75, ITEM_GROUPS.sofa.userData.pos[1]], null);
+    const d = LAY.dump(); out.fork = !LAY.variants[LAY.cur].locked && d.variants.length === 1 && Math.abs(d.variants[0].poses.sofa.pos[0] - 10.75) < 1e-9;
+    LAY.variants.splice(LAY.cur, 1); LAY.applyVariant(0);
+    LAY.toggle(true); LAY.select('sofa'); out.mm = Math.abs(parseFloat(document.querySelector('#itCard [data-k=x]').value) - 11.35) < 1e-9;
+    LAY.tool = 'move'; MK.toggle(true); out.excl = MK.on && !LAY.on && LAY.tool == null; LAY.toggle(true); out.excl2 = LAY.on && !MK.on; LAY.toggle(false);
+    const wm = MK.addPoint([3, 3]);
+    try { MK.edit(wm, { wall: { side: 'N', from: 'W', dist: 1, h: 1.2 } }); MK.edit(wm, { bind: null, conflict: null }); MK.undo(); MK.undo(); out.wallEdit = !wm.wall; } catch (e) { out.wallEdit = false; out.err = e.message; }
+    MK.marks.slice().forEach(m => MK.remove(m)); MK.addPoint([4, 4]); MK.addPoint([5, 5]);
+    const bad = m => !MK.importText(JSON.stringify({ format: 1, plan: PLAN.meta.version, marks: [m] }));
+    const pt = { id: 'M99', type: 'point', pts: [[3, 3]], y0: 0, y1: 0, dir: 'S' };
+    out.reject = bad({ ...pt, name: 123 }) && bad({ ...pt, wall: { side: 'X' } }) && bad({ ...pt, bind: { item: 5 } }) && MK.marks.length === 2
+      && !MK.importText(JSON.stringify({ format: 1, plan: PLAN.meta.version, marks: [pt, pt] })) && MK.marks.length === 2 && MK.importText(JSON.stringify({ format: 1, plan: PLAN.meta.version, marks: [pt] })) && MK.marks[0].name === '';
+    MK.marks.slice().forEach(m => MK.remove(m)); MK.toggle(false);
+    return out;
+  });
+  if (!rev.fork) problems.push('расстановка: правка «Исходной» не создала сохраняемый вариант');
+  if (!rev.mm) problems.push('расстановка: поле x округлено не до мм');
+  if (!rev.excl || !rev.excl2) problems.push('режимы: разметка и расстановка включены одновременно');
+  if (!rev.wallEdit) problems.push('разметка: «на стене»/снятие привязки у новой точки: ' + (rev.err || 'история не откатилась'));
+  if (!rev.reject) problems.push('разметка: импорт принял битые поля/повтор ID или стёр метки');
 
   // T12: детали не выходят за согласованный габарит предмета (pos/size) — допуск 3 см (ручки на фасаде)
   const fit = await page.evaluate(() => ITEMS.filter(it => { const u = ITEM_GROUPS[it.id].userData; if (u.rot) return false; const bb = new THREE.Box3().setFromObject(ITEM_GROUPS[it.id]);
@@ -277,6 +301,18 @@ const { chromium } = require('playwright');
       tone: renderer.toneMapping === THREE.ACESFilmicToneMapping && renderer.outputEncoding === THREE.sRGBEncoding, geom: JSON.stringify(PLAN) === pj && Math.abs(ITEM_GROUPS.sofa.userData.pos[0] - 11.35) < 1e-9 };
   }, planJson);
   const fpsViz = await fps();
+  // ревью 2026-09-05: ползунок стен ведёт PBR-двойники, не гасит порог балкона; потолок возвращается после плана
+  const wop = await page.evaluate(() => {
+    const set = v => { const s = document.getElementById('wop'); s.value = v; s.dispatchEvent(new Event('input')); };
+    set(50); const half = Math.abs(VIZ.std.get(wallMat).opacity - 0.5) < 1e-9 && Math.abs(VIZ.std.get(finishMats.wp).opacity - 0.5) < 1e-9;
+    set(0); const floorKept = finishMats.woodFloor.opacity === 1 && VIZ.std.get(finishMats.woodFloor).opacity === 1 && finishMats.wood.opacity === 0; set(100);
+    const cb = document.getElementById('ceil'); cb.checked = true; cb.dispatchEvent(new Event('change'));
+    const c0 = ceilGroup.visible; setView('top'); const c1 = ceilGroup.visible; controls.setFPV(10.6, 3.9, Math.PI / 2 + 0.25); const c2 = ceilGroup.visible; cb.checked = false; cb.dispatchEvent(new Event('change'));
+    return { half, floorKept, ceil: c0 && !c1 && c2 };
+  });
+  if (!wop.half) problems.push('визуализация: PBR-стены не следуют ползунку прозрачности');
+  if (!wop.floorKept) problems.push('стены 0%: порог балкона исчез');
+  if (!wop.ceil) problems.push('потолок не восстановился после режима плана');
   await page.screenshot({ path: path.join(outDir, 'viz-on.png') });
   await page.reload(); await page.waitForTimeout(2500);
   const vizKept = await page.evaluate(() => { const ok = VIZ.on && document.getElementById('viz').checked; VIZ.set(false); return ok; });

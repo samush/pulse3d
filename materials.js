@@ -11,6 +11,7 @@ const MATERIALS={
   grey:     {name:'плитка серый мрамор',  size:[0.6,0.6], rough:0.3,  bump:0.15},
   wp:       {name:'обои под покраску',    size:[1.2,1.2], rough:0.92, bump:0.45, albedo:0.82},
   wood:     {name:'дерево светлое, откосы', size:[1.0,1.0], rough:0.6,  bump:0.3},
+  woodFloor:{name:'дерево светлое, порог балкона', size:[1.0,1.0], rough:0.6, bump:0.3},
   plinth:   {name:'плинтус белый',        rough:0.7},
   frame:    {name:'дверная коробка белая', rough:0.7},
   wall:     {name:'стена',                rough:0.95},
