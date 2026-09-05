@@ -1,17 +1,17 @@
-// Расстановка (план): выбор предмета кликом, перенос, поворот, численная правка, именованные варианты.
-// Вариант = {name, poses:{id:{pos,rot}}} поверх исходной расстановки из items.js; общая геометрия и
-// материалы не дублируются. Хранится в localStorage['pulse3d.layout']. Использует ITEMS, ITEM_GROUPS,
-// setItemPose, itemCorners, PLAN, controls, camera, canvas, THREE из app.js/items.js.
+// Layout (plan): pick an item by click, move, rotate, numeric editing, named variants.
+// Variant = {name, poses:{id:{pos,rot}}} on top of the base layout from items.js; shared geometry and
+// materials are not duplicated. Stored in localStorage['pulse3d.layout'].
+// Uses ITEMS, ITEM_GROUPS, setItemPose, itemCorners, PLAN, controls, camera, canvas, THREE from app.js/items.js.
 (function(){
   const LAY={on:false,sel:null,tool:null,variants:[],cur:0,hist:[],warn:[]};
   window.LAY=LAY;
   const ui=document.getElementById('lay'), card=document.getElementById('itCard'), btn=document.getElementById('layBtn');
-  const KEY='pulse3d.layout', FORMAT=1, PASS=0.7; // PASS — минимальная ширина прохода, м
+  const KEY='pulse3d.layout', FORMAT=1, PASS=0.7; // PASS — minimum passage width, m
   const ray=new THREE.Raycaster(), plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
   const DIRS={N:'север',S:'юг',E:'восток',W:'запад'};
-  const base={}; ITEMS.forEach(it=>{ base[it.id]={pos:it.pos.slice(),rot:it.rot||0}; }); // исходная расстановка (неизменяемая)
+  const base={}; ITEMS.forEach(it=>{ base[it.id]={pos:it.pos.slice(),rot:it.rot||0}; }); // base layout (immutable)
 
-  // ---------- варианты ----------
+  // ---------- variants ----------
   function poseOf(id){ const u=ITEM_GROUPS[id].userData; return {pos:u.pos.slice(),rot:u.rot}; }
   function variant(){ return LAY.variants[LAY.cur]; }
   function applyVariant(i){
@@ -24,7 +24,7 @@
   function resetVariant(){ const v=variant(); if(v.locked) return; v.poses={}; applyVariant(LAY.cur); }
   function deleteVariant(){ if(variant().locked||LAY.variants.length<=1) return; if(!confirm('Удалить вариант «'+variant().name+'»?')) return; LAY.variants.splice(LAY.cur,1); applyVariant(Math.max(0,LAY.cur-1)); }
 
-  // ---------- перестановка ----------
+  // ---------- moving ----------
   function ensureEditable(){ if(!variant().locked) return; LAY.variants.push({name:'Вариант '+LAY.variants.length,poses:{}}); applyVariant(LAY.variants.length-1); setHint('«Исходная» только для чтения — создан вариант «'+variant().name+'»'); }
   function setPose(id,pos,rot){ // with history and attached items (chairs follow the table)
     ensureEditable();
@@ -35,7 +35,7 @@
     recordPose(id); LAY.hist.push(before); select(id); persist();
   }
   function undo(){ const h=LAY.hist.pop(); if(!h) return; setItemPose(h.id,h.pose.pos,h.pose.rot); recordPose(h.id); h.att.forEach(a=>{ setItemPose(a.id,a.pose.pos,a.pose.rot); recordPose(a.id); }); select(h.id); persist(); }
-  // пристенный предмет двигается только вдоль ближайшей стены своей комнаты
+  // a wall-fixed item moves only along the nearest wall of its room
   function constrain(id,pos){
     const u=ITEM_GROUPS[id].userData; if(u.fixed!=='wall') return pos;
     const room=PLAN.rooms.find(r=>r.id===u.room); if(!room) return pos;
@@ -47,7 +47,7 @@
   }
   LAY.setPose=setPose; LAY.undo=undo; LAY.constrain=constrain;
 
-  // ---------- предупреждения ----------
+  // ---------- warnings ----------
   function aabb(id){ const c=itemCorners(id); return [Math.min(...c.map(q=>q[0])),Math.min(...c.map(q=>q[1])),Math.max(...c.map(q=>q[0])),Math.max(...c.map(q=>q[1]))]; }
   function inPoly(p,poly){ let c=false; for(let i=0,j=poly.length-1;i<poly.length;j=i++){ const [xi,zi]=poly[i],[xj,zj]=poly[j]; if((zi>p[1])!==(zj>p[1])&&p[0]<(xj-xi)*(p[1]-zi)/(zj-zi)+xi) c=!c; } return c; }
   function warnings(id){
@@ -57,7 +57,7 @@
     ITEMS.filter(it=>it.id!==id&&it.attach!==id&&u.attach!==it.id).forEach(it=>{
       const o=aabb(it.id), ou=ITEM_GROUPS[it.id].userData;
       const ox=Math.min(b[2],o[2])-Math.max(b[0],o[0]), oz=Math.min(b[3],o[3])-Math.max(b[1],o[1]);
-      const yOverlap=!(u.size[1]<=0||ou.size[1]<=0)&&true; // высоты: подвесные (низ выше 1.9) не мешают напольным
+      const yOverlap=!(u.size[1]<=0||ou.size[1]<=0)&&true; // heights: hanging items (bottom above 1.9) do not block floor-standing ones
       const lowA=lowEdge(id), lowB=lowEdge(it.id);
       if(ox>0.005&&oz>0.005&&!(lowA>=1.9||lowB>=1.9)) w.push('пересекается с '+it.id+' ('+it.type+')');
       else if(ox>-PASS&&oz>-PASS&&(ox<=0.005||oz<=0.005)&&!(lowA>=1.9||lowB>=1.9)){ const gap=Math.max(-ox,-oz); if(gap>0.005&&gap<PASS) w.push('проход до '+it.id+' '+gap.toFixed(2)+' м (< '+PASS+')'); }
@@ -104,14 +104,14 @@
     card.querySelector('[data-a=undo]').onclick=undo;
   }
   function setHint(t){ ui.querySelector('.mk-hint').textContent=t; }
-  function describe(){ // текст варианта для агента
+  function describe(){ // variant text for the agent
     const v=variant(); const L=['Вариант расстановки «'+v.name+'», план v'+(PLAN.meta?PLAN.meta.version:1)+', метры, x → восток, z → юг; pos — северо-западный угол при rot=0, rot по часовой.'];
     ITEMS.forEach(it=>{ const u=ITEM_GROUPS[it.id].userData; const ch=(v.poses&&v.poses[it.id])?' (изменён)':''; L.push(it.id+' ('+it.type+'), помещение '+it.room+': pos '+fmt(u.pos[0])+', '+fmt(u.pos[1])+'; rot '+u.rot+'°; размер '+fmt(u.size[0])+'×'+fmt(u.size[2])+'×'+fmt(u.size[1])+ch); });
     return L.join('\n');
   }
   LAY.describe=describe; LAY.select=select; LAY.applyVariant=applyVariant; LAY.copyVariant=copyVariant;
 
-  // ---------- сохранение ----------
+  // ---------- persistence ----------
   function dump(){ return {format:FORMAT,plan:PLAN.meta?PLAN.meta.version:1,cur:LAY.cur,variants:LAY.variants.filter(v=>!v.locked)}; }
   function validate(d){ const e=[]; if(!d||typeof d!=='object') return ['не объект']; if(d.format!==FORMAT) e.push('формат '+d.format);
     if(!Array.isArray(d.variants)) e.push('нет variants'); else d.variants.forEach((v,i)=>{ if(!v||typeof v.name!=='string'||(v.poses&&typeof v.poses!=='object')) e.push('вариант #'+(i+1)+' повреждён');
@@ -123,7 +123,7 @@
   function importText(t){ let d; try{ d=JSON.parse(t); }catch(e){ setHint('Импорт отклонён: не JSON'); return false; } const e=validate(d); if(e.length){ setHint('Импорт отклонён: '+e.join(', ')); return false; } restore(d); setHint('Импортировано вариантов: '+d.variants.length); return true; }
   LAY.dump=dump; LAY.validate=validate; LAY.importText=importText; LAY.exportText=()=>JSON.stringify(dump(),null,1); LAY.persist=persist;
 
-  // ---------- события ----------
+  // ---------- events ----------
   function toggle(on){ LAY.on=on==null?!LAY.on:on; ui.hidden=!LAY.on; btn.classList.toggle('on',LAY.on); if(LAY.on){ if(!controls.plan) setView('top'); controls.lookDown(); if(window.MK&&MK.on) MK.toggle(false); setHint('Кликните предмет на плане'); } else { LAY.tool=null; select(null); } }
   LAY.toggle=toggle;
   btn.addEventListener('click',()=>toggle());

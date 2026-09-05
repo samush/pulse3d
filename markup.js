@@ -1,18 +1,18 @@
-// Режим «Разметка» (план): точка, отрезок, прямоугольник по клику на плоскость чистового пола.
-// Метки живут в памяти (сохранение — T08), у каждой постоянный ID M1, M2, …; карточка справа даёт
-// численное редактирование, перенос, удаление и текст задания для агента. Использует глобальные
-// scene, camera, controls, canvas, PLAN, ORG, THREE из app.js.
+// "Markup" mode (plan): point, segment, rectangle placed by clicking the finished-floor plane.
+// Marks live in memory (persistence is T08), each has a permanent ID M1, M2, ...; the right-hand card gives
+// numeric editing, moving, deleting and the task text for the agent.
+// Uses globals scene, camera, controls, canvas, PLAN, ORG, THREE from app.js.
 (function(){
   const MK={marks:[],sel:null,tool:null,draft:[],hist:[],next:1,step:0.05,snap:true};
   window.MK=MK;
   const group=new THREE.Group(); scene.add(group);
   const ui=document.getElementById('mk'), card=document.getElementById('mkCard');
   const btn=document.getElementById('mkBtn');
-  const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0); // чистовой пол y=0
+  const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0); // finished floor y=0
   const ray=new THREE.Raycaster();
   const DIRS={N:'север',S:'юг',E:'восток',W:'запад'};
 
-  // ---------- геометрия помещений ----------
+  // ---------- room geometry ----------
   function inPoly(p,poly){
     let c=false;
     for(let i=0,j=poly.length-1;i<poly.length;j=i++){
@@ -22,7 +22,7 @@
     return c;
   }
   function roomAt(p){ const r=PLAN.rooms.find(r=>inPoly(p,r.poly)); return r?r.id:null; }
-  function edges(room){ // осепараллельные рёбра комнаты: {ax:'x'|'z', v, lo, hi}
+  function edges(room){ // axis-aligned room edges: {ax:'x'|'z', v, lo, hi}
     const out=[]; const p=room.poly;
     for(let i=0;i<p.length;i++){
       const a=p[i], b=p[(i+1)%p.length];
@@ -31,7 +31,7 @@
     }
     return out;
   }
-  // расстояния от точки до ближайшей стены комнаты в четырёх направлениях
+  // distances from a point to the nearest room wall in four directions
   function wallDist(p,roomId){
     const room=PLAN.rooms.find(r=>r.id===roomId); if(!room) return null;
     const d={N:null,S:null,W:null,E:null};
@@ -47,8 +47,8 @@
     });
     return d;
   }
-  // привязка: шаг сетки от origin, затем стены/углы комнаты и края мебели ближе 15 см.
-  // Последняя привязка к мебели запоминается в MK.lastBind = {item, side} и попадает в метку.
+  // snapping: grid step from origin, then room walls/corners and furniture edges within 15 cm.
+  // Last furniture snap is kept in MK.lastBind = {item, side} and stored in the mark.
   function snapPt(p){
     let x=ORG[0]+Math.round((p[0]-ORG[0])/MK.step)*MK.step, z=ORG[1]+Math.round((p[1]-ORG[1])/MK.step)*MK.step;
     MK.lastBind=null;
@@ -58,7 +58,7 @@
         if(e.ax==='x' && Math.abs(p[0]-e.v)<0.15 && e.lo-0.15<=p[1] && p[1]<=e.hi+0.15) x=e.v;
         if(e.ax==='z' && Math.abs(p[1]-e.v)<0.15 && e.lo-0.15<=p[0] && p[0]<=e.hi+0.15) z=e.v;
       });
-      if(typeof ITEMS!=='undefined') ITEMS.forEach(it=>{ // края предметов по осевому габариту: W/E — грань по x, N/S — по z
+      if(typeof ITEMS!=='undefined') ITEMS.forEach(it=>{ // item edges by axis-aligned bounds: W/E — face along x, N/S — along z
         const c=itemCorners(it.id); const bx=[Math.min(...c.map(q=>q[0])),Math.min(...c.map(q=>q[1])),Math.max(...c.map(q=>q[0])),Math.max(...c.map(q=>q[1]))];
         const nearZ=bx[1]-0.15<=p[1]&&p[1]<=bx[3]+0.15, nearX=bx[0]-0.15<=p[0]&&p[0]<=bx[2]+0.15;
         if(nearZ&&Math.abs(p[0]-bx[0])<0.15){x=bx[0];MK.lastBind={item:it.id,side:'W'};}
@@ -69,14 +69,14 @@
     }
     return [Math.round(x*1000)/1000, Math.round(z*1000)/1000];
   }
-  // где сейчас край предмета, к которому привязана метка; null, если предмета нет
+  // current edge of the item a mark is bound to; null if the item is gone
   function bindEdge(bind){
     if(!bind||typeof ITEM_GROUPS==='undefined'||!ITEM_GROUPS[bind.item]) return null;
     const c=itemCorners(bind.item); const xs=c.map(q=>q[0]), zs=c.map(q=>q[1]);
     return {W:Math.min(...xs),E:Math.max(...xs),N:Math.min(...zs),S:Math.max(...zs)}[bind.side];
   }
-  // настенная точка: стена комнаты, угол отсчёта, расстояние вдоль стены → координата; и обратно
-  function wallSpec(m){ // {side:'N'|'S'|'W'|'E', from:'W'|'E'|'N'|'S', dist, h} → пересчёт из pts[0]
+  // wall point: room wall, reference corner, distance along the wall → coordinate; and back
+  function wallSpec(m){ // {side:'N'|'S'|'W'|'E', from:'W'|'E'|'N'|'S', dist, h} → derived from pts[0]
     const ids=rooms(m); const rid=ids.length===1?ids[0]:null; if(rid==null) return null;
     const room=PLAN.rooms.find(r=>r.id===rid); const xs=room.poly.map(q=>q[0]), zs=room.poly.map(q=>q[1]);
     return {room:rid,minX:Math.min(...xs),maxX:Math.max(...xs),minZ:Math.min(...zs),maxZ:Math.max(...zs)};
@@ -92,23 +92,23 @@
     const dist=along?(from==='E'?b.maxX-p[0]:p[0]-b.minX):(from==='S'?b.maxZ-p[1]:p[1]-b.minZ);
     return {side,from,dist:Math.round(dist*1000)/1000,h:m.y0||0};
   }
-  function cell(p){ // старый адрес клетки: D7+26
+  function cell(p){ // legacy cell address: D7+26
     const cx=Math.floor(p[0]-ORG[0]+1e-9), cz=Math.floor(p[1]-ORG[1]+1e-9);
     const dx=Math.floor(((p[0]-ORG[0])-cx)*10+1e-6), dz=Math.floor(((p[1]-ORG[1])-cz)*10+1e-6);
     return String.fromCharCode(65+cx)+(cz+1)+'+'+dx+dz;
   }
-  function rectCorners(m){ // 4 угла прямоугольника: опорная точка — северо-западный угол, поворот по часовой (вид сверху)
+  function rectCorners(m){ // 4 rectangle corners: anchor is the north-west corner, rotation clockwise (top view)
     const a=m.rot*Math.PI/180, c=Math.cos(a), s=Math.sin(a);
     const [x,z]=m.pts[0];
     return [[0,0],[m.w,0],[m.w,m.d],[0,m.d]].map(([u,v])=>[x+u*c-v*s, z+u*s+v*c]);
   }
-  function pick(e){ // экранная точка → точка на полу
+  function pick(e){ // screen point → point on the floor
     const ndc=new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight*2-1));
     ray.setFromCamera(ndc,camera);
     const p=new THREE.Vector3(); return ray.ray.intersectPlane(plane,p)?[p.x,p.z]:null;
   }
 
-  // ---------- отрисовка ----------
+  // ---------- drawing ----------
   const matPt=new THREE.MeshBasicMaterial({color:0xd32f2f}), matSel=new THREE.MeshBasicMaterial({color:0x2c5aa0});
   const matLine=new THREE.LineBasicMaterial({color:0xd32f2f}), matLineSel=new THREE.LineBasicMaterial({color:0x2c5aa0});
   const matBox=new THREE.MeshBasicMaterial({color:0xd32f2f,transparent:true,opacity:0.18,depthWrite:false});
@@ -141,14 +141,14 @@
         const e=new THREE.LineSegments(new THREE.EdgesGeometry(b.geometry),sel?matLineSel:matLine); e.rotation.copy(b.rotation); e.position.copy(b.position); group.add(e);
         const c=rectCorners(m); const cx=(c[0][0]+c[2][0])/2, cz=(c[0][1]+c[2][1])/2;
         group.add(label(m.id,cx,cz,y+h+0.3));
-        const a=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.02,16),sel?matSel:matPt); a.position.set(m.pts[0][0],y+0.02,m.pts[0][1]); group.add(a); // опорная точка
+        const a=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.02,16),sel?matSel:matPt); a.position.set(m.pts[0][0],y+0.02,m.pts[0][1]); group.add(a); // anchor point
       }
     });
     MK.draft.forEach(p=>{const d=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.02,16),matSel); d.position.set(p[0],0.02,p[1]); group.add(d);});
   }
   function segLen(m){ return Math.hypot(m.pts[1][0]-m.pts[0][0], m.pts[1][1]-m.pts[0][1]); }
 
-  // ---------- модель ----------
+  // ---------- model ----------
   function add(m){ m.id='M'+(MK.next++); m.name=m.name||''; m.y0=m.y0||0; if(m.y1==null) m.y1=m.type==='rect'?0.9:0; m.dir=m.dir||'S'; if(MK.lastBind&&!m.bind) m.bind=MK.lastBind; MK.lastBind=null; MK.marks.push(m); MK.hist.push({op:'add',m}); select(m); return m; }
   function remove(m){ const i=MK.marks.indexOf(m); if(i<0) return; MK.marks.splice(i,1); MK.hist.push({op:'del',m,i}); if(MK.sel===m) select(null); else redraw(); }
   function undo(){
@@ -160,7 +160,7 @@
   }
   function edit(m,patch){ const prev={}; Object.keys(patch).forEach(k=>prev[k]=structuredClone(m[k])); MK.hist.push({op:'edit',m,prev}); Object.assign(m,patch); select(m); }
   function select(m){ MK.sel=m; redraw(); renderCard(); persist(); }
-  function rooms(m){ // помещения под меткой; для прямоугольника — по углам
+  function rooms(m){ // rooms under the mark; for a rectangle — by its corners
     const pts=m.type==='rect'?rectCorners(m):m.pts;
     const ids=[...new Set(pts.map(roomAt))];
     return ids;
@@ -170,7 +170,7 @@
   MK.addSeg=(a,b)=>add({type:'seg',pts:[a,b]});
   MK.addRect=(a,w,d,rot)=>add({type:'rect',pts:[a],w,d,rot:rot||0});
 
-  // ---------- текст для агента ----------
+  // ---------- agent text ----------
   function fmt(v){ return (Math.round(v*100)/100).toFixed(2); }
   function describe(m){
     const ids=rooms(m); const roomTxt=ids.length===1&&ids[0]!=null?('помещение '+ids[0]):ids.every(i=>i==null)?'вне квартиры':('пересекает границу помещений '+ids.map(i=>i==null?'вне квартиры':i).join(' и '));
@@ -195,7 +195,7 @@
     L.push('Шаг сетки при разметке: '+Math.round(MK.step*100)+' см'+(MK.snap?', привязка к стенам включена':'')+'.');
     return L.join('\n');
   }
-  // предметы, чей контур на плане пересекает метку (точка/концы отрезка/прямоугольник) — по осевым габаритам
+  // items whose plan outline intersects the mark (point / segment ends / rectangle) — by axis-aligned bounds
   function itemsAt(m){
     if(typeof ITEMS==='undefined') return [];
     const pts=m.type==='rect'?rectCorners(m):m.pts;
@@ -206,7 +206,7 @@
   MK.itemsAt=itemsAt;
   MK.describe=describe;
 
-  // ---------- карточка ----------
+  // ---------- card ----------
   function renderCard(){
     const m=MK.sel;
     if(!m){ card.hidden=true; return; }
@@ -238,7 +238,7 @@
     card.querySelectorAll('input,select').forEach(el=>el.addEventListener('change',()=>{
       const k=el.dataset.k, v=el.type==='number'?parseFloat(el.value):el.value;
       if(k==='wallOn'){ if(el.checked){ const b=wallSpec(m); if(!b){ el.checked=false; setHint('Точка не в одном помещении — настенную привязку задать нельзя'); return; }
-          const d={N:p[1]-b.minZ,S:b.maxZ-p[1],W:p[0]-b.minX,E:b.maxX-p[0]}; const side=Object.keys(d).sort((a,c)=>d[a]-d[c])[0]; // ближайшая стена
+          const d={N:p[1]-b.minZ,S:b.maxZ-p[1],W:p[0]-b.minX,E:b.maxX-p[0]}; const side=Object.keys(d).sort((a,c)=>d[a]-d[c])[0]; // nearest wall
           const w=pointToWall(m,side,(side==='N'||side==='S')?'W':'N'); edit(m,{wall:w,pts:[wallToPoint({...m,wall:w})]}); } else edit(m,{wall:null}); return; }
       if(k==='wallSide'||k==='wallFrom'||k==='wallDist'){ const w=Object.assign({},m.wall); if(k==='wallSide'){ w.side=v; w.from=(v==='N'||v==='S')?'W':'N'; Object.assign(w,pointToWall(m,w.side,w.from)); } if(k==='wallFrom'){ Object.assign(w,pointToWall(m,w.side,v)); } if(k==='wallDist'){ if(isNaN(v)) return; w.dist=v; } const np=wallToPoint({...m,wall:w}); edit(m,{wall:w,pts:np?[np]:m.pts}); return; }
       if(k==='px'||k==='pz'||k==='qx'||k==='qz'){ if(isNaN(v)) return; const pts=JSON.parse(JSON.stringify(m.pts)); const i=k[0]==='q'?1:0; pts[i][k[1]==='x'?0:1]=v; edit(m,{pts}); return; }
@@ -257,11 +257,11 @@
   }
   function setHint(t){ ui.querySelector('.mk-hint').textContent=t; }
 
-  // ---------- сохранение: localStorage + файл ----------
+  // ---------- persistence: localStorage + file ----------
   const KEY='pulse3d.marks', FORMAT=1;
   function planVer(){ return PLAN.meta?PLAN.meta.version:1; }
   function dump(){ return {format:FORMAT,plan:planVer(),next:MK.next,marks:MK.marks.map(m=>{const c=Object.assign({},m); delete c.conflict; return c;})}; }
-  function validate(d){ // список ошибок формата; пустой — данные пригодны
+  function validate(d){ // list of format errors; empty means the data is usable
     const err=[]; if(!d||typeof d!=='object') return ['не объект'];
     if(d.format!==FORMAT) err.push('формат '+d.format+' вместо '+FORMAT);
     if(!Array.isArray(d.marks)) err.push('нет списка marks');
@@ -277,7 +277,7 @@
       }); }
     return err;
   }
-  function restore(d,source){ // подставить данные; вернуть текст статуса
+  function restore(d,source){ // load the data; returns status text
     MK.marks=d.marks.map(m=>Object.assign({name:'',y0:0,y1:m.type==='rect'?0.9:0,dir:'S'},m)); // defaults for optional fields the card reads MK.next=Math.max(d.next||1,...MK.marks.map(m=>parseInt(m.id.slice(1))+1),1); MK.hist=[]; MK.sel=null;
     const notes=[]; if(d.plan!==planVer()) notes.push('план v'+d.plan+' → v'+planVer()+': координаты оставлены как есть, проверьте метки');
     let moved=0; MK.marks.forEach(m=>{ if(m.bind){ const e=bindEdge(m.bind); const p=m.pts[0]; const cur=(m.bind.side==='W'||m.bind.side==='E')?p[0]:p[1];
@@ -298,7 +298,7 @@
   });
   ui.querySelector('[data-a=import]').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>importText(String(r.result)); r.onerror=()=>setHint('Файл не прочитан — текущая разметка сохранена'); r.readAsText(f); e.target.value=''; });
 
-  // ---------- инструменты и события ----------
+  // ---------- tools and events ----------
   const toolHint={point:'Кликните точку на плане',seg:'Кликните начало отрезка',rect:'Кликните первый угол прямоугольника',move:''};
   function setTool(t){ MK.tool=t; MK.draft=[]; ui.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===t)); setHint(t?toolHint[t]:'Выберите инструмент или метку'); redraw(); }
   MK.setTool=setTool;
@@ -324,7 +324,7 @@
     if(MK.tool==='seg'){ MK.draft.push(p); if(MK.draft.length===2){ add({type:'seg',pts:MK.draft.slice()}); MK.draft=[]; setHint(toolHint.seg); } else { setHint('Кликните конец отрезка (Esc — отмена)'); redraw(); } return; }
     if(MK.tool==='rect'){ MK.draft.push(p); if(MK.draft.length===2){ const [a,b]=MK.draft; const x0=Math.min(a[0],b[0]),z0=Math.min(a[1],b[1]); const w=Math.abs(b[0]-a[0]),d=Math.abs(b[1]-a[1]); MK.draft=[]; if(w<0.02||d<0.02){ setHint('Слишком маленький прямоугольник — кликните первый угол заново'); redraw(); return; } add({type:'rect',pts:[[x0,z0]],w,d,rot:0}); setHint(toolHint.rect); } else { setHint('Кликните противоположный угол (Esc — отмена)'); redraw(); } return; }
     if(MK.tool==='move'&&MK.sel){ const pts=JSON.parse(JSON.stringify(MK.sel.pts)); const d=[p[0]-pts[0][0],p[1]-pts[0][1]]; pts.forEach(q=>{q[0]+=d[0];q[1]+=d[1];}); edit(MK.sel,{pts}); setTool(null); return; }
-    // без инструмента — выбор ближайшей метки (до 0.3 м)
+    // no tool active — pick the nearest mark (within 0.3 m)
     let best=null,bd=0.3;
     MK.marks.forEach(m=>{ const pts=m.type==='rect'?rectCorners(m).concat([m.pts[0]]):m.pts; pts.forEach(q=>{ const dd=Math.hypot(q[0]-raw[0],q[1]-raw[1]); if(dd<bd){bd=dd;best=m;} }); if(m.type==='rect'&&inPoly(raw,rectCorners(m))){best=m;bd=0;} });
     select(best);
@@ -338,7 +338,7 @@
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){ undo(); e.preventDefault(); }
     if(e.key==='1') setTool('point'); if(e.key==='2') setTool('seg'); if(e.key==='3') setTool('rect');
   });
-  // выход из плана выключает разметку, метки остаются
+  // leaving the plan turns markup off, marks are kept
   ['vTop','vFP'].forEach(id=>document.getElementById(id).addEventListener('click',()=>{ if(MK.on&&!controls.plan) toggle(false); }));
   group.visible=true;
   loadLocal();

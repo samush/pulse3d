@@ -195,7 +195,7 @@ const { chromium } = require('playwright');
     window.prompt = () => 'проверка';
     const c0 = ITEM_GROUPS.chair1.userData.pos.slice();
     LAY.setPose('table', [ITEM_GROUPS.table.userData.pos[0] + 0.3, ITEM_GROUPS.table.userData.pos[1]], null);
-    const follow = Math.abs(ITEM_GROUPS.chair1.userData.pos[0] - c0[0] - 0.3) < 1e-9; LAY.undo(); LAY.variants.splice(LAY.cur, 1); LAY.applyVariant(0); // правка «Исходной» создаёт вариант — убрать
+    const follow = Math.abs(ITEM_GROUPS.chair1.userData.pos[0] - c0[0] - 0.3) < 1e-9; LAY.undo(); LAY.variants.splice(LAY.cur, 1); LAY.applyVariant(0); // editing "Base" creates a variant — drop it
     const sofa0 = ITEM_GROUPS.sofa.userData.pos.slice(); const n0 = LAY.variants.length;
     LAY.copyVariant(); const vi = LAY.cur; LAY.setPose('sofa', [8.4, 3.0], null);
     const overlap = LAY.warnings('sofa').some(w => /kitchen/.test(w));
@@ -207,8 +207,8 @@ const { chromium } = require('playwright');
   if (!lay.follow) problems.push('расстановка: стулья не поехали за столом');
   if (!lay.overlap) problems.push('расстановка: нет предупреждения о пересечении с кухней');
   if (!lay.orig || !lay.kept) problems.push('расстановка: варианты не изолированы');
-  // ревью 2026-09-05: правка «Исходной» создаёт вариант и сохраняется; поля карточки в мм; режимы взаимоисключающие;
-  // «на стене» у новой точки и снятие привязки не падают; импорт проверяет все поля и повтор ID
+  // review 2026-09-05: editing "Base" creates a variant and is saved; card fields in mm; modes are mutually exclusive;
+  // "on wall" for a new point and unbinding do not crash; import validates all fields and duplicate IDs
   const rev = await page.evaluate(() => {
     const out = {};
     LAY.applyVariant(0); LAY.setPose('sofa', [10.75, ITEM_GROUPS.sofa.userData.pos[1]], null);
@@ -301,7 +301,7 @@ const { chromium } = require('playwright');
       tone: renderer.toneMapping === THREE.ACESFilmicToneMapping && renderer.outputEncoding === THREE.sRGBEncoding, geom: JSON.stringify(PLAN) === pj && Math.abs(ITEM_GROUPS.sofa.userData.pos[0] - 11.35) < 1e-9 };
   }, planJson);
   const fpsViz = await fps();
-  // ревью 2026-09-05: ползунок стен ведёт PBR-двойники, не гасит порог балкона; потолок возвращается после плана
+  // review 2026-09-05: wall slider drives the PBR twins and does not hide the balcony threshold; ceiling returns after plan
   const wop = await page.evaluate(() => {
     const set = v => { const s = document.getElementById('wop'); s.value = v; s.dispatchEvent(new Event('input')); };
     set(50); const half = Math.abs(VIZ.std.get(wallMat).opacity - 0.5) < 1e-9 && Math.abs(VIZ.std.get(finishMats.wp).opacity - 0.5) < 1e-9;
