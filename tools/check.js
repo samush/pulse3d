@@ -202,6 +202,11 @@ const { chromium } = require('playwright');
   if (!lay.overlap) problems.push('расстановка: нет предупреждения о пересечении с кухней');
   if (!lay.orig || !lay.kept) problems.push('расстановка: варианты не изолированы');
 
+  // T12: детали не выходят за согласованный габарит предмета (pos/size) — допуск 3 см (ручки на фасаде)
+  const fit = await page.evaluate(() => ITEMS.filter(it => { const u = ITEM_GROUPS[it.id].userData; if (u.rot) return false; const bb = new THREE.Box3().setFromObject(ITEM_GROUPS[it.id]);
+    const t = 0.03; return !(bb.min.x >= u.pos[0] - t && bb.max.x <= u.pos[0] + u.size[0] + t && bb.min.z >= u.pos[1] - t && bb.max.z <= u.pos[1] + u.size[2] + t && bb.min.y >= -t && bb.max.y <= u.size[1] + t); }).map(it => it.id));
+  if (fit.length) problems.push('предметы вышли за свой габарит: ' + fit.join(', '));
+
   if (!items.uniq) problems.push('предметы: ID не уникальны');
   if (!items.moved) problems.push('предметы: перенос дивана не сдвинул все детали');
   if (!items.tvSame) problems.push('предметы: перенос дивана задел телевизор');
@@ -275,6 +280,28 @@ const { chromium } = require('playwright');
   if (!viz.tone) problems.push('визуализация: tone mapping / sRGB не включены');
   if (!viz.geom) problems.push('визуализация: изменилась геометрия или позы');
   if (!vizKept) problems.push('визуализация: режим не восстановился после перезагрузки');
+  // T12: сквозной сценарий — метка → текст для агента → размещение предмета по числам из текста → вариант → перезагрузка → прогулка
+  await page.click('#vTop'); await page.waitForTimeout(300);
+  const scen = await page.evaluate(() => {
+    window.prompt = () => 'по метке';
+    const m = MK.addRect([12.2, 2.6], 2.0, 0.88, 0); MK.edit(m, { name: 'место под диван', y1: 0.85 });
+    const text = MK.describe(m);
+    const mx = /x=([\d.]+), z=([\d.]+)/.exec(text), mr = /поворот (\d+)°/.exec(text); // так же читает агент
+    LAY.copyVariant(); LAY.setPose('sofa', [parseFloat(mx[1]), parseFloat(mx[2])], parseInt(mr[1]));
+    const u = ITEM_GROUPS.sofa.userData;
+    return { placed: Math.abs(u.pos[0] - 12.2) < 1e-9 && Math.abs(u.pos[1] - 2.6) < 1e-9 && u.rot === 0, variant: LAY.variants[LAY.cur].name, warn: LAY.warnings('sofa') };
+  });
+  await page.reload(); await page.waitForTimeout(2500);
+  const scen2 = await page.evaluate(async () => {
+    const u = ITEM_GROUPS.sofa.userData; const kept = LAY.variants[LAY.cur].name === 'по метке' && Math.abs(u.pos[1] - 2.6) < 1e-9 && MK.marks.some(k => k.name === 'место под диван');
+    controls.setFPV(13.0, 4.4, Math.PI); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp' })); await new Promise(r => setTimeout(r, 1500)); window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowUp' }));
+    const stopped = controls.pos.z > 2.6 + 0.88 + 0.25 && controls.pos.z < 2.6 + 0.88 + 0.7; // уперся в южный край дивана на новом месте
+    LAY.variants.splice(LAY.cur, 1); LAY.applyVariant(0); MK.marks.slice().forEach(k => MK.remove(k));
+    return { kept, stopped, z: controls.pos.z.toFixed(2) };
+  });
+  if (!scen.placed) problems.push('сценарий: предмет не встал по координатам из текста метки');
+  if (!scen2.kept) problems.push('сценарий: вариант или метка не восстановились после перезагрузки');
+  if (!scen2.stopped) problems.push('сценарий: прогулка не упёрлась в диван на новом месте (z=' + scen2.z + ')');
   console.log(`  кадров/с: план ${fpsPlain}, визуализация ${fpsViz} (viewport 1400×1000, прогулка в кухне)`);
   await browser.close();
 

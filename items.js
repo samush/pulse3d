@@ -20,9 +20,10 @@ const PHYS={}; // id → боксы
     wbody:M(0xc9c9c9), wdoor:M(0x6f6f6f), wpanel:M(0x9c9c9c),
     kbody:M(0xdadad6), kleg:M(0xbdbdb8), kmat:M(0xf0ede6), knob:M(0x4a4a4a),
     rail:new THREE.MeshLambertMaterial({color:0xbfd7e6,transparent:true,opacity:0.35}),
+    cushion:M(0x9a9a9a), screen:M(0x2a2a2a), ring:M(0x2f2f2f), pillow:M(0xf7f5ef),
   };
   const chair=(backEast)=>(b,g)=>{ // стул 0.42×0.42, спинка с запада или востока
-    b(0,0.42,0.42,0.46,0,0.42,mat.chair);
+    b(0,0.42,0.42,0.46,0,0.42,mat.chair); b(0.03,0.39,0.46,0.49,0.03,0.39,mat.cushion); // подушка сиденья
     const bx=backEast?0.38:0; b(bx,bx+0.04,0.46,0.9,0,0.42,mat.chair);
     [[0.03,0.03],[0.35,0.03],[0.03,0.35],[0.35,0.35]].forEach(([x,z])=>b(x,x+0.04,0,0.42,z,z+0.04,mat.chair));
   };
@@ -41,21 +42,25 @@ const PHYS={}; // id → боксы
        b(0,0.36,1.45,2.69,0.66,2.99,mat.upper);      // навесные шкафы до потолка
        b(0,0.6,0,2.69,2.99,3.59,mat.base);           // пенал
        b(0.6,0.62,0.8,1.4,3.04,3.54,mat.dark);       // духовка
+       [0.9,1.5,2.1,2.7].forEach(z=>b(0.6,0.615,0.79,0.8,z,z+0.15,mat.handle));   // ручки нижних шкафов (планки)
+       b(0.6,0.615,1.5,1.52,3.1,3.48,mat.handle);                                  // ручка пенала
+       [[0.2,1.25],[0.42,1.25],[0.2,1.55],[0.42,1.55]].forEach(([x,z])=>{ const r=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.004,24),mat.ring); r.position.set(x,0.927,z); g.add(r); }); // конфорки
      }},
     {id:'table',type:'стол на 6 мест',room:4,layer:'kitchen',pos:[9.85,KN+0.04],rot:0,size:[0.8,0.76,1.8],
-     build(b){ b(0,0.8,0.72,0.76,0,1.8,mat.table); [[0.05,0.05],[0.7,0.05],[0.05,1.7],[0.7,1.7]].forEach(([x,z])=>b(x,x+0.05,0,0.72,z,z+0.05,mat.table)); }},
+     build(b){ b(0,0.8,0.72,0.76,0,1.8,mat.table); b(0.05,0.75,0.64,0.72,0.05,1.75,mat.table); [[0.05,0.05],[0.7,0.05],[0.05,1.7],[0.7,1.7]].forEach(([x,z])=>b(x,x+0.05,0,0.72,z,z+0.05,mat.table)); }}, // царга под столешницей
     {id:'chair1',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(false)},
     {id:'chair2',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(false)},
     {id:'chair3',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(false)},
     {id:'chair4',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(true)},
     {id:'chair5',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(true)},
     {id:'chair6',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(true)},
-    {id:'lamp',type:'настенный светильник над столом',room:4,layer:'kitchen',pos:[10.23,KN],rot:0,size:[0.04,1.94,0.5],fixed:'wall',
-     build(b,g){ b(0,0.04,1.9,1.94,0,0.5,mat.lamp); const sh=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.16,16,1,true),mat.lamp); sh.position.set(0.02,1.82,0.5); g.add(sh); }},
-    {id:'tv',type:'телевизор 58"',room:4,layer:'kitchen',pos:[11.85,KN+0.02],rot:0,size:[1.3,1.75,0.04],fixed:'wall',build(b){ b(0,1.3,1.0,1.75,0,0.04,mat.dark); }},
+    {id:'lamp',type:'настенный светильник над столом',room:4,layer:'kitchen',pos:[10.12,KN],rot:0,size:[0.26,1.94,0.63],fixed:'wall', // габарит по плафону
+     build(b,g){ b(0.11,0.15,1.9,1.94,0,0.5,mat.lamp); const sh=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.16,16,1,true),mat.lamp); sh.position.set(0.13,1.82,0.5); g.add(sh); }},
+    {id:'tv',type:'телевизор 58"',room:4,layer:'kitchen',pos:[11.85,KN+0.02],rot:0,size:[1.3,1.75,0.04],fixed:'wall',build(b){ b(0,1.3,1.0,1.75,0,0.04,mat.dark); b(0.03,1.27,1.03,1.72,0.035,0.04,mat.screen); }}, // рамка и экран
     {id:'console',type:'подвесная консоль под ТВ',room:4,layer:'kitchen',pos:[11.9,KN],rot:0,size:[1.2,0.75,0.38],fixed:'wall',build(b){ b(0,1.2,0.45,0.75,0,0.38,mat.base); }},
     {id:'sofa',type:'диван 2 м',room:4,layer:'kitchen',pos:[11.35,6.287-0.9],rot:0,size:[2.0,0.85,0.88],
-     build(b){ b(0,2,0.1,0.42,0,0.88,mat.sofa); b(0,2,0.42,0.85,0.63,0.88,mat.sofa); b(0,0.15,0.42,0.6,0,0.88,mat.sofa); b(1.85,2,0.42,0.6,0,0.88,mat.sofa); }},
+     build(b){ b(0,2,0.1,0.42,0,0.88,mat.sofa); b(0,2,0.42,0.85,0.63,0.88,mat.sofa); b(0,0.15,0.42,0.6,0,0.88,mat.sofa); b(1.85,2,0.42,0.6,0,0.88,mat.sofa);
+       [[0.17,0.98],[1.02,1.83]].forEach(([x0,x1])=>{ b(x0,x1,0.42,0.52,0.05,0.62,mat.cushion); b(x0,x1,0.52,0.82,0.55,0.66,mat.cushion); }); }}, // подушки сиденья и спинки со швом посередине
     // ---- коридор 5 (эскизы .local/R2_*) ----
     {id:'wardrobe',type:'шкаф в нише',room:5,layer:'hall',pos:[8.20,7.974-0.45],rot:0,size:[1.77,2.65,0.45],fixed:'wall',
      build(b){
@@ -94,6 +99,7 @@ const PHYS={}; // id → боксы
        b(1.0,2.2,PL-0.1,PL,0,2.0,mat.kbody);                                                    // платформа
        [[1.0,0],[2.12,0],[1.0,1.92],[2.12,1.92]].forEach(([x,z])=>b(x,x+0.08,0,PL-0.1,z,z+0.08,mat.kleg)); // ноги
        b(1.05,2.17,PL,PL+0.15,0.03,1.95,mat.kmat);                                              // матрас
+       b(1.15,2.07,PL+0.15,PL+0.25,0.1,0.5,mat.pillow);                                           // подушка
        b(1.0,1.02,PL,TOP,0.6,2.0,mat.rail);                                                     // борт
        b(1.0,2.2,HF,TOP,2.0,2.97,mat.kbody); b(1.0,1.08,0,HF,2.89,2.97,mat.kleg);               // полка хранения над проходом и нога
        b(1.0,1.02,TOP,TOP+0.3,2.0,2.97,mat.rail); b(1.02,2.2,TOP,TOP+0.3,2.95,2.97,mat.rail);   // бортики полки
