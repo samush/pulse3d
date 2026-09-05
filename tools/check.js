@@ -49,6 +49,7 @@ const { chromium } = require('playwright');
 
   await page.goto(url);
   await page.waitForTimeout(3500);
+  await page.evaluate(() => { try { localStorage.removeItem('pulse3d.marks'); } catch (e) {} }); // чистый старт разметки
   await page.screenshot({ path: path.join(outDir, 'default.png') });
 
   const report = await page.evaluate(() => {
@@ -146,9 +147,27 @@ const { chromium } = require('playwright');
     const txt = MK.describe(rect);
     const out = { pt: p && Math.abs(p[0] - exp[0]) < 1e-6 && Math.abs(p[1] - exp[1]) < 1e-6, len: Math.abs(Math.hypot(3, 4) - Math.hypot(seg.pts[1][0] - seg.pts[0][0], seg.pts[1][1] - seg.pts[0][1])) < 1e-9,
       txt: /поворот 90°/.test(txt) && /Шаг сетки/.test(txt) && /помещение 1/.test(txt) && /x=1\.50, z=2\.50/.test(txt) };
+    // T08: привязка к краю дивана, настенная точка, экспорт → импорт, отказ битого файла
+    const sp = MK.snapPt([11.40, 5.6]); const bm = MK.addPoint(sp);
+    out.bind = !!(bm.bind && bm.bind.item === 'sofa' && bm.bind.side === 'W' && Math.abs(sp[0] - 11.35) < 1e-6);
+    const wm = MK.addPoint([2.5, 1.95]); wm.wall = { side: 'N', from: 'W', dist: 1.604, h: 1.2 }; MK.edit(wm, { y0: 1.2 });
+    out.wall = /стена север помещения 1.*1\.60 м вдоль стены.*1\.20 м/.test(MK.describe(wm));
+    const dumpText = MK.exportText(); const ids = MK.marks.map(m => m.id).join();
+    MK.marks.slice().forEach(m => MK.remove(m));
+    out.reject = !MK.importText('{bad') && !MK.importText(JSON.stringify({ format: 9, marks: [] })) && MK.marks.length === 0;
+    out.roundtrip = MK.importText(dumpText) && MK.marks.map(m => m.id).join() === ids && MK.marks.find(m => m.id === bm.id).bind.item === 'sofa';
     MK.marks.slice().forEach(m => MK.remove(m)); MK.toggle(false);
     return out;
   }, expPt);
+  // T08: метки переживают перезагрузку страницы с теми же ID
+  const idsBefore = await page.evaluate(() => { MK.addPoint([3, 3]); MK.addRect([12, 3], 1, 0.5, 0); return MK.marks.map(m => m.id).join(); });
+  await page.reload(); await page.waitForTimeout(2500);
+  const persisted = await page.evaluate((ids) => { const ok = MK.marks.map(m => m.id).join() === ids && MK.marks[1].type === 'rect' && MK.marks[1].w === 1; MK.marks.slice().forEach(m => MK.remove(m)); return ok; }, idsBefore);
+  if (!persisted) problems.push('разметка: метки не восстановились после перезагрузки');
+  if (!mk.bind) problems.push('разметка: привязка к краю дивана не сработала');
+  if (!mk.wall) problems.push('разметка: описание настенной точки неверно');
+  if (!mk.reject) problems.push('разметка: битый импорт не отклонён или стёр метки');
+  if (!mk.roundtrip) problems.push('разметка: экспорт→импорт не сохранил ID и привязки');
   // предметы: перенос дивана двигает все его детали на ту же дельту, соседи на месте; поворот стола меняет контур
   const items = await page.evaluate(() => {
     const bbs = id => { const L = []; ITEM_GROUPS[id].traverse(o => { if (o.isMesh) L.push(new THREE.Box3().setFromObject(o)); }); return L; };
