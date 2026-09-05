@@ -69,6 +69,28 @@ const { chromium } = require('playwright');
     return { canvas: !!(c && c.width > 0), nRooms: rooms.length, rooms };
   });
 
+  // высоты от чистового пола (y=0): отделка пола у нуля, плинтус 0–0.1, потолок H, дверная перемычка 2.1,
+  // мебель не утоплена — нижняя грань всех предметов ≥ 0
+  const hts = await page.evaluate(() => {
+    const bb = o => new THREE.Box3().setFromObject(o);
+    const minY = g => g.children.reduce((m, o) => Math.min(m, bb(o).min.y), Infinity);
+    const floor = finishGroup.children.find(o => o.geometry && o.geometry.type === 'ShapeGeometry');
+    const plinth = finishGroup.children.find(o => o.geometry && o.geometry.type === 'BoxGeometry' && Math.abs(bb(o).max.y - bb(o).min.y - 0.1) < 1e-3);
+    const ceil = ceilGroup.children[0];
+    return {
+      floor: floor ? bb(floor).min.y : null,
+      plinth: plinth ? [bb(plinth).min.y, bb(plinth).max.y] : null,
+      ceil: ceil ? bb(ceil).min.y : null,
+      furnitureMin: Math.min(...[furnGroup, hallGroup, laundryGroup, kidGroup].map(minY)),
+      doorTop: (() => { const m = finishGroup.children.filter(o => o.geometry && o.geometry.type === 'BoxGeometry').map(o => bb(o).max.y); return m.filter(y => Math.abs(y - 2.17) < 0.02).length; })(),
+    };
+  });
+  if (hts.floor == null || hts.floor < 0 || hts.floor > 0.02) problems.push('отделка пола не у чистового пола: y=' + hts.floor);
+  if (!hts.plinth || Math.abs(hts.plinth[0]) > 0.01 || Math.abs(hts.plinth[1] - 0.1) > 0.01) problems.push('плинтус не 0–0.1: ' + JSON.stringify(hts.plinth));
+  if (hts.ceil == null || Math.abs(hts.ceil - 2.7) > 0.01) problems.push('потолок не на 2.7: ' + hts.ceil);
+  if (hts.furnitureMin < -0.001) problems.push('мебель утоплена ниже пола: min y=' + hts.furnitureMin);
+  if (!hts.doorTop) problems.push('дверные коробки: верх перемычки не на 2.1+0.07');
+
   if (!report.canvas) problems.push('канвас сцены не создан');
   if (report.nRooms !== 10) problems.push('ожидалось 10 комнат, получено ' + report.nRooms);
   for (const r of report.rooms) {
