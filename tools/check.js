@@ -385,7 +385,7 @@ const { chromium } = require('playwright');
     const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     return { n: its.length, inside, bedEast: bed.max.x, cab, door, consoleLow: console_, rugTop, overlap, colored, tv: (bb(ITEM_GROUPS.mtv).min.x + bb(ITEM_GROUPS.mtv).max.x) / 2 };
   });
-  if (m3.n < 27) problems.push('комната 3: предметов слоя master ' + m3.n + ' (< 27)');
+  if (m3.n < 26) problems.push('комната 3: предметов слоя master ' + m3.n + ' (< 26)');
   if (m3.inside.length) problems.push('комната 3: предметы вне помещения: ' + m3.inside.join(', '));
   if (Math.abs(m3.bedEast - 14.76) > 0.01) problems.push('комната 3: кровать не у восточной стены: x1=' + m3.bedEast.toFixed(3));
   if (m3.cab) problems.push('комната 3: блок ящиков/шкаф заходит на окно');
