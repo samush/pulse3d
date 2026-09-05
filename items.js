@@ -114,30 +114,29 @@ const PHYS={}; // id → boxes
          b((x0+x1)/2-0.075,(x0+x1)/2+0.075,top-0.07,top-0.05,0.52,0.54,mat.knob);
          b(x0,x1,top+0.885,top+0.915,0.02,0.05,mat.oak); }                                          // handrail segments on the north wall, tread + 0.90
      }},
-    {id:'kiddesk',type:'стол-подоконник во всю западную стену',room:1,layer:'kid',pos:[0.896,1.874],rot:0,size:[0.75,0.72,2.99],fixed:'wall',
+    {id:'kiddesk',type:'угловой стол: вдоль окна 2.39 м и вдоль южной стены 1.23 м',room:1,layer:'kid',pos:[0.896,2.474],rot:0,size:[1.234,0.72,2.39],fixed:'wall',
      build(b){
-       b(0,0.75,0.68,0.72,0,2.99,mat.hpl);                                                           // worktop, light HPL
-       b(0.02,0.73,0,0.68,0,0.02,mat.kbody); b(0.02,0.73,0,0.68,2.97,2.99,mat.kbody);                // side panels
-       b(0.05,0.73,0,0.68,1.03,1.05,mat.kbody);                                                      // middle support at z≈2.9, clear of the chair
-       b(0.10,0.20,0.72,0.725,1.19,1.79,mat.knob);                                                   // vent grille over the radiator, 0.60 × 0.10
-       b(0.10,0.52,0.03,0.63,2.43,2.93,mat.kbody);                                                   // mobile pedestal 0.42 × 0.50 × 0.60
-       [0.06,0.24,0.42].forEach(y=>{ b(0.52,0.53,y,y+0.16,2.44,2.92,mat.oak); b(0.53,0.545,y+0.1,y+0.12,2.6,2.76,mat.knob); }); // 3 drawers
+       b(0,0.75,0.68,0.72,0,2.39,mat.hpl); b(0.75,1.234,0.68,0.72,1.79,2.39,mat.hpl);                 // worktop: west wing and south wing (depth 0.60)
+       b(0.02,0.73,0,0.68,0,0.02,mat.kbody); b(1.214,1.234,0,0.68,1.81,2.37,mat.kbody);               // end panels: north (at the shelf unit) and east
+       b(0.05,0.73,0,0.68,0.98,1.0,mat.kbody);                                                        // middle support under the west wing, clear of the chair
+       b(0.10,0.20,0.72,0.725,0.59,1.19,mat.knob);                                                     // vent grille over the radiator, 0.60 × 0.10
+       b(0.10,0.52,0.03,0.63,1.83,2.33,mat.kbody);                                                     // mobile pedestal 0.42 × 0.50 × 0.60 under the corner
+       [0.06,0.24,0.42].forEach(y=>{ b(0.52,0.53,y,y+0.16,1.84,2.32,mat.oak); b(0.53,0.545,y+0.1,y+0.12,2.0,2.16,mat.knob); }); // 3 drawers
      }},
-    {id:'kidchair',type:'рабочее кресло, регулируемое',room:1,layer:'kid',pos:[1.55,3.10],rot:0,size:[0.55,0.85,0.55],
+    {id:'kidchair',type:'рабочее кресло, регулируемое',room:1,layer:'kid',pos:[1.58,3.60],rot:0,size:[0.55,0.85,0.55],
      build(b,g){
        b(0.05,0.50,0.42,0.47,0.05,0.50,mat.terra); b(0.50,0.55,0.47,0.85,0.08,0.47,mat.terra);      // seat and back, faces the window
        const c=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.39,10),mat.knob); c.position.set(0.275,0.225,0.275); g.add(c); // gas lift
        b(0.03,0.52,0,0.03,0.26,0.29,mat.knob); b(0.26,0.29,0,0.03,0.03,0.52,mat.knob);                // base cross
      }},
-    {id:'kidshelf',type:'стеллаж до потолка',room:1,layer:'kid',pos:[1.646,1.874],rot:0,size:[1.189,2.70,0.43],fixed:'wall',
+    {id:'kidshelf',type:'стеллаж узкий в углу, фасадом к двери',room:1,layer:'kid',pos:[0.896,2.474],rot:270,size:[0.60,2.50,0.43],fixed:'wall',
      build(b){
-       const W=1.189, D=0.40, t=0.02, S=(W-4*t)/3;
-       b(0,W,0,t,0,D,mat.kbody); b(0,W,2.7-t,2.7,0,D,mat.kbody); b(0,W,t,2.7-t,0,t,mat.oak);         // bottom, top, oak back
-       for(let i=0;i<4;i++) b(i*(S+t),i*(S+t)+t,t,2.7-t,t,D,mat.kbody);                              // 4 verticals → 3 sections
-       [0.90,1.27,1.63,2.00].forEach(y=>b(t,W-t,y-t,y,t,D,mat.kbody));                                // shelves: closed 0–0.9, open cells 0.9–2.0, attic 2.0–2.7
-       for(let i=0;i<3;i++){ const x0=t+i*(S+t);
-         b(x0+0.003,x0+S-0.003,t+0.003,0.90-t-0.003,D,D+0.018,mat.oak); b(x0+S/2-0.005,x0+S/2+0.005,0.78,0.86,D+0.018,D+0.03,mat.knob);   // lower doors
-         b(x0+0.003,x0+S-0.003,2.0+0.003,2.7-t-0.003,D,D+0.018,mat.oak); b(x0+S/2-0.005,x0+S/2+0.005,2.05,2.13,D+0.018,D+0.03,mat.knob); } // attic doors
+       const W=0.60, D=0.40, t=0.02;
+       b(0,W,0,t,0,D,mat.kbody); b(0,W,2.5-t,2.5,0,D,mat.kbody); b(0,W,t,2.5-t,0,t,mat.oak);           // bottom, top, oak back
+       b(0,t,t,2.5-t,t,D,mat.kbody); b(W-t,W,t,2.5-t,t,D,mat.kbody);                                  // sides
+       [0.90,1.27,1.63,2.00].forEach(y=>b(t,W-t,y-t,y,t,D,mat.kbody));                                 // shelves: closed 0–0.9, open cells 0.9–2.0, attic 2.0–2.5
+       b(t+0.003,W-t-0.003,t+0.003,0.90-t-0.003,D,D+0.018,mat.oak); b(W/2-0.005,W/2+0.005,0.78,0.86,D+0.018,D+0.03,mat.knob);   // lower door
+       b(t+0.003,W-t-0.003,2.0+0.003,2.5-t-0.003,D,D+0.018,mat.oak); b(W/2-0.005,W/2+0.005,2.05,2.13,D+0.018,D+0.03,mat.knob); // attic door
      }},
     {id:'kidsofa',type:'диванчик в нише под кроватью',room:1,layer:'kid',pos:[4.65,2.05],rot:0,size:[0.75,0.80,1.60],
      build(b){
@@ -145,31 +144,16 @@ const PHYS={}; // id → boxes
        b(0,0.60,0.45,0.60,0,0.15,mat.fabric); b(0,0.60,0.45,0.60,1.45,1.60,mat.fabric);              // armrests
        [[0.03,0.03],[0.69,0.03],[0.03,1.54],[0.69,1.54]].forEach(([x,z])=>b(x,x+0.03,0,0.10,z,z+0.03,mat.knob)); // legs
      }},
-    {id:'kidbench',type:'тумба-скамья с 4 ящиками',room:1,layer:'kid',pos:[2.35,4.41],rot:0,size:[1.80,0.50,0.45],fixed:'wall',
-     build(b){
-       b(0.03,1.77,0,0.05,0.05,0.42,mat.knob); b(0,1.80,0.05,0.45,0.02,0.45,mat.kbody); b(0,1.80,0.45,0.50,0.02,0.45,mat.terra); // plinth, body, seat cushion
-       for(let i=0;i<4;i++){ const x0=0.01+i*0.45; b(x0,x0+0.43,0.06,0.44,0,0.02,mat.oak); b(x0+0.14,x0+0.29,0.38,0.40,-0.012,0,mat.knob); } // drawer fronts north
-     }},
-    {id:'kidledge',type:'планка для рисунков',room:1,layer:'kid',pos:[1.75,4.75],rot:0,size:[2.40,1.05,0.10],fixed:'wall',
-     build(b){ b(0,2.4,1.02,1.05,0,0.095,mat.oak); b(0,2.4,1.05,1.07,0,0.02,mat.oak); }},          // shelf and front lip
-    {id:'kidshelf1',type:'открытая полка для поделок, нижняя',room:1,layer:'kid',pos:[2.00,4.61],rot:0,size:[2.15,1.45,0.25],fixed:'wall',
-     build(b){ b(0,2.15,1.42,1.45,0,0.235,mat.oak); [0.02,1.065,2.11].forEach(x=>b(x,x+0.02,1.30,1.42,0.05,0.235,mat.kbody)); }}, // brackets
-    {id:'kidshelf2',type:'открытая полка для поделок, верхняя',room:1,layer:'kid',pos:[2.00,4.61],rot:0,size:[2.15,1.85,0.25],fixed:'wall',
-     build(b){ b(0,2.15,1.82,1.85,0,0.235,mat.oak); [0.02,1.065,2.11].forEach(x=>b(x,x+0.02,1.70,1.82,0.05,0.235,mat.kbody)); }},
-    {id:'led2',type:'LED-лента под верхней полкой (подсветка нижней)',room:1,layer:'kid',pos:[2.00,4.62],rot:0,size:[2.15,1.82,0.02],fixed:'wall',
-     build(b){ b(0,2.15,1.81,1.82,0,0.02,mat.led); }},
     {id:'pegboard',type:'перфорированная панель над столом',room:1,layer:'kid',pos:[0.95,4.814],rot:0,size:[0.65,1.75,0.03],fixed:'wall',
      build(b){ b(0,0.65,0.95,1.75,0.01,0.03,mat.oak); [[0.12,1.55],[0.32,1.55],[0.52,1.55],[0.2,1.2],[0.45,1.2]].forEach(([x,y])=>b(x,x+0.03,y,y+0.03,-0.02,0.01,mat.knob)); }}, // hooks
     {id:'kidrug',type:'ковёр моющийся',room:1,layer:'kid',pos:[2.15,2.60],rot:0,size:[1.60,0.01,1.70],
      build(b){ b(0,1.6,0,0.01,0,1.7,mat.rug); }},
-    {id:'beanbag',type:'кресло-мешок',room:1,layer:'kid',pos:[3.10,3.02],rot:0,size:[0.68,0.65,0.68],
-     build(b,g){ const s=new THREE.Mesh(new THREE.SphereGeometry(0.34,20,14),mat.ochre); s.scale.y=0.65/0.68; s.position.set(0.34,0.325,0.34); g.add(s); }},
     {id:'projector',type:'проектор короткофокусный на потолке (throw ≈0.57, экран M13)',room:1,layer:'kid',pos:[2.15,3.235],rot:0,size:[0.30,2.70,0.25],fixed:'wall',
      build(b,g){ b(0,0.30,2.44,2.56,0,0.25,mat.kbody); b(0.02,0.06,2.47,2.53,-0.005,0,mat.knob); const c=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.14,8),mat.knob); c.position.set(0.15,2.63,0.125); g.add(c); }}, // body, lens to the west, bracket
     {id:'screen',type:'кассета моторизованного экрана 2.20×1.24 (свёрнут)',room:1,layer:'kid',pos:[0.99,2.20],rot:0,size:[0.12,2.65,2.30],fixed:'wall',
      build(b){ b(0,0.12,2.53,2.65,0,2.30,mat.kbody); b(0.03,0.09,2.52,2.53,0.05,2.25,mat.knob); }},   // ponytail: canvas not modelled, add a toggle when the cinema view is needed
-    {id:'curtain',type:'карниз с тюлем (блэкаут в проёме окна)',room:1,layer:'kid',pos:[0.911,1.874],rot:0,size:[0.05,2.68,2.99],fixed:'wall',
-     build(b){ b(0.01,0.04,2.65,2.68,0,2.99,mat.kbody); b(0.015,0.025,0.75,2.64,0.10,2.89,mat.tulle); }},
+    {id:'curtain',type:'карниз с тюлем (блэкаут в проёме окна)',room:1,layer:'kid',pos:[0.911,2.474],rot:0,size:[0.05,2.68,2.39],fixed:'wall',
+     build(b){ b(0.01,0.04,2.65,2.68,0,2.39,mat.kbody); b(0.015,0.025,0.75,2.64,0.10,2.29,mat.tulle); }},
     {id:'kidlight',type:'потолочный светильник Ø0.50, 3000 K, диммер',room:1,layer:'kid',pos:[2.45,3.25],rot:0,size:[0.50,2.70,0.50],fixed:'wall',
      build(b,g){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.25,0.04,32),mat.lamp); c.position.set(0.25,2.68,0.25); g.add(c); }},
     {id:'track',type:'трек с 2 спотами на галерейную стену',room:1,layer:'kid',pos:[1.90,4.22],rot:0,size:[2.20,2.70,0.06],fixed:'wall',
@@ -185,10 +169,10 @@ const PHYS={}; // id → boxes
      build(b){ b(0,0.01,0.91,0.99,0,0.08,mat.lamp); }},
     // sockets: flat boxes 0.08 × 0.08 × 0.01 on the wall, purpose in the caption; all with shutters
     {id:'sock1',type:'розетки 2+2 USB у стола, южный торец',room:1,layer:'kid',pos:[1.16,4.834],rot:0,size:[0.08,0.94,0.01],fixed:'wall',build(b){ b(0,0.08,0.86,0.94,0,0.01,mat.lamp); }},
-    {id:'sock2',type:'розетки 2+2 USB у стола, северный торец',room:1,layer:'kid',pos:[1.26,1.894],rot:0,size:[0.08,0.94,0.01],fixed:'wall',build(b){ b(0,0.08,0.86,0.94,0,0.01,mat.lamp); }},
+    {id:'sock2',type:'розетки 2+2 USB у стола, восточный торец',room:1,layer:'kid',pos:[2.06,4.834],rot:0,size:[0.08,0.94,0.01],fixed:'wall',build(b){ b(0,0.08,0.86,0.94,0,0.01,mat.lamp); }},
     {id:'sock3',type:'розетка + USB в нише под кроватью, вывод HDMI от проектора',room:1,layer:'kid',pos:[5.415,3.69],rot:0,size:[0.01,0.44,0.08],fixed:'wall',build(b){ b(0,0.01,0.36,0.44,0,0.08,mat.lamp); }},
     {id:'sock4',type:'розетка у изголовья кровати (ночник, телефон)',room:1,layer:'kid',pos:[4.66,1.894],rot:0,size:[0.08,2.09,0.01],fixed:'wall',build(b){ b(0,0.08,2.01,2.09,0,0.01,mat.lamp); }},
-    {id:'sock5',type:'розетка общего назначения (пылесос, увлажнитель)',room:1,layer:'kid',pos:[1.96,4.834],rot:0,size:[0.08,0.34,0.01],fixed:'wall',build(b){ b(0,0.08,0.26,0.34,0,0.01,mat.lamp); }},
+    {id:'sock5',type:'розетка общего назначения (пылесос, увлажнитель)',room:1,layer:'kid',pos:[2.56,4.834],rot:0,size:[0.08,0.34,0.01],fixed:'wall',build(b){ b(0,0.08,0.26,0.34,0,0.01,mat.lamp); }},
     {id:'sock6',type:'розетка в потолке для проектора',room:1,layer:'kid',pos:[2.26,3.51],rot:0,size:[0.08,2.70,0.08],fixed:'wall',build(b){ b(0,0.08,2.69,2.70,0,0.08,mat.lamp); }},
     {id:'sock7',type:'розетка в потолке для мотора экрана',room:1,layer:'kid',pos:[1.06,2.11],rot:0,size:[0.08,2.70,0.08],fixed:'wall',build(b){ b(0,0.08,2.69,2.70,0,0.08,mat.lamp); }},
   ];
