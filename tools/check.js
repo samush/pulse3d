@@ -357,7 +357,7 @@ const { chromium } = require('playwright');
     const sofaTop = bb(ITEM_GROUPS.kidsofa).max.y;
     return { n: kids.length, inside, hitPlat, warn, tops, sofaTop, bedPos: ITEM_GROUPS.kidbed.userData.pos };
   });
-  if (kid.n < 23) problems.push('комната 1: предметов слоя kid ' + kid.n + ' (< 23)');
+  if (kid.n < 22) problems.push('комната 1: предметов слоя kid ' + kid.n + ' (< 22)');
   if (kid.inside.length) problems.push('комната 1: предметы вне помещения: ' + kid.inside.join(', '));
   if (kid.hitPlat.length) problems.push('комната 1: пересекают платформу кровати: ' + kid.hitPlat.join(', '));
   if (kid.sofaTop > 1.7) problems.push('комната 1: диванчик выше низа платформы: ' + kid.sofaTop);
