@@ -75,7 +75,7 @@ const { chromium } = require('playwright');
     const bb = o => new THREE.Box3().setFromObject(o);
     const minY = g => g.children.reduce((m, o) => Math.min(m, bb(o).min.y), Infinity);
     const floor = finishGroup.children.find(o => o.geometry && o.geometry.type === 'ShapeGeometry');
-    const plinth = finishGroup.children.find(o => o.geometry && o.geometry.type === 'BoxGeometry' && Math.abs(bb(o).max.y - bb(o).min.y - 0.1) < 1e-3);
+    let plinth = null; finishGroup.traverse(o => { if (!plinth && o.isMesh && o.geometry.type === 'BoxGeometry' && Math.abs(bb(o).max.y - bb(o).min.y - 0.1) < 1e-3) plinth = o; });
     const ceil = ceilGroup.children[0];
     return {
       floor: floor ? bb(floor).min.y : null,
