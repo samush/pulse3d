@@ -77,12 +77,12 @@ const PHYS={}; // id → boxes
     {id:'table',type:'стол на 6 мест',room:4,layer:'kitchen',pos:[9.85,KN+0.04],rot:0,size:[0.8,0.76,1.8],
      build(b){ b.phys(0,0.8,0.72,0.76,0,1.8); b.phys(0.05,0.75,0.64,0.72,0.05,1.75); [[0.05,0.05],[0.7,0.05],[0.05,1.7],[0.7,1.7]].forEach(([x,z])=>b.phys(x,x+0.05,0,0.72,z,z+0.05)); // proxy = today's AABBs (top, apron, legs)
        b(0,0.8,0.72,0.76,0,1.8,mat.table); b(0.05,0.75,0.64,0.72,0.05,1.75,mat.table); [[0.05,0.05],[0.7,0.05],[0.05,1.7],[0.7,1.7]].forEach(([x,z])=>b(x,x+0.05,0,0.72,z,z+0.05,mat.table)); }}, // apron under the tabletop
-    {id:'chair1',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(false)},
-    {id:'chair2',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(false)},
-    {id:'chair3',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(false)},
-    {id:'chair4',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(true)},
-    {id:'chair5',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(true)},
-    {id:'chair6',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(true)},
+    {id:'chair1',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:90,build:chair(false)},
+    {id:'chair2',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:90,build:chair(false)},
+    {id:'chair3',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:90,build:chair(false)},
+    {id:'chair4',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:-90,build:chair(true)},
+    {id:'chair5',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:-90,build:chair(true)},
+    {id:'chair6',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:-90,build:chair(true)},
     {id:'lamp',type:'настенный светильник над столом',room:4,layer:'kitchen',pos:[10.12,KN],rot:0,size:[0.26,1.94,0.63],fixed:'wall', // size by the shade
      build(b,g){ b(0.11,0.15,1.9,1.94,0,0.5,mat.lamp); const sh=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.16,16,1,true),mat.lamp); sh.position.set(0.13,1.82,0.5); g.add(sh); }},
     {id:'tv',type:'телевизор 58"',room:4,layer:'kitchen',pos:[11.85,KN+0.02],rot:0,size:[1.3,1.75,0.04],fixed:'wall',build(b){ b(0,1.3,1.0,1.75,0,0.04,mat.dark); b(0.03,1.27,1.03,1.72,0.035,0.04,mat.screen); }}, // frame and screen
@@ -529,7 +529,7 @@ const PHYS={}; // id → boxes
     it.build(b,g);
     LAYERS[it.layer].add(g); ITEM_GROUPS[it.id]=g;
     poseGroup(g);
-    if(it.glb) g.userData.glb=it.glb;
+    if(it.glb){ g.userData.glb=it.glb; g.userData.glbRot=it.glbRot||0; }
     return g;
   }
   // GLB model of an item: the procedural build stays as fallback and proxy; on success its meshes are replaced by the model.
@@ -538,36 +538,37 @@ const PHYS={}; // id → boxes
   const slotMat=n=>{ if(!GLB_MATS[n]){ console.warn('glb: unknown material "'+n+'", grey used'); GLB_MATS[n]=M(0x8c8c8c); GLB_MATS[n].userData.slot=n; } return GLB_MATS[n]; };
   // Model checks on load (console warnings, never exceptions): metres, Box3 inside size ±1 cm, bottom at y=0, pivot at the NW corner,
   // facade like the procedural version (centroid of the top quarter offset from the footprint centre points the same way — back of a chair/sofa).
-  const topCentroid=(root,h)=>{ root.updateMatrixWorld(true); const inv=new THREE.Matrix4().copy(root.matrixWorld).invert(), v=new THREE.Vector3(), c=new THREE.Vector3(); let n=0;
-    root.traverse(o=>{ if(!o.isMesh) return; const p=o.geometry.attributes.position; for(let i=0;i<p.count;i++){ v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld).applyMatrix4(inv); if(v.y>0.75*h){ c.add(v); n++; } } });
-    return n?c.divideScalar(n):null; };
-  function validateItemGlb(id,model,ref){
+  // vertices of root's meshes in the frame of `frame` (the item group, or root itself when detached): bounding box and top-quarter centroid
+  const scan=(root,h,frame)=>{ frame=frame||root; frame.updateMatrixWorld(true); root.updateMatrixWorld(true); const inv=new THREE.Matrix4().copy(frame.matrixWorld).invert(), v=new THREE.Vector3(), c=new THREE.Vector3(), bb=new THREE.Box3(); let n=0;
+    root.traverse(o=>{ if(!o.isMesh) return; const p=o.geometry.attributes.position; for(let i=0;i<p.count;i++){ v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld).applyMatrix4(inv); bb.expandByPoint(v); if(v.y>0.75*h){ c.add(v); n++; } } });
+    return {bb,top:n?c.divideScalar(n):null}; };
+  function validateItemGlb(id,model,ref){ // ref: procedural group or its scan().top computed before removal
     const g=ITEM_GROUPS[id], sz=g.userData.size, out=[], warn=m=>{ out.push(m); console.warn('glb '+id+': '+m); };
-    model.updateMatrixWorld(true); const bb=new THREE.Box3().setFromObject(model), e=new THREE.Vector3(); bb.getSize(e);
+    const {bb,top:b}=scan(model,sz[1],model.parent||model), e=new THREE.Vector3(); bb.getSize(e);
     const r=Math.max(e.x,e.y,e.z)/Math.max(...sz); if(r>2||r<0.5) warn('units: model extent '+e.toArray().map(v=>v.toFixed(2)).join('×')+' vs size '+sz.join('×')+' — not metres?');
     else{ if(bb.min.x<-0.01||bb.min.z<-0.01||bb.max.x>sz[0]+0.01||bb.max.y>sz[1]+0.01||bb.max.z>sz[2]+0.01) warn('outside size: '+[bb.min.x,bb.min.z,bb.max.x,bb.max.y,bb.max.z].map(v=>v.toFixed(3)).join(' ')+' vs '+sz.join('×')+' (pivot must be the NW corner)');
       if(Math.abs(bb.min.y)>0.01) warn('bottom at y='+bb.min.y.toFixed(3)+', expected 0'); }
-    if(ref){ const a=topCentroid(ref,sz[1]), b=topCentroid(model,sz[1]), cx=sz[0]/2, cz=sz[2]/2;
+    if(ref){ const a=ref.isObject3D?scan(ref,sz[1]).top:ref, cx=sz[0]/2, cz=sz[2]/2;
       if(a&&b){ const ax=a.x-cx, az=a.z-cz, bx=b.x-cx, bz=b.z-cz, la=Math.hypot(ax,az), lb=Math.hypot(bx,bz);
         if(la>0.02&&(lb<0.01||(ax*bx+az*bz)/(la*lb)<0.5)) warn('facade: back points to ('+bx.toFixed(2)+','+bz.toFixed(2)+'), procedural ('+ax.toFixed(2)+','+az.toFixed(2)+')'); } }
     return out;
   }
   window.validateItemGlb=validateItemGlb;
+  const GLB_CACHE={}; // url → promise of the loaded scene; items sharing a file get clones with shared geometry (6 chairs = one geometry)
+  const fetchGlb=url=>GLB_CACHE[url]||(GLB_CACHE[url]=new Promise((res,rej)=>{ if(typeof THREE.GLTFLoader!=='function') return rej(new Error('no GLTFLoader'));
+    new THREE.GLTFLoader().load(url,gltf=>{ gltf.scene.traverse(o=>{ if(o.isMesh){ const name=o.material.name; o.material.dispose(); o.material=slotMat(name); } }); res(gltf.scene); },undefined,rej); }));
   function loadItemGlb(id,url){
     const g=ITEM_GROUPS[id]; url=url||g.userData.glb;
-    const fail=e=>{ VIZ.loadErrors=(VIZ.loadErrors||[]).concat(id+': '+url); return false; };
-    return new Promise(res=>{
-      if(typeof THREE.GLTFLoader!=='function') return res(fail());
-      new THREE.GLTFLoader().load(url,gltf=>{
-        const model=gltf.scene;
-        model.traverse(o=>{ if(o.isMesh){ const name=o.material.name; o.material.dispose(); o.material=slotMat(name); } });
-        g.userData.glbWarnings=validateItemGlb(id,model,g);
-        g.children.slice().forEach(c=>{ g.remove(c); c.traverse(o=>{ if(o.isMesh) o.geometry.dispose(); }); }); // procedural fallback out, its geometry freed
-        g.add(model); g.userData.glbLoaded=url;
-        if(window.VIZ&&VIZ.adopt) VIZ.adopt(g);
-        res(true);
-      },undefined,e=>res(fail(e)));
-    });
+    return fetchGlb(url).then(scene=>{
+      const model=scene.clone(), sz=g.userData.size, ref=scan(g,sz[1]).top;
+      if(g.userData.glbRot){ const a=-g.userData.glbRot*Math.PI/180, cx=sz[0]/2, cz=sz[2]/2; model.rotation.y=a; model.position.set(cx-(cx*Math.cos(a)+cz*Math.sin(a)),0,cz-(-cx*Math.sin(a)+cz*Math.cos(a))); } // turn about the footprint centre, same sense as rot
+      const old=g.children.slice(); g.add(model);
+      g.userData.glbWarnings=validateItemGlb(id,model,ref);
+      old.forEach(c=>{ g.remove(c); c.traverse(o=>{ if(o.isMesh) o.geometry.dispose(); }); }); // procedural fallback out, its geometry freed
+      g.userData.glbLoaded=url;
+      if(window.VIZ&&VIZ.adopt) VIZ.adopt(g);
+      return true;
+    },e=>{ VIZ.loadErrors=(VIZ.loadErrors||[]).concat(id+': '+url); return false; });
   }
   window.loadItemGlb=loadItemGlb;
   function poseGroup(g){ const u=g.userData; g.position.set(u.pos[0],0,u.pos[1]); g.rotation.y=-u.rot*Math.PI/180; g.updateMatrixWorld(true); rebuildPhys(g.userData.id); }
