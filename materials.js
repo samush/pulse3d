@@ -26,6 +26,11 @@ const MATERIALS={
   emitter:  {name:'светящаяся поверхность (LED)', rough:0.6, emissive:true},
   screen:   {name:'экран телевизора',     rough:0.15},
   paint:    {name:'крашеный каркас (стулья)', rough:0.45},
+  plastic:  {name:'пластик (рамки розеток, корпуса ламп)', rough:0.4},
+  ceramic:  {name:'керамика (сантехника)', rough:0.12},
+  acrylic:  {name:'акрил (ванна)',        rough:0.2},
+  leather:  {name:'кожа (изголовье, пуфы)', rough:0.6},
+  mirror:   {name:'зеркало',              rough:0.02, metal:1},
 };
 const VIZ={on:false,ready:false,std:new Map(),basic:new Map()};
 window.VIZ=VIZ; window.MATERIALS=MATERIALS;

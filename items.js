@@ -16,6 +16,7 @@ const PHYS={}; // id → boxes
     sofa:M(0x8a8a8a), lamp:M(0xd8d8d8), body:M(0x9a9a9a), door:M(0xa8a8a8), hdark:M(0x5a5a5a), handle:M(0x3c3c3c),
     glass:M(0xc3cbd2), frame:M(0x2e2e2e), pouf:M(0x8a8683), led:new THREE.MeshBasicMaterial({color:0xfff1cf}),
     wbody:M(0xc9c9c9), wdoor:M(0x6f6f6f), wpanel:M(0x9c9c9c),
+    plastic:M(0xd8d8d8), ceramic:M(0xe6e6e6), acrylic:M(0xe9e9e9), leather:M(0x8f8f8f), mirror:M(0xc3cbd2), // realism-all §4 slots
     kbody:M(0xdadad6), kleg:M(0xbdbdb8), kmat:M(0xf0ede6), knob:M(0x4a4a4a),
     rail:new THREE.MeshLambertMaterial({color:0xbfd7e6,transparent:true,opacity:0.35}),
     cushion:M(0x9a9a9a), screen:M(0x2a2a2a), ring:M(0x2f2f2f), pillow:M(0xf7f5ef),
@@ -23,7 +24,7 @@ const PHYS={}; // id → boxes
     tulle:new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:0.3,side:THREE.DoubleSide}),
   };
   // material slot = physical class for the visualization twin (B04); concept colours stay grey, MATERIALS[slot] gives roughness/metalness/emissive
-  const SLOTS={chrome:['handle','knob','ring'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle'],emitter:['led'],screen:['screen'],wood:['table'],paint:['chair']};
+  const SLOTS={chrome:['handle','knob','ring'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle'],emitter:['led'],screen:['screen'],wood:['table'],paint:['chair'],plastic:['plastic'],ceramic:['ceramic'],acrylic:['acrylic'],leather:['leather'],mirror:['mirror']};
   Object.entries(SLOTS).forEach(([slot,keys])=>keys.forEach(k=>{ mat[k].userData.slot=slot; }));
   window.ITEM_MATS=mat;
   const chair=(backEast)=>(b,g)=>{ // chair 0.42×0.42, back on the west or east side
@@ -112,7 +113,7 @@ const PHYS={}; // id → boxes
        b(0.01,0.03,1.15,1.85,0.10,0.13,mat.led); b(0.01,0.03,1.15,1.85,0.27,0.30,mat.led);
      }},
     {id:'mirror',type:'зеркало',room:5,layer:'hall',pos:[6.346,6.05],rot:0,size:[0.025,2.4,0.9],fixed:'wall',
-     build(b){ b(0,0.02,0.15,2.40,0,0.9,mat.frame); b(0.02,0.025,0.17,2.38,0.02,0.88,mat.glass); }},
+     build(b){ b.phys(0,0.025,0.15,2.40,0,0.9); b.round(0,0.02,0.15,2.40,0,0.9,0.01,mat.frame); b.round(0.02,0.025,0.16,2.39,0.01,0.89,0.002,mat.mirror); }}, // backing board with rounded corners, 5 mm mirror glass
     {id:'pouf',type:'пуфик',room:5,layer:'hall',pos:[6.396,6.75],rot:0,size:[0.4,0.45,0.6],
      build(b){ b(0,0.4,0.12,0.45,0,0.6,mat.pouf); [[0.03,0.03],[0.34,0.03],[0.03,0.54],[0.34,0.54]].forEach(([x,z])=>b(x,x+0.03,0,0.12,z,z+0.03,mat.frame)); }},
     // ---- laundry 7 ----
@@ -383,7 +384,7 @@ const PHYS={}; // id → boxes
     // electrics: flat boxes 0.08 × 0.08 × 0.01
     {id:'sock21',type:'розетка IP44 + USB на фасаде короба инсталляции, h 1.00',room:9,layer:'bath',pos:[9.68,9.737],rot:0,size:[0.08,1.04,0.01],fixed:'wall',build(b){ b(0,0.08,0.96,1.04,0,0.01,mat.lamp); }},
     {id:'sock22',type:'скрытый вывод для полотенцесушителя, h 0.45',room:9,layer:'bath',pos:[9.842,8.294],rot:0,size:[0.01,0.49,0.08],fixed:'wall',build(b){ b(0,0.01,0.41,0.49,0,0.08,mat.lamp); }},
-    {id:'sw5',type:'выключатель 2 клавиши в коридоре у двери санузла: свет + вытяжка; рядом терморегулятор тёплого пола',room:5,layer:'bath',pos:[10.038,8.414],rot:0,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b(0,0.01,0.91,0.99,0,0.08,mat.lamp); }},
+    {id:'sw5',type:'выключатель 2 клавиши в коридоре у двери санузла: свет + вытяжка; рядом терморегулятор тёплого пола',room:5,layer:'bath',pos:[10.038,8.414],rot:0,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.91,0.99,0,0.08,mat.plastic,{keys:2}); }},
     // ---- bathroom 8 (tasks/bath8/README.md, marks M1–M21; grey materials only) ----
     // Room box: x 8.192–9.872, z 11.588–13.144 plus the bump x 9.098–9.872, z 11.384–11.588 (closed by wcbox8). Door on the east
     // wall z 12.20–13.00. The shower runs along the whole west wall (opposite the door); no basin in this room (iteration 2). Tiles follow PLAN.baths[1]: west at x 8.235, south at z 13.124, east at x 9.852; the north wall west
@@ -480,7 +481,7 @@ const PHYS={}; // id → boxes
      build(b){ b(0,0.04,2.68,2.70,0,1.85,mat.led); }},
     {id:'led6',type:'LED-лента под передней кромкой антресоли, свет вниз на штанги; включается вместе с M9',room:6,layer:'wardrobe',pos:[6.135,1.90],rot:0,size:[0.02,2.00,1.55],fixed:'wall',
      build(b){ b(0,0.02,1.98,2.00,0,1.55,mat.led); }},
-    {id:'sw7',type:'датчик движения + выключатель в коридоре у двери гардеробной: свет M9+M10 от датчика, клавиша — принудительно',room:5,layer:'wardrobe',pos:[5.76,4.033],rot:0,size:[0.08,0.99,0.01],fixed:'wall',build(b){ b(0,0.08,0.91,0.99,0,0.01,mat.lamp); }},
+    {id:'sw7',type:'датчик движения + выключатель в коридоре у двери гардеробной: свет M9+M10 от датчика, клавиша — принудительно',room:5,layer:'wardrobe',pos:[5.76,4.033],rot:0,size:[0.08,0.99,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.91,0.99,0,0.01,mat.plastic); }},
     {id:'sock25',type:'розетка у двери для пылесоса и утюга, h 0.30',room:6,layer:'wardrobe',pos:[6.875,3.55],rot:0,size:[0.01,0.34,0.08],fixed:'wall',build(b){ b(0,0.01,0.26,0.34,0,0.08,mat.lamp); }},
     // ---- loggia 10 (tasks/balcony10/README.md, marks M1–M13; grey materials only) ----
     // Room box: x 13.91–15.1, z 2.268–6.043; glazing on the east wall z 2.40–5.90, opening from the kitchen on the west wall z 3.353–4.971 (top 2.10).
@@ -531,6 +532,30 @@ const PHYS={}; // id → boxes
       for(let i=0;i<uv.count;i++){ const [a,c]=F[i>>2]; uv.setXY(i,uv.getX(i)*a,uv.getY(i)*c); }
       const mesh=new THREE.Mesh(geo,m); mesh.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); g.add(mesh); return mesh; };
     b.phys=(x0,x1,y0,y1,z0,z1)=>g.userData.proxy.push([x0,x1,y0,y1,z0,z1]); // explicit collision box (local); declared → render meshes leave physics (B02)
+    // ---- shared detail helpers (tasks/realism-all/PLAN.md §3); all coordinates local, UV in metres ----
+    const rrect=(w,h,r)=>{ const sh=new THREE.Shape(); r=Math.min(r,w/2,h/2); sh.moveTo(r,0); sh.lineTo(w-r,0); sh.absarc(w-r,r,r,-Math.PI/2,0,false); sh.lineTo(w,h-r); sh.absarc(w-r,h-r,r,0,Math.PI/2,false); sh.lineTo(r,h); sh.absarc(r,h-r,r,Math.PI/2,Math.PI,false); sh.lineTo(0,r); sh.absarc(r,r,r,Math.PI,Math.PI*1.5,false); return sh; };
+    b.round=(x0,x1,y0,y1,z0,z1,r,m)=>{ // box with all edges rounded by r: rounded-rect shape extruded along the thinnest axis with a bevel r
+      const w=x1-x0,h=y1-y0,d=z1-z0, t=Math.min(w,h,d); r=Math.min(r,t/2-1e-4); const ex=(a,c)=>new THREE.ExtrudeGeometry(rrect(a-2*r,c-2*r,r),{depth:t-2*r,bevelThickness:r,bevelSize:r,bevelSegments:2,curveSegments:4});
+      let geo; if(t===h) geo=ex(w,d).rotateX(Math.PI/2).translate(x0+r,y1-r,z0+r); else if(t===w) geo=ex(d,h).rotateY(-Math.PI/2).translate(x1-r,y0+r,z0+r); else geo=ex(w,h).translate(x0+r,y0+r,z0+r);
+      const mesh=new THREE.Mesh(geo,m); g.add(mesh); return mesh; };
+    b.plate=(x0,x1,y0,y1,z0,z1,m,o={})=>{ // wall plate of a socket/switch: 12 mm frame, keys recessed 2 mm on both faces; one proxy box for the whole item
+      m=m||mat.plastic; const keys=o.keys||1, f=0.012, thinX=(x1-x0)<(z1-z0); b.phys(x0,x1,y0,y1,z0,z1); b.round(x0,x1,y0,y1,z0,z1,0.001,m);
+      const [a0,a1]=thinX?[z0+f,z1-f]:[x0+f,x1-f], gap=0.001, kw=(a1-a0-gap*(keys-1))/keys;
+      for(let i=0;i<keys;i++){ const k0=a0+i*(kw+gap), k1=k0+kw; if(thinX) b(x0-0.0005,x1+0.0005,y0+f,y1-f,k0,k1,mat.dark); else b(k0,k1,y0+f,y1-f,z0-0.0005,z1+0.0005,mat.dark); } // keys show through the frame on both faces
+      return g; };
+    b.spot=(cx,cz,r,y=2.70)=>{ // recessed ceiling spot: metal ring flush with the ceiling, emitter disc just above it
+      b.phys(cx-r,cx+r,y-0.02,y,cz-r,cz+r); const ring=new THREE.Mesh(new THREE.TorusGeometry(r-0.005,0.005,8,24).rotateX(Math.PI/2).translate(cx,y-0.005,cz),mat.frame); g.add(ring);
+      const disc=new THREE.Mesh(new THREE.CircleGeometry(r-0.008,24).rotateX(Math.PI/2).translate(cx,y-0.008,cz),mat.led); g.add(disc); return ring; };
+    b.led=(x0,x1,y0,y1,z0,z1)=>{ // LED tape in an aluminium profile: the strip runs along the long axis and shows 0.5 mm on both faces
+      b.phys(x0,x1,y0,y1,z0,z1); b(x0,x1,y0,y1,z0,z1,mat.frame); const w=x1-x0,h=y1-y0,d=z1-z0, L=Math.max(w,h,d), q=[x0,x1,y0,y1,z0,z1];
+      [w,h,d].forEach((v,i)=>{ if(v===L) return; const c=(q[2*i]+q[2*i+1])/2; if(v===Math.min(w,h,d)){ q[2*i]-=0.0005; q[2*i+1]+=0.0005; } else { q[2*i]=c-v/4; q[2*i+1]=c+v/4; } });
+      return b(q[0],q[1],q[2],q[3],q[4],q[5],mat.led); };
+    b.handle=(x,y,z,len,axis='y',out='-z')=>{ // bar handle Ø8 standing 20 mm off the front point (x,y,z): `axis` bar direction, `out` front normal
+      const o={x:[1,0,0],'-x':[-1,0,0],z:[0,0,1],'-z':[0,0,-1],y:[0,1,0]}[out], a={x:[1,0,0],y:[0,1,0],z:[0,0,1]}[axis], rot=geo=>axis==='x'?geo.rotateZ(Math.PI/2):axis==='z'?geo.rotateX(Math.PI/2):geo;
+      const bar=new THREE.Mesh(rot(new THREE.CylinderGeometry(0.004,0.004,len,10)).translate(x+o[0]*0.02,y+o[1]*0.02,z+o[2]*0.02),mat.handle); g.add(bar);
+      [-1,1].forEach(sg=>{ const e=len/2-0.012, st=new THREE.CylinderGeometry(0.003,0.003,0.02,8); if(out==='x'||out==='-x') st.rotateZ(Math.PI/2); else if(out!=='y') st.rotateX(Math.PI/2);
+        st.translate(x+a[0]*sg*e+o[0]*0.01,y+a[1]*sg*e+o[1]*0.01,z+a[2]*sg*e+o[2]*0.01); g.add(new THREE.Mesh(st,mat.handle)); });
+      return bar; };
     it.build(b,g);
     LAYERS[it.layer].add(g); ITEM_GROUPS[it.id]=g;
     poseGroup(g);
@@ -539,7 +564,7 @@ const PHYS={}; // id → boxes
   }
   // GLB model of an item: the procedural build stays as fallback and proxy; on success its meshes are replaced by the model.
   // Material names inside the GLB are ITEM_MATS keys or slot names (fabric/wood/paint/metal) → same grey concept materials, VIZ twins keep working.
-  const GLB_MATS={fabric:mat.sofa,metal:mat.frame,wood:mat.table,paint:mat.chair}; // slot name in the GLB → grey concept material carrying that slot
+  const GLB_MATS={fabric:mat.sofa,metal:mat.frame,wood:mat.table,paint:mat.chair,chrome:mat.handle,glass:mat.glass,plastic:mat.plastic,ceramic:mat.ceramic,acrylic:mat.acrylic,leather:mat.leather,mirror:mat.mirror,led:mat.led}; // slot name in the GLB → grey concept material carrying that slot
   const slotMat=n=>{ if(!GLB_MATS[n]){ console.warn('glb: unknown material "'+n+'", grey used'); GLB_MATS[n]=M(0x8c8c8c); GLB_MATS[n].userData.slot=n; } return GLB_MATS[n]; };
   // Model checks on load (console warnings, never exceptions): metres, Box3 inside size ±1 cm, bottom at y=0, pivot at the NW corner,
   // facade like the procedural version (centroid of the top quarter offset from the footprint centre points the same way — back of a chair/sofa).

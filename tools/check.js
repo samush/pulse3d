@@ -263,6 +263,11 @@ const { chromium } = require('playwright');
   if (!sofaGlb.loaded) problems.push('glb: models/sofa.glb не загрузился: ' + JSON.stringify(sofaGlb));
   else { if (sofaGlb.warn) problems.push('glb: sofa — предупреждения валидации: ' + sofaGlb.warn);
     if (sofaGlb.size !== '2,0.85,0.88' || sofaGlb.slots !== 'fabric,metal' || !sofaGlb.grey || sofaGlb.boxes !== 1) problems.push('glb: sofa — габарит/слоты/серый/proxy не сошлись: ' + JSON.stringify(sofaGlb)); }
+  // realism-all stage A: shared helpers — plate/round keep the item inside size with one proxy box; new slots reach VIZ
+  const helpers = await page.evaluate(() => { const fit = id => { const g = ITEM_GROUPS[id], bb = new THREE.Box3().setFromObject(g), inv = new THREE.Matrix4().copy(g.matrixWorld).invert(); bb.applyMatrix4(inv); const s = g.userData.size; return bb.min.x >= -0.001 && bb.min.y >= -0.001 && bb.min.z >= -0.001 && bb.max.x <= s[0] + 0.001 && bb.max.y <= s[1] + 0.001 && bb.max.z <= s[2] + 0.001; };
+    const n = id => { let k = 0; ITEM_GROUPS[id].traverse(o => { if (o.isMesh) k++; }); return k; };
+    return { sw5: fit('sw5') && PHYS.sw5.length === 1 && n('sw5') === 3, sw7: fit('sw7') && PHYS.sw7.length === 1 && n('sw7') === 2, mirror: fit('mirror') && PHYS.mirror.length === 1 && n('mirror') === 2, slots: ['plastic', 'ceramic', 'acrylic', 'leather', 'mirror'].every(k => ITEM_MATS[k].userData.slot === k && MATERIALS[k]) }; });
+  Object.entries(helpers).forEach(([k, ok]) => { if (!ok) problems.push('helpers: «' + k + '» вне size, число боксов/мешей или слот не сошлись (realism-all §3/§4)'); });
   // realism-living step 6: six chairs from one GLB — every chair loaded without warnings, one shared geometry per material, back on the table side
   const chairGlb = await page.evaluate(async () => { const ids = [1, 2, 3, 4, 5, 6].map(i => 'chair' + i); for (let i = 0; i < 100 && !ids.every(id => ITEM_GROUPS[id].userData.glbLoaded); i++) await new Promise(r => setTimeout(r, 100));
     const geos = new Set(), sizes = new Set(); let warn = ''; ids.forEach(id => { const g = ITEM_GROUPS[id]; warn += (g.userData.glbWarnings || []).join('|'); g.traverse(o => { if (o.isMesh) geos.add(o.geometry); }); const s = new THREE.Vector3(); new THREE.Box3().setFromObject(g).getSize(s); sizes.add([s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join()); });
