@@ -429,52 +429,52 @@ const PHYS={}; // id → boxes
        const d=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.005,16),mat.handle); d.position.set(0.25,0.152,1.45); g.add(d); // drain at the south end, by the mixer
      }},
     {id:'tubmixer',type:'смеситель ванны настенный, излив 0.20',room:9,layer:'bath',pos:[8.192,9.124],rot:0,size:[0.20,0.86,0.20],fixed:'wall',
-     build(b){ b(0,0.05,0.75,0.85,0.02,0.18,mat.lamp); b(0.05,0.20,0.78,0.80,0.09,0.11,mat.lamp); b(0.05,0.10,0.85,0.86,0.09,0.11,mat.handle); }}, // body, spout, lever
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.05,0.75,0.85,0.02,0.18); b.phys(0.05,0.2,0.78,0.8,0.09,0.11); b.phys(0.05,0.1,0.85,0.86,0.09,0.11); b(0,0.05,0.75,0.85,0.02,0.18,mat.lamp); b(0.05,0.20,0.78,0.80,0.09,0.11,mat.lamp); b(0.05,0.10,0.85,0.86,0.09,0.11,mat.handle); }}, // body, spout, lever
     {id:'shower',type:'душевая штанга 0.90 с лейкой, шланг к смесителю',room:9,layer:'bath',pos:[8.192,9.374],rot:0,size:[0.10,2.05,0.10],fixed:'wall',
-     build(b){ b(0.03,0.05,1.15,2.05,0.04,0.06,mat.lamp); [1.15,2.02].forEach(y=>b(0,0.03,y,y+0.03,0.03,0.07,mat.lamp)); b(0.03,0.10,1.98,2.02,0.02,0.08,mat.lamp); }}, // rod, two holders, hand shower on the top holder
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0.03,0.05,1.15,2.05,0.04,0.06); b.phys(0,0.03,1.15,1.18,0.03,0.07); b.phys(0,0.03,2.02,2.05,0.03,0.07); b.phys(0.03,0.1,1.98,2.02,0.02,0.08); b(0.03,0.05,1.15,2.05,0.04,0.06,mat.lamp); [1.15,2.02].forEach(y=>b(0,0.03,y,y+0.03,0.03,0.07,mat.lamp)); b(0.03,0.10,1.98,2.02,0.02,0.08,mat.lamp); }}, // rod, two holders, hand shower on the top holder
     {id:'wcbox',type:'короб инсталляции 0.71×0.12 за унитазом, от торца ванны до восточной стены, верх 1.15 — полка; кнопка смыва на фасаде',room:9,layer:'bath',pos:[9.162,9.747],rot:0,size:[0.71,1.15,0.125],fixed:'wall',
-     build(b){ b(0,0.71,0,1.15,0.005,0.125,mat.body); b(0.28,0.44,0.96,1.04,0,0.005,mat.lamp); }},                 // box, flush plate on the toilet axis (x 9.52)
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.71,0,1.15,0.005,0.125); b.phys(0.28,0.44,0.96,1.04,0,0.005); b(0,0.71,0,1.15,0.005,0.125,mat.body); b(0.28,0.44,0.96,1.04,0,0.005,mat.lamp); }},                 // box, flush plate on the toilet axis (x 9.52)
     {id:'wc',type:'унитаз подвесной компактный 0.36×0.48, сиденье 0.42, фасад на север',room:9,layer:'bath',pos:[9.34,9.272],rot:0,size:[0.36,0.42,0.48],fixed:'wall',
-     build(b,g){
+     build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0.02,0.34,0.2,0.4,0.16,0.48); b.phys(0.02,0.34,0.2,0.4,0,0.32); b.phys(0.03,0.33,0.4,0.42,0.16,0.46); b.phys(0.03,0.33,0.4,0.42,0.01,0.31);
        const cyl=(r,h,y,m)=>{ const c=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,24),m); c.position.set(0.18,y,0.16); g.add(c); };
        b(0.02,0.34,0.20,0.40,0.16,0.48,mat.kmat); cyl(0.16,0.20,0.30,mat.kmat);                     // bowl: box at the back, round front to z 0
        b(0.03,0.33,0.40,0.42,0.16,0.46,mat.lamp); cyl(0.15,0.02,0.41,mat.lamp);                     // seat
      }},
     {id:'basin',type:'раковина подвесная 0.85×0.36 вдоль северной стены, чаша 0.60×0.30 глубиной 0.10',room:9,layer:'bath',pos:[8.90,8.181],rot:0,size:[0.85,0.85,0.36],fixed:'wall',
-     build(b,g){
+     build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.85,0.7,0.75,0,0.36); b.phys(0,0.125,0.75,0.85,0,0.36); b.phys(0.725,0.85,0.75,0.85,0,0.36); b.phys(0.125,0.725,0.75,0.85,0,0.03); b.phys(0.125,0.725,0.75,0.85,0.33,0.36); b.phys(0.4,0.45,0.75,0.754,0.155,0.205);
        b(0,0.85,0.70,0.75,0,0.36,mat.kmat);                                                          // slab, bowl floor at 0.75
        b(0,0.125,0.75,0.85,0,0.36,mat.kmat); b(0.725,0.85,0.75,0.85,0,0.36,mat.kmat);               // rim around the bowl 0.125–0.725 × 0.03–0.33
        b(0.125,0.725,0.75,0.85,0,0.03,mat.kmat); b(0.125,0.725,0.75,0.85,0.33,0.36,mat.kmat);
        const d=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.004,16),mat.handle); d.position.set(0.425,0.752,0.18); g.add(d); // drain
      }},
     {id:'basindrawer',type:'ящик под раковиной 0.85×0.31×0.18, подвесной, push-to-open',room:9,layer:'bath',pos:[8.90,8.181],rot:0,size:[0.85,0.68,0.31],fixed:'wall',
-     build(b){ b(0,0.85,0.50,0.68,0,0.29,mat.body); b(0.005,0.845,0.505,0.675,0.29,0.31,mat.wdoor); }},            // body, front to the south
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.85,0.5,0.68,0,0.29); b.phys(0.005,0.845,0.505,0.675,0.29,0.31); b(0,0.85,0.50,0.68,0,0.29,mat.body); b(0.005,0.845,0.505,0.675,0.29,0.31,mat.wdoor); }},            // body, front to the south
     {id:'bathmirror',type:'зеркало 0.96×1.20 прямоугольное со скруглёнными углами, LED-контур сзади; низ 1.10 — над корпусом смесителя',room:9,layer:'bath',pos:[8.795,8.185],rot:0,size:[0.96,2.30,0.02],fixed:'wall',
-     build(b,g){
+     build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.96,1.1,2.3,0,0.01); b.phys(0.01,0.95,1.11,2.29,0.01,0.02);
        const rr=(w,h,r)=>{ const s=new THREE.Shape(); s.moveTo(r,0); s.lineTo(w-r,0); s.quadraticCurveTo(w,0,w,r); s.lineTo(w,h-r); s.quadraticCurveTo(w,h,w-r,h); s.lineTo(r,h); s.quadraticCurveTo(0,h,0,h-r); s.lineTo(0,r); s.quadraticCurveTo(0,0,r,0); return s; };
        const plate=(w,h,r,x,y,z,m)=>{ const mesh=new THREE.Mesh(new THREE.ExtrudeGeometry(rr(w,h,r),{depth:0.01,bevelEnabled:false}),m); mesh.position.set(x,y,z); g.add(mesh); };
        plate(0.96,1.20,0.07,0,1.10,0,mat.led); plate(0.94,1.18,0.06,0.01,1.11,0.01,mat.glass);      // light halo behind, glass in front (faces south)
      }},
     {id:'towelrail',type:'полотенцесушитель электрический 0.40×1.80 на простенке севернее двери, низ 0.45',room:9,layer:'bath',pos:[9.77,8.13],rot:0,size:[0.10,2.25,0.40],fixed:'wall',
-     build(b){
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0.03,0.06,0.45,2.25,0.03,0.06); b.phys(0.03,0.06,0.45,2.25,0.34,0.37); b.phys(0.035,0.055,0.55,0.57,0.06,0.34); b.phys(0.035,0.055,0.65,0.67,0.06,0.34); b.phys(0.035,0.055,0.75,0.77,0.06,0.34); b.phys(0.035,0.055,0.85,0.87,0.06,0.34); b.phys(0.035,0.055,0.95,0.97,0.06,0.34); b.phys(0.035,0.055,1.05,1.07,0.06,0.34); b.phys(0.035,0.055,1.15,1.17,0.06,0.34); b.phys(0.035,0.055,1.25,1.27,0.06,0.34); b.phys(0.035,0.055,1.35,1.37,0.06,0.34); b.phys(0.035,0.055,1.45,1.47,0.06,0.34); b.phys(0.035,0.055,1.55,1.57,0.06,0.34); b.phys(0.035,0.055,1.65,1.67,0.06,0.34); b.phys(0.035,0.055,1.75,1.77,0.06,0.34); b.phys(0.035,0.055,1.85,1.87,0.06,0.34); b.phys(0.035,0.055,1.95,1.97,0.06,0.34); b.phys(0.035,0.055,2.05,2.07,0.06,0.34); b.phys(0.035,0.055,2.15,2.17,0.06,0.34); b.phys(0.06,0.1,0.55,0.58,0.03,0.06); b.phys(0.06,0.1,0.55,0.58,0.34,0.37); b.phys(0.06,0.1,1.1,1.13,0.03,0.06); b.phys(0.06,0.1,1.1,1.13,0.34,0.37); b.phys(0.06,0.1,1.6,1.63,0.03,0.06); b.phys(0.06,0.1,1.6,1.63,0.34,0.37); b.phys(0.06,0.1,2.15,2.18,0.03,0.06); b.phys(0.06,0.1,2.15,2.18,0.34,0.37);
        [0.03,0.34].forEach(z=>b(0.03,0.06,0.45,2.25,z,z+0.03,mat.lamp));                              // two vertical collectors
        for(let y=0.55;y<2.2;y+=0.10) b(0.035,0.055,y,y+0.02,0.06,0.34,mat.lamp);                     // rungs every 0.10
        [0.55,1.10,1.60,2.15].forEach(y=>[0.03,0.34].forEach(z=>b(0.06,0.10,y,y+0.03,z,z+0.03,mat.handle))); // wall brackets
      }},
     {id:'basinmixer',type:'смеситель раковины настенный, излив 0.18; ось чаши x 9.325',room:9,layer:'bath',pos:[9.275,8.185],rot:0,size:[0.14,1.09,0.20],fixed:'wall',
-     build(b){ b(0,0.10,1.00,1.09,0,0.02,mat.lamp); b(0.04,0.06,1.035,1.055,0.02,0.18,mat.lamp); b(0.10,0.14,1.04,1.05,0,0.02,mat.handle); }}, // body, spout, lever
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.1,1,1.09,0,0.02); b.phys(0.04,0.06,1.035,1.055,0.02,0.18); b.phys(0.1,0.14,1.04,1.05,0,0.02); b(0,0.10,1.00,1.09,0,0.02,mat.lamp); b(0.04,0.06,1.035,1.055,0.02,0.18,mat.lamp); b(0.10,0.14,1.04,1.05,0,0.02,mat.handle); }}, // body, spout, lever
     // ceiling: three IP44 spots Ø0.08 and the extractor fan Ø0.12 above the cistern box
     {id:'spot1',type:'точечный светильник над ванной, IP44',room:9,layer:'bath',pos:[8.48,8.96],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
-     build(b,g){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.02,24),mat.lamp); c.position.set(0.04,2.69,0.04); g.add(c); }},
+     build(b){ b.spot(0.04,0.04,0.04); }},
     {id:'spot2',type:'точечный светильник над унитазом',room:9,layer:'bath',pos:[9.48,9.40],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
-     build(b,g){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.02,24),mat.lamp); c.position.set(0.04,2.69,0.04); g.add(c); }},
+     build(b){ b.spot(0.04,0.04,0.04); }},
     {id:'spot3',type:'точечный светильник перед зеркалом',room:9,layer:'bath',pos:[9.28,8.65],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
-     build(b,g){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.02,24),mat.lamp); c.position.set(0.04,2.69,0.04); g.add(c); }},
+     build(b){ b.spot(0.04,0.04,0.04); }},
     {id:'fan',type:'вентилятор вытяжки Ø0.12 в потолке над коробом',room:9,layer:'bath',pos:[9.31,9.58],rot:0,size:[0.12,2.70,0.12],fixed:'wall',
-     build(b,g){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.02,24),mat.wpanel); c.position.set(0.06,2.69,0.06); g.add(c); }},
+     build(b,g){ b.phys(0,0.12,2.68,2.7,0,0.12); g.add(new THREE.Mesh(new THREE.TorusGeometry(0.055,0.005,8,24).rotateX(Math.PI/2).translate(0.06,2.695,0.06),mat.plastic)); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.004,24).translate(0.06,2.694,0.06),mat.dark)); [-0.03,-0.01,0.01,0.03].forEach(dx=>b(0.06+dx-0.003,0.06+dx+0.003,2.686,2.692,0.02,0.10,mat.plastic)); }}, // rim, dark intake, four grille bars
     // electrics: flat boxes 0.08 × 0.08 × 0.01
-    {id:'sock21',type:'розетка IP44 + USB на фасаде короба инсталляции, h 1.00',room:9,layer:'bath',pos:[9.68,9.737],rot:0,size:[0.08,1.04,0.01],fixed:'wall',build(b){ b(0,0.08,0.96,1.04,0,0.01,mat.lamp); }},
-    {id:'sock22',type:'скрытый вывод для полотенцесушителя, h 0.45',room:9,layer:'bath',pos:[9.842,8.294],rot:0,size:[0.01,0.49,0.08],fixed:'wall',build(b){ b(0,0.01,0.41,0.49,0,0.08,mat.lamp); }},
+    {id:'sock21',type:'розетка IP44 + USB на фасаде короба инсталляции, h 1.00',room:9,layer:'bath',pos:[9.68,9.737],rot:0,size:[0.08,1.04,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.96,1.04,0,0.01,mat.plastic); }},
+    {id:'sock22',type:'скрытый вывод для полотенцесушителя, h 0.45',room:9,layer:'bath',pos:[9.842,8.294],rot:0,size:[0.01,0.49,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.41,0.49,0,0.08,mat.plastic); }},
     {id:'sw5',type:'выключатель 2 клавиши в коридоре у двери санузла: свет + вытяжка; рядом терморегулятор тёплого пола',room:5,layer:'bath',pos:[10.038,8.414],rot:0,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.91,0.99,0,0.08,mat.plastic,{keys:2}); }},
     // ---- bathroom 8 (tasks/bath8/README.md, marks M1–M21; grey materials only) ----
     // Room box: x 8.192–9.872, z 11.588–13.144 plus the bump x 9.098–9.872, z 11.384–11.588 (closed by wcbox8). Door on the east
@@ -483,48 +483,48 @@ const PHYS={}; // id → boxes
     // Shower floor: the real tray is 0.02 below the finished floor, but floor layers (0.001–0.009) would hide a mesh below 0,
     // so the tray is a darker plate at 0.010 — it reads as a different surface and never flickers with the floor.
     {id:'shower8',type:'душевая зона в уровень пола 0.81×1.54 вдоль западной стены, поддон из плитки на −0.02 с уклоном к трапу',room:8,layer:'bath2',pos:[8.235,11.588],rot:0,size:[0.813,0.01,1.536],fixed:'wall',
-     build(b){ b(0,0.813,0.007,0.010,0,1.536,mat.top); }},
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.813,0.007,0.01,0,1.536); b(0,0.813,0.007,0.010,0,1.536,mat.top); }},
     {id:'drain8',type:'линейный трап 1.40×0.06 вдоль западной стены',room:8,layer:'bath2',pos:[8.25,11.65],rot:0,size:[0.06,0.012,1.40],fixed:'wall',
-     build(b){ b(0,0.06,0.010,0.012,0,1.40,mat.handle); }},
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.06,0.01,0.012,0,1.4); b(0,0.06,0.010,0.012,0,1.40,mat.handle); }},
     {id:'curb8e',type:'бортик душа 0.05×0.05 по восточной кромке на всю длину; вход в душ с юга (z 12.45–13.12) переступается',room:8,layer:'bath2',pos:[9.048,11.588],rot:0,size:[0.05,0.05,1.536],
-     build(b){ b(0,0.05,0,0.05,0,1.536,mat.kmat); }},
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.05,0,0.05,0,1.536); b(0,0.05,0,0.05,0,1.536,mat.kmat); }},
     {id:'glass8',type:'неподвижное стекло душа 0.86×2.05 на бортике со стороны унитаза (z 11.59–12.45)',room:8,layer:'bath2',pos:[9.088,11.588],rot:0,size:[0.01,2.10,0.862],
-     build(b){ b(0,0.01,0.05,0.07,0,0.862,mat.frame); b(0,0.01,0.07,2.10,0,0.862,mat.glass); }},                     // profile, glass
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.01,0.05,0.07,0,0.862); b.phys(0,0.01,0.07,2.1,0,0.862); b(0,0.01,0.05,0.07,0,0.862,mat.frame); b(0,0.01,0.07,2.10,0,0.862,mat.glass); }},                     // profile, glass
     {id:'rain8',type:'верхний душ Ø0.25 заподлицо с потолком, над закрытой частью душа',room:8,layer:'bath2',pos:[8.52,11.95],rot:0,size:[0.25,2.70,0.25],fixed:'wall',
-     build(b,g){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.125,0.125,0.02,32),mat.lamp); c.position.set(0.125,2.69,0.125); g.add(c); }},
+     build(b,g){ b.phys(0,0.25,2.68,2.7,0,0.25); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.125,0.125,0.008,40).translate(0.125,2.696,0.125),mat.handle)); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.105,0.105,0.004,40).translate(0.125,2.69,0.125),mat.frame)); g.add(new THREE.Mesh(new THREE.TorusGeometry(0.115,0.004,8,40).rotateX(Math.PI/2).translate(0.125,2.69,0.125),mat.handle)); }}, // chrome plate, dark nozzle field, rim
     {id:'mixer8',type:'термостат душа h 1.10 и ручная лейка h 1.60 в накладном коробе 0.08 (южная стена наружная); восточнее полки',room:8,layer:'bath2',pos:[8.90,13.044],rot:0,size:[0.15,1.70,0.08],fixed:'wall',
-     build(b){ b(0.035,0.115,0.90,1.70,0.02,0.08,mat.body); b(0,0.15,1.06,1.14,0,0.02,mat.lamp); b(0.055,0.095,1.58,1.62,0,0.02,mat.lamp); b(0.065,0.085,1.38,1.62,-0.01,0.0,mat.lamp); }}, // pipe cover, thermostat bar, holder, handset
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0.035,0.115,0.9,1.7,0.02,0.08); b.phys(0,0.15,1.06,1.14,0,0.02); b.phys(0.055,0.095,1.58,1.62,0,0.02); b.phys(0.065,0.085,1.38,1.62,-0.01,0); b(0.035,0.115,0.90,1.70,0.02,0.08,mat.body); b(0,0.15,1.06,1.14,0,0.02,mat.lamp); b(0.055,0.095,1.58,1.62,0,0.02,mat.lamp); b(0.065,0.085,1.38,1.62,-0.01,0.0,mat.lamp); }}, // pipe cover, thermostat bar, holder, handset
     {id:'niche8',type:'накладная полка-ниша 0.60×0.10×0.30 на южной стене, открыта на север, LED по верхней кромке',room:8,layer:'bath2',pos:[8.30,13.024],rot:0,size:[0.60,1.35,0.10],fixed:'wall',
-     build(b){ b(0,0.6,1.05,1.07,0,0.10,mat.body); b(0,0.6,1.33,1.35,0,0.10,mat.body); b(0,0.02,1.07,1.33,0,0.10,mat.body); b(0.58,0.6,1.07,1.33,0,0.10,mat.body); b(0.02,0.58,1.07,1.33,0.08,0.10,mat.body); // bottom, top, sides, back
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.6,1.05,1.07,0,0.1); b.phys(0,0.6,1.33,1.35,0,0.1); b.phys(0,0.02,1.07,1.33,0,0.1); b.phys(0.58,0.6,1.07,1.33,0,0.1); b.phys(0.02,0.58,1.07,1.33,0.08,0.1); b.phys(0.02,0.58,1.32,1.33,0.005,0.02); b(0,0.6,1.05,1.07,0,0.10,mat.body); b(0,0.6,1.33,1.35,0,0.10,mat.body); b(0,0.02,1.07,1.33,0,0.10,mat.body); b(0.58,0.6,1.07,1.33,0,0.10,mat.body); b(0.02,0.58,1.07,1.33,0.08,0.10,mat.body); // bottom, top, sides, back
        b(0.02,0.58,1.32,1.33,0.005,0.02,mat.led); }},                                                                     // LED strip under the top edge
     {id:'wcbox8',type:'выступ северной стены зашит заподлицо (z 11.588) на всю высоту, рама инсталляции внутри; кнопка смыва на оси',room:8,layer:'bath2',pos:[9.098,11.384],rot:0,size:[0.774,2.70,0.204],fixed:'wall',
-     build(b){ b(0,0.774,0,2.70,0,0.204,mat.body); b(0.33,0.49,0.96,1.04,0.204,0.209,mat.lamp); }},                    // box, flush plate on the toilet axis (x 9.51)
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.774,0,2.7,0,0.204); b.phys(0.33,0.49,0.96,1.04,0.204,0.209); b(0,0.774,0,2.70,0,0.204,mat.body); b(0.33,0.49,0.96,1.04,0.204,0.209,mat.lamp); }},                    // box, flush plate on the toilet axis (x 9.51)
     {id:'wc8',type:'унитаз подвесной компактный 0.36×0.48, сиденье 0.42, фасад на юг',room:8,layer:'bath2',pos:[9.34,11.588],rot:0,size:[0.36,0.42,0.48],fixed:'wall',
-     build(b,g){
+     build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0.02,0.34,0.2,0.4,0,0.32); b.phys(0.02,0.34,0.2,0.4,0.16,0.48); b.phys(0.03,0.33,0.4,0.42,0.02,0.32); b.phys(0.03,0.33,0.4,0.42,0.17,0.47);
        const cyl=(r,h,y,m)=>{ const c=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,24),m); c.position.set(0.18,y,0.32); g.add(c); };
        b(0.02,0.34,0.20,0.40,0,0.32,mat.kmat); cyl(0.16,0.20,0.30,mat.kmat);                                           // bowl: box at the back, round front to z 0.48
        b(0.03,0.33,0.40,0.42,0.02,0.32,mat.lamp); cyl(0.15,0.02,0.41,mat.lamp);                                        // seat
      }},
     {id:'towel8',type:'полотенцесушитель электрический 0.50×1.80 на южной стене у двери, низ 0.45',room:8,layer:'bath2',pos:[9.30,13.044],rot:0,size:[0.50,2.25,0.08],fixed:'wall',
-     build(b){
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0.03,0.06,0.45,2.25,0.02,0.05); b.phys(0.44,0.47,0.45,2.25,0.02,0.05); b.phys(0.06,0.44,0.55,0.57,0.025,0.045); b.phys(0.06,0.44,0.65,0.67,0.025,0.045); b.phys(0.06,0.44,0.75,0.77,0.025,0.045); b.phys(0.06,0.44,0.85,0.87,0.025,0.045); b.phys(0.06,0.44,0.95,0.97,0.025,0.045); b.phys(0.06,0.44,1.05,1.07,0.025,0.045); b.phys(0.06,0.44,1.15,1.17,0.025,0.045); b.phys(0.06,0.44,1.25,1.27,0.025,0.045); b.phys(0.06,0.44,1.35,1.37,0.025,0.045); b.phys(0.06,0.44,1.45,1.47,0.025,0.045); b.phys(0.06,0.44,1.55,1.57,0.025,0.045); b.phys(0.06,0.44,1.65,1.67,0.025,0.045); b.phys(0.06,0.44,1.75,1.77,0.025,0.045); b.phys(0.06,0.44,1.85,1.87,0.025,0.045); b.phys(0.06,0.44,1.95,1.97,0.025,0.045); b.phys(0.06,0.44,2.05,2.07,0.025,0.045); b.phys(0.06,0.44,2.15,2.17,0.025,0.045); b.phys(0.03,0.06,0.55,0.58,0.05,0.08); b.phys(0.44,0.47,0.55,0.58,0.05,0.08); b.phys(0.03,0.06,1.1,1.13,0.05,0.08); b.phys(0.44,0.47,1.1,1.13,0.05,0.08); b.phys(0.03,0.06,1.6,1.63,0.05,0.08); b.phys(0.44,0.47,1.6,1.63,0.05,0.08); b.phys(0.03,0.06,2.15,2.18,0.05,0.08); b.phys(0.44,0.47,2.15,2.18,0.05,0.08);
        [0.03,0.44].forEach(x=>b(x,x+0.03,0.45,2.25,0.02,0.05,mat.lamp));                                                // two vertical collectors
        for(let y=0.55;y<2.2;y+=0.10) b(0.06,0.44,y,y+0.02,0.025,0.045,mat.lamp);                                       // rungs every 0.10
        [0.55,1.10,1.60,2.15].forEach(y=>[0.03,0.44].forEach(x=>b(x,x+0.03,y,y+0.03,0.05,0.08,mat.handle)));            // wall brackets
      }},
     // ceiling: three spots Ø0.08, the extractor fan Ø0.12, hidden LED cove along the north and east walls
     {id:'spot4',type:'точечный светильник над входом в душ, IP65',room:8,layer:'bath2',pos:[8.62,12.75],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
-     build(b,g){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.02,24),mat.lamp); c.position.set(0.04,2.69,0.04); g.add(c); }},
+     build(b){ b.spot(0.04,0.04,0.04); }},
     {id:'spot5',type:'точечный светильник в центре комнаты (общий свет)',room:8,layer:'bath2',pos:[9.41,12.56],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
-     build(b,g){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.02,24),mat.lamp); c.position.set(0.04,2.69,0.04); g.add(c); }},
+     build(b){ b.spot(0.04,0.04,0.04); }},
     {id:'spot6',type:'точечный светильник над унитазом',room:8,layer:'bath2',pos:[9.48,11.91],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
-     build(b,g){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.02,24),mat.lamp); c.position.set(0.04,2.69,0.04); g.add(c); }},
+     build(b){ b.spot(0.04,0.04,0.04); }},
     {id:'cove8',type:'скрытый LED-карниз по потолку: северная стена 1.62 и восточная до двери (z 11.59–12.15), h 2.62',room:8,layer:'bath2',pos:[8.235,11.588],rot:0,size:[1.637,2.65,0.562],fixed:'wall',
-     build(b){ b(0,1.617,2.55,2.62,0.02,0.06,mat.body); b(0,1.617,2.62,2.65,0,0.02,mat.led);                            // north: shadow profile lip and the strip above it
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,1.617,2.55,2.62,0.02,0.06); b.phys(0,1.617,2.62,2.65,0,0.02); b.phys(1.577,1.617,2.55,2.62,0.06,0.562); b.phys(1.617,1.637,2.62,2.65,0.06,0.562); b(0,1.617,2.55,2.62,0.02,0.06,mat.body); b(0,1.617,2.62,2.65,0,0.02,mat.led);                            // north: shadow profile lip and the strip above it
        b(1.577,1.617,2.55,2.62,0.06,0.562,mat.body); b(1.617,1.637,2.62,2.65,0.06,0.562,mat.led); }},                  // east segment to the door
     {id:'fan8',type:'вентилятор вытяжки Ø0.12 в потолке над унитазом',room:8,layer:'bath2',pos:[9.46,11.69],rot:0,size:[0.12,2.70,0.12],fixed:'wall',
-     build(b,g){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.02,24),mat.wpanel); c.position.set(0.06,2.69,0.06); g.add(c); }},
+     build(b,g){ b.phys(0,0.12,2.68,2.7,0,0.12); g.add(new THREE.Mesh(new THREE.TorusGeometry(0.055,0.005,8,24).rotateX(Math.PI/2).translate(0.06,2.695,0.06),mat.plastic)); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.004,24).translate(0.06,2.694,0.06),mat.dark)); [-0.03,-0.01,0.01,0.03].forEach(dx=>b(0.06+dx-0.003,0.06+dx+0.003,2.686,2.692,0.02,0.10,mat.plastic)); }}, // rim, dark intake, four grille bars
     // electrics: flat boxes 0.08 × 0.08 × 0.01
-    {id:'sock24',type:'скрытый вывод для полотенцесушителя, h 0.45',room:8,layer:'bath2',pos:[9.51,13.114],rot:0,size:[0.08,0.49,0.01],fixed:'wall',build(b){ b(0,0.08,0.41,0.49,0,0.01,mat.lamp); }},
+    {id:'sock24',type:'скрытый вывод для полотенцесушителя, h 0.45',room:8,layer:'bath2',pos:[9.51,13.114],rot:0,size:[0.08,0.49,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.41,0.49,0,0.01,mat.plastic); }},
     {id:'sw6',type:'выключатель 2 клавиши (свет + вытяжка) и терморегулятор — в спальне 3 у двери санузла',room:3,layer:'bath2',pos:[10.041,12.06],rot:0,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.91,0.99,0,0.08,mat.plastic,{keys:2}); }},
     // ---- walk-in closet 6 (tasks/wardrobe6/README.md, marks M1–M13; grey materials only) ----
     // Room box: x 5.565–6.885, z 1.874–3.894, door on the south wall x 6.10–6.885 (opens out into corridor 5).
