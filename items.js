@@ -27,8 +27,10 @@ const PHYS={}; // id → boxes
   Object.entries(SLOTS).forEach(([slot,keys])=>keys.forEach(k=>{ mat[k].userData.slot=slot; }));
   window.ITEM_MATS=mat;
   const chair=(backEast)=>(b,g)=>{ // chair 0.42×0.42, back on the west or east side
+    const bx=backEast?0.38:0;
+    b.phys(0,0.42,0.42,0.49,0,0.42); b.phys(bx,bx+0.04,0.46,0.9,0,0.42); [[0.03,0.03],[0.35,0.03],[0.03,0.35],[0.35,0.35]].forEach(([x,z])=>b.phys(x,x+0.04,0,0.42,z,z+0.04)); // proxy = today's AABBs, so detailing never changes walk/layout
     b(0,0.42,0.42,0.46,0,0.42,mat.chair); b(0.03,0.39,0.46,0.49,0.03,0.39,mat.cushion); // seat cushion
-    const bx=backEast?0.38:0; b(bx,bx+0.04,0.46,0.9,0,0.42,mat.chair);
+    b(bx,bx+0.04,0.46,0.9,0,0.42,mat.chair);
     [[0.03,0.03],[0.35,0.03],[0.03,0.35],[0.35,0.35]].forEach(([x,z])=>b(x,x+0.04,0,0.42,z,z+0.04,mat.chair));
   };
   // Loft bed shared by rooms 1 and 2: stair-chest along local z 0–0.5, platform x 1.4–2.6 × z 0–L, storage shelf above the passage z L–2.97
@@ -73,7 +75,8 @@ const PHYS={}; // id → boxes
        [[0.2,1.25],[0.42,1.25],[0.2,1.55],[0.42,1.55]].forEach(([x,z])=>{ const r=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.004,24),mat.ring); r.position.set(x,0.927,z); g.add(r); }); // burners
      }},
     {id:'table',type:'стол на 6 мест',room:4,layer:'kitchen',pos:[9.85,KN+0.04],rot:0,size:[0.8,0.76,1.8],
-     build(b){ b(0,0.8,0.72,0.76,0,1.8,mat.table); b(0.05,0.75,0.64,0.72,0.05,1.75,mat.table); [[0.05,0.05],[0.7,0.05],[0.05,1.7],[0.7,1.7]].forEach(([x,z])=>b(x,x+0.05,0,0.72,z,z+0.05,mat.table)); }}, // apron under the tabletop
+     build(b){ b.phys(0,0.8,0.72,0.76,0,1.8); b.phys(0.05,0.75,0.64,0.72,0.05,1.75); [[0.05,0.05],[0.7,0.05],[0.05,1.7],[0.7,1.7]].forEach(([x,z])=>b.phys(x,x+0.05,0,0.72,z,z+0.05)); // proxy = today's AABBs (top, apron, legs)
+       b(0,0.8,0.72,0.76,0,1.8,mat.table); b(0.05,0.75,0.64,0.72,0.05,1.75,mat.table); [[0.05,0.05],[0.7,0.05],[0.05,1.7],[0.7,1.7]].forEach(([x,z])=>b(x,x+0.05,0,0.72,z,z+0.05,mat.table)); }}, // apron under the tabletop
     {id:'chair1',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(false)},
     {id:'chair2',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(false)},
     {id:'chair3',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',build:chair(false)},
