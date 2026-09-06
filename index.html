@@ -114,23 +114,24 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <div class="row"><input type="checkbox" id="labels"><label for="labels">Точки с размерами</label></div>
   <div class="row"><input type="checkbox" id="kwall"><label for="kwall">Стена коридор–кухня</label></div>
   <div class="row"><input type="checkbox" id="ceil"><label for="ceil">Потолок</label></div>
+  <div class="row"><input type="checkbox" id="avatarOn" checked><label for="avatarOn">Человечек (в экскурсии)</label></div>
   <div class="row"><input type="checkbox" id="wgrid"><label for="wgrid">Сетка-адресация</label></div>
   <div class="row"><input type="checkbox" id="finish" checked><label for="finish">Отделка (слой 1)</label></div>
-  <div class="row"><input type="checkbox" id="furn" checked><label for="furn">Интерьер кухня (слой 1)</label></div>
-  <div class="row"><input type="checkbox" id="furnHall" checked><label for="furnHall">Интерьер коридор (слой 1)</label></div>
-  <div class="row"><input type="checkbox" id="furnLaundry" checked><label for="furnLaundry">Интерьер постирочная (слой 1)</label></div>
-  <div class="row"><input type="checkbox" id="furnKid" checked><label for="furnKid">Интерьер детская (слой 1)</label></div>
-  <div class="row"><input type="checkbox" id="furnMaster" checked><label for="furnMaster">Интерьер спальня (слой 1)</label></div>
-  <div class="row"><input type="checkbox" id="furnBath" checked><label for="furnBath">Интерьер санузел (слой 1)</label></div>
-  <div class="row"><input type="checkbox" id="furnWardrobe" checked><label for="furnWardrobe">Интерьер гардеробная (слой 1)</label></div>
+  <div class="row"><input type="checkbox" id="furn" checked><label for="furn">Кухня (слой 1)</label></div>
+  <div class="row"><input type="checkbox" id="furnHall" checked><label for="furnHall">Коридор (слой 1)</label></div>
+  <div class="row"><input type="checkbox" id="furnLaundry" checked><label for="furnLaundry">Постирочная (слой 1)</label></div>
+  <div class="row"><input type="checkbox" id="furnKid" checked><label for="furnKid">Детская (слой 1)</label></div>
+  <div class="row"><input type="checkbox" id="furnMaster" checked><label for="furnMaster">Спальня (слой 1)</label></div>
+  <div class="row"><input type="checkbox" id="furnBath" checked><label for="furnBath">Санузел (слой 1)</label></div>
+  <div class="row"><input type="checkbox" id="furnWardrobe" checked><label for="furnWardrobe">Гардеробная (слой 1)</label></div>
   <div class="row"><input type="checkbox" id="viz"><label for="viz">Визуализация (свет и материалы)</label></div>
   <div class="slider-lab"><span>Стены</span><span id="wov">100%</span></div>
   <input type="range" id="wop" min="0" max="100" value="100" aria-label="Прозрачность стен">
   <div class="slider-lab"><span>Масштаб</span><span id="zov">100%</span></div>
   <input type="range" id="zoom" min="30" max="300" value="100" aria-label="Масштаб">
   <div class="views">
+    <button id="vFP">Экскурсия</button>
     <button id="vTop">Сверху</button>
-    <button id="vFP">От первого лица</button>
     <button id="mkBtn" title="Точка, отрезок, прямоугольник на плане">Разметка</button>
     <button id="layBtn" title="Перенос и поворот предметов, варианты расстановки">Расстановка</button>
   </div>

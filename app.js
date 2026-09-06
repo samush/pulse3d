@@ -72,7 +72,7 @@ const controls={
   },
   apply(){
     camera=this.plan?ortho:persp;
-    if(typeof avatar!=='undefined'){ avatar.visible=this.fpv; }
+    if(typeof avatar!=='undefined'){ avatar.visible=this.fpv&&document.getElementById('avatarOn').checked; }
     if(typeof backdropGroup!=='undefined'){ backdropGroup.visible=this.fpv; }
     if(typeof ceilGroup!=='undefined') ceilGroup.visible=!this.plan&&document.getElementById('ceil').checked; // hidden in plan; set before the fpv return so walk mode restores it
     if(this.fpv){
@@ -673,6 +673,7 @@ var avatarMat=new THREE.MeshLambertMaterial({color:0x2c5aa0,transparent:true,opa
 })();
 avatar.visible=false;
 scene.add(avatar);
+document.getElementById('avatarOn').addEventListener('change',()=>controls.apply()); // the walk keeps running, only the figure hides
 
 // потолок (по умолчанию выключен)
 var ceilGroup=new THREE.Group();

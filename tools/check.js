@@ -252,7 +252,7 @@ const { chromium } = require('playwright');
   if (plan.tilt > 1e-6) problems.push('план: перетаскивание наклонило камеру');
 
   // прогулка: переход в режим и шаг вперёд стрелкой должны сдвинуть человечка
-  await page.click('text=От первого лица').catch(() => problems.push('нет кнопки «От первого лица»'));
+  await page.click('text=Экскурсия').catch(() => problems.push('нет кнопки «Экскурсия»'));
   await page.waitForTimeout(300);
   const walk = await page.evaluate(async () => {
     if (typeof controls === 'undefined' || !controls.fpv) return { fpv: false, moved: 0 };
@@ -282,7 +282,7 @@ const { chromium } = require('playwright');
   if (!col.hidden) problems.push('столкновения: скрытый слой мебели пропускает');
   if (!col.under) problems.push('столкновения: под кроватью нет прохода');
   if (!col.moved) problems.push('столкновения: после переноса дивана препятствие осталось');
-  if (await page.evaluate(() => !!camera.isOrthographicCamera)) problems.push('после «От первого лица» камера осталась ортографической');
+  if (await page.evaluate(() => !!camera.isOrthographicCamera)) problems.push('после «Экскурсии» камера осталась ортографической');
   else if (walk.moved < 0.3) problems.push('прогулка: шаг вперёд не сдвинул человечка (' + walk.moved.toFixed(2) + ' м)');
   await page.screenshot({ path: path.join(outDir, 'walk.png') });
   // T11: визуализация — PBR-материалы, тени, масштаб рисунка в метрах, геометрия не меняется; замер кадров в обоих режимах
@@ -291,6 +291,9 @@ const { chromium } = require('playwright');
   await page.evaluate(() => { controls.setFPV(10.6, 3.9, Math.PI / 2 + 0.25); });
   const fpsPlain = await fps();
   await page.screenshot({ path: path.join(outDir, 'viz-off.png') });
+  // the figure can be hidden in the walk without leaving it
+  const av = await page.evaluate(() => { const on = () => avatar.visible; const a = on(); document.getElementById('avatarOn').click(); const b = on(); document.getElementById('avatarOn').click(); return [a, b, on(), controls.fpv]; });
+  if (av.join() !== 'true,false,true,true') problems.push('галочка «Человечек» не прячет фигуру в экскурсии: ' + av.join());
   await page.click('#viz'); await page.waitForTimeout(800);
   const viz = await page.evaluate((pj) => {
     const floor = finishGroup.children.find(o => o.geometry && o.geometry.type === 'ShapeGeometry');
