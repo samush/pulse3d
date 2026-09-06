@@ -34,27 +34,30 @@ const PHYS={}; // id → boxes
     b(bx,bx+0.04,0.46,0.9,0,0.42,mat.chair);
     [[0.03,0.03],[0.35,0.03],[0.03,0.35],[0.35,0.35]].forEach(([x,z])=>b(x,x+0.04,0,0.42,z,z+0.04,mat.chair));
   };
-  // Loft bed shared by rooms 1 and 2: stair-chest along local z 0–0.5, platform x 1.4–2.6 × z 0–L, storage shelf above the passage z L–2.97
+  // Loft bed shared by rooms 1 and 2: stair-chest along local z 0–0.5, platform x 1.4–2.6 × z 0–L, storage shelf above the passage z L–2.97.
+  // Procedural on purpose (realism-all §0 rule: boxes + bevels): the 9 proxy boxes and the step/platform/post checks in check.js keep working for both beds.
   const kidBedBuild=(L,front,blanket,tread=0.28)=>b=>{
        const PL=1.8, TOP=2.3, HF=2.2, X0=5*tread, W=X0+1.2;                                           // L — platform length along z (2.00 in room 1, 1.85 in room 2); tread — step depth
        b.phys(0,X0,0,2.4,0,0.54); [[X0,0],[W-0.08,0],[X0,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b.phys(x,x+0.08,0,PL,z,z+0.08)); // stair-chest, legs
        b.phys(X0+0.08,W-0.08,0.10,0.14,L-0.08,L); b.phys(X0,W,PL-0.2,TOP+0.3,0,L+0.02); b.phys(X0,W,HF,TOP+0.3,L,2.97); b.phys(X0,X0+0.08,0,HF,2.89,2.97); // rail, platform with rails, shelf, post
-       b(X0,W,PL-0.1,PL,0,L,mat.kbody);                                                          // platform, world x 4.235–5.435
-       [[X0,0],[W-0.08,0],[X0,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b(x,x+0.08,0,PL-0.1,z,z+0.08,mat.kleg)); // legs
+       b.round(X0,W,PL-0.1,PL,0,L,0.01,mat.kbody);                                                // platform 0.10 with a 10 mm bevel, world x 4.235–5.435 (check.js reads its AABB)
+       [[X0,0],[W-0.08,0],[X0,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b(x,x+0.08,0,PL-0.1,z,z+0.08,mat.kleg)); // legs 80×80
        b(X0+0.08,W-0.08,0.10,0.14,L-0.08,L,mat.kleg);                                               // lower rail between the south legs
        b(X0,X0+0.04,PL-0.2,PL-0.1,0,L,mat.kbody); b(X0,W,PL-0.2,PL-0.1,L-0.04,L,mat.kbody);       // apron on the west and south edges
        b(X0+0.01,X0+0.03,PL-0.11,PL-0.1,0,L,mat.led);                                             // M20: LED strip under the west edge
-       b(X0+0.05,W-0.03,PL,PL+0.18,0.03,L-0.05,mat.kmat);                                             // mattress 1.80–1.98
-       b(X0+0.15,W-0.13,PL+0.18,PL+0.28,0.1,0.5,mat.pillow);                                        // pillow
-       b(X0+0.1,W-0.15,PL+0.18,PL+0.24,0.8,L-0.1,blanket);                                          // blanket at the feet
-       b(X0,X0+0.02,PL,TOP,0.5,L,mat.rail); b(X0,W,PL,HF,L,L+0.02,mat.rail);                      // west and south rails
-       b(X0,W,HF,TOP,L,2.97,mat.kbody); b(X0,X0+0.08,0,HF,2.89,2.97,mat.kleg);                    // storage shelf above the passage and its post
-       b(X0,X0+0.02,TOP,TOP+0.3,L,2.97,mat.rail); b(X0+0.02,W,TOP,TOP+0.3,2.95,2.97,mat.rail);    // shelf rails
+       b.round(X0+0.05,W-0.03,PL,PL+0.18,0.03,L-0.05,0.04,mat.kmat);                                 // mattress 0.18, edges r 40
+       b.round(X0+0.15,W-0.13,PL+0.18,PL+0.28,0.1,0.5,0.045,mat.pillow);                             // pillow
+       b.round(X0+0.1,W-0.15,PL+0.18,PL+0.24,0.8,L-0.1,0.025,blanket); b.round(X0+0.1,W-0.15,PL+0.24,PL+0.27,0.8,1.05,0.014,blanket); // blanket, top edge folded back
+       const bal=(x0,x1,z0,z1)=>b(x0,x1,PL-0.1,TOP-0.04,z0,z1,mat.kleg);                             // guard: 40×40 top rail on 20×20 balusters every 0.10
+       b(X0,X0+0.04,TOP-0.04,TOP,0.5,L,mat.kbody); for(let z=0.5;z<L-0.03;z+=0.1) bal(X0+0.01,X0+0.03,z,z+0.02);      // west side, from the stair landing
+       b(X0,W,TOP-0.04,TOP,L-0.04,L,mat.kbody); for(let x=X0+0.1;x<W-0.03;x+=0.1) bal(x,x+0.02,L-0.03,L-0.01);       // south side
+       b(X0,W,HF,HF+0.04,L,2.97,mat.kbody); b(X0,X0+0.02,HF+0.04,HF+0.12,L,2.97,mat.kbody); b(X0,W,HF+0.04,TOP+0.2,2.95,2.97,mat.kbody); // storage shelf over the passage: slab, front lip, back panel
+       b(X0,X0+0.08,0,HF,2.89,2.97,mat.kleg);                                                       // shelf post (check.js: clear of the door in room 2)
        b(X0-0.03,X0,1.38,1.42,2.91,2.95,mat.knob);                                                  // backpack hook on the post, 1.40
-       for(let i=0;i<5;i++){ const x0=i*tread, x1=x0+tread, top=0.3*(i+1);                             // stair-chest: 5 steps 0.28 × 0.30, drawer fronts south
-         b(x0,x1,0,top,0,0.5,mat.kbody); b(x0+0.01,x1-0.01,0.02,top-0.02,0.5,0.52,front);
-         b((x0+x1)/2-0.075,(x0+x1)/2+0.075,top-0.07,top-0.05,0.52,0.54,mat.knob);
-         b(x0,x1,top+0.885,top+0.915,0.02,0.05,front); }                                          // handrail segments on the north wall, tread + 0.90
+       for(let i=0;i<5;i++){ const x0=i*tread, x1=x0+tread, top=0.3*(i+1), cx=(x0+x1)/2;             // stair-chest: 5 steps 0.28 × 0.30 (check.js reads the step tops), one drawer per 0.30 row, fronts south
+         b(x0,x1,0,top,0,0.5,mat.kbody);
+         for(let j=0;j<=i;j++){ const y0=0.3*j; b(x0+0.004,x1-0.004,y0+0.015,y0+0.285,0.5,0.518,front); b(cx-0.06,cx+0.06,y0+0.235,y0+0.25,0.518,0.535,mat.knob); } // 3 mm gaps, bar handle
+         b.round(x0,x1,top+0.885,top+0.915,0.02,0.05,0.01,front); }                                // handrail segments on the north wall, tread + 0.90
   };
   const KN=1.915; // north wall of kitchen-living room 4
   const ITEMS=[
