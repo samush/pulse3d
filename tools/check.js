@@ -465,6 +465,32 @@ const { chromium } = require('playwright');
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
+  // bath8: the passage strip x 9.10–9.872 × z 12.20–13.00 × 0–2.10 is free of every part box of room 8 (tolerance 1e-6),
+  // toilet axis ≥ 0.35 from the east wall, no layout warnings (corners inside the polygon with the bump), grey materials
+  const b8 = await page.evaluate(() => {
+    const its = ITEMS.filter(it => it.layer === 'bath' && it.room === 8), bb = o => new THREE.Box3().setFromObject(o);
+    const strip = new THREE.Box3(new THREE.Vector3(9.10, 0, 12.20), new THREE.Vector3(9.872, 2.1, 13.00)), e = 1e-6;
+    const inStrip = its.filter(it => PHYS[it.id].some(m => { const b = bb(m); return b.min.x < strip.max.x - e && b.max.x > strip.min.x + e && b.min.z < strip.max.z - e && b.max.z > strip.min.z + e && b.min.y < strip.max.y; })).map(it => it.id);
+    const wc = bb(ITEM_GROUPS.wc8), axis = (wc.min.x + wc.max.x) / 2;
+    const warn = its.concat(ITEMS.filter(it => it.id === 'sw6')).map(it => [it.id, LAY.warnings(it.id)]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
+    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
+    const tray = bb(ITEM_GROUPS.shower8), curbTop = bb(ITEM_GROUPS.curb8e).max.y, glassTop = bb(ITEM_GROUPS.glass8).max.y, glassEast = Math.max(bb(ITEM_GROUPS.glass8).max.x, bb(ITEM_GROUPS.curb8e).max.x);
+    return { n: its.length, inStrip, axisWall: 9.872 - axis, wcFront: wc.max.z, warn, colored, trayLow: tray.min.y, trayHigh: tray.max.y, curbTop, glassTop, glassEast };
+  });
+  if (b8.n < 20) problems.push('санузел 8: предметов слоя bath ' + b8.n + ' (< 20)');
+  if (b8.inStrip.length) problems.push('санузел 8: в полосе прохода: ' + b8.inStrip.join(', '));
+  if (b8.axisWall < 0.35) problems.push('санузел 8: ось унитаза ближе 0.35 к стене: ' + b8.axisWall.toFixed(3));
+  if (b8.wcFront > 12.2) problems.push('санузел 8: унитаз заходит в полосу прохода: z ' + b8.wcFront.toFixed(3));
+  if (b8.trayLow < 0.0065 || b8.trayHigh > 0.02) problems.push('санузел 8: поддон душа не между отделкой пола и 0.02: ' + b8.trayLow + '–' + b8.trayHigh);
+  if (Math.abs(b8.curbTop - 0.05) > 1e-6 || Math.abs(b8.glassTop - 2.1) > 1e-6 || b8.glassEast > 9.10 + 1e-6) problems.push('санузел 8: бортик/стекло не по ТЗ (0.05 / 2.10 / x ≤ 9.10)');
+  if (b8.warn.length) problems.push('санузел 8: предупреждения расстановки:\n    ' + b8.warn.join('\n    '));
+  if (b8.colored.length) problems.push('санузел 8: цветные материалы у ' + b8.colored.join(', '));
+  await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 1.4; controls.r = hh / TAN22; controls.target.set(9.03 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 12.26); controls.apply(); });
+  await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'bath8-top.png') });
+  for (const [name, x, z, th] of [['bath8-door', 9.8, 12.6, -Math.PI / 2 + 0.3], ['bath8-wc', 9.6, 12.75, -Math.PI / 2 - 0.55], ['bath8-shower', 8.7, 12.8, Math.PI / 2 - 0.1]]) {
+    await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(outDir, name + '.png') });
+  }
   console.log(`  кадров/с: план ${fpsPlain}, визуализация ${fpsViz} (viewport 1400×1000, прогулка в кухне)`);
   await browser.close();
 
