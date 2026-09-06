@@ -434,24 +434,24 @@ const { chromium } = require('playwright');
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
-  // bath9: door 0.70 at z 8.75–9.45 (plan + tile cutout agree), the passage strip x 8.872–9.872 × z 8.75–9.45 × 0–2.10 is
+  // bath9: door 0.70 at z 8.55–9.25 (plan + tile cutout agree), the passage strip x 8.872–9.872 × z 8.55–9.25 × 0–2.10 is
   // free of every part box (tolerance 1e-6, float noise only), toilet axis ≥ 0.35 from the tub rim and the east wall, items inside room 9
   // (the corridor switch inside room 5), no layout warnings, grey materials
   const b9 = await page.evaluate(() => {
     const its = ITEMS.filter(it => it.layer === 'bath'), bb = o => new THREE.Box3().setFromObject(o);
     const door = PLAN.doors[5], bath = PLAN.baths[0];
-    const doorOk = door[2] === 'v' && Math.abs(door[3] - 0.7) < 1e-9 && Math.abs(door[1] - 0.35 - 8.75) < 1e-9 && bath.dz0 === 8.75 && bath.dz1 === 9.45;
+    const doorOk = door[2] === 'v' && Math.abs(door[3] - 0.7) < 1e-9 && Math.abs(door[1] - 0.35 - 8.55) < 1e-9 && bath.dz0 === 8.55 && bath.dz1 === 9.25;
     const inside = its.filter(it => { const r = PLAN.rooms.find(q => q.id === it.room), xs = r.poly.map(q => q[0]), zs = r.poly.map(q => q[1]); const b = bb(ITEM_GROUPS[it.id]);
       return b.min.x < Math.min(...xs) - 0.001 || b.max.x > Math.max(...xs) + 0.001 || b.min.z < Math.min(...zs) - 0.001 || b.max.z > Math.max(...zs) + 0.001; }).map(it => it.id);
-    const strip = new THREE.Box3(new THREE.Vector3(8.872, 0, 8.75), new THREE.Vector3(9.872, 2.1, 9.45));
+    const strip = new THREE.Box3(new THREE.Vector3(8.872, 0, 8.55), new THREE.Vector3(9.872, 2.1, 9.25));
     const inStrip = its.filter(it => it.room === 9 && PHYS[it.id].some(m => { const b = bb(m); const e = 1e-6; return b.min.x < strip.max.x - e && b.max.x > strip.min.x + e && b.min.z < strip.max.z - e && b.max.z > strip.min.z + e && b.min.y < strip.max.y; })).map(it => it.id);
     const wc = bb(ITEM_GROUPS.wc), tub = bb(ITEM_GROUPS.tub), axis = (wc.min.x + wc.max.x) / 2;
     const warn = its.map(it => [it.id, LAY.warnings(it.id)]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
     const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     return { n: its.length, doorOk, inside, inStrip, axisTub: axis - tub.max.x, axisWall: 9.872 - axis, wcFront: wc.max.z, warn, colored };
   });
-  if (b9.n < 18) problems.push('санузел 9: предметов слоя bath ' + b9.n + ' (< 18)');
-  if (!b9.doorOk) problems.push('санузел 9: дверь не 0.70 на z 8.75–9.45 или вырез плитки не совпал');
+  if (b9.n < 17) problems.push('санузел 9: предметов слоя bath ' + b9.n + ' (< 17)');
+  if (!b9.doorOk) problems.push('санузел 9: дверь не 0.70 на z 8.55–9.25 или вырез плитки не совпал');
   if (b9.inside.length) problems.push('санузел 9: предметы вне помещения: ' + b9.inside.join(', '));
   if (b9.inStrip.length) problems.push('санузел 9: в полосе прохода: ' + b9.inStrip.join(', '));
   if (b9.axisTub < 0.35 || b9.axisWall < 0.35) problems.push('санузел 9: ось унитаза ближе 0.35: до ванны ' + b9.axisTub.toFixed(3) + ', до стены ' + b9.axisWall.toFixed(3));
@@ -459,7 +459,7 @@ const { chromium } = require('playwright');
   if (b9.colored.length) problems.push('санузел 9: цветные материалы у ' + b9.colored.join(', '));
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 1.4; controls.r = hh / TAN22; controls.target.set(9.03 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 9.0); controls.apply(); });
   await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'bath9-top.png') });
-  for (const [name, x, z, th] of [['bath9-door', 9.8, 9.15, -Math.PI / 2 - 0.3], ['bath9-basin', 9.6, 9.0, 0.35], ['bath9-tub', 8.6, 8.9, Math.PI / 2 + 0.1]]) {
+  for (const [name, x, z, th] of [['bath9-door', 9.8, 8.85, -Math.PI / 2 + 0.3], ['bath9-basin', 9.6, 9.0, Math.PI - 0.35], ['bath9-tub', 8.6, 8.9, Math.PI / 2 + 0.1]]) {
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
