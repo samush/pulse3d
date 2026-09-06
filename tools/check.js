@@ -306,6 +306,9 @@ const { chromium } = require('playwright');
     const one = ['sw3', 'sw4', 'sw6', 'sock14', 'sock15', 'sock16', 'sock17', 'sock18', 'sock19', 'sock20', 'led4', 'led5'], ids = ['mcab', 'mward', 'mconsole', 'vanity', 'vmirror', 'mtv', 'mrug', 'mcurtain', 'mlight', 'bra5', 'bra6', 'bra7', 'bra8'].concat(one);
     const bad = ids.filter(id => !fit(id)); one.forEach(id => { if (PHYS[id].length !== 1) bad.push(id + ':phys'); }); return bad; });
   if (fitD.length) problems.push('этап D: детали вне size или proxy розеток/LED не один бокс: ' + fitD.join(' '));
+  // realism-all stage E: procedural bath items stay inside size
+  const fitE = await page.evaluate(() => ['basin', 'basindrawer', 'basinmixer', 'tubmixer', 'mixer8', 'shower', 'bathmirror', 'towelrail', 'towel8', 'wcbox', 'wcbox8', 'niche8', 'curb8e', 'drain8', 'glass8', 'cove8', 'fan', 'fan8', 'rain8', 'sock21', 'sock22', 'sock24'].filter(id => { const g = ITEM_GROUPS[id], bb = new THREE.Box3().setFromObject(g).applyMatrix4(new THREE.Matrix4().copy(g.matrixWorld).invert()), s = g.userData.size; return !(bb.min.x >= -0.001 && bb.min.y >= -0.001 && bb.min.z >= -0.001 && bb.max.x <= s[0] + 0.001 && bb.max.y <= s[1] + 0.001 && bb.max.z <= s[2] + 0.001); }));
+  if (fitE.length) problems.push('этап E: детали вне size: ' + fitE.join(' '));
   // realism-all stage E: tub GLB loaded without warnings, its 5 proxy boxes untouched
   const tubE = await page.evaluate(async () => { const g = ITEM_GROUPS.tub; for (let i = 0; i < 100 && !g.userData.glbLoaded && !(VIZ.loadErrors || []).some(s => s.startsWith('tub:')); i++) await new Promise(r => setTimeout(r, 100));
     return { loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), boxes: PHYS.tub.length }; });
