@@ -75,6 +75,8 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
     VIZ.active=on;
   }
   const hemiLight=scene.children.find(o=>o.isHemisphereLight);
+  VIZ.adopt=function(root){ // meshes added after prepare (GLB models): twins for their materials, then the current mode
+    if(!VIZ.ready) return; root.traverse(o=>{ if(o.isMesh&&!VIZ.std.has(o.material)&&!VIZ.basic.has(o.material)){ const b=o.material, s=stdFor(b.userData.slot||'furniture',b); VIZ.std.set(b,s); VIZ.basic.set(s,b); } }); swap(root,VIZ.active); };
   VIZ.apply=apply;
   VIZ.set=function(on){ VIZ.on=!!on; try{ localStorage.setItem(KEY,VIZ.on?'1':'0'); }catch(e){} const cb=document.getElementById('viz'); if(cb) cb.checked=VIZ.on; apply(); };
   document.getElementById('viz').addEventListener('change',e=>VIZ.set(e.target.checked));
