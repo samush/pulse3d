@@ -361,7 +361,7 @@ const { chromium } = require('playwright');
     const colored = []; kids.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     const desk = bb(ITEM_GROUPS.kiddesk), seat = bb(ITEM_GROUPS.windowseat1), shelfN = bb(ITEM_GROUPS.kidshelf), shelfS = bb(ITEM_GROUPS.kidshelf2), win = PLAN.windows[0];
     const deskStraight = desk.max.z - desk.min.z <= 0.61 && desk.max.z > 4.86 && desk.max.x - desk.min.x > 2.1;
-    const chair = bb(ITEM_GROUPS.kidchair), ped = bb(ITEM_GROUPS.kidped), chairIn = chair.max.z - desk.min.z >= 0.07, pedEnd = desk.max.x - ped.max.x < 0.025;
+    const chair = bb(ITEM_GROUPS.kidchair), ped = bb(ITEM_GROUPS.kidped), chairIn = chair.max.z - desk.min.z >= 0.25, pedEnd = desk.max.x - ped.max.x < 0.025;
     const seatOk = seat.min.z >= shelfN.max.z - 0.001 && seat.max.z <= desk.min.z + 0.001 && seat.max.x <= 1.52;
     const windowFree = shelfN.max.z <= win.z0 - 0.09 && shelfS.min.z >= win.z1 + 0.09;
     return { n: kids.length, inside, hitPlat, warn, tops, sofaTop, bedPos: ITEM_GROUPS.kidbed.userData.pos, colored, deskStraight, seatOk, windowFree, chairIn, pedEnd };

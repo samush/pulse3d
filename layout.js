@@ -69,7 +69,12 @@
   // per part, not per item box: the loft bed's box covers the empty space under it; diagonal corners are not a corridor
   function minGap(a,b){ let best=null; const P=id=>PHYS[id].map(m=>new THREE.Box3().setFromObject(m)).filter(x=>x.min.y<1.9);
     P(a).forEach(x=>P(b).forEach(y=>{ const ox=Math.min(x.max.x,y.max.x)-Math.max(x.min.x,y.min.x), oz=Math.min(x.max.z,y.max.z)-Math.max(x.min.z,y.min.z);
-      const g=ox>0&&oz<=0.005?-oz:oz>0&&ox<=0.005?-ox:null; if(g!=null&&(best==null||g<best)) best=g; })); return best!=null&&best>0.15&&best<PASS?best:null; } // touching parts (gap ≤ 0.15) mean one block, not a corridor
+      const g=ox>0&&oz<=0.005?-oz:oz>0&&ox<=0.005?-ox:null; if(g==null||(best!=null&&g>=best)) return;
+      // the gap rectangle in plan; a gap fully under a third item (a chair beside a pedestal under one desk) is not a corridor
+      const r=ox>0?[Math.max(x.min.x,y.min.x),Math.min(x.max.x,y.max.x),Math.min(x.max.z,y.max.z),Math.max(x.min.z,y.min.z)]:[Math.min(x.max.x,y.max.x),Math.max(x.min.x,y.min.x),Math.max(x.min.z,y.min.z),Math.min(x.max.z,y.max.z)];
+      const covered=g>0.15&&Object.keys(PHYS).some(id=>id!==a&&id!==b&&PHYS[id].some(m=>{ const c=new THREE.Box3().setFromObject(m); return c.min.y<1.9&&c.min.x<=r[0]+0.005&&c.max.x>=r[1]-0.005&&c.min.z<=r[2]+0.005&&c.max.z>=r[3]-0.005; }));
+      if(g<=0.15||!covered) best=g; }));                                                              // touching parts stay one block even when something covers the seam
+    return best!=null&&best>0.15&&best<PASS?best:null; }                                                 // touching parts (gap ≤ 0.15) mean one block, not a corridor
   // real overlap: per-mesh boxes (a sofa under a loft bed sits between the legs, a socket above a desk is fine)
   function hits3d(a,b){ const A=PHYS[a].map(m=>new THREE.Box3().setFromObject(m)), B=PHYS[b].map(m=>new THREE.Box3().setFromObject(m)); const e=0.005;
     return A.some(x=>B.some(y=>x.min.x<y.max.x-e&&x.max.x>y.min.x+e&&x.min.y<y.max.y-e&&x.max.y>y.min.y+e&&x.min.z<y.max.z-e&&x.max.z>y.min.z+e)); }
