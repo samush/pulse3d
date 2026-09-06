@@ -82,7 +82,7 @@ const { chromium } = require('playwright');
       floor: floor ? bb(floor).min.y : null,
       plinth: plinth ? [bb(plinth).min.y, bb(plinth).max.y] : null,
       ceil: ceil ? bb(ceil).min.y : null,
-      furnitureMin: Math.min(...[furnGroup, hallGroup, laundryGroup, kidGroup, masterGroup].map(minY)),
+      furnitureMin: Math.min(...[furnGroup, hallGroup, laundryGroup, kidGroup, kid2Group, masterGroup, bathGroup, bath2Group].map(minY)),
       doorTop: (() => { let n = 0; finishGroup.traverse(o => { if (o.isMesh && o.geometry.type === 'BoxGeometry' && Math.abs(bb(o).max.y - 2.17) < 0.02) n++; }); return n; })(),
     };
   });
@@ -378,7 +378,7 @@ const { chromium } = require('playwright');
   // shelf post clear of the door opening, open door leaf (x ≤ 11.97, z 7.65–7.70) clear of the bed legs, pull-up bar under
   // the ceiling, no overlaps, grey materials
   const r2 = await page.evaluate(() => {
-    const its = ITEMS.filter(it => it.layer === 'kid' && it.room === 2), bb = o => new THREE.Box3().setFromObject(o);
+    const its = ITEMS.filter(it => it.layer === 'kid2' && it.room === 2), bb = o => new THREE.Box3().setFromObject(o);
     const inside = its.filter(it => { const b = bb(ITEM_GROUPS[it.id]); const zs = b.min.x > 13.477 ? 9.519 : 9.614; return b.min.x < 11.066 || b.max.x > 14.775 || b.min.z < 6.517 || b.max.z > zs + 0.001; }).map(it => it.id);
     const parts = ITEM_GROUPS.kidbed2.children.map(o => bb(o));
     const plat = parts.filter(b => Math.abs(b.min.y - 1.7) < 0.01 && b.max.x - b.min.x > 1.1)[0];
@@ -471,7 +471,7 @@ const { chromium } = require('playwright');
   // bath8: shower along the whole west wall, glass on the toilet side, no basin; the passage strip x 9.10–9.872 × z 12.20–13.00 × 0–2.10 is free of every part box of room 8 (tolerance 1e-6),
   // toilet axis ≥ 0.35 from the east wall, no layout warnings (corners inside the polygon with the bump), grey materials
   const b8 = await page.evaluate(() => {
-    const its = ITEMS.filter(it => it.layer === 'bath' && it.room === 8), bb = o => new THREE.Box3().setFromObject(o);
+    const its = ITEMS.filter(it => it.layer === 'bath2' && it.room === 8), bb = o => new THREE.Box3().setFromObject(o);
     const strip = new THREE.Box3(new THREE.Vector3(9.10, 0, 12.20), new THREE.Vector3(9.872, 2.1, 13.00)), e = 1e-6;
     const inStrip = its.filter(it => PHYS[it.id].some(m => { const b = bb(m); return b.min.x < strip.max.x - e && b.max.x > strip.min.x + e && b.min.z < strip.max.z - e && b.max.z > strip.min.z + e && b.min.y < strip.max.y; })).map(it => it.id);
     const wc = bb(ITEM_GROUPS.wc8), axis = (wc.min.x + wc.max.x) / 2;
