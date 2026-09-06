@@ -432,6 +432,7 @@ document.getElementById('ceil').addEventListener('change',e=>ceilGroup.visible=e
 document.getElementById('wgrid').addEventListener('change',e=>{wallGridGroup.visible=e.target.checked;addrGroup.visible=e.target.checked;});
 document.getElementById('finish').addEventListener('change',e=>finishGroup.visible=e.target.checked);
 document.getElementById('tileFloor').addEventListener('change',e=>tileGroup.visible=e.target.checked);
+document.getElementById('boardFloor').addEventListener('change',e=>boardGroup.visible=e.target.checked);
 const wop=document.getElementById('wop'),wov=document.getElementById('wov');
 const fade=(m,v)=>{ m.opacity=v; m.transparent=v<0.999; m.depthWrite=v>=0.5; m.needsUpdate=true; const s=window.VIZ&&VIZ.std.get(m); if(s) fade(s,v); }; // PBR twin follows the basic material
 wop.addEventListener('input',()=>{
@@ -494,6 +495,7 @@ var backdropGroup=new THREE.Group();
   const glassMat=new THREE.MeshBasicMaterial({color:0xa8c9e0,transparent:true,opacity:0.32,side:THREE.DoubleSide,depthWrite:false});
   const frameMat=new THREE.LineBasicMaterial({color:0x8b8f94});
   var loggiaFrameMat=new THREE.MeshBasicMaterial({color:0x26282b}); window.loggiaFrameMat=loggiaFrameMat;
+  var loggiaFrostMat=new THREE.MeshBasicMaterial({color:0xe6e6e2,transparent:true,opacity:0.9}); window.loggiaFrostMat=loggiaFrostMat;
   const loader=new THREE.TextureLoader();
   PLAN.windows.forEach(w=>{
     const wgeo=new THREE.PlaneGeometry(w.z1-w.z0, w.y1-w.y0);
@@ -510,6 +512,10 @@ var backdropGroup=new THREE.Group();
       [w.y0,2.05-T/2,w.y1-T].forEach(y=>box(w.x,y,y+T,w.z0,w.z1,0.10));
       const rx=w.x-w.nx*0.09; box(rx,1.02,1.06,w.z0+T,w.z1-T,0.04);
       for(let z=w.z0+T+0.05;z<w.z1-T;z+=0.11) box(rx,0.02,1.02,z,z+0.012,0.012);
+      // frosted inserts as on the real glazing: the top row in every bay, the side bays between the railing and the transom
+      const frost=(y0,y1,z0,z1)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(0.02,y1-y0,z1-z0),loggiaFrostMat); m.position.set(w.x,(y0+y1)/2,(z0+z1)/2); glassGroup.add(m); };
+      frost(2.05+T/2,w.y1-T,w.z0+T,w.z1-T);
+      frost(1.06,2.05-T/2,w.z0+T,w.z0+W*0.3-T/2); frost(1.06,2.05-T/2,w.z0+W*0.7+T/2,w.z1-T);
     } else { // mullion in the middle
       const mull=new THREE.Mesh(new THREE.BoxGeometry(0.05,w.y1-w.y0,0.05),new THREE.MeshLambertMaterial({color:0xf2f2f0}));
       mull.position.set(w.x,(w.y0+w.y1)/2,(w.z0+w.z1)/2);
@@ -828,6 +834,20 @@ var finishGroup=new THREE.Group();
   tileTex.repeat.set(1/1.8,1/1.2);
   const tileMat=new THREE.MeshBasicMaterial({map:tileTex});
   finishGroup.add(new THREE.Mesh(window.loggiaFloorGeo,tileMat)); // loggia 10 floor: dark grey porcelain tile as on the photos
+  // layer 3 (BOARD_POLYS): engineered oak board to try floor coverings — the living zone of room 4 east of the tile (x 10.36–13.47) and the loggia 10
+  const boardTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=512; const g=c.getContext('2d'); let sd=7; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; }; // canvas = 2.0 × 2.0 m
+    const tones=['#b6925d','#c09a66','#ab8752','#c9a672','#a37f4c','#bd9760']; const rowH=51.2; // plank 0.20 m
+    for(let r=0;r<10;r++){ const y=r*rowH; g.fillStyle=tones[(r*5)%tones.length]; g.fillRect(0,y,512,rowH);
+      for(let i=0;i<14;i++){ g.strokeStyle='rgba(70,45,20,'+(0.06+0.1*rnd())+')'; g.lineWidth=0.6+rnd()*1.2; const gy=y+3+rnd()*(rowH-6); g.beginPath(); g.moveTo(0,gy); g.bezierCurveTo(170,gy+(rnd()-0.5)*8,340,gy+(rnd()-0.5)*8,512,gy+(rnd()-0.5)*4); g.stroke(); }
+      for(let k=0;k<2;k++){ if(rnd()<0.5) continue; g.fillStyle='rgba(60,38,18,0.55)'; g.beginPath(); g.ellipse(rnd()*512,y+8+rnd()*(rowH-16),3+rnd()*4,2+rnd()*3,rnd()*3,0,Math.PI*2); g.fill(); } // knots
+      const jx=(r*173+97)%512; g.strokeStyle='rgba(50,32,15,0.5)'; g.lineWidth=1; g.beginPath(); g.moveTo(jx+0.5,y); g.lineTo(jx+0.5,y+rowH); g.stroke(); // end joint, staggered per row
+      g.strokeStyle='rgba(50,32,15,0.45)'; g.beginPath(); g.moveTo(0,y+0.5); g.lineTo(512,y+0.5); g.stroke(); }
+    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/2,1/2); return t; })();
+  const boardMat=new THREE.MeshBasicMaterial({map:boardTex});
+  window.BOARD_POLYS=[[[10.36,1.915],[13.47,1.915],[13.47,6.287],[10.36,6.287]],PLAN.rooms.find(r=>r.id===10).poly];
+  window.boardGroup=new THREE.Group();
+  BOARD_POLYS.forEach(poly=>{ const g=new THREE.ShapeGeometry(toShape(poly)); const uv=g.attributes.uv; for(let i=0;i<uv.count;i++) uv.setXY(i,uv.getY(i),uv.getX(i)); // planks run north–south, along the long side of the loggia
+    g.rotateX(-Math.PI/2); g.translate(0,TILE+0.0015,0); boardGroup.add(new THREE.Mesh(g,boardMat)); });
   window.tileGroup=new THREE.Group();
   {
     const g=new THREE.ShapeGeometry([toShape(TILE_POLY)].concat(TILE_SILLS.map(toShape)));
@@ -920,7 +940,7 @@ var finishGroup=new THREE.Group();
   const plinthMat=new THREE.MeshBasicMaterial({color:0xffffff});
   const loggiaMat=new THREE.MeshBasicMaterial({color:0x8e8f91}); // loggia 10 walls: grey paint as on the photos
   window.wallFinMats=[wpMat,whiteWall,greyMat,woodMat,frameMat2,plinthMat,loggiaMat]; // гасятся ползунком «Стены»
-  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,loggia:loggiaMat}; // для PBR-двойников (materials.js)
+  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,loggia:loggiaMat,board:boardMat}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
   // room 2, M10: finish block on the north wall behind the gym wall, 0.1–2.40, x 12.15–13.75; grey until the palette stage
   const accent2Mat=new THREE.MeshBasicMaterial({color:0xd6d6d3}); wallFinMats.push(accent2Mat); finishMats.accent2=accent2Mat;
@@ -1036,7 +1056,7 @@ var finishGroup=new THREE.Group();
     }
   });
 })();
-scene.add(finishGroup); scene.add(tileGroup);
+scene.add(finishGroup); scene.add(tileGroup); scene.add(boardGroup);
 
 // мебель — в items.js (предметы с id, локальными координатами и слоями)
 

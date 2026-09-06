@@ -691,6 +691,25 @@ const { chromium } = require('playwright');
   if (lg.walls < 3) problems.push('лоджия 10: серых стеновых панелей ' + lg.walls + ' (< 3)');
   await page.evaluate(() => { setView('fpv'); controls.setFPV(14.45, 4.7, Math.PI / 2 + 0.3); }); await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(outDir, 'balcony10-glazing.png') });
+  // floor layer 3: oak board over the living zone of room 4 (x 10.36–13.47) and the loggia, its own checkbox, PBR twin in visualization
+  const bd = await page.evaluate(() => {
+    const meshes = []; boardGroup.traverse(o => { if (o.isMesh) meshes.push(o); });
+    const b = new THREE.Box3().setFromObject(boardGroup);
+    const cb = document.getElementById('boardFloor'); cb.checked = false; cb.dispatchEvent(new Event('change')); const hid = !boardGroup.visible && tileGroup.visible; cb.checked = true; cb.dispatchEvent(new Event('change'));
+    VIZ.set(true); setView('fpv'); VIZ.apply && VIZ.apply(); const std = meshes[0].material.type; VIZ.set(false);
+    const frost = []; glassGroup.traverse(o => { if (o.isMesh && o.material === loggiaFrostMat) frost.push(o); });
+    return { n: meshes.length, box: [b.min.x, b.max.x, b.min.z, b.max.z, b.min.y], hid, shown: boardGroup.visible, std, frost: frost.length };
+  });
+  if (bd.n !== 2) problems.push('покрытие: мешей ' + bd.n + ' (нужно 2)');
+  if (Math.abs(bd.box[0] - 10.36) > 1e-6 || Math.abs(bd.box[1] - 15.1) > 1e-6 || Math.abs(bd.box[2] - 1.915) > 1e-6 || Math.abs(bd.box[3] - 6.287) > 1e-6) problems.push('покрытие: контур ' + bd.box.slice(0, 4).map(v => v.toFixed(3)).join(' '));
+  if (Math.abs(bd.box[4] - 0.009) > 1e-6) problems.push('покрытие: высота ' + bd.box[4]);
+  if (!bd.hid || !bd.shown) problems.push('покрытие: галочка не переключает слой или трогает плитку');
+  if (bd.std !== 'MeshStandardMaterial') problems.push('покрытие: в визуализации материал ' + bd.std);
+  if (bd.frost !== 3) problems.push('лоджия 10: матовых вставок ' + bd.frost + ' (нужно 3)');
+  await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 2.6; controls.r = hh / TAN22; controls.target.set(12.7 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 4.1); controls.apply(); });
+  await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'board-top.png') });
+  await page.evaluate(() => { setView('fpv'); controls.setFPV(11.2, 5.6, Math.PI / 2 - 0.9); }); await page.waitForTimeout(300);
+  await page.screenshot({ path: path.join(outDir, 'board-walk.png') });
   // facade: one cladding mesh per outer face with windows (west, north, two east faces), holes equal the windows on that face, follows the walls slider and gets a PBR twin
   const fc = await page.evaluate(() => {
     const meshes = []; facadeGroup.traverse(o => { if (o.isMesh) meshes.push(o); });
