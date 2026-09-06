@@ -470,15 +470,15 @@ const PHYS={}; // id → boxes
     {id:'sw7',type:'датчик движения + выключатель в коридоре у двери гардеробной: свет M9+M10 от датчика, клавиша — принудительно',room:5,layer:'wardrobe',pos:[5.76,4.033],rot:0,size:[0.08,0.99,0.01],fixed:'wall',build(b){ b(0,0.08,0.91,0.99,0,0.01,mat.lamp); }},
     {id:'sock25',type:'розетка у двери для пылесоса и утюга, h 0.30',room:6,layer:'wardrobe',pos:[6.875,3.55],rot:0,size:[0.01,0.34,0.08],fixed:'wall',build(b){ b(0,0.01,0.26,0.34,0,0.08,mat.lamp); }},
     // ---- loggia 10 (tasks/balcony10/README.md, marks M1–M13; grey materials only) ----
-    // Room box: x 13.91–15.1, z 2.268–6.043; glazing on the east wall z 2.40–5.90, opening from the kitchen on the west wall z 2.80–4.60 (top 2.10).
+    // Room box: x 13.91–15.1, z 2.268–6.043; glazing on the east wall z 2.40–5.90, opening from the kitchen on the west wall z 3.353–4.971 (top 2.10).
     // South end: cantilevered desk and the IT shelf above it; north end: the shelving unit. Nothing else stands on the floor,
-    // the opening zone x 13.91–14.4 × z 2.80–4.60 stays clear (check.js).
+    // the opening zone x 13.91–14.4 × z of the opening stays clear (check.js).
     {id:'bdesk',type:'подвесной стол 1.19×0.80 во всю ширину у южного торца, верх 0.75, консоли к южной и западной стенам, уголок у стекла; под столом пусто',room:10,layer:'balcony',pos:[13.91,5.24],rot:0,size:[1.19,0.75,0.80],fixed:'wall',
      build(b){
        b(0,1.19,0.71,0.75,0,0.80,mat.table);                                                         // top 0.04
        b(0,1.19,0.66,0.71,0.75,0.80,mat.dark); b(0,0.05,0.66,0.71,0,0.75,mat.dark); b(1.14,1.19,0.66,0.71,0.30,0.50,mat.dark); // angle consoles 0.05 right under the top: south wall, west wall, bracket by the glass
      }},
-    {id:'bchair',type:'стул 0.45 с прямой спинкой до 0.90, задвинут под стол на 0.29',room:10,layer:'balcony',pos:[14.28,4.95],rot:0,size:[0.45,0.90,0.45],
+    {id:'bchair',type:'стул 0.45 с прямой спинкой до 0.90, задвинут под стол на 0.24',room:10,layer:'balcony',pos:[14.28,5.00],rot:0,size:[0.45,0.90,0.45],
      build(b){
        b(0,0.45,0.42,0.46,0,0.45,mat.chair); b(0,0.45,0.46,0.90,0,0.04,mat.chair);                    // seat, straight back on the north side
        [[0.02,0.02],[0.40,0.02],[0.02,0.40],[0.40,0.40]].forEach(([x,z])=>b(x,x+0.03,0,0.42,z,z+0.03,mat.chair)); // legs
@@ -507,7 +507,7 @@ const PHYS={}; // id → boxes
      build(b){ b(0,1.11,1.98,2.00,0,0.02,mat.led); }},
     {id:'blight',type:'линейный потолочный светильник 2.20×0.04 по оси лоджии от проёма до стула, 4000 K',room:10,layer:'balcony',pos:[14.48,2.90],rot:0,size:[0.04,2.70,2.20],fixed:'wall',
      build(b){ b(0,0.04,2.68,2.70,0,2.20,mat.led); }},
-    {id:'sw8',type:'выключатель потолочного света на западной стене южнее проёма, h 0.95',room:10,layer:'balcony',pos:[13.91,4.73],rot:0,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b(0,0.01,0.91,0.99,0,0.08,mat.lamp); }},
+    {id:'sw8',type:'выключатель потолочного света на западной стене южнее проёма (проём до 4.971), h 0.95',room:10,layer:'balcony',pos:[13.91,5.02],rot:0,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b(0,0.01,0.91,0.99,0,0.08,mat.lamp); }},
     {id:'blinds10',type:'рулонные солнцезащитные шторы: кассеты по верху остекления z 2.40–5.90 (собраны)',room:10,layer:'balcony',pos:[15.02,2.40],rot:0,size:[0.08,2.30,3.50],fixed:'wall',
      build(b){ b(0,0.08,2.22,2.30,0,3.50,mat.wpanel); }},
   ];

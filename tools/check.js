@@ -537,7 +537,7 @@ const { chromium } = require('playwright');
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
   // balcony10: nothing under the desk below its consoles (0.66) except the chair, the IT shelf plate and the shelving unit top at 2.05
-  // (0.65 to the ceiling), the cable duct above the kitchen opening (≥ 2.10), the opening zone x 13.91–14.4 × z 2.80–4.60 free of
+  // (0.65 to the ceiling), the cable duct above the kitchen opening (≥ 2.10), the opening zone x 13.91–14.4 × z of PLAN.openings.balcony free of
   // floor-standing parts, items inside room 10, no layout warnings, grey materials
   const b10 = await page.evaluate(() => {
     const its = ITEMS.filter(it => it.layer === 'balcony'), bb = o => new THREE.Box3().setFromObject(o);
@@ -548,18 +548,20 @@ const { chromium } = require('playwright');
     const underDesk = its.filter(it => it.id !== 'bchair' && PHYS[it.id].some(m => hit(under, m))).map(it => it.id);
     const plate = bb(ITEM_GROUPS.itshelf.children[0]).max.y, shelfTop = bb(ITEM_GROUPS.bshelf).max.y, lip = bb(ITEM_GROUPS.itshelf).max.y;
     const duct = bb(ITEM_GROUPS.cable10);
-    const zone = new THREE.Box3(new THREE.Vector3(13.91, 0, 2.8), new THREE.Vector3(14.4, 0.05, 4.6));
+    const op = PLAN.openings.find(o => o.tag === 'balcony'); const zone = new THREE.Box3(new THREE.Vector3(13.91, 0, op.z0), new THREE.Vector3(14.4, 0.05, op.z1));
     const inZone = its.filter(it => PHYS[it.id].some(m => hit(zone, m))).map(it => it.id);
     const warn = its.map(it => [it.id, LAY.warnings(it.id)]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
     const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
-    return { n: its.length, inside, underDesk, plate, shelfTop, lip, ductMin: duct.min.y, ductZ: [duct.min.z, duct.max.z], inZone, warn, colored };
+    const swZ = bb(ITEM_GROUPS.sw8).min.z;
+    return { n: its.length, inside, underDesk, plate, shelfTop, lip, ductMin: duct.min.y, ductZ: [duct.min.z, duct.max.z], op: [op.z0, op.z1], swZ, inZone, warn, colored };
   });
   if (b10.n < 13) problems.push('лоджия 10: предметов слоя balcony ' + b10.n + ' (< 13)');
   if (b10.inside.length) problems.push('лоджия 10: предметы вне помещения: ' + b10.inside.join(', '));
   if (b10.underDesk.length) problems.push('лоджия 10: под столом ниже 0.66: ' + b10.underDesk.join(', '));
   if (Math.abs(b10.plate - 2.05) > 1e-6 || Math.abs(b10.shelfTop - 2.05) > 1e-6 || b10.lip > 2.08 + 1e-6) problems.push('лоджия 10: верх полки/стеллажа не 2.05: ' + [b10.plate, b10.shelfTop, b10.lip].map(v => v.toFixed(3)).join(', '));
-  if (b10.ductMin < 2.1 || b10.ductZ[0] > 2.8 || b10.ductZ[1] < 4.6) problems.push('лоджия 10: кабель-канал не выше проёма: низ ' + b10.ductMin.toFixed(2) + ', z ' + b10.ductZ.map(v => v.toFixed(2)).join('–'));
+  if (b10.ductMin < 2.1 || b10.ductZ[0] > b10.op[0] || b10.ductZ[1] < b10.op[1]) problems.push('лоджия 10: кабель-канал не выше проёма: низ ' + b10.ductMin.toFixed(2) + ', z ' + b10.ductZ.map(v => v.toFixed(2)).join('–'));
   if (b10.inZone.length) problems.push('лоджия 10: в зоне проёма: ' + b10.inZone.join(', '));
+  if (Math.abs(b10.op[0] - 3.353) > 1e-9 || Math.abs(b10.op[1] - 4.971) > 1e-9 || b10.swZ < b10.op[1]) problems.push('лоджия 10: проём не 3.353–4.971 по плану или выключатель sw8 в проёме: ' + b10.op.join('–') + ', sw8 z ' + b10.swZ.toFixed(3));
   if (b10.warn.length) problems.push('лоджия 10: предупреждения расстановки:\n    ' + b10.warn.join('\n    '));
   if (b10.colored.length) problems.push('лоджия 10: цветные материалы у ' + b10.colored.join(', '));
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 2.1; controls.r = hh / TAN22; controls.target.set(14.5 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 4.15); controls.apply(); });
