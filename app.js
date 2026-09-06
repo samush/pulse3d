@@ -825,12 +825,18 @@ var finishGroup=new THREE.Group();
   window.TILE_SILLS=[{d:0,face:5.608},{d:1,face:4.033},{d:2,face:4.033},{d:3,face:10.904},{d:4,face:9.6},{d:5,face:10.008},{d:7,face:7.754,far:7.468}].map(({d,face,far})=>{
     const [cx,cz,o,w]=PLAN.doors[d], a=far!=null?far:(o==='v'?cx:cz), lo=Math.min(a,face), hi=Math.max(a,face);
     return o==='v'?[[lo,cz-w/2],[hi,cz-w/2],[hi,cz+w/2],[lo,cz+w/2]]:[[cx-w/2,lo],[cx+w/2,lo],[cx+w/2,hi],[cx-w/2,hi]]; });
-  const tileTex=canvasTex(g=>{ // canvas = 1.8 × 1.2 m: three 0.6 × 1.2 tiles side by side, each column staggered by 0.4 (1/3 bond), 3 mm grout
-    g.fillStyle='#7c7c7f'; g.fillRect(0,0,256,256);
-    const cw=256/3;
-    for(let c=0;c<3;c++){ const x0=c*cw, dy=(c*256/3)%256;
-      g.fillStyle='#a3a3a5'; g.fillRect(x0+1,dy+1,cw-1,256-1); if(dy>0) g.fillRect(x0+1,0,cw-1,dy-1); }
-  });
+  const tileTex=(()=>{ // canvas = 1.8 × 1.2 m: three 0.6 × 1.2 porcelain tiles side by side, each column staggered by 0.4 (1/3 bond), 3 mm grout;
+    // warm greige stone look to sit with the oak board of layer 3: mottled body, faint veins, a few darker specks
+    const c=document.createElement('canvas'); c.width=768; c.height=512; const g=c.getContext('2d'); let sd=11; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
+    g.fillStyle='#9a8d78'; g.fillRect(0,0,768,512); // grout
+    const cw=256, tile=(x0,y0,h)=>{ g.save(); g.beginPath(); g.rect(x0+1,y0+1,cw-2,h-2); g.clip();
+      g.fillStyle='#c4b7a1'; g.fillRect(x0,y0,cw,h);
+      for(let i=0;i<40;i++){ g.fillStyle='rgba('+(rnd()<0.5?'170,155,130':'215,205,185')+','+(0.10+0.15*rnd())+')'; g.beginPath(); g.ellipse(x0+rnd()*cw,y0+rnd()*h,20+rnd()*60,10+rnd()*30,rnd()*3,0,Math.PI*2); g.fill(); } // mottling
+      for(let i=0;i<4;i++){ g.strokeStyle='rgba(140,125,100,'+(0.12+0.12*rnd())+')'; g.lineWidth=0.6+rnd(); g.beginPath(); let x=x0+rnd()*cw,y=y0; g.moveTo(x,y); for(let k=0;k<5;k++){ x+=(rnd()-0.5)*70; y+=h/5; g.lineTo(x,y); } g.stroke(); } // veins
+      for(let i=0;i<25;i++){ g.fillStyle='rgba(110,95,75,'+(0.2+0.3*rnd())+')'; g.fillRect(x0+rnd()*cw,y0+rnd()*h,1+rnd()*2,1+rnd()*2); } // specks
+      g.restore(); };
+    for(let col=0;col<3;col++){ const x0=col*cw, dy=(col*512/3)%512; tile(x0,dy,512); if(dy>0) tile(x0,dy-512,512); }
+    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t; })();
   tileTex.repeat.set(1/1.8,1/1.2);
   const tileMat=new THREE.MeshBasicMaterial({map:tileTex});
   finishGroup.add(new THREE.Mesh(window.loggiaFloorGeo,tileMat)); // loggia 10 floor: dark grey porcelain tile as on the photos
