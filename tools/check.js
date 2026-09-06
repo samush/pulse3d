@@ -279,7 +279,7 @@ const { chromium } = require('playwright');
   if (!kitchenA.fit || kitchenA.n < 40 || kitchenA.tri > 6000 || kitchenA.boxes !== 19) problems.push('кухня: детали вне size, мало мешей, дорого или proxy изменился: ' + JSON.stringify(kitchenA));
   // realism-all stage C: detailed room 2 items stay inside size (+1 mm); plates carry one proxy box equal to the item
   const fitC = await page.evaluate(() => { const fit = id => { const g = ITEM_GROUPS[id], bb = new THREE.Box3().setFromObject(g), inv = new THREE.Matrix4().copy(g.matrixWorld).invert(); bb.applyMatrix4(inv); const s = g.userData.size; return bb.min.x >= -0.001 && bb.min.y >= -0.001 && bb.min.z >= -0.001 && bb.max.x <= s[0] + 0.001 && bb.max.y <= s[1] + 0.001 && bb.max.z <= s[2] + 0.001; };
-    const ids = ['kiddesk2', 'deskshelf2', 'gymwall', 'pullup', 'kidrug2', 'kidlight2', 'desklamp2', 'bra3', 'bra4', 'blind2', 'sw2', 'sock9', 'sock10', 'sock11', 'sock12', 'sock13'];
+    const ids = ['tower2n', 'tower2s', 'kiddesk2', 'deskshelf2', 'gymwall', 'pullup', 'kidrug2', 'kidlight2', 'desklamp2', 'bra3', 'bra4', 'blind2', 'sw2', 'sock9', 'sock10', 'sock11', 'sock12', 'sock13'];
     const bad = ids.filter(id => !fit(id)); ['sw2', 'sock9', 'sock10', 'sock11', 'sock12', 'sock13'].forEach(id => { if (PHYS[id].length !== 1) bad.push(id + ':phys'); }); return bad; });
   if (fitC.length) problems.push('этап C: детали вне size или proxy розеток не один бокс: ' + fitC.join(' '));
   // realism-all stage A: tv, console, lamp, wardrobe, entry detailed — inside size, proxy counts as before
