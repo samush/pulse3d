@@ -679,6 +679,18 @@ const { chromium } = require('playwright');
   await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'tile-joint.png') }); await page.evaluate(() => { document.getElementById('kwall').checked = true; document.getElementById('kwall').dispatchEvent(new Event('change')); });
   await page.evaluate(() => controls.setFPV(7.0, 7.0, Math.PI / 2 - 0.5)); await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(outDir, 'tile-walk.png') });
+  // loggia 10: black frame grid and railing on the floor-to-ceiling glazing, grey paint on the walls, porcelain tile on the floor
+  const lg = await page.evaluate(() => {
+    const frames = []; glassGroup.traverse(o => { if (o.isMesh && o.material === loggiaFrameMat) frames.push(o); });
+    const bars = frames.filter(m => m.geometry.parameters.height > 0.9 && m.geometry.parameters.depth < 0.02).length;
+    const floor = [], walls = []; finishGroup.traverse(o => { if (!o.isMesh) return; const b = new THREE.Box3().setFromObject(o); if (b.min.x > 13.9 && b.max.x < 15.11 && b.min.z > 2.26 && b.max.z < 6.05) { if (b.max.y < 0.02) floor.push(o.material); else if (o.material === finishMats.loggia) walls.push(o); } });
+    return { frames: frames.length, bars, floorTile: floor.length === 1 && floor[0] === finishMats.tile, walls: walls.length };
+  });
+  if (lg.frames < 30 || lg.bars < 25) problems.push('лоджия 10: рам ' + lg.frames + ', прутьев ' + lg.bars + ' (ожидалось ≥30 и ≥25)');
+  if (!lg.floorTile) problems.push('лоджия 10: пол не керамогранит');
+  if (lg.walls < 3) problems.push('лоджия 10: серых стеновых панелей ' + lg.walls + ' (< 3)');
+  await page.evaluate(() => { setView('fpv'); controls.setFPV(14.45, 4.7, Math.PI / 2 + 0.3); }); await page.waitForTimeout(300);
+  await page.screenshot({ path: path.join(outDir, 'balcony10-glazing.png') });
   // facade: one cladding mesh per outer face with windows (west, north, two east faces), holes equal the windows on that face, follows the walls slider and gets a PBR twin
   const fc = await page.evaluate(() => {
     const meshes = []; facadeGroup.traverse(o => { if (o.isMesh) meshes.push(o); });

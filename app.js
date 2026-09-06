@@ -493,6 +493,7 @@ var backdropGroup=new THREE.Group();
 (function(){
   const glassMat=new THREE.MeshBasicMaterial({color:0xa8c9e0,transparent:true,opacity:0.32,side:THREE.DoubleSide,depthWrite:false});
   const frameMat=new THREE.LineBasicMaterial({color:0x8b8f94});
+  var loggiaFrameMat=new THREE.MeshBasicMaterial({color:0x26282b}); window.loggiaFrameMat=loggiaFrameMat;
   const loader=new THREE.TextureLoader();
   PLAN.windows.forEach(w=>{
     const wgeo=new THREE.PlaneGeometry(w.z1-w.z0, w.y1-w.y0);
@@ -502,10 +503,18 @@ var backdropGroup=new THREE.Group();
     pane.renderOrder=3;
     glassGroup.add(pane);
     glassGroup.add(new THREE.LineSegments(new THREE.EdgesGeometry(wgeo),frameMat)).children.slice(-1)[0].position.copy(pane.position);
-    // импост посередине
-    const mull=new THREE.Mesh(new THREE.BoxGeometry(0.05,w.y1-w.y0,0.05),new THREE.MeshLambertMaterial({color:0xf2f2f0}));
-    mull.position.set(w.x,(w.y0+w.y1)/2,(w.z0+w.z1)/2);
-    glassGroup.add(mull);
+    if(w.y0<0.2){ // loggia: black aluminium frame to the floor, three bays, transom at 2.05 and a railing of vertical bars — as on the real building
+      const box=(x,y0,y1,z0,z1,t)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(t,y1-y0,z1-z0),loggiaFrameMat); m.position.set(x,(y0+y1)/2,(z0+z1)/2); glassGroup.add(m); };
+      const T=0.06, W=w.z1-w.z0;
+      [w.z0,w.z0+W*0.3-T/2,w.z0+W*0.7-T/2,w.z1-T].forEach(z=>box(w.x,w.y0,w.y1,z,z+T,0.10));
+      [w.y0,2.05-T/2,w.y1-T].forEach(y=>box(w.x,y,y+T,w.z0,w.z1,0.10));
+      const rx=w.x-w.nx*0.09; box(rx,1.02,1.06,w.z0+T,w.z1-T,0.04);
+      for(let z=w.z0+T+0.05;z<w.z1-T;z+=0.11) box(rx,0.02,1.02,z,z+0.012,0.012);
+    } else { // mullion in the middle
+      const mull=new THREE.Mesh(new THREE.BoxGeometry(0.05,w.y1-w.y0,0.05),new THREE.MeshLambertMaterial({color:0xf2f2f0}));
+      mull.position.set(w.x,(w.y0+w.y1)/2,(w.z0+w.z1)/2);
+      glassGroup.add(mull);
+    }
     // вид за окном
     const tex=loader.load(VIEWS[w.img]);
     const winW=w.z1-w.z0;
@@ -798,7 +807,8 @@ var finishGroup=new THREE.Group();
   PLAN.rooms.forEach(r=>{
     const g=new THREE.ShapeGeometry(toShape(r.poly));
     g.rotateX(-Math.PI/2); g.translate(0,FLOOR,0);
-    finishGroup.add(new THREE.Mesh(g,(r.id===7||r.id===8||r.id===9)?whiteMat:lamMat));
+    if(r.id!==10) finishGroup.add(new THREE.Mesh(g,(r.id===7||r.id===8||r.id===9)?whiteMat:lamMat));
+    else window.loggiaFloorGeo=g; // loggia: porcelain tile, material is built below
   });
 
   // плитка второго слоя: коридор 5 + кухонная зона комнаты 4 (x 8.23–10.36, one tile row short of the wall stub 10.96) + the footprint
@@ -817,6 +827,7 @@ var finishGroup=new THREE.Group();
   });
   tileTex.repeat.set(1/1.8,1/1.2);
   const tileMat=new THREE.MeshBasicMaterial({map:tileTex});
+  finishGroup.add(new THREE.Mesh(window.loggiaFloorGeo,tileMat)); // loggia 10 floor: dark grey porcelain tile as on the photos
   window.tileGroup=new THREE.Group();
   {
     const g=new THREE.ShapeGeometry([toShape(TILE_POLY)].concat(TILE_SILLS.map(toShape)));
@@ -907,8 +918,9 @@ var finishGroup=new THREE.Group();
 
   // белый плинтус 10 см (от чистового пола) и обои вдоль стен (кроме санузлов и дверных проёмов)
   const plinthMat=new THREE.MeshBasicMaterial({color:0xffffff});
-  window.wallFinMats=[wpMat,whiteWall,greyMat,woodMat,frameMat2,plinthMat]; // гасятся ползунком «Стены»
-  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat}; // для PBR-двойников (materials.js)
+  const loggiaMat=new THREE.MeshBasicMaterial({color:0x8e8f91}); // loggia 10 walls: grey paint as on the photos
+  window.wallFinMats=[wpMat,whiteWall,greyMat,woodMat,frameMat2,plinthMat,loggiaMat]; // гасятся ползунком «Стены»
+  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,loggia:loggiaMat}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
   // room 2, M10: finish block on the north wall behind the gym wall, 0.1–2.40, x 12.15–13.75; grey until the palette stage
   const accent2Mat=new THREE.MeshBasicMaterial({color:0xd6d6d3}); wallFinMats.push(accent2Mat); finishMats.accent2=accent2Mat;
@@ -999,7 +1011,7 @@ var finishGroup=new THREE.Group();
         grpFor((sg[0]+sg[1])/2).add(m);
       });
       // обои: панели между проёмами (от плинтуса до потолка) и перемычки над дверями
-      if(r.id!==10){
+      {
         function wpPanel(y0,y1,s0,s1){
           if(s1-s0<0.08) return;
           // класть по реальным концам ребра: бывают слегка косые стены (север комнаты 2),
@@ -1010,7 +1022,7 @@ var finishGroup=new THREE.Group();
           const g=new THREE.PlaneGeometry(L,y1-y0); scaleUV(g,L,y1-y0);
           g.rotateY(Math.atan2(nx,nz));
           // в постирочной 7 вместо обоев белая плитка, как в санузлах
-          const m=new THREE.Mesh(g,r.id===7?whiteWall:wpMat);
+          const m=new THREE.Mesh(g,r.id===7?whiteWall:r.id===10?loggiaMat:wpMat); // laundry 7: white tile; loggia 10: grey paint
           m.position.set((p0[0]+p1[0])/2,(y0+y1)/2,(p0[1]+p1[1])/2);
           grpFor((s0+s1)/2).add(m);
         }
