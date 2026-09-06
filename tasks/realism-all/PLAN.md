@@ -75,7 +75,7 @@ Blender на машинах нет; генераторы — node + `three.min.j
 Существующие: `chrome`, `metal`, `glass`, `fabric`, `emitter` (`led`), `screen`, `wood` (столы), `paint` (каркасы),
 `furniture` (по умолчанию). Этап A добавляет в `MATERIALS`, `SLOTS`/`ITEM_MATS` и `GLB_MATS`:
 `plastic` (rough 0.4 — рамки розеток, корпуса ламп), `ceramic` (rough 0.12 — сантехника), `acrylic` (rough 0.2 — ванна),
-`leather` (rough 0.6 — изголовье, пуфы), `mirror` (rough 0.02, metal 1). Другие этапы новые слоты **не добавляют**,
+`leather` (rough 0.6 — изголовье, пуфы), `mirror` (rough 0.05, без metal — без environment map металл рендерится чёрным; отражение придёт с G3). Другие этапы новые слоты **не добавляют**,
 чтобы не конфликтовать; если чего-то не хватает — берут ближайший и пишут в TODO этого файла.
 
 ## 5. Бюджеты и стоимость
