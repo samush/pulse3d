@@ -434,7 +434,7 @@ const PHYS={}; // id → boxes
      build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0.03,0.05,1.15,2.05,0.04,0.06); b.phys(0,0.03,1.15,1.18,0.03,0.07); b.phys(0,0.03,2.02,2.05,0.03,0.07); b.phys(0.03,0.1,1.98,2.02,0.02,0.08); b(0.03,0.05,1.15,2.05,0.04,0.06,mat.lamp); [1.15,2.02].forEach(y=>b(0,0.03,y,y+0.03,0.03,0.07,mat.lamp)); b(0.03,0.10,1.98,2.02,0.02,0.08,mat.lamp); }}, // rod, two holders, hand shower on the top holder
     {id:'wcbox',type:'короб инсталляции 0.71×0.12 за унитазом, от торца ванны до восточной стены, верх 1.15 — полка; кнопка смыва на фасаде',room:9,layer:'bath',pos:[9.162,9.747],rot:0,size:[0.71,1.15,0.125],fixed:'wall',
      build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.71,0,1.15,0.005,0.125); b.phys(0.28,0.44,0.96,1.04,0,0.005); b(0,0.71,0,1.15,0.005,0.125,mat.body); b(0.28,0.44,0.96,1.04,0,0.005,mat.lamp); }},                 // box, flush plate on the toilet axis (x 9.52)
-    {id:'wc',type:'унитаз подвесной компактный 0.36×0.48, сиденье 0.42, фасад на север',room:9,layer:'bath',pos:[9.34,9.272],rot:0,size:[0.36,0.42,0.48],fixed:'wall',
+    {id:'wc',type:'унитаз подвесной компактный 0.36×0.48, сиденье 0.42, фасад на север',room:9,layer:'bath',pos:[9.34,9.272],rot:0,size:[0.36,0.42,0.48],fixed:'wall',glb:'models/wc.glb',glbFacade:false,
      build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0.02,0.34,0.2,0.4,0.16,0.48); b.phys(0.02,0.34,0.2,0.4,0,0.32); b.phys(0.03,0.33,0.4,0.42,0.16,0.46); b.phys(0.03,0.33,0.4,0.42,0.01,0.31);
        const cyl=(r,h,y,m)=>{ const c=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,24),m); c.position.set(0.18,y,0.16); g.add(c); };
        b(0.02,0.34,0.20,0.40,0.16,0.48,mat.kmat); cyl(0.16,0.20,0.30,mat.kmat);                     // bowl: box at the back, round front to z 0
@@ -499,7 +499,7 @@ const PHYS={}; // id → boxes
        b(0.02,0.58,1.32,1.33,0.005,0.02,mat.led); }},                                                                     // LED strip under the top edge
     {id:'wcbox8',type:'выступ северной стены зашит заподлицо (z 11.588) на всю высоту, рама инсталляции внутри; кнопка смыва на оси',room:8,layer:'bath2',pos:[9.098,11.384],rot:0,size:[0.774,2.70,0.204],fixed:'wall',
      build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.774,0,2.7,0,0.204); b.phys(0.33,0.49,0.96,1.04,0.204,0.209); b(0,0.774,0,2.70,0,0.204,mat.body); b(0.33,0.49,0.96,1.04,0.204,0.209,mat.lamp); }},                    // box, flush plate on the toilet axis (x 9.51)
-    {id:'wc8',type:'унитаз подвесной компактный 0.36×0.48, сиденье 0.42, фасад на юг',room:8,layer:'bath2',pos:[9.34,11.588],rot:0,size:[0.36,0.42,0.48],fixed:'wall',
+    {id:'wc8',type:'унитаз подвесной компактный 0.36×0.48, сиденье 0.42, фасад на юг',room:8,layer:'bath2',pos:[9.34,11.588],rot:0,size:[0.36,0.42,0.48],fixed:'wall',glb:'models/wc.glb',glbRot:180,glbFacade:false,
      build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0.02,0.34,0.2,0.4,0,0.32); b.phys(0.02,0.34,0.2,0.4,0.16,0.48); b.phys(0.03,0.33,0.4,0.42,0.02,0.32); b.phys(0.03,0.33,0.4,0.42,0.17,0.47);
        const cyl=(r,h,y,m)=>{ const c=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,24),m); c.position.set(0.18,y,0.32); g.add(c); };
        b(0.02,0.34,0.20,0.40,0,0.32,mat.kmat); cyl(0.16,0.20,0.30,mat.kmat);                                           // bowl: box at the back, round front to z 0.48
@@ -666,7 +666,7 @@ const PHYS={}; // id → boxes
     it.build(b,g);
     LAYERS[it.layer].add(g); ITEM_GROUPS[it.id]=g;
     poseGroup(g);
-    if(it.glb){ g.userData.glb=it.glb; g.userData.glbRot=it.glbRot||0; }
+    if(it.glb){ g.userData.glb=it.glb; g.userData.glbRot=it.glbRot||0; g.userData.glbFacade=it.glbFacade; } // glbFacade:false — no back to compare (toilet seat, symmetric tops)
     return g;
   }
   // GLB model of an item: the procedural build stays as fallback and proxy; on success its meshes are replaced by the model.
@@ -679,15 +679,16 @@ const PHYS={}; // id → boxes
   const scan=(root,h,frame)=>{ frame=frame||root; frame.updateMatrixWorld(true); root.updateMatrixWorld(true); const inv=new THREE.Matrix4().copy(frame.matrixWorld).invert(), v=new THREE.Vector3(), c=new THREE.Vector3(), bb=new THREE.Box3(); let n=0;
     root.traverse(o=>{ if(!o.isMesh) return; const p=o.geometry.attributes.position; for(let i=0;i<p.count;i++){ v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld).applyMatrix4(inv); bb.expandByPoint(v); if(v.y>0.75*h){ c.add(v); n++; } } });
     return {bb,top:n?c.divideScalar(n):null}; };
-  function validateItemGlb(id,model,ref){ // ref: procedural group or its scan().top computed before removal
+  function validateItemGlb(id,model,ref){ // ref: procedural group or its scan() {bb,top} computed before removal
     const g=ITEM_GROUPS[id], sz=g.userData.size, out=[], warn=m=>{ out.push(m); console.warn('glb '+id+': '+m); };
-    const {bb,top:b}=scan(model,sz[1],model.parent||model), e=new THREE.Vector3(); bb.getSize(e);
+    if(ref&&ref.isObject3D) ref=scan(ref,sz[1]);
+    const {bb,top:b}=scan(model,sz[1],model.parent||model), e=new THREE.Vector3(), floor=ref&&ref.bb.min.y>0.15?ref.bb.min.y:0; bb.getSize(e); // floor-standing items must touch y=0, wall-hung ones hang where the procedural version did // wall-hung items float like their procedural version
     const r=Math.max(e.x,e.y,e.z)/Math.max(...sz); if(r>2||r<0.5) warn('units: model extent '+e.toArray().map(v=>v.toFixed(2)).join('×')+' vs size '+sz.join('×')+' — not metres?');
     else{ if(bb.min.x<-0.01||bb.min.z<-0.01||bb.max.x>sz[0]+0.01||bb.max.y>sz[1]+0.01||bb.max.z>sz[2]+0.01) warn('outside size: '+[bb.min.x,bb.min.z,bb.max.x,bb.max.y,bb.max.z].map(v=>v.toFixed(3)).join(' ')+' vs '+sz.join('×')+' (pivot must be the NW corner)');
-      if(Math.abs(bb.min.y)>0.01) warn('bottom at y='+bb.min.y.toFixed(3)+', expected 0'); }
-    if(ref){ const a=ref.isObject3D?scan(ref,sz[1]).top:ref, cx=sz[0]/2, cz=sz[2]/2;
+      if(Math.abs(bb.min.y-floor)>0.01) warn('bottom at y='+bb.min.y.toFixed(3)+', expected '+floor.toFixed(3)); }
+    if(ref){ const a=ref.top, cx=sz[0]/2, cz=sz[2]/2;
       if(a&&b){ const ax=a.x-cx, az=a.z-cz, bx=b.x-cx, bz=b.z-cz, la=Math.hypot(ax,az), lb=Math.hypot(bx,bz);
-        if(la>0.02&&(lb<0.01||(ax*bx+az*bz)/(la*lb)<0.5)) warn('facade: back points to ('+bx.toFixed(2)+','+bz.toFixed(2)+'), procedural ('+ax.toFixed(2)+','+az.toFixed(2)+')'); } }
+        if(g.userData.glbFacade!==false&&la>0.02&&(lb<0.01||(ax*bx+az*bz)/(la*lb)<0.5)) warn('facade: back points to ('+bx.toFixed(2)+','+bz.toFixed(2)+'), procedural ('+ax.toFixed(2)+','+az.toFixed(2)+')'); } }
     return out;
   }
   window.validateItemGlb=validateItemGlb;
@@ -697,7 +698,7 @@ const PHYS={}; // id → boxes
   function loadItemGlb(id,url){
     const g=ITEM_GROUPS[id]; url=url||g.userData.glb;
     return fetchGlb(url).then(scene=>{
-      const model=scene.clone(), sz=g.userData.size, ref=scan(g,sz[1]).top;
+      const model=scene.clone(), sz=g.userData.size, ref=scan(g,sz[1]);
       if(g.userData.glbRot){ const a=-g.userData.glbRot*Math.PI/180, cx=sz[0]/2, cz=sz[2]/2; model.rotation.y=a; model.position.set(cx-(cx*Math.cos(a)+cz*Math.sin(a)),0,cz-(-cx*Math.sin(a)+cz*Math.cos(a))); } // turn about the footprint centre, same sense as rot
       const old=g.children.slice(); g.add(model);
       g.userData.glbWarnings=validateItemGlb(id,model,ref);

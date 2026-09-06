@@ -19,3 +19,4 @@
 | `bchair.glb` | `bchair` 0.45×0.90×0.45, спинка по −z | ~1.9k | `tools/models/bchair.js` |
 | `mbed.glb` | `mbed` 1.70×1.10×2.20; имена материалов — ключи `ITEM_MATS` | ~11.6k | `tools/models/mbed.js` |
 | `vpouf.glb` | `vpouf` 0.4×0.45×0.4 | ~2.3k | `tools/models/vpouf.js` |
+| `wc.glb` | `wc`, `wc8` 0.36×0.42×0.48, один файл, `glbRot` 180 для wc8 | ~1.5k | `tools/models/wc.js` |
