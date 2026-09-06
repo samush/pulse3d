@@ -25,12 +25,12 @@ const MATERIALS={
   fabric:   {name:'ткань, матрасы, ковры', rough:0.95},
   emitter:  {name:'светящаяся поверхность (LED)', rough:0.6, emissive:true},
   screen:   {name:'экран телевизора',     rough:0.15},
-  paint:    {name:'крашеный каркас (стулья)', rough:0.45},
+  paint:    {name:'крашеный МДФ (фасады, каркасы, стулья)', rough:0.45},
   plastic:  {name:'пластик (рамки розеток, корпуса ламп)', rough:0.4},
   ceramic:  {name:'керамика (сантехника)', rough:0.12},
   acrylic:  {name:'акрил (ванна)',        rough:0.2},
   leather:  {name:'кожа (изголовье, пуфы)', rough:0.6},
-  mirror:   {name:'зеркало',              rough:0.05}, // no env map yet: metal 1 would render black; real reflection comes with G3
+  mirror:   {name:'зеркало',              rough:0.02, metal:1}, // reflects the procedural room environment (VIZ only)
 };
 const VIZ={on:false,ready:false,std:new Map(),basic:new Map()};
 window.VIZ=VIZ; window.MATERIALS=MATERIALS;
@@ -64,6 +64,11 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
     // sun with shadows on top of the existing lights
     sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); const sc=sun.shadow.camera; sc.left=-9; sc.right=9; sc.top=8; sc.bottom=-8; sc.near=1; sc.far=40; sun.shadow.bias=-0.0006; sun.shadow.normalBias=0.02;
     sun.target.position.set(cx,0,cz); scene.add(sun.target);
+    // procedural room environment for reflections (mirror, chrome, glass): a grey box with a bright window panel, prefiltered once
+    const env=new THREE.Scene(), Bm=c=>new THREE.MeshBasicMaterial({color:c,side:THREE.BackSide});
+    env.add(new THREE.Mesh(new THREE.BoxGeometry(8,3,8),Bm(0x8a8a8a))); const ceil=new THREE.Mesh(new THREE.PlaneGeometry(8,8),new THREE.MeshBasicMaterial({color:0xd8d8d8})); ceil.rotation.x=Math.PI/2; ceil.position.y=1.49; env.add(ceil);
+    const win=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.6),new THREE.MeshBasicMaterial({color:0xffffff})); win.position.set(0,0.2,-3.99); env.add(win);
+    const pm=new THREE.PMREMGenerator(renderer); VIZ.env=pm.fromScene(env,0.04).texture; pm.dispose();
   }
   function swap(root,toStd){ root.traverse(o=>{ if(!o.isMesh) return; const m=toStd?VIZ.std.get(o.material):VIZ.basic.get(o.material); if(m) o.material=m; if(toStd){ o.castShadow=root!==finishGroup&&root!==tileGroup&&root!==boardGroup; o.receiveShadow=true; } else { o.castShadow=false; o.receiveShadow=false; } }); }
   function apply(){ // effective state: visualization on and not in plan mode
@@ -77,6 +82,7 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
     if(VIZ.ready){ const seen=new Set(); const enc=on?THREE.sRGBEncoding:THREE.LinearEncoding;
       VIZ.std.forEach((s,b)=>{ [s.map,b.map].forEach(t=>{ if(t&&!seen.has(t)){ seen.add(t); if(t.encoding!==enc){ t.encoding=enc; t.needsUpdate=true; } } }); s.needsUpdate=true; b.needsUpdate=true; }); }
     sun.intensity=on?0.9:0.55; if(hemiLight) hemiLight.intensity=on?0.45:1.0; // ACES + sRGB: total light is lower than in flat mode, otherwise white walls burn out
+    scene.environment=on?VIZ.env:null; // reflections only in the visualization
     renderer.compile&&renderer.compile(scene,camera);
     VIZ.active=on;
   }
