@@ -115,12 +115,13 @@ const PHYS={}; // id → boxes
     // ---- kids room 1 (tasks/room1-kid/README.md, marks M1–M30) ----
     // Room box: x 0.896–5.445, z 1.874–4.864. Wall-mounted boxes sit 0.02–0.03 in front of the wall so they show over the wallpaper (0.015).
     {id:'kidbed',type:'кровать-чердак с лестницей-комодом и полкой хранения',room:1,layer:'kid',pos:[2.835,1.884],rot:0,size:[2.6,2.6,2.97],fixed:'wall',build:kidBedBuild(2.0,mat.wdoor,mat.cushion)},
-    {id:'kiddesk',type:'стол прямой 1.94 × 0.60 вдоль южной стены, от западной стены до стойки кровати; стеллаж у окна стоит на его западном краю',room:1,layer:'kid',pos:[0.896,4.264],rot:0,size:[1.939,0.72,0.60],fixed:'wall',
-     build(b){ b(0,1.939,0.68,0.72,0,0.60,mat.kbody); b(0.02,0.04,0,0.68,0.02,0.58,mat.kbody); b(1.899,1.919,0,0.68,0.02,0.58,mat.kbody); }}, // worktop, end panels (the pedestal carries the east half)
-    {id:'kidped',type:'тумба с 3 ящиками под столом у восточного торца, фасады к комнате',room:1,layer:'kid',pos:[2.375,4.364],rot:0,size:[0.42,0.68,0.50],
-     build(b){ b(0.02,0.40,0,0.68,0.02,0.50,mat.kbody);
-       [0.06,0.26,0.46].forEach(y=>{ b(0.02,0.40,y,y+0.18,0,0.02,mat.wdoor); b(0.135,0.285,y+0.11,y+0.13,-0.015,0,mat.knob); }); }},
-    {id:'kidchair',type:'рабочее кресло, регулируемое, лицом к столу',room:1,layer:'kid',pos:[1.55,4.20],rot:270,size:[0.55,0.85,0.55],
+    {id:'kiddesk',type:'стол прямой 2.14 × 0.60 вдоль южной стены, от западной стены за стойку кровати (вырез под стойку); стеллаж у окна стоит на его западном краю',room:1,layer:'kid',pos:[0.896,4.264],rot:0,size:[2.139,0.72,0.60],fixed:'wall',
+     build(b){ b(0,1.939,0.68,0.72,0,0.60,mat.kbody); b(1.939,2.139,0.68,0.72,0,0.505,mat.kbody);   // worktop; past the bed post (x 2.835–2.915, z 4.774–4.854) only the front 0.505
+       b(0.02,0.04,0,0.68,0.02,0.58,mat.kbody); b(2.119,2.139,0,0.68,0.02,0.505,mat.kbody); }},     // end panels (the pedestal carries the east end)
+    {id:'kidped',type:'тумба с 3 ящиками под столом у самого восточного края, глубина 0.40 — не упирается в стойку кровати; фасады к комнате',room:1,layer:'kid',pos:[2.615,4.364],rot:0,size:[0.42,0.68,0.40],
+     build(b){ b(0.02,0.40,0,0.68,0.02,0.40,mat.kbody);
+       [0.06,0.26,0.46].forEach(y=>b(0.02,0.40,y,y+0.18,0,0.02,mat.wdoor)); }},                   // push-to-open fronts, no handles (the chair sits right beside)
+    {id:'kidchair',type:'рабочее кресло, регулируемое, лицом к столу, сиденье на 0.08 под столешницей, вплотную к лежанке',room:1,layer:'kid',pos:[1.55,4.39],rot:270,size:[0.55,0.85,0.55],
      build(b,g){
        b(0.05,0.50,0.42,0.47,0.05,0.50,mat.cushion); b(0.50,0.55,0.47,0.85,0.08,0.47,mat.cushion);   // seat and back; rot 270 puts the back on the north side
        const c=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.39,10),mat.knob); c.position.set(0.275,0.225,0.275); g.add(c); // gas lift
