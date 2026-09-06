@@ -320,7 +320,7 @@ const PHYS={}; // id → boxes
     {id:'sock13',type:'розетка у шведской стенки (увлажнитель)',room:2,layer:'kid2',pos:[12.23,6.538],rot:0,size:[0.08,0.34,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.26,0.34,0,0.01,mat.plastic); }},
     // ---- master bedroom 3 (tasks/room3-master/README.md, marks M1–M28; grey materials only) ----
     // Room box: x 10.021–14.76, z 9.777–13.144. Items are built as if against the north wall and turned 180° (rot 180, pos = SE corner): the composition faces north. Wall-mounted boxes sit 0.02–0.03 in front of the wall (wallpaper at 0.015).
-    {id:'mbed',type:'кровать 160×200 с мягким изголовьем',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[1.70,1.10,2.20],fixed:'wall',
+    {id:'mbed',type:'кровать 160×200 с мягким изголовьем',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[1.70,1.10,2.20],fixed:'wall',glb:'models/mbed.glb', // model by tools/models/mbed.js; the build below is proxy and fallback
      build(b){
        b.phys(0.05,1.65,0,0.1,0.05,2.15); b.phys(0,1.7,0.1,0.35,0,2.2); b.phys(0.05,1.65,0.35,0.55,0.1,2.1); b.phys(0,1.7,0.35,1.1,0,0.08); [[0.12,0.82],[0.88,1.58]].forEach(([x0,x1])=>b.phys(x0,x1,0.55,0.67,0.15,0.6)); b.phys(0.1,1.6,0.55,0.61,0.85,2.15); // proxy = pre-detail mesh AABBs (realism-all D1)
        b(0.05,1.65,0,0.10,0.05,2.15,mat.dark); b(0,1.7,0.10,0.35,0,2.2,mat.body);                 // plinth inset 0.05, frame; east side touches the wall under the window
@@ -360,7 +360,7 @@ const PHYS={}; // id → boxes
        const half=r=>{ const sh=new THREE.Shape(); sh.absarc(0.55,0.95,r,0,Math.PI,false); sh.lineTo(0.55-r,0.95); return sh; };
        g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(half(0.55),{depth:0.02,bevelEnabled:false,curveSegments:48}).translate(0,0,0.01),mat.frame)); // metal backing 20 mm, flat bottom at 0.95
        g.add(new THREE.Mesh(new THREE.ShapeGeometry(half(0.535),48).rotateY(Math.PI).translate(1.10,0,0.009),mat.mirror)); b(0,1.1,0.93,0.95,0.005,0.03,mat.frame); }}, // flat bottom edge 0.20 above the worktop
-    {id:'vpouf',type:'пуфик у туалетного столика',room:3,layer:'master',pos:[12.3,10.681],rot:180,size:[0.40,0.45,0.40],
+    {id:'vpouf',type:'пуфик у туалетного столика',room:3,layer:'master',pos:[12.3,10.681],rot:180,size:[0.40,0.45,0.40],glb:'models/vpouf.glb', // model by tools/models/vpouf.js
      build(b){ b.phys(0,0.4,0.35,0.45,0,0.4); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b.phys(x,x+0.03,0,0.35,z,z+0.03)); // proxy = pre-detail mesh AABBs (realism-all D1)
        b(0,0.4,0.35,0.45,0,0.4,mat.cushion); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b(x,x+0.03,0,0.35,z,z+0.03,mat.frame)); }},
     {id:'mrug',type:'ковёр, короткий ворс',room:3,layer:'master',pos:[14.0,12.321],rot:180,size:[2.00,0.01,2.00],
