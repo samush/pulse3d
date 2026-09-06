@@ -30,7 +30,7 @@ const MATERIALS={
   ceramic:  {name:'керамика (сантехника)', rough:0.12},
   acrylic:  {name:'акрил (ванна)',        rough:0.2},
   leather:  {name:'кожа (изголовье, пуфы)', rough:0.6},
-  mirror:   {name:'зеркало',              rough:0.02, metal:1},
+  mirror:   {name:'зеркало',              rough:0.05}, // no env map yet: metal 1 would render black; real reflection comes with G3
 };
 const VIZ={on:false,ready:false,std:new Map(),basic:new Map()};
 window.VIZ=VIZ; window.MATERIALS=MATERIALS;

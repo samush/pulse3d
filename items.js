@@ -137,10 +137,10 @@ const PHYS={}; // id → boxes
      }},
     {id:'mirror',type:'зеркало',room:5,layer:'hall',pos:[6.346,6.05],rot:0,size:[0.025,2.4,0.9],fixed:'wall',
      build(b){ b.phys(0,0.025,0.15,2.40,0,0.9); b.round(0,0.02,0.15,2.40,0,0.9,0.01,mat.frame); b.round(0.02,0.025,0.16,2.39,0.01,0.89,0.002,mat.mirror); }}, // backing board with rounded corners, 5 mm mirror glass
-    {id:'pouf',type:'пуфик',room:5,layer:'hall',pos:[6.396,6.75],rot:0,size:[0.4,0.45,0.6],
+    {id:'pouf',type:'пуфик',room:5,layer:'hall',pos:[6.396,6.75],rot:0,size:[0.4,0.45,0.6],glb:'models/pouf.glb',
      build(b){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.4,0.12,0.45,0,0.6); b.phys(0.03,0.06,0,0.12,0.03,0.06); b.phys(0.34,0.37,0,0.12,0.03,0.06); b.phys(0.03,0.06,0,0.12,0.54,0.57); b.phys(0.34,0.37,0,0.12,0.54,0.57); b(0,0.4,0.12,0.45,0,0.6,mat.pouf); [[0.03,0.03],[0.34,0.03],[0.03,0.54],[0.34,0.54]].forEach(([x,z])=>b(x,x+0.03,0,0.12,z,z+0.03,mat.frame)); }},
     // ---- laundry 7 ----
-    {id:'washer',type:'стиральная и сушильная машины колонной',room:7,layer:'laundry',pos:[7.05,2.43],rot:0,size:[0.6,1.72,0.6],fixed:'wall',
+    {id:'washer',type:'стиральная и сушильная машины колонной',room:7,layer:'laundry',pos:[7.05,2.43],rot:0,size:[0.6,1.72,0.6],fixed:'wall',glb:'models/washer.glb',
      build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.6,0,0.85,0,0.6); b.phys(0.06,0.54,0.135,0.615,0.6,0.62); b.phys(0.05,0.55,0.73,0.81,0.6,0.61); b.phys(0,0.6,0.87,1.72,0,0.6); b.phys(0.06,0.54,1.005,1.485,0.6,0.62); b.phys(0.05,0.55,1.6,1.68,0.6,0.61);
        [[0,0.85],[0.87,1.72]].forEach(([y0,y1])=>{
          b(0,0.6,y0,y1,0,0.6,mat.wbody);

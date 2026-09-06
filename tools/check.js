@@ -292,6 +292,10 @@ const { chromium } = require('playwright');
     return { loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), size: [s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join(), slots: [...mats].map(m => m.userData.slot).sort().join(), boxes: PHYS.windowseat2.length }; });
   if (!wsGlb.loaded) problems.push('glb: models/windowseat2.glb не загрузился: ' + JSON.stringify(wsGlb));
   else if (wsGlb.warn || wsGlb.size !== '0.61,0.65,1.7' || wsGlb.slots !== 'chrome,fabric,paint' || wsGlb.boxes !== 9) problems.push('glb: windowseat2 — предупреждения/габарит/слоты/proxy не сошлись: ' + JSON.stringify(wsGlb));
+  // realism-all stage A: pouf and washer GLB loaded without warnings, proxies as before
+  const glbA = await page.evaluate(async () => { const ids = ['pouf', 'washer']; for (let i = 0; i < 100 && !ids.every(id => ITEM_GROUPS[id].userData.glbLoaded || (VIZ.loadErrors || []).some(s => s.startsWith(id + ':'))); i++) await new Promise(r => setTimeout(r, 100));
+    return ids.filter(id => !ITEM_GROUPS[id].userData.glbLoaded || (ITEM_GROUPS[id].userData.glbWarnings || []).length || PHYS[id].length !== { pouf: 5, washer: 6 }[id]).map(id => id + ':' + JSON.stringify(ITEM_GROUPS[id].userData.glbWarnings)); });
+  if (glbA.length) problems.push('glb: этап A — пуф/стиралка не загрузились чисто: ' + glbA.join(' '));
   // realism-all stage A: shared helpers — plate/round keep the item inside size with one proxy box; new slots reach VIZ
   const helpers = await page.evaluate(() => { const fit = id => { const g = ITEM_GROUPS[id], bb = new THREE.Box3().setFromObject(g), inv = new THREE.Matrix4().copy(g.matrixWorld).invert(); bb.applyMatrix4(inv); const s = g.userData.size; return bb.min.x >= -0.001 && bb.min.y >= -0.001 && bb.min.z >= -0.001 && bb.max.x <= s[0] + 0.001 && bb.max.y <= s[1] + 0.001 && bb.max.z <= s[2] + 0.001; };
     const n = id => { let k = 0; ITEM_GROUPS[id].traverse(o => { if (o.isMesh) k++; }); return k; };
