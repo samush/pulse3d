@@ -99,9 +99,20 @@ const PHYS={}; // id → boxes
     {id:'chair5',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:-90,build:chair(true)},
     {id:'chair6',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:-90,build:chair(true)},
     {id:'lamp',type:'настенный светильник над столом',room:4,layer:'kitchen',pos:[10.12,KN],rot:0,size:[0.26,1.94,0.63],fixed:'wall', // size by the shade
-     build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0.11,0.15,1.9,1.94,0,0.5); b.phys(0,0.26,1.74,1.9,0.37,0.63); b(0.11,0.15,1.9,1.94,0,0.5,mat.lamp); const sh=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.16,16,1,true),mat.lamp); sh.position.set(0.13,1.82,0.5); g.add(sh); }},
-    {id:'tv',type:'телевизор 58"',room:4,layer:'kitchen',pos:[11.85,KN+0.02],rot:0,size:[1.3,1.75,0.04],fixed:'wall',build(b){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,1.3,1,1.75,0,0.04); b(0,1.3,1.0,1.75,0,0.04,mat.dark); b(0.03,1.27,1.03,1.72,0.035,0.04,mat.screen); }}, // frame and screen
-    {id:'console',type:'подвесная консоль под ТВ',room:4,layer:'kitchen',pos:[11.9,KN],rot:0,size:[1.2,0.75,0.38],fixed:'wall',build(b){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,1.2,0.45,0.75,0,0.38); b(0,1.2,0.45,0.75,0,0.38,mat.base); }},
+     build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0.11,0.15,1.9,1.94,0,0.5); b.phys(0,0.26,1.74,1.9,0.37,0.63);
+       b.round(0.08,0.18,1.86,1.94,0,0.012,0.002,mat.frame); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.49,10).rotateX(Math.PI/2).translate(0.13,1.92,0.012+0.245),mat.frame)); // wall plate and Ø12 arm
+       g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.004,0.004,0.03,8).translate(0.13,1.905,0.5),mat.frame)); // drop to the shade
+       g.add(new THREE.Mesh(new THREE.LatheGeometry([[0.012,0.16],[0.03,0.155],[0.07,0.09],[0.11,0.03],[0.13,0]].map(([r,y])=>new THREE.Vector2(r,y)),24).translate(0.13,1.74,0.5),mat.plastic)); // shade Ø0.26, open at the bottom
+       g.add(new THREE.Mesh(new THREE.SphereGeometry(0.025,12,8).translate(0.13,1.80,0.5),mat.led)); // bulb
+     }},
+    {id:'tv',type:'телевизор 58"',room:4,layer:'kitchen',pos:[11.85,KN+0.02],rot:0,size:[1.3,1.75,0.04],fixed:'wall',build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,1.3,1,1.75,0,0.04);
+       b.round(0,1.3,1.0,1.75,0.008,0.028,0.002,mat.dark); b(0.008,1.292,1.008,1.742,0.028,0.031,mat.screen); // slim panel with an 8 mm bezel, screen 3 mm proud
+       b(0.35,0.95,1.0,1.012,0.02,0.034,mat.frame); b(0.45,0.85,1.2,1.5,0,0.008,mat.frame); // bottom strip and wall bracket
+     }},
+    {id:'console',type:'подвесная консоль под ТВ',room:4,layer:'kitchen',pos:[11.9,KN],rot:0,size:[1.2,0.75,0.38],fixed:'wall',build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,1.2,0.45,0.75,0,0.38);
+       b(0,1.2,0.45,0.75,0,0.36,mat.hdark); b.round(0,1.2,0.73,0.75,0,0.38,0.002,mat.base); // carcass and 20 mm top with a chamfer
+       [[0.0015,0.5985],[0.6015,1.1985]].forEach(([x0,x1])=>b.round(x0,x1,0.4515,0.7285,0.36,0.38,0.001,mat.base)); // two push-to-open fronts, 3 mm gaps
+     }},
     {id:'sofa',type:'диван 2 м',room:4,layer:'kitchen',pos:[11.35,6.287-0.9],rot:0,size:[2.0,0.85,0.88],glb:'models/sofa.glb',
      build(b){ b.phys(0,2,0.1,0.85,0,0.88); b(0,2,0.1,0.42,0,0.88,mat.sofa); b(0,2,0.42,0.85,0.63,0.88,mat.sofa); b(0,0.15,0.42,0.6,0,0.88,mat.sofa); b(1.85,2,0.42,0.6,0,0.88,mat.sofa);
        [[0.17,0.98],[1.02,1.83]].forEach(([x0,x1])=>{ b(x0,x1,0.42,0.52,0.05,0.62,mat.cushion); b(x0,x1,0.52,0.82,0.55,0.66,mat.cushion); }); }}, // seat and back cushions with a seam in the middle
@@ -111,17 +122,18 @@ const PHYS={}; // id → boxes
        const W=1.77, D=0.45, t=0.02, mid=W/2, gap=0.004, H0=0.45, H1=1.95, H2=2.65;
        b(0,t,0,H2,0,D,mat.body); b(W-t,W,0,H2,0,D,mat.body); b(0,W,0,H2,D-t,D,mat.body); b(0,W,H2-t,H2,0,D,mat.body); // body
        b(t,W-t,0.02,0.04,0.05,D-t,mat.body); b(t,W-t,H0-t,H0,0,D-t,mat.body); b(t,W-t,0.04,H0-t,D-0.10,D-t,mat.hdark); // shoe niche
-       b(t,mid-gap,H0,H1,0,t,mat.door); b(mid+gap,W-t,H0,H1,0,t,mat.door);                                              // doors
-       b(mid-0.06,mid-0.045,1.0,1.3,-0.02,0,mat.handle); b(mid+0.045,mid+0.06,1.0,1.3,-0.02,0,mat.handle);
-       b(t,W-t,H1,H1+t,0,D-t,mat.body); b(t,mid-gap,H1+t,H2-t,0,t,mat.door); b(mid+gap,W-t,H1+t,H2-t,0,t,mat.door);    // top cabinets
-       b(mid-0.06,mid-0.045,H1+0.12,H1+0.28,-0.02,0,mat.handle); b(mid+0.045,mid+0.06,H1+0.12,H1+0.28,-0.02,0,mat.handle);
+       const door=(x0,x1,y0,y1)=>b.round(x0+0.0015,x1-0.0015,y0+0.0015,y1-0.0015,0,t,0.001,mat.door); // 3 mm gaps between doors and to the body
+       door(t,mid-gap,H0,H1); door(mid+gap,W-t,H0,H1);                                                                // doors
+       b(mid-0.02,mid-gap-0.001,H0+0.02,H1-0.02,0,0.003,mat.frame); b(mid+gap+0.001,mid+0.02,H0+0.02,H1-0.02,0,0.003,mat.frame); // flush vertical pull profiles along the meeting edge
+       b(t,W-t,H1,H1+t,0,D-t,mat.body); door(t,mid-gap,H1+t,H2-t); door(mid+gap,W-t,H1+t,H2-t);                       // top cabinets
+       b(mid-0.02,mid-gap-0.001,H1+0.04,H2-0.04,0,0.003,mat.frame); b(mid+gap+0.001,mid+0.02,H1+0.04,H2-0.04,0,0.003,mat.frame);
      }},
     {id:'entry',type:'полочка с ящиками и светильниками у входа',room:5,layer:'hall',pos:[6.346,7.03],rot:0,size:[0.325,1.85,0.4],fixed:'wall',
-     build(b){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.3,0.8,0.92,0,0.4); b.phys(0.3,0.315,0.81,0.91,0.01,0.195); b.phys(0.3,0.315,0.81,0.91,0.205,0.39); b.phys(0.315,0.325,0.855,0.865,0.07,0.14); b.phys(0.315,0.325,0.855,0.865,0.26,0.33); b.phys(0.01,0.03,1.15,1.85,0.1,0.13); b.phys(0.01,0.03,1.15,1.85,0.27,0.3);
-       b(0,0.30,0.80,0.92,0,0.4,mat.body);
-       b(0.30,0.315,0.81,0.91,0.01,0.195,mat.door); b(0.30,0.315,0.81,0.91,0.205,0.39,mat.door);
-       b(0.315,0.325,0.855,0.865,0.07,0.14,mat.handle); b(0.315,0.325,0.855,0.865,0.26,0.33,mat.handle);
-       b(0.01,0.03,1.15,1.85,0.10,0.13,mat.led); b(0.01,0.03,1.15,1.85,0.27,0.30,mat.led);
+     build(b){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.3,0.8,0.92,0,0.4); b.phys(0.3,0.315,0.81,0.91,0.01,0.195); b.phys(0.3,0.315,0.81,0.91,0.205,0.39); b.phys(0.315,0.325,0.855,0.865,0.07,0.14); b.phys(0.315,0.325,0.855,0.865,0.26,0.33);
+       b.round(0,0.30,0.80,0.92,0,0.4,0.003,mat.body);                                                                  // shelf box with a 3 mm chamfer
+       b.round(0.30,0.315,0.81,0.91,0.01,0.195,0.001,mat.door); b.round(0.30,0.315,0.81,0.91,0.205,0.39,0.001,mat.door);   // two drawer fronts, 10 mm gap between
+       b(0.315,0.318,0.855,0.865,0.07,0.14,mat.handle); b(0.315,0.318,0.855,0.865,0.26,0.33,mat.handle);                 // flush finger pulls
+       b.led(0.01,0.03,1.15,1.85,0.10,0.13); b.led(0.01,0.03,1.15,1.85,0.27,0.30);                                       // two vertical light profiles (they declare their own proxies)
      }},
     {id:'mirror',type:'зеркало',room:5,layer:'hall',pos:[6.346,6.05],rot:0,size:[0.025,2.4,0.9],fixed:'wall',
      build(b){ b.phys(0,0.025,0.15,2.40,0,0.9); b.round(0,0.02,0.15,2.40,0,0.9,0.01,mat.frame); b.round(0.02,0.025,0.16,2.39,0.01,0.89,0.002,mat.mirror); }}, // backing board with rounded corners, 5 mm mirror glass
