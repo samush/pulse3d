@@ -303,7 +303,7 @@ const { chromium } = require('playwright');
   if (proxD.length) problems.push('proxy: этап D — число боксов/габарит не сошлись: ' + proxD.join(' '));
   // realism-all stage D: detailed room 3 items stay inside size (+1 mm); plates and LED strips carry one proxy box equal to the item
   const fitD = await page.evaluate(() => { const fit = id => { const g = ITEM_GROUPS[id], bb = new THREE.Box3().setFromObject(g), inv = new THREE.Matrix4().copy(g.matrixWorld).invert(); bb.applyMatrix4(inv); const s = g.userData.size; return bb.min.x >= -0.001 && bb.min.y >= -0.001 && bb.min.z >= -0.001 && bb.max.x <= s[0] + 0.001 && bb.max.y <= s[1] + 0.001 && bb.max.z <= s[2] + 0.001; };
-    const one = ['sw3', 'sw4', 'sw6', 'sock14', 'sock15', 'sock16', 'sock17', 'sock18', 'sock19', 'sock20', 'led4', 'led5'], ids = ['mlight', 'bra5', 'bra6', 'bra7', 'bra8'].concat(one);
+    const one = ['sw3', 'sw4', 'sw6', 'sock14', 'sock15', 'sock16', 'sock17', 'sock18', 'sock19', 'sock20', 'led4', 'led5'], ids = ['mcab', 'mward', 'mconsole', 'vanity', 'vmirror', 'mtv', 'mrug', 'mcurtain', 'mlight', 'bra5', 'bra6', 'bra7', 'bra8'].concat(one);
     const bad = ids.filter(id => !fit(id)); one.forEach(id => { if (PHYS[id].length !== 1) bad.push(id + ':phys'); }); return bad; });
   if (fitD.length) problems.push('этап D: детали вне size или proxy розеток/LED не один бокс: ' + fitD.join(' '));
   // realism-all stage A: shared helpers — plate/round keep the item inside size with one proxy box; new slots reach VIZ
