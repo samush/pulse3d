@@ -5,7 +5,8 @@
 
 Статика без сборки и внешних зависимостей: `index.html` + `plan.js`
 (геометрия квартиры) + `app.js` (код сцены) + `three.min.js` (впендоренный
-three.js, текстуры встроены). Живая страница: https://samush.github.io/pulse3d/
+three.js r128, текстуры встроены) + `GLTFLoader.js` (из three.js r128,
+`examples/js/loaders/GLTFLoader.js`, не редактировать). Живая страница: https://samush.github.io/pulse3d/
 (GitHub Pages, деплой с `main`).
 
 Для разработки: структура данных — `docs/GEOMETRY.md`, инструменты —
