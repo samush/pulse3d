@@ -491,6 +491,35 @@ const { chromium } = require('playwright');
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
+  // wardrobe6: the passage x 6.165–6.885 × z 2.274–3.894 × 0–2.10 holds no part box thicker than 0.03 (peg board, mirror,
+  // door brackets and the socket are flat on the walls), section C stays west of the door opening (x ≤ 6.10), every rod ≤ 2.00,
+  // items inside room 6 (the corridor switch inside room 5), no layout warnings, grey materials
+  const w6 = await page.evaluate(() => {
+    const its = ITEMS.filter(it => it.layer === 'wardrobe'), bb = o => new THREE.Box3().setFromObject(o);
+    const inside = its.filter(it => { const r = PLAN.rooms.find(q => q.id === it.room), xs = r.poly.map(q => q[0]), zs = r.poly.map(q => q[1]); const b = bb(ITEM_GROUPS[it.id]);
+      return b.min.x < Math.min(...xs) - 0.001 || b.max.x > Math.max(...xs) + 0.001 || b.min.z < Math.min(...zs) - 0.001 || b.max.z > Math.max(...zs) + 0.001; }).map(it => it.id);
+    const strip = new THREE.Box3(new THREE.Vector3(6.165, 0, 2.274), new THREE.Vector3(6.885, 2.1, 3.894));
+    const inStrip = its.filter(it => it.room === 6 && PHYS[it.id].some(m => { const b = bb(m); const e = 1e-6; const thin = Math.min(b.max.x - b.min.x, b.max.z - b.min.z) <= 0.03;
+      return !thin && b.min.x < strip.max.x - e && b.max.x > strip.min.x + e && b.min.z < strip.max.z - e && b.max.z > strip.min.z + e && b.min.y < strip.max.y; })).map(it => it.id);
+    const secC = bb(ITEM_GROUPS.wsecC).max.x;
+    const rods = []; ['wsecA', 'wsecB'].forEach(id => ITEM_GROUPS[id].traverse(o => { if (o.isMesh && o.geometry.type === 'CylinderGeometry') rods.push(bb(o).max.y); }));
+    const warn = its.map(it => [it.id, LAY.warnings(it.id)]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
+    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
+    return { n: its.length, inside, inStrip, secC, rods, warn, colored };
+  });
+  if (w6.n < 13) problems.push('гардеробная 6: предметов слоя wardrobe ' + w6.n + ' (< 13)');
+  if (w6.inside.length) problems.push('гардеробная 6: предметы вне помещения: ' + w6.inside.join(', '));
+  if (w6.inStrip.length) problems.push('гардеробная 6: в проходе: ' + w6.inStrip.join(', '));
+  if (w6.secC > 6.10 + 1e-9) problems.push('гардеробная 6: секция C заходит в проём двери, x1 ' + w6.secC.toFixed(3));
+  if (w6.rods.length !== 3 || w6.rods.some(y => y > 2.0)) problems.push('гардеробная 6: штанги ' + w6.rods.map(y => y.toFixed(3)).join(', ') + ' (нужно 3, верх ≤ 2.00)');
+  if (w6.warn.length) problems.push('гардеробная 6: предупреждения расстановки:\n    ' + w6.warn.join('\n    '));
+  if (w6.colored.length) problems.push('гардеробная 6: цветные материалы у ' + w6.colored.join(', '));
+  await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 1.4; controls.r = hh / TAN22; controls.target.set(6.225 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 2.884); controls.apply(); });
+  await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'wardrobe6-top.png') });
+  for (const [name, x, z, th] of [['wardrobe6-door', 6.6, 4.5, Math.PI - 0.15], ['wardrobe6-end', 6.55, 3.2, 0.2]]) {
+    await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(outDir, name + '.png') });
+  }
   console.log(`  кадров/с: план ${fpsPlain}, визуализация ${fpsViz} (viewport 1400×1000, прогулка в кухне)`);
   await browser.close();
 

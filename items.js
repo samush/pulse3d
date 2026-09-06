@@ -1,9 +1,9 @@
 // Interior items as data. Each item is a THREE.Group with a permanent id and userData
 // {id, type, room, layer, pos:[x,z], rot, size:[w,h,d], fixed}. Parts are built in item-local coords: x right 0..w,
 // z down 0..d (at rot=0), y from the finished floor; pos is the north-west corner at rot=0, rot is degrees clockwise
-// in top view (same as markup rectangles). fixed:'wall' moves only along its wall. Layers: kitchen/hall/laundry/kid/master/bath.
-var furnGroup=new THREE.Group(), hallGroup=new THREE.Group(), laundryGroup=new THREE.Group(), kidGroup=new THREE.Group(), masterGroup=new THREE.Group(), bathGroup=new THREE.Group();
-const LAYERS={kitchen:furnGroup,hall:hallGroup,laundry:laundryGroup,kid:kidGroup,master:masterGroup,bath:bathGroup};
+// in top view (same as markup rectangles). fixed:'wall' moves only along its wall. Layers: kitchen/hall/laundry/kid/master/bath/wardrobe.
+var furnGroup=new THREE.Group(), hallGroup=new THREE.Group(), laundryGroup=new THREE.Group(), kidGroup=new THREE.Group(), masterGroup=new THREE.Group(), bathGroup=new THREE.Group(), wardrobeGroup=new THREE.Group();
+const LAYERS={kitchen:furnGroup,hall:hallGroup,laundry:laundryGroup,kid:kidGroup,master:masterGroup,bath:bathGroup,wardrobe:wardrobeGroup};
 const ITEM_GROUPS={}; // id → group
 // Walk obstacles: one axis-aligned box per item mesh (bed legs block, the platform above the head does not).
 // Kept apart from visibility layers: a hidden layer is still physically there.
@@ -434,6 +434,54 @@ const PHYS={}; // id → boxes
     {id:'sock23',type:'розетка IP44 + USB у раковины на северной стене, h 1.00',room:8,layer:'bath',pos:[8.75,11.59],rot:0,size:[0.08,1.04,0.01],fixed:'wall',build(b){ b(0,0.08,0.96,1.04,0,0.01,mat.lamp); }},
     {id:'sock24',type:'скрытый вывод для полотенцесушителя, h 0.45',room:8,layer:'bath',pos:[9.51,13.114],rot:0,size:[0.08,0.49,0.01],fixed:'wall',build(b){ b(0,0.08,0.41,0.49,0,0.01,mat.lamp); }},
     {id:'sw6',type:'выключатель 2 клавиши (свет + вытяжка) и терморегулятор — в спальне 3 у двери санузла',room:3,layer:'bath',pos:[10.041,12.06],rot:0,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b(0,0.01,0.91,0.99,0,0.08,mat.lamp); }},
+    // ---- walk-in closet 6 (tasks/wardrobe6/README.md, marks M1–M13; grey materials only) ----
+    // Room box: x 5.565–6.885, z 1.874–3.894, door on the south wall x 6.10–6.885 (opens out into corridor 5).
+    // Linear layout: the deep system (0.60) along the west wall, the 0.40 end shelf on the north wall, only flat parts
+    // (peg board, mirror, socket) on the east wall. The passage x 6.165–6.885 × z 2.274–3.894 × 0–2.10 stays empty (check.js).
+    // Sections A/B have no top board: the mezzanine floor at 2.00 is their top. Rods are cylinders along z, centre ≤ 2.00.
+    {id:'wsecA',type:'секция A западной стены: две штанги 1.00 и 1.95 для коротких вещей, открытый каркас без дверей',room:6,layer:'wardrobe',pos:[5.565,1.874],rot:0,size:[0.60,2.00,0.90],fixed:'wall',
+     build(b,g){
+       b(0,0.60,0,2.00,0,0.02,mat.body); b(0,0.60,0,2.00,0.88,0.90,mat.body);                     // sides, no back, floor 0–0.10 empty
+       [1.00,1.95].forEach(y=>{ const r=new THREE.Mesh(new THREE.CylinderGeometry(0.0125,0.0125,0.86,12),mat.dark); r.rotation.x=Math.PI/2; r.position.set(0.30,y,0.45); g.add(r); }); // rods
+     }},
+    {id:'wsecB',type:'секция B западной стены: длинная штанга 1.75 (пальто, платья), внизу пол 0–0.30 под сапоги и чемодан',room:6,layer:'wardrobe',pos:[5.565,2.774],rot:0,size:[0.60,2.00,0.70],fixed:'wall',
+     build(b,g){
+       b(0,0.60,0,2.00,0,0.02,mat.body); b(0,0.60,0,2.00,0.68,0.70,mat.body);                     // sides
+       const r=new THREE.Mesh(new THREE.CylinderGeometry(0.0125,0.0125,0.66,12),mat.dark); r.rotation.x=Math.PI/2; r.position.set(0.30,1.75,0.35); g.add(r); // rod 1.75
+     }},
+    {id:'wsecC',type:'секция C у двери: 6 ящиков 0.05–1.13 (верхний на защёлке — аптечка-2), 5 полок с шагом 0.31; глубина 0.50, чтобы не заходить в проём',room:6,layer:'wardrobe',pos:[5.565,3.474],rot:0,size:[0.50,2.70,0.42],fixed:'wall',
+     build(b){
+       b(0,0.50,0,2.70,0,0.02,mat.body); b(0,0.50,0,2.70,0.40,0.42,mat.body); b(0.02,0.48,2.68,2.70,0.02,0.40,mat.body); b(0.02,0.48,0.03,0.05,0.02,0.40,mat.body); // sides, top, bottom
+       for(let i=0;i<6;i++){ const y0=0.05+0.18*i; b(0.48,0.50,y0+0.005,y0+0.175,0.02,0.40,mat.door); b(0.02,0.48,y0,y0+0.02,0.02,0.40,mat.body); } // drawer fronts (push-to-open) and bottoms
+       for(let i=0;i<5;i++){ const y=1.13+0.31*i; b(0.02,0.48,y,y+0.02,0.02,0.40,mat.body); }   // shelves 1.13–2.68
+     }},
+    {id:'wmezz',type:'антресоль над секциями A и B: две полки 2.00–2.35 и 2.35–2.70 (сезонное, постельное, чемодан); верхняя — со стремянки',room:6,layer:'wardrobe',pos:[5.565,1.874],rot:0,size:[0.60,2.70,1.60],fixed:'wall',
+     build(b){
+       b(0,0.60,2.00,2.70,0,0.02,mat.body); b(0,0.60,2.00,2.70,1.58,1.60,mat.body); b(0,0.60,2.02,2.68,0.89,0.91,mat.body); // sides and the divider over the A/B joint
+       [2.00,2.35,2.68].forEach(y=>b(0,0.60,y,y+0.02,0.02,1.58,mat.body));                          // floor (top of A/B), middle shelf, top
+     }},
+    {id:'wend',type:'торцевой стеллаж 0.72×0.40 на северной стене: инструмент внизу, 4 наклонные полки под обувь 0.45–1.25, закрытый шкафчик-аптечка 1.25–1.60, выше полки под сумки и коробки',room:6,layer:'wardrobe',pos:[6.17,1.874],rot:0,size:[0.715,2.70,0.40],fixed:'wall',
+     build(b){
+       b(0,0.02,0,2.70,0,0.40,mat.body); b(0.695,0.715,0,2.70,0,0.40,mat.body); b(0.02,0.695,2.68,2.70,0,0.40,mat.body); // sides (0.715: the west side sits 0.005 off section B so the parts do not read as one block by float noise), top
+       [0.03,0.23,0.43,1.23,1.60,1.97,2.34].forEach(y=>b(0.02,0.695,y,y+0.02,0,0.40,mat.body));       // flat shelves: two tool tiers, cabinet floor/top, upper shelves
+       [0.65,0.85,1.05].forEach(y=>{ const m=b(0.02,0.695,y,y+0.02,0.02,0.38,mat.body); m.rotation.x=0.26; }); // shoe shelves tilted 15°, front low
+       b(0.03,0.685,1.25,1.60,0.38,0.40,mat.wdoor); b(0.36,0.42,1.30,1.32,0.40,0.41,mat.handle);       // medicine cabinet door 1.25–1.60 with a knob
+     }},
+    {id:'wpeg',type:'перфопанель 0.60×0.80 для ручного инструмента на восточной стене у торца, вынос крючков ≤ 0.08',room:6,layer:'wardrobe',pos:[6.865,2.30],rot:0,size:[0.02,1.80,0.60],fixed:'wall',
+     build(b){ b(0,0.02,1.00,1.80,0,0.60,mat.wpanel); }},
+    {id:'wmirror',type:'зеркало ростовое 0.50×1.60 без рамы напротив длинной штанги',room:6,layer:'wardrobe',pos:[6.865,3.00],rot:0,size:[0.02,1.90,0.50],fixed:'wall',
+     build(b){ b(0,0.02,0.30,1.90,0,0.50,mat.glass); }},
+    {id:'wboard',type:'держатель гладильной доски: две скобы на внутренней стороне двери (доска 1.20×0.35 висит 0.50–1.70)',room:6,layer:'wardrobe',pos:[6.30,3.874],rot:0,size:[0.40,1.20,0.02],fixed:'wall',
+     build(b){ [0,0.36].forEach(x=>b(x,x+0.04,1.10,1.20,0,0.02,mat.handle)); }},
+    // hung on a hook 0.10 above the floor: a floor-standing step inside section B reads as furniture facing section C (layout.js passage rule)
+    {id:'wstep',type:'складная стремянка 2 ступени на крючке у боковины секции B, низ 0.10 (разложенная 0.40×0.30×0.45)',room:6,layer:'wardrobe',pos:[5.60,2.794],rot:0,size:[0.40,0.58,0.12],fixed:'wall',
+     build(b){ b(0,0.40,0.10,0.55,0.02,0.12,mat.hdark); b(0.18,0.22,0.55,0.58,0,0.02,mat.handle); }},
+    {id:'wlight',type:'линейный потолочный светильник 1.85×0.04 над проходом, 4000 K, от датчика движения M11',room:6,layer:'wardrobe',pos:[6.48,1.95],rot:0,size:[0.04,2.70,1.85],fixed:'wall',
+     build(b){ b(0,0.04,2.68,2.70,0,1.85,mat.led); }},
+    {id:'led6',type:'LED-лента под передней кромкой антресоли, свет вниз на штанги; включается вместе с M9',room:6,layer:'wardrobe',pos:[6.135,1.90],rot:0,size:[0.02,2.00,1.55],fixed:'wall',
+     build(b){ b(0,0.02,1.98,2.00,0,1.55,mat.led); }},
+    {id:'sw7',type:'датчик движения + выключатель в коридоре у двери гардеробной: свет M9+M10 от датчика, клавиша — принудительно',room:5,layer:'wardrobe',pos:[5.76,4.033],rot:0,size:[0.08,0.99,0.01],fixed:'wall',build(b){ b(0,0.08,0.91,0.99,0,0.01,mat.lamp); }},
+    {id:'sock25',type:'розетка у двери для пылесоса и утюга, h 0.30',room:6,layer:'wardrobe',pos:[6.875,3.55],rot:0,size:[0.01,0.34,0.08],fixed:'wall',build(b){ b(0,0.01,0.26,0.34,0,0.08,mat.lamp); }},
   ];
   function buildItem(it){
     const g=new THREE.Group();
@@ -469,3 +517,4 @@ document.getElementById('furnLaundry').addEventListener('change',e=>laundryGroup
 document.getElementById('furnKid').addEventListener('change',e=>kidGroup.visible=e.target.checked);
 document.getElementById('furnMaster').addEventListener('change',e=>masterGroup.visible=e.target.checked);
 document.getElementById('furnBath').addEventListener('change',e=>bathGroup.visible=e.target.checked);
+document.getElementById('furnWardrobe').addEventListener('change',e=>wardrobeGroup.visible=e.target.checked);
