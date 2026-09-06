@@ -8,6 +8,7 @@ const MATERIALS={
   whiteWall:{name:'плитка белый мрамор, стены', size:[0.6,0.6], rough:0.25, bump:0.15},
   grey:     {name:'плитка серый мрамор',  size:[0.6,0.6], rough:0.3,  bump:0.15},
   wp:       {name:'обои под покраску',    size:[1.2,1.2], rough:0.92, bump:0.45, albedo:0.82},
+  tile:     {name:'керамогранит 60×120, серый', size:[0.6,1.2], rough:0.3, bump:0.1},
   wood:     {name:'дерево светлое, откосы', size:[1.0,1.0], rough:0.6,  bump:0.3},
   woodFloor:{name:'дерево светлое, порог балкона', size:[1.0,1.0], rough:0.6, bump:0.3},
   plinth:   {name:'плинтус белый',        rough:0.7},
@@ -47,11 +48,11 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
     sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); const sc=sun.shadow.camera; sc.left=-9; sc.right=9; sc.top=8; sc.bottom=-8; sc.near=1; sc.far=40; sun.shadow.bias=-0.0006; sun.shadow.normalBias=0.02;
     sun.target.position.set(cx,0,cz); scene.add(sun.target);
   }
-  function swap(root,toStd){ root.traverse(o=>{ if(!o.isMesh) return; const m=toStd?VIZ.std.get(o.material):VIZ.basic.get(o.material); if(m) o.material=m; if(toStd){ o.castShadow=root!==finishGroup; o.receiveShadow=true; } else { o.castShadow=false; o.receiveShadow=false; } }); }
+  function swap(root,toStd){ root.traverse(o=>{ if(!o.isMesh) return; const m=toStd?VIZ.std.get(o.material):VIZ.basic.get(o.material); if(m) o.material=m; if(toStd){ o.castShadow=root!==finishGroup&&root!==tileGroup; o.receiveShadow=true; } else { o.castShadow=false; o.receiveShadow=false; } }); }
   function apply(){ // effective state: visualization on and not in plan mode
     const on=VIZ.on&&!controls.plan;
     if(on) prepare();
-    if(VIZ.ready){ [finishGroup,wallGroup,wallGroupR].forEach(g=>swap(g,on)); Object.values(ITEM_GROUPS).forEach(g=>swap(g,on)); }
+    if(VIZ.ready){ [finishGroup,tileGroup,wallGroup,wallGroupR].forEach(g=>swap(g,on)); Object.values(ITEM_GROUPS).forEach(g=>swap(g,on)); }
     renderer.outputEncoding=on?THREE.sRGBEncoding:THREE.LinearEncoding;
     renderer.toneMapping=on?THREE.ACESFilmicToneMapping:THREE.NoToneMapping; renderer.toneMappingExposure=on?0.75:1.0;
     renderer.shadowMap.enabled=on; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
