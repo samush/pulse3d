@@ -10,7 +10,7 @@ const MATERIALS={
   wp:       {name:'обои под покраску',    size:[1.2,1.2], rough:0.92, bump:0.45, albedo:0.82},
   tile:     {name:'керамогранит 60×120, тёплый серо-бежевый', size:[0.6,1.2], rough:0.25, bump:0.12},
   board:    {name:'инженерная доска дуб', size:[2.0,2.0], rough:0.5, bump:0.35},
-  wood:     {name:'дерево светлое, откосы', size:[1.0,1.0], rough:0.6,  bump:0.3},
+  wood:     {name:'дерево светлое, откосы; слот столов', size:[1.0,1.0], rough:0.6,  bump:0.3},
   woodFloor:{name:'дерево светлое, порог балкона', size:[1.0,1.0], rough:0.6, bump:0.3},
   plinth:   {name:'плинтус белый',        rough:0.7},
   frame:    {name:'дверная коробка белая', rough:0.7},
@@ -25,6 +25,7 @@ const MATERIALS={
   fabric:   {name:'ткань, матрасы, ковры', rough:0.95},
   emitter:  {name:'светящаяся поверхность (LED)', rough:0.6, emissive:true},
   screen:   {name:'экран телевизора',     rough:0.15},
+  paint:    {name:'крашеный каркас (стулья)', rough:0.45},
 };
 const VIZ={on:false,ready:false,std:new Map(),basic:new Map()};
 window.VIZ=VIZ; window.MATERIALS=MATERIALS;
