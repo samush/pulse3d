@@ -87,7 +87,7 @@ const PHYS={}; // id → boxes
      build(b,g){ b(0.11,0.15,1.9,1.94,0,0.5,mat.lamp); const sh=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.16,16,1,true),mat.lamp); sh.position.set(0.13,1.82,0.5); g.add(sh); }},
     {id:'tv',type:'телевизор 58"',room:4,layer:'kitchen',pos:[11.85,KN+0.02],rot:0,size:[1.3,1.75,0.04],fixed:'wall',build(b){ b(0,1.3,1.0,1.75,0,0.04,mat.dark); b(0.03,1.27,1.03,1.72,0.035,0.04,mat.screen); }}, // frame and screen
     {id:'console',type:'подвесная консоль под ТВ',room:4,layer:'kitchen',pos:[11.9,KN],rot:0,size:[1.2,0.75,0.38],fixed:'wall',build(b){ b(0,1.2,0.45,0.75,0,0.38,mat.base); }},
-    {id:'sofa',type:'диван 2 м',room:4,layer:'kitchen',pos:[11.35,6.287-0.9],rot:0,size:[2.0,0.85,0.88],
+    {id:'sofa',type:'диван 2 м',room:4,layer:'kitchen',pos:[11.35,6.287-0.9],rot:0,size:[2.0,0.85,0.88],glb:'models/sofa.glb',
      build(b){ b.phys(0,2,0.1,0.85,0,0.88); b(0,2,0.1,0.42,0,0.88,mat.sofa); b(0,2,0.42,0.85,0.63,0.88,mat.sofa); b(0,0.15,0.42,0.6,0,0.88,mat.sofa); b(1.85,2,0.42,0.6,0,0.88,mat.sofa);
        [[0.17,0.98],[1.02,1.83]].forEach(([x0,x1])=>{ b(x0,x1,0.42,0.52,0.05,0.62,mat.cushion); b(x0,x1,0.52,0.82,0.55,0.66,mat.cushion); }); }}, // seat and back cushions with a seam in the middle
     // ---- hallway 5 (sketches .local/R2_*) ----
@@ -529,16 +529,17 @@ const PHYS={}; // id → boxes
     it.build(b,g);
     LAYERS[it.layer].add(g); ITEM_GROUPS[it.id]=g;
     poseGroup(g);
-    if(it.glb){ g.userData.glb=it.glb; loadItemGlb(it.id); }
+    if(it.glb) g.userData.glb=it.glb;
     return g;
   }
   // GLB model of an item: the procedural build stays as fallback and proxy; on success its meshes are replaced by the model.
   // Material names inside the GLB are ITEM_MATS keys or slot names (fabric/wood/paint/metal) → same grey concept materials, VIZ twins keep working.
-  const slotMat=n=>{ if(!mat[n]){ if(!MATERIALS[n]) console.warn('glb: unknown material "'+n+'", grey furniture used'); mat[n]=M(0x8c8c8c); mat[n].userData.slot=n; } return mat[n]; };
+  const GLB_MATS={fabric:mat.sofa,metal:mat.frame,wood:mat.table,paint:mat.chair}; // slot name in the GLB → grey concept material carrying that slot
+  const slotMat=n=>{ if(!GLB_MATS[n]){ console.warn('glb: unknown material "'+n+'", grey used'); GLB_MATS[n]=M(0x8c8c8c); GLB_MATS[n].userData.slot=n; } return GLB_MATS[n]; };
   // Model checks on load (console warnings, never exceptions): metres, Box3 inside size ±1 cm, bottom at y=0, pivot at the NW corner,
-  // facade like the procedural version (top-half centroid offset from the footprint centre points the same way — back of a chair/sofa).
+  // facade like the procedural version (centroid of the top quarter offset from the footprint centre points the same way — back of a chair/sofa).
   const topCentroid=(root,h)=>{ root.updateMatrixWorld(true); const inv=new THREE.Matrix4().copy(root.matrixWorld).invert(), v=new THREE.Vector3(), c=new THREE.Vector3(); let n=0;
-    root.traverse(o=>{ if(!o.isMesh) return; const p=o.geometry.attributes.position; for(let i=0;i<p.count;i++){ v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld).applyMatrix4(inv); if(v.y>h/2){ c.add(v); n++; } } });
+    root.traverse(o=>{ if(!o.isMesh) return; const p=o.geometry.attributes.position; for(let i=0;i<p.count;i++){ v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld).applyMatrix4(inv); if(v.y>0.75*h){ c.add(v); n++; } } });
     return n?c.divideScalar(n):null; };
   function validateItemGlb(id,model,ref){
     const g=ITEM_GROUPS[id], sz=g.userData.size, out=[], warn=m=>{ out.push(m); console.warn('glb '+id+': '+m); };
@@ -580,6 +581,7 @@ const PHYS={}; // id → boxes
       const m=new THREE.Mesh(new THREE.BoxGeometry(sz.x,sz.y,sz.z),physMat); bb.getCenter(m.position); m.userData.item=id; physGroup.add(m); PHYS[id].push(m); });
   }
   ITEMS.forEach(buildItem);
+  window.addEventListener('DOMContentLoaded',()=>ITEMS.forEach(it=>{ if(it.glb) loadItemGlb(it.id); })); // after materials.js (VIZ, MATERIALS) ran
   physGroup.updateMatrixWorld(true);
   window.ITEMS=ITEMS;
   // fingerprint of the geometry and catalogue: saved poses/marks carry it, a mismatch is reported instead of applied silently (A05)
