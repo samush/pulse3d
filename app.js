@@ -32,6 +32,8 @@ const PANEL_W=320, MAP_W=200; // панель слева и мини-карта 
 const TAN22=Math.tan(45/2*Math.PI/180); // при равном r видимая высота в ортографии равна перспективной у цели
 
 // Встроенное орбитальное управление (без внешних зависимостей)
+let rndSeed=1; function rnd(){ rndSeed=(rndSeed+0x6D2B79F5)|0; let t=Math.imul(rndSeed^rndSeed>>>15,1|rndSeed); t=(t+Math.imul(t^t>>>7,61|t))^t; return ((t^t>>>14)>>>0)/4294967296; } // seeded: procedural maps identical on every load (B06)
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); } // user text into innerHTML (names, imported IDs)
 const controls={
   target:new THREE.Vector3(cx,0,cz),
   r:20, theta:0.8, phi:1.0,
@@ -744,8 +746,8 @@ var finishGroup=new THREE.Group();
       g.beginPath(); g.moveTo(0,y+0.5); g.lineTo(256,y+0.5); g.stroke();
       // лёгкая текстура волокон
       for(let i=0;i<4;i++){
-        g.strokeStyle='rgba(55,50,46,'+(0.04+0.04*Math.random())+')';
-        const gy=y+3+Math.random()*(rowH-6);
+        g.strokeStyle='rgba(55,50,46,'+(0.04+0.04*rnd())+')';
+        const gy=y+3+rnd()*(rowH-6);
         g.beginPath(); g.moveTo(0,gy); g.bezierCurveTo(64,gy+2,192,gy-2,256,gy+1); g.stroke();
       }
     }
@@ -756,11 +758,11 @@ var finishGroup=new THREE.Group();
       g.fillStyle=grout; g.fillRect(0,0,256,256);
       g.fillStyle=base; g.fillRect(2,2,252,252);
       for(let i=0;i<7;i++){
-        g.strokeStyle=vein; g.lineWidth=0.8+Math.random()*1.5;
+        g.strokeStyle=vein; g.lineWidth=0.8+rnd()*1.5;
         g.beginPath();
-        let x=Math.random()*256, y=0;
+        let x=rnd()*256, y=0;
         g.moveTo(x,y);
-        for(let k=0;k<4;k++){ x+=(Math.random()-0.5)*90; y+=64; g.lineTo(x,y); }
+        for(let k=0;k<4;k++){ x+=(rnd()-0.5)*90; y+=64; g.lineTo(x,y); }
         g.stroke();
       }
     });
@@ -779,9 +781,9 @@ var finishGroup=new THREE.Group();
   const wpTex=canvasTex(g=>{
     g.fillStyle='#fbfaf6'; g.fillRect(0,0,256,256);
     for(let i=0;i<1500;i++){
-      g.fillStyle=Math.random()<0.55?'rgba(180,177,170,0.4)':'rgba(255,255,255,0.6)';
-      const s=1+Math.random()*1.4;
-      g.fillRect(Math.random()*256,Math.random()*256,s,s);
+      g.fillStyle=rnd()<0.55?'rgba(180,177,170,0.4)':'rgba(255,255,255,0.6)';
+      const s=1+rnd()*1.4;
+      g.fillRect(rnd()*256,rnd()*256,s,s);
     }
   });
   wpTex.repeat.set(1/1.2,1/1.2);
@@ -858,8 +860,8 @@ var finishGroup=new THREE.Group();
       const y=r*rowH; g.fillStyle=tones[(r*3)%tones.length]; g.fillRect(0,y,256,rowH);
       g.strokeStyle='rgba(120,95,60,0.25)'; g.beginPath(); g.moveTo(0,y+0.5); g.lineTo(256,y+0.5); g.stroke();
       for(let i=0;i<3;i++){
-        g.strokeStyle='rgba(120,95,60,'+(0.05+0.05*Math.random())+')';
-        const gy=y+3+Math.random()*(rowH-6);
+        g.strokeStyle='rgba(120,95,60,'+(0.05+0.05*rnd())+')';
+        const gy=y+3+rnd()*(rowH-6);
         g.beginPath(); g.moveTo(0,gy); g.bezierCurveTo(64,gy+2,192,gy-2,256,gy+1); g.stroke();
       }
     }

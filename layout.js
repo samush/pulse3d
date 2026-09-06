@@ -14,10 +14,10 @@
   // ---------- variants ----------
   function poseOf(id){ const u=ITEM_GROUPS[id].userData; return {pos:u.pos.slice(),rot:u.rot}; }
   function variant(){ return LAY.variants[LAY.cur]; }
-  function applyVariant(i){
+  function applyVariant(i,save){ // save=false while loading: reading storage must not rewrite it (A04)
     LAY.cur=i; const v=variant();
     ITEMS.forEach(it=>{ const p=(v.poses&&v.poses[it.id])||base[it.id]; setItemPose(it.id,p.pos,p.rot); });
-    LAY.hist=[]; select(LAY.sel&&LAY.sel.userData?LAY.sel.userData.id:null); refreshUI(); persist();
+    LAY.hist=[]; select(LAY.sel&&LAY.sel.userData?LAY.sel.userData.id:null); refreshUI(); if(save!==false) persist();
   }
   function recordPose(id){ const v=variant(); if(v.locked) return; v.poses=v.poses||{}; v.poses[id]=poseOf(id); }
   function copyVariant(){ const v=variant(); const name=prompt('Название варианта',(v.name||'вариант')+' (копия)'); if(name==null) return; LAY.variants.push({name,poses:JSON.parse(JSON.stringify(v.poses||{}))}); applyVariant(LAY.variants.length-1); }
@@ -84,7 +84,7 @@
   function fmt(v){ return (Math.round(v*100)/100).toFixed(2); }
   function refreshUI(){
     const sel=ui.querySelector('[data-k=variant]');
-    sel.innerHTML=LAY.variants.map((v,i)=>'<option value="'+i+'"'+(i===LAY.cur?' selected':'')+'>'+v.name+(v.locked?' (исходная)':'')+'</option>').join('');
+    sel.innerHTML=LAY.variants.map((v,i)=>'<option value="'+i+'"'+(i===LAY.cur?' selected':'')+'>'+esc(v.name)+(v.locked?' (исходная)':'')+'</option>').join('');
     ui.querySelector('[data-a=reset]').disabled=!!variant().locked; ui.querySelector('[data-a=delvar]').disabled=!!variant().locked;
   }
   function select(id){
@@ -130,9 +130,14 @@
     if(!Array.isArray(d.variants)) e.push('нет variants'); else d.variants.forEach((v,i)=>{ if(!v||typeof v.name!=='string'||(v.poses&&typeof v.poses!=='object')) e.push('вариант #'+(i+1)+' повреждён');
       else Object.entries(v.poses||{}).forEach(([id,p])=>{ if(!ITEM_GROUPS[id]) e.push('вариант «'+v.name+'»: неизвестный предмет '+id); else if(!p||!Array.isArray(p.pos)||p.pos.length!==2||!p.pos.every(Number.isFinite)||!Number.isFinite(p.rot)) e.push('вариант «'+v.name+'»: поза '+id+' повреждена'); }); });
     return e; }
-  function persist(){ try{ localStorage.setItem(KEY,JSON.stringify(dump())); }catch(e){ setHint('Не удалось сохранить варианты: '+e.message); } }
-  function restore(d){ LAY.variants=[{name:'Исходная',locked:true,poses:{}}].concat(d.variants.map(v=>({name:v.name,poses:v.poses||{}}))); applyVariant(Math.min(Math.max(0,(d.cur|0)),LAY.variants.length-1)); }
-  function loadLocal(){ let d=null; try{ const raw=localStorage.getItem(KEY); if(raw) d=JSON.parse(raw); }catch(e){} if(d&&!validate(d).length) restore(d); else { LAY.variants=[{name:'Исходная',locked:true,poses:{}}]; applyVariant(0); } }
+  function persist(){ try{ if(LAY.badSave){ localStorage.setItem(KEY+'.bad',LAY.badSave); LAY.badSave=null; } localStorage.setItem(KEY,JSON.stringify(dump())); }catch(e){ setHint('Не удалось сохранить варианты: '+e.message); } }
+  function restore(d,save){ LAY.variants=[{name:'Исходная',locked:true,poses:{}}].concat(d.variants.map(v=>({name:v.name,poses:v.poses||{}}))); applyVariant(Math.min(Math.max(0,(d.cur|0)),LAY.variants.length-1),save); }
+  function loadLocal(){ let raw=null; try{ raw=localStorage.getItem(KEY); }catch(e){}
+    LAY.variants=[{name:'Исходная',locked:true,poses:{}}];
+    if(!raw){ applyVariant(0,false); return; }
+    let d, err; try{ d=JSON.parse(raw); err=validate(d); }catch(e){ err=['не JSON']; }
+    if(err.length){ LAY.badSave=raw; LAY.status='сохранённые варианты не подходят: '+err.join(', ')+' — оставлены в pulse3d.layout.bad'; applyVariant(0,false); setHint(LAY.status); return; }
+    restore(d,false); LAY.status='восстановлено вариантов: '+d.variants.length; }
   function importText(t){ let d; try{ d=JSON.parse(t); }catch(e){ setHint('Импорт отклонён: не JSON'); return false; } const e=validate(d); if(e.length){ setHint('Импорт отклонён: '+e.join(', ')); return false; } restore(d); setHint('Импортировано вариантов: '+d.variants.length); return true; }
   LAY.dump=dump; LAY.validate=validate; LAY.importText=importText; LAY.exportText=()=>JSON.stringify(dump(),null,1); LAY.persist=persist;
 

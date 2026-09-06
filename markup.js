@@ -214,7 +214,7 @@
     const ids=rooms(m), p=m.pts[0];
     const val=v=>{ const virt={px:p[0],pz:p[1],qx:m.pts[1]&&m.pts[1][0],qz:m.pts[1]&&m.pts[1][1]}; const x=v in virt?virt[v]:m[v]; return x==null?'':(typeof x==='number'?Math.round(x*1000)/1000:x); };
     const num=(k,v,st)=>'<label>'+k+' <input type="number" step="'+(st||0.01)+'" data-k="'+v+'" value="'+val(v)+'"></label>';
-    let h='<div class="mk-head"><b>'+m.id+'</b> <input data-k="name" placeholder="название" value="'+(m.name||'').replace(/"/g,'&quot;')+'"></div>';
+    let h='<div class="mk-head"><b>'+m.id+'</b> <input data-k="name" placeholder="название" value="'+esc(m.name||'')+'"></div>';
     h+='<div class="mk-row">'+(ids.length===1&&ids[0]!=null?'Помещение '+ids[0]:ids.every(i=>i==null)?'Вне квартиры':'Пересекает: '+ids.map(i=>i==null?'вне':i).join(', '))+' · клетка '+cell(p)+'</div>';
     h+='<div class="mk-row">'+num('x','px')+num('z','pz')+'</div>';
     if(m.type==='seg'){ h+='<div class="mk-row">'+num('x₂','qx')+num('z₂','qz')+'<span>длина '+fmt(segLen(m))+' м</span></div>'; }
@@ -229,7 +229,7 @@
         +'<label>от угла <select data-k="wallFrom">'+((w.side==='N'||w.side==='S')?['W','E']:['N','S']).map(k=>'<option value="'+k+'"'+(w.from===k?' selected':'')+'>'+DIRS[k]+'</option>').join('')+'</select></label>'
         +'<label>вдоль <input type="number" step="0.01" data-k="wallDist" value="'+(Math.round(w.dist*1000)/1000)+'"></label>':'')+'</div>';
     }
-    if(m.bind) h+='<div class="mk-row mk-dim">привязка: '+m.bind.item+' / '+DIRS[m.bind.side]+(m.conflict?' — <b>предмет сдвинулся</b>':'')+(bindEdge(m.bind)==null?' — <b>предмета нет</b>':'')+' <button data-a="unbind">снять</button></div>';
+    if(m.bind) h+='<div class="mk-row mk-dim">привязка: '+esc(m.bind.item)+' / '+DIRS[m.bind.side]+(m.conflict?' — <b>предмет сдвинулся</b>':'')+(bindEdge(m.bind)==null?' — <b>предмета нет</b>':'')+' <button data-a="unbind">снять</button></div>';
     const rid=ids.length===1?ids[0]:null; const wd=rid!=null?wallDist(p,rid):null;
     if(wd) h+='<div class="mk-row mk-dim">до стен: '+['N','S','W','E'].filter(k=>wd[k]!=null).map(k=>DIRS[k]+' '+fmt(wd[k])).join(' · ')+'</div>';
     h+='<div class="mk-row mk-btns"><button data-a="copy">Скопировать для агента</button><button data-a="move">Перенести</button><button data-a="del">Удалить</button></div>';
@@ -278,16 +278,17 @@
     return err;
   }
   function restore(d,source){ // load the data; returns status text
-    MK.marks=d.marks.map(m=>Object.assign({name:'',y0:0,y1:m.type==='rect'?0.9:0,dir:'S'},m)); // defaults for optional fields the card reads MK.next=Math.max(d.next||1,...MK.marks.map(m=>parseInt(m.id.slice(1))+1),1); MK.hist=[]; MK.sel=null;
+    MK.marks=d.marks.map(m=>Object.assign({name:'',y0:0,y1:m.type==='rect'?0.9:0,dir:'S'},m)); // defaults for optional fields the card reads
+    MK.next=Math.max(d.next||1,...MK.marks.map(m=>parseInt(m.id.slice(1))+1),1); MK.hist=[]; MK.sel=null;
     const notes=[]; if(d.plan!==planVer()) notes.push('план v'+d.plan+' → v'+planVer()+': координаты оставлены как есть, проверьте метки');
     let moved=0; MK.marks.forEach(m=>{ if(m.bind){ const e=bindEdge(m.bind); const p=m.pts[0]; const cur=(m.bind.side==='W'||m.bind.side==='E')?p[0]:p[1];
       if(e==null){ m.conflict='предмета нет'; moved++; } else if(Math.abs(e-cur)>0.001){ m.conflict='предмет сдвинулся'; moved++; } } });
     if(moved) notes.push('привязок с конфликтом: '+moved+' (метки не перенесены)');
     redraw(); renderCard(); MK.status=source+': '+MK.marks.length+' меток'+(notes.length?'; '+notes.join('; '):''); setHint(MK.status); return MK.status;
   }
-  function persist(){ if(MK.noPersist) return; try{ localStorage.setItem(KEY,JSON.stringify(dump())); MK.saveError=null; }catch(e){ MK.saveError=e.message; setHint('Не удалось сохранить в браузере: '+e.message+' — экспортируйте файл'); } }
-  function loadLocal(){ let raw=null; try{ raw=localStorage.getItem(KEY); }catch(e){ return; } if(!raw) return; let d; try{ d=JSON.parse(raw); }catch(e){ MK.status='сохранённая разметка повреждена, оставлена нетронутой'; return; }
-    const err=validate(d); if(err.length){ MK.status='сохранённая разметка не подходит: '+err.join(', '); return; } restore(d,'восстановлено'); }
+  function persist(){ if(MK.noPersist) return; try{ if(MK.badSave){ localStorage.setItem(KEY+'.bad',MK.badSave); MK.badSave=null; } localStorage.setItem(KEY,JSON.stringify(dump())); MK.saveError=null; }catch(e){ MK.saveError=e.message; setHint('Не удалось сохранить в браузере: '+e.message+' — экспортируйте файл'); } }
+  function loadLocal(){ let raw=null; try{ raw=localStorage.getItem(KEY); }catch(e){ return; } if(!raw) return; let d, err; try{ d=JSON.parse(raw); err=validate(d); }catch(e){ err=['не JSON']; }
+    if(err.length){ MK.badSave=raw; MK.status='сохранённая разметка не подходит: '+err.join(', ')+' — оставлена в pulse3d.marks.bad'; setHint(MK.status); return; } restore(d,'восстановлено'); }
   function exportText(){ return JSON.stringify(dump(),null,1); }
   function importText(text){ let d; try{ d=JSON.parse(text); }catch(e){ setHint('Импорт отклонён: не JSON'); return false; }
     const err=validate(d); if(err.length){ setHint('Импорт отклонён: '+err.join(', ')+' — текущая разметка сохранена'); return false; } restore(d,'импорт'); persist(); return true; }

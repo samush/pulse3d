@@ -170,6 +170,34 @@ const { chromium } = require('playwright');
   await page.reload(); await page.waitForTimeout(2500);
   const persisted = await page.evaluate((ids) => { const ok = MK.marks.map(m => m.id).join() === ids && MK.marks[1].type === 'rect' && MK.marks[1].w === 1; MK.marks.slice().forEach(m => MK.remove(m)); return ok; }, idsBefore);
   if (!persisted) problems.push('разметка: метки не восстановились после перезагрузки');
+  // audit 2026-09-06 G0: A01 — IDs stay unique after reload; A02 — imported item ID is text, not HTML; A04 — corrupted saves survive a load
+  await page.evaluate(() => { MK.marks.slice().forEach(m => MK.remove(m)); MK.addPoint([3, 3]); });
+  await page.reload(); await page.waitForTimeout(2500);
+  const g0 = await page.evaluate(() => {
+    const out = {};
+    const m2 = MK.addPoint([4, 4]); out.uniqId = m2.id !== MK.marks[0].id && !MK.validate(MK.dump()).length;
+    window.__pwned = false;
+    const bad = { id: 'M7', type: 'point', pts: [[3, 3]], bind: { item: '<img src=x onerror="window.__pwned=true">', side: 'W' } };
+    out.imp = MK.importText(JSON.stringify({ format: 1, plan: PLAN.meta.version, marks: [bad] }));
+    MK.toggle(true); MK.select(MK.marks[0]);
+    out.noImg = !document.querySelector('#mkCard img') && document.querySelector('#mkCard').textContent.includes('<img') && !window.__pwned;
+    MK.marks.slice().forEach(m => MK.remove(m)); MK.toggle(false);
+    try { localStorage.setItem('pulse3d.layout', '{bad'); localStorage.setItem('pulse3d.marks', '{bad'); } catch (e) {}
+    return out;
+  });
+  await page.reload(); await page.waitForTimeout(2500);
+  const g0b = await page.evaluate(() => {
+    const kept = localStorage.getItem('pulse3d.layout') === '{bad' && localStorage.getItem('pulse3d.marks') === '{bad' && !!LAY.badSave && !!MK.badSave;
+    LAY.setPose('sofa', [ITEM_GROUPS.sofa.userData.pos[0] + 0.1, ITEM_GROUPS.sofa.userData.pos[1]], null); MK.addPoint([3, 3]);
+    const backed = localStorage.getItem('pulse3d.layout.bad') === '{bad' && localStorage.getItem('pulse3d.marks.bad') === '{bad' && !LAY.validate(JSON.parse(localStorage.getItem('pulse3d.layout'))).length;
+    LAY.variants.splice(LAY.cur, 1); LAY.applyVariant(0); MK.marks.slice().forEach(m => MK.remove(m));
+    localStorage.removeItem('pulse3d.layout.bad'); localStorage.removeItem('pulse3d.marks.bad');
+    return { kept, backed };
+  });
+  if (!g0.uniqId) problems.push('разметка: после перезагрузки ID новой метки повторяется (A01)');
+  if (!g0.imp || !g0.noImg) problems.push('разметка: ID предмета из импорта вставлен как HTML (A02)');
+  if (!g0b.kept) problems.push('сохранения: повреждённый localStorage перезаписан при загрузке (A04)');
+  if (!g0b.backed) problems.push('сохранения: повреждённая строка не сохранена в *.bad перед перезаписью (A04)');
   if (!mk.bind) problems.push('разметка: привязка к краю дивана не сработала');
   if (!mk.wall) problems.push('разметка: описание настенной точки неверно');
   if (!mk.reject) problems.push('разметка: битый импорт не отклонён или стёр метки');
