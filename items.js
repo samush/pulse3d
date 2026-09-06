@@ -591,7 +591,7 @@ const PHYS={}; // id → boxes
        b(0,1.19,0.71,0.75,0,0.80,mat.table);                                                         // top 0.04
        b(0,1.19,0.66,0.71,0.75,0.80,mat.dark); b(0,0.05,0.66,0.71,0,0.75,mat.dark); b(1.14,1.19,0.66,0.71,0.30,0.50,mat.dark); // angle consoles 0.05 right under the top: south wall, west wall, bracket by the glass
      }},
-    {id:'bchair',type:'стул 0.45 с прямой спинкой до 0.90, задвинут под стол на 0.24',room:10,layer:'balcony',pos:[14.28,5.00],rot:0,size:[0.45,0.90,0.45],
+    {id:'bchair',type:'стул 0.45 с прямой спинкой до 0.90, задвинут под стол на 0.24',room:10,layer:'balcony',pos:[14.28,5.00],rot:0,size:[0.45,0.90,0.45],glb:'models/bchair.glb',
      build(b){[[0,0.45,0.42,0.46,0,0.45],[0,0.45,0.46,0.9,0,0.04],[0.02,0.05,0,0.42,0.02,0.05],[0.02,0.05,0,0.42,0.4,0.43],[0.4,0.43,0,0.42,0.02,0.05],[0.4,0.43,0,0.42,0.4,0.43]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
        
        b(0,0.45,0.42,0.46,0,0.45,mat.chair); b(0,0.45,0.46,0.90,0,0.04,mat.chair);                    // seat, straight back on the north side
