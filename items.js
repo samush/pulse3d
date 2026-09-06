@@ -23,7 +23,7 @@ const PHYS={}; // id → boxes
     tulle:new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:0.3,side:THREE.DoubleSide}),
   };
   // material slot = physical class for the visualization twin (B04); concept colours stay grey, MATERIALS[slot] gives roughness/metalness/emissive
-  const SLOTS={chrome:['handle','knob','ring'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle'],emitter:['led'],screen:['screen']};
+  const SLOTS={chrome:['handle','knob','ring'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle'],emitter:['led'],screen:['screen'],wood:['table'],paint:['chair']};
   Object.entries(SLOTS).forEach(([slot,keys])=>keys.forEach(k=>{ mat[k].userData.slot=slot; }));
   window.ITEM_MATS=mat;
   const chair=(backEast)=>(b,g)=>{ // chair 0.42×0.42, back on the west or east side
@@ -75,8 +75,11 @@ const PHYS={}; // id → boxes
        [[0.2,1.25],[0.42,1.25],[0.2,1.55],[0.42,1.55]].forEach(([x,z])=>{ const r=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.004,24),mat.ring); r.position.set(x,0.927,z); g.add(r); }); // burners
      }},
     {id:'table',type:'стол на 6 мест',room:4,layer:'kitchen',pos:[9.85,KN+0.04],rot:0,size:[0.8,0.76,1.8],
-     build(b){ b.phys(0,0.8,0.72,0.76,0,1.8); b.phys(0.05,0.75,0.64,0.72,0.05,1.75); [[0.05,0.05],[0.7,0.05],[0.05,1.7],[0.7,1.7]].forEach(([x,z])=>b.phys(x,x+0.05,0,0.72,z,z+0.05)); // proxy = today's AABBs (top, apron, legs)
-       b(0,0.8,0.72,0.76,0,1.8,mat.table); b(0.05,0.75,0.64,0.72,0.05,1.75,mat.table); [[0.05,0.05],[0.7,0.05],[0.05,1.7],[0.7,1.7]].forEach(([x,z])=>b(x,x+0.05,0,0.72,z,z+0.05,mat.table)); }}, // apron under the tabletop
+     build(b,g){ b.phys(0,0.8,0.72,0.76,0,1.8); b.phys(0.05,0.75,0.64,0.72,0.05,1.75); [[0.05,0.05],[0.7,0.05],[0.05,1.7],[0.7,1.7]].forEach(([x,z])=>b.phys(x,x+0.05,0,0.72,z,z+0.05)); // proxy = the old block AABBs (top, apron, legs)
+       const r=0.004, sh=new THREE.Shape([[r,r],[0.8-r,r],[0.8-r,1.8-r],[r,1.8-r]].map(([x,y])=>new THREE.Vector2(x,y))); // tabletop 0.04 with a 4 mm bevel all round (UVs in metres from the shape)
+       const top=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.04-2*r,bevelThickness:r,bevelSize:r,bevelSegments:2}).rotateX(Math.PI/2).translate(0,0.76-r,0),mat.table); g.add(top);
+       [[0.08,0.10,0.10,1.70],[0.70,0.72,0.10,1.70],[0.10,0.70,0.08,0.10],[0.10,0.70,1.70,1.72]].forEach(([x0,x1,z0,z1])=>b(x0,x1,0.65,0.72,z0,z1,mat.table)); // apron rails 20×70, 30 mm in from the leg faces
+       [[0.075,0.075],[0.725,0.075],[0.075,1.725],[0.725,1.725]].forEach(([x,z])=>{ const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.05/Math.SQRT2,0.035/Math.SQRT2,0.72,4).rotateY(Math.PI/4).translate(x,0.36,z),mat.table); g.add(leg); }); }}, // square legs tapering 50→35 mm
     {id:'chair1',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:90,build:chair(false)},
     {id:'chair2',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:90,build:chair(false)},
     {id:'chair3',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:90,build:chair(false)},
@@ -524,7 +527,9 @@ const PHYS={}; // id → boxes
   function buildItem(it){
     const g=new THREE.Group();
     g.userData={id:it.id,type:it.type,room:it.room,layer:it.layer,pos:it.pos.slice(),rot:it.rot||0,size:it.size.slice(),fixed:it.fixed||null,attach:it.attach||null,proxy:[]};
-    const b=(x0,x1,y0,y1,z0,z1,m)=>{ const mesh=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0),m); mesh.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); g.add(mesh); return mesh; };
+    const b=(x0,x1,y0,y1,z0,z1,m)=>{ const w=x1-x0,h=y1-y0,d=z1-z0, geo=new THREE.BoxGeometry(w,h,d), uv=geo.attributes.uv, F=[[d,h],[d,h],[w,d],[w,d],[w,h],[w,h]]; // UV in metres per face (±x,±y,±z), so VIZ pattern scale holds on items too
+      for(let i=0;i<uv.count;i++){ const [a,c]=F[i>>2]; uv.setXY(i,uv.getX(i)*a,uv.getY(i)*c); }
+      const mesh=new THREE.Mesh(geo,m); mesh.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); g.add(mesh); return mesh; };
     b.phys=(x0,x1,y0,y1,z0,z1)=>g.userData.proxy.push([x0,x1,y0,y1,z0,z1]); // explicit collision box (local); declared → render meshes leave physics (B02)
     it.build(b,g);
     LAYERS[it.layer].add(g); ITEM_GROUPS[it.id]=g;

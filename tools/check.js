@@ -246,6 +246,10 @@ const { chromium } = require('playwright');
     VIZ.set(true); setView('door');
     const std = k => VIZ.std.get(ITEM_MATS[k]);
     out.slots = std('handle').metalness > 0.5 && std('cushion').roughness > 0.9 && std('led').emissive.getHex() !== 0 && std('body').metalness === 0;
+    out.slots2 = std('table').roughness === MATERIALS.wood.rough && std('chair').roughness === MATERIALS.paint.rough; // realism-living step 7: wood/paint slots
+    const tg = ITEM_GROUPS.table, tbb = new THREE.Box3().setFromObject(tg), ts = new THREE.Vector3(); tbb.getSize(ts); const kinds = {}; tg.children.forEach(o => { kinds[o.geometry.type] = (kinds[o.geometry.type] || 0) + 1; });
+    const rail = tg.children.find(o => o.geometry.type === 'BoxGeometry'), ruv = rail.geometry.attributes.uv; let umax = 0; for (let i = 0; i < ruv.count; i++) umax = Math.max(umax, ruv.getX(i), ruv.getY(i));
+    out.table = kinds.ExtrudeGeometry === 1 && kinds.CylinderGeometry === 4 && kinds.BoxGeometry === 4 && ts.x <= 0.801 && ts.y <= 0.761 && ts.z <= 1.801 && Math.abs(umax - 1.6) < 1e-6 && Math.abs(tbb.min.y) < 1e-6; // bevelled top, tapered legs, rails; UV in metres (rail 1.6 m long)
     VIZ.set(false); setView('top');
     return out;
   });
@@ -282,6 +286,8 @@ const { chromium } = require('playwright');
   if (!g1.living) problems.push('proxy: стол/стул/диван — число боксов не 6/6/1 или габарит изменился (realism-living §2)');
   if (!g1.hooks) problems.push('поза: метка с привязкой не получила/не сняла конфликт при переносе (B02/B03)');
   if (!g1.slots) problems.push('материалы: слоты предметов не различаются в визуализации (B04)');
+  if (!g1.slots2) problems.push('материалы: слоты wood/paint не дошли до стола/стула (realism-living §9.7)');
+  if (!g1.table) problems.push('стол: фаска/ножки/рейки/габарит/UV в метрах не сошлись (realism-living §9.7)');
   if (!mk.bind) problems.push('разметка: привязка к краю дивана не сработала');
   if (!mk.wall) problems.push('разметка: описание настенной точки неверно');
   if (!mk.reject) problems.push('разметка: битый импорт не отклонён или стёр метки');
