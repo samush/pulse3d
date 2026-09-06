@@ -535,6 +535,23 @@ const PHYS={}; // id → boxes
   // GLB model of an item: the procedural build stays as fallback and proxy; on success its meshes are replaced by the model.
   // Material names inside the GLB are ITEM_MATS keys or slot names (fabric/wood/paint/metal) → same grey concept materials, VIZ twins keep working.
   const slotMat=n=>{ if(!mat[n]){ if(!MATERIALS[n]) console.warn('glb: unknown material "'+n+'", grey furniture used'); mat[n]=M(0x8c8c8c); mat[n].userData.slot=n; } return mat[n]; };
+  // Model checks on load (console warnings, never exceptions): metres, Box3 inside size ±1 cm, bottom at y=0, pivot at the NW corner,
+  // facade like the procedural version (top-half centroid offset from the footprint centre points the same way — back of a chair/sofa).
+  const topCentroid=(root,h)=>{ root.updateMatrixWorld(true); const inv=new THREE.Matrix4().copy(root.matrixWorld).invert(), v=new THREE.Vector3(), c=new THREE.Vector3(); let n=0;
+    root.traverse(o=>{ if(!o.isMesh) return; const p=o.geometry.attributes.position; for(let i=0;i<p.count;i++){ v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld).applyMatrix4(inv); if(v.y>h/2){ c.add(v); n++; } } });
+    return n?c.divideScalar(n):null; };
+  function validateItemGlb(id,model,ref){
+    const g=ITEM_GROUPS[id], sz=g.userData.size, out=[], warn=m=>{ out.push(m); console.warn('glb '+id+': '+m); };
+    model.updateMatrixWorld(true); const bb=new THREE.Box3().setFromObject(model), e=new THREE.Vector3(); bb.getSize(e);
+    const r=Math.max(e.x,e.y,e.z)/Math.max(...sz); if(r>2||r<0.5) warn('units: model extent '+e.toArray().map(v=>v.toFixed(2)).join('×')+' vs size '+sz.join('×')+' — not metres?');
+    else{ if(bb.min.x<-0.01||bb.min.z<-0.01||bb.max.x>sz[0]+0.01||bb.max.y>sz[1]+0.01||bb.max.z>sz[2]+0.01) warn('outside size: '+[bb.min.x,bb.min.z,bb.max.x,bb.max.y,bb.max.z].map(v=>v.toFixed(3)).join(' ')+' vs '+sz.join('×')+' (pivot must be the NW corner)');
+      if(Math.abs(bb.min.y)>0.01) warn('bottom at y='+bb.min.y.toFixed(3)+', expected 0'); }
+    if(ref){ const a=topCentroid(ref,sz[1]), b=topCentroid(model,sz[1]), cx=sz[0]/2, cz=sz[2]/2;
+      if(a&&b){ const ax=a.x-cx, az=a.z-cz, bx=b.x-cx, bz=b.z-cz, la=Math.hypot(ax,az), lb=Math.hypot(bx,bz);
+        if(la>0.02&&(lb<0.01||(ax*bx+az*bz)/(la*lb)<0.5)) warn('facade: back points to ('+bx.toFixed(2)+','+bz.toFixed(2)+'), procedural ('+ax.toFixed(2)+','+az.toFixed(2)+')'); } }
+    return out;
+  }
+  window.validateItemGlb=validateItemGlb;
   function loadItemGlb(id,url){
     const g=ITEM_GROUPS[id]; url=url||g.userData.glb;
     const fail=e=>{ VIZ.loadErrors=(VIZ.loadErrors||[]).concat(id+': '+url); return false; };
@@ -543,6 +560,7 @@ const PHYS={}; // id → boxes
       new THREE.GLTFLoader().load(url,gltf=>{
         const model=gltf.scene;
         model.traverse(o=>{ if(o.isMesh){ const name=o.material.name; o.material.dispose(); o.material=slotMat(name); } });
+        g.userData.glbWarnings=validateItemGlb(id,model,g);
         g.children.slice().forEach(c=>{ g.remove(c); c.traverse(o=>{ if(o.isMesh) o.geometry.dispose(); }); }); // procedural fallback out, its geometry freed
         g.add(model); g.userData.glbLoaded=url;
         if(window.VIZ&&VIZ.adopt) VIZ.adopt(g);
