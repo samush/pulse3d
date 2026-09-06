@@ -17,3 +17,5 @@
 | `kidchair.glb` | `kidchair`, `kidchair2` 0.55×0.85×0.55, один файл | ~2.1k | `tools/models/kidchair.js` |
 | `windowseat1.glb` | `windowseat1` 0.60×0.65×1.89; имена материалов — ключи `ITEM_MATS` (`kmat`, `pillow`, `body`…), чтобы оттенки концепта сохранились | ~3.1k | `tools/models/windowseat1.js` |
 | `bchair.glb` | `bchair` 0.45×0.90×0.45, спинка по −z | ~1.9k | `tools/models/bchair.js` |
+| `mbed.glb` | `mbed` 1.70×1.10×2.20; имена материалов — ключи `ITEM_MATS` | ~11.6k | `tools/models/mbed.js` |
+| `vpouf.glb` | `vpouf` 0.4×0.45×0.4 | ~2.3k | `tools/models/vpouf.js` |
