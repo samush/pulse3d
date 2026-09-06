@@ -22,6 +22,10 @@ const PHYS={}; // id → boxes
     oak:M(0xc9a97a), hpl:M(0xe7e2d8), terra:M(0xc2704e), fabric:M(0xb8ab9a), rug:M(0xd9cfc0), ochre:M(0xd08a5a),
     tulle:new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:0.3,side:THREE.DoubleSide}),
   };
+  // material slot = physical class for the visualization twin (B04); concept colours stay grey, MATERIALS[slot] gives roughness/metalness/emissive
+  const SLOTS={chrome:['handle','knob','ring'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle'],emitter:['led'],screen:['screen']};
+  Object.entries(SLOTS).forEach(([slot,keys])=>keys.forEach(k=>{ mat[k].userData.slot=slot; }));
+  window.ITEM_MATS=mat;
   const chair=(backEast)=>(b,g)=>{ // chair 0.42×0.42, back on the west or east side
     b(0,0.42,0.42,0.46,0,0.42,mat.chair); b(0.03,0.39,0.46,0.49,0.03,0.39,mat.cushion); // seat cushion
     const bx=backEast?0.38:0; b(bx,bx+0.04,0.46,0.9,0,0.42,mat.chair);
@@ -30,6 +34,8 @@ const PHYS={}; // id → boxes
   // Loft bed shared by rooms 1 and 2: stair-chest along local z 0–0.5, platform x 1.4–2.6 × z 0–L, storage shelf above the passage z L–2.97
   const kidBedBuild=(L,front,blanket,tread=0.28)=>b=>{
        const PL=1.8, TOP=2.3, HF=2.2, X0=5*tread, W=X0+1.2;                                           // L — platform length along z (2.00 in room 1, 1.85 in room 2); tread — step depth
+       b.phys(0,X0,0,2.4,0,0.54); [[X0,0],[W-0.08,0],[X0,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b.phys(x,x+0.08,0,PL,z,z+0.08)); // stair-chest, legs
+       b.phys(X0+0.08,W-0.08,0.10,0.14,L-0.08,L); b.phys(X0,W,PL-0.2,TOP+0.3,0,L+0.02); b.phys(X0,W,HF,TOP+0.3,L,2.97); b.phys(X0,X0+0.08,0,HF,2.89,2.97); // rail, platform with rails, shelf, post
        b(X0,W,PL-0.1,PL,0,L,mat.kbody);                                                          // platform, world x 4.235–5.435
        [[X0,0],[W-0.08,0],[X0,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b(x,x+0.08,0,PL-0.1,z,z+0.08,mat.kleg)); // legs
        b(X0+0.08,W-0.08,0.10,0.14,L-0.08,L,mat.kleg);                                               // lower rail between the south legs
@@ -79,7 +85,7 @@ const PHYS={}; // id → boxes
     {id:'tv',type:'телевизор 58"',room:4,layer:'kitchen',pos:[11.85,KN+0.02],rot:0,size:[1.3,1.75,0.04],fixed:'wall',build(b){ b(0,1.3,1.0,1.75,0,0.04,mat.dark); b(0.03,1.27,1.03,1.72,0.035,0.04,mat.screen); }}, // frame and screen
     {id:'console',type:'подвесная консоль под ТВ',room:4,layer:'kitchen',pos:[11.9,KN],rot:0,size:[1.2,0.75,0.38],fixed:'wall',build(b){ b(0,1.2,0.45,0.75,0,0.38,mat.base); }},
     {id:'sofa',type:'диван 2 м',room:4,layer:'kitchen',pos:[11.35,6.287-0.9],rot:0,size:[2.0,0.85,0.88],
-     build(b){ b(0,2,0.1,0.42,0,0.88,mat.sofa); b(0,2,0.42,0.85,0.63,0.88,mat.sofa); b(0,0.15,0.42,0.6,0,0.88,mat.sofa); b(1.85,2,0.42,0.6,0,0.88,mat.sofa);
+     build(b){ b.phys(0,2,0.1,0.85,0,0.88); b(0,2,0.1,0.42,0,0.88,mat.sofa); b(0,2,0.42,0.85,0.63,0.88,mat.sofa); b(0,0.15,0.42,0.6,0,0.88,mat.sofa); b(1.85,2,0.42,0.6,0,0.88,mat.sofa);
        [[0.17,0.98],[1.02,1.83]].forEach(([x0,x1])=>{ b(x0,x1,0.42,0.52,0.05,0.62,mat.cushion); b(x0,x1,0.52,0.82,0.55,0.66,mat.cushion); }); }}, // seat and back cushions with a seam in the middle
     // ---- hallway 5 (sketches .local/R2_*) ----
     {id:'wardrobe',type:'шкаф в нише',room:5,layer:'hall',pos:[8.20,7.974-0.45],rot:0,size:[1.77,2.65,0.45],fixed:'wall',
@@ -317,7 +323,7 @@ const PHYS={}; // id → boxes
          sh.moveTo(xl(z0),-z0); for(let i=0;i<=n;i++) sh.lineTo(xr(zs(i)),-zs(i)); for(let i=n;i>=0;i--) sh.lineTo(xl(zs(i)),-zs(i));
          const mesh=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:y1-y0,bevelEnabled:false}),m); mesh.rotation.x=-Math.PI/2; mesh.position.y=y0; g.add(mesh); };
        const edges=[0,0.403,1.103,1.30,1.45,L];
-       for(let i=0;i<edges.length-1;i++){ const [z0,z1]=[edges[i],edges[i+1]];
+       for(let i=0;i<edges.length-1;i++){ const [z0,z1]=[edges[i],edges[i+1]]; b.phys(0,wo(z1),0,0.58,z0,z1);
          slice(z0,z1,wi,wo,0.12,0.58,mat.kmat);                                                       // curved shell wall
          slice(z0,z1,()=>W,wi,0.12,0.15,mat.kmat);                                                    // bottom at 0.12
          slice(z0,z1,()=>0,wo,0,0.12,mat.body); }                                                    // blind apron under the rim
@@ -514,8 +520,9 @@ const PHYS={}; // id → boxes
   ];
   function buildItem(it){
     const g=new THREE.Group();
-    g.userData={id:it.id,type:it.type,room:it.room,layer:it.layer,pos:it.pos.slice(),rot:it.rot||0,size:it.size.slice(),fixed:it.fixed||null,attach:it.attach||null};
+    g.userData={id:it.id,type:it.type,room:it.room,layer:it.layer,pos:it.pos.slice(),rot:it.rot||0,size:it.size.slice(),fixed:it.fixed||null,attach:it.attach||null,proxy:[]};
     const b=(x0,x1,y0,y1,z0,z1,m)=>{ const mesh=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0),m); mesh.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); g.add(mesh); return mesh; };
+    b.phys=(x0,x1,y0,y1,z0,z1)=>g.userData.proxy.push([x0,x1,y0,y1,z0,z1]); // explicit collision box (local); declared → render meshes leave physics (B02)
     it.build(b,g);
     LAYERS[it.layer].add(g); ITEM_GROUPS[it.id]=g;
     poseGroup(g);
@@ -525,7 +532,10 @@ const PHYS={}; // id → boxes
   const physMat=new THREE.MeshBasicMaterial({visible:false});
   function rebuildPhys(id){
     (PHYS[id]||[]).forEach(m=>{ physGroup.remove(m); m.geometry.dispose(); }); PHYS[id]=[];
-    ITEM_GROUPS[id].traverse(o=>{ if(!o.isMesh) return; const bb=new THREE.Box3().setFromObject(o); const sz=new THREE.Vector3(); bb.getSize(sz);
+    const g=ITEM_GROUPS[id], boxes=[];
+    if(g.userData.proxy.length) g.userData.proxy.forEach(([x0,x1,y0,y1,z0,z1])=>boxes.push(new THREE.Box3(new THREE.Vector3(x0,y0,z0),new THREE.Vector3(x1,y1,z1)).applyMatrix4(g.matrixWorld)));
+    else g.traverse(o=>{ if(o.isMesh) boxes.push(new THREE.Box3().setFromObject(o)); }); // fallback for simple block items
+    boxes.forEach(bb=>{ const sz=new THREE.Vector3(); bb.getSize(sz);
       const m=new THREE.Mesh(new THREE.BoxGeometry(sz.x,sz.y,sz.z),physMat); bb.getCenter(m.position); m.userData.item=id; physGroup.add(m); PHYS[id].push(m); });
   }
   ITEMS.forEach(buildItem);
@@ -539,7 +549,9 @@ const PHYS={}; // id → boxes
     return [[0,0],[w,0],[w,d],[0,d]].map(([p,q])=>[x+p*c-q*s, z+p*s+q*c]);
   };
   // move: new anchor and/or rotation; parts move with the group, neighbours are untouched
-  window.setItemPose=function(id,pos,rot){ const g=ITEM_GROUPS[id]; if(!g) return null; if(pos) g.userData.pos=pos.slice(); if(rot!=null) g.userData.rot=rot; poseGroup(g); physGroup.updateMatrixWorld(true); return g; };
+  // the one pose operation: group, physics, then dependants (markup binds, layout selection) via POSE_HOOKS (B02/B03)
+  window.POSE_HOOKS=[];
+  window.setItemPose=function(id,pos,rot){ const g=ITEM_GROUPS[id]; if(!g) return null; if(pos) g.userData.pos=pos.slice(); if(rot!=null) g.userData.rot=rot; poseGroup(g); physGroup.updateMatrixWorld(true); POSE_HOOKS.forEach(f=>f(id)); return g; };
 })();
 Object.values(LAYERS).forEach(g=>scene.add(g)); scene.add(physGroup);
 document.getElementById('furn').addEventListener('change',e=>furnGroup.visible=e.target.checked);

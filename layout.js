@@ -46,6 +46,7 @@
     return (side==='W'||side==='E')?[u.pos[0],pos[1]]:[pos[0],u.pos[1]];
   }
   LAY.setPose=setPose; LAY.undo=undo; LAY.constrain=constrain;
+  POSE_HOOKS.push(id=>{ if(LAY.sel&&LAY.sel.userData.id===id) select(id); }); // selection frame and card follow a pose set from anywhere
 
   // ---------- warnings ----------
   function aabb(id){ const c=itemCorners(id); return [Math.min(...c.map(q=>q[0])),Math.min(...c.map(q=>q[1])),Math.max(...c.map(q=>q[0])),Math.max(...c.map(q=>q[1]))]; }

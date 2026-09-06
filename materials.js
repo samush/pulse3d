@@ -16,6 +16,13 @@ const MATERIALS={
   wall:     {name:'стена',                rough:0.95},
   facade:   {name:'фасад (камень, панели)', rough:0.85, bump:0.2, albedo:0.95},
   furniture:{name:'мебель (концепт)',     rough:0.8},
+  // item material slots (items.js SLOTS): physical class of a detail, independent of its concept colour
+  chrome:   {name:'хром (ручки, смесители)', rough:0.25, metal:0.9},
+  metal:    {name:'металл окрашенный',    rough:0.45, metal:0.6},
+  glass:    {name:'стекло, ограждения',   rough:0.05},
+  fabric:   {name:'ткань, матрасы, ковры', rough:0.95},
+  emitter:  {name:'светящаяся поверхность (LED)', rough:0.6, emissive:true},
+  screen:   {name:'экран телевизора',     rough:0.15},
 };
 const VIZ={on:false,ready:false,std:new Map(),basic:new Map()};
 window.VIZ=VIZ; window.MATERIALS=MATERIALS;
@@ -32,7 +39,7 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
       id.data[i]=(n.x*0.5+0.5)*255; id.data[i+1]=(n.y*0.5+0.5)*255; id.data[i+2]=(n.z*0.5+0.5)*255; id.data[i+3]=255; } g.putImageData(id,0,0); return c; }
   function texLike(src,canvas){ const t=new THREE.CanvasTexture(canvas); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.copy(src.repeat); return t; }
   function stdFor(key,basic){ // PBR twin of a simple material; maps from the same image, same repeat
-    const spec=MATERIALS[key]||MATERIALS.furniture; const m=new THREE.MeshStandardMaterial({color:basic.color?basic.color.clone():0xffffff,roughness:spec.rough,metalness:0.0,transparent:basic.transparent,opacity:basic.opacity,depthWrite:basic.depthWrite,side:basic.side});
+    const spec=MATERIALS[key]||MATERIALS.furniture; const m=new THREE.MeshStandardMaterial({color:basic.color?basic.color.clone():0xffffff,roughness:spec.rough,metalness:spec.metal||0,transparent:basic.transparent,opacity:basic.opacity,depthWrite:basic.depthWrite,side:basic.side,emissive:spec.emissive?basic.color.clone():0x000000});
     m.color.multiplyScalar(spec.albedo!=null?spec.albedo:0.85); // white paint/tile reflect ~85 %, otherwise ACES burns everything out
     if(basic.map&&basic.map.image){ m.map=basic.map; if(spec.bump){ m.roughnessMap=texLike(basic.map,roughMap(basic.map.image,spec.rough)); m.normalMap=texLike(basic.map,normalMap(basic.map.image,4)); m.normalScale=new THREE.Vector2(spec.bump,spec.bump); }
       if(spec.image){ new THREE.TextureLoader().load(spec.image,t=>{ t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/spec.size[0],1/spec.size[1]); t.encoding=THREE.sRGBEncoding; m.map=t; m.needsUpdate=true; },undefined,()=>{ VIZ.loadErrors=(VIZ.loadErrors||[]).concat(key+': '+spec.image); }); } }
@@ -44,7 +51,7 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
     Object.entries(fm).forEach(([k,b])=>{ VIZ.std.set(b,stdFor(k,b)); });
     VIZ.std.set(wallMat,stdFor('wall',wallMat));
     facadeMats.forEach(b=>VIZ.std.set(b,stdFor('facade',b)));
-    Object.values(ITEM_GROUPS).forEach(g=>g.traverse(o=>{ if(o.isMesh&&!VIZ.std.has(o.material)){ const b=o.material; const m=new THREE.MeshStandardMaterial({color:b.color.clone(),roughness:MATERIALS.furniture.rough,metalness:0,transparent:b.transparent,opacity:b.opacity,emissive:b.type==='MeshBasicMaterial'?b.color.clone():0x000000}); VIZ.std.set(b,m); } }));
+    Object.values(ITEM_GROUPS).forEach(g=>g.traverse(o=>{ if(o.isMesh&&!VIZ.std.has(o.material)){ const b=o.material; VIZ.std.set(b,stdFor(b.userData.slot||'furniture',b)); } }));
     VIZ.std.forEach((s,b)=>VIZ.basic.set(s,b));
     // sun with shadows on top of the existing lights
     sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); const sc=sun.shadow.camera; sc.left=-9; sc.right=9; sc.top=8; sc.bottom=-8; sc.near=1; sc.far=40; sun.shadow.bias=-0.0006; sun.shadow.normalBias=0.02;
