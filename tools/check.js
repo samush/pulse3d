@@ -598,6 +598,22 @@ const { chromium } = require('playwright');
   await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'tile-joint.png') }); await page.evaluate(() => { document.getElementById('kwall').checked = true; document.getElementById('kwall').dispatchEvent(new Event('change')); });
   await page.evaluate(() => controls.setFPV(7.0, 7.0, Math.PI / 2 - 0.5)); await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(outDir, 'tile-walk.png') });
+  // facade: one cladding mesh per outer face with windows (west, two east faces), holes equal the windows on that face, follows the walls slider and gets a PBR twin
+  const fc = await page.evaluate(() => {
+    const meshes = []; facadeGroup.traverse(o => { if (o.isMesh) meshes.push(o); });
+    const holes = meshes.reduce((n, m) => n + m.geometry.parameters.shapes.holes.length, 0);
+    const wop = document.getElementById('wop'); wop.value = 0; wop.dispatchEvent(new Event('input')); const hid = !facadeGroup.visible; wop.value = 100; wop.dispatchEvent(new Event('input'));
+    VIZ.set(true); setView('fpv'); VIZ.apply && VIZ.apply(); const std = meshes[0].material.type; VIZ.set(false);
+    return { n: meshes.length, holes, hid, std, shown: facadeGroup.visible };
+  });
+  if (fc.n !== 3) problems.push('фасад: мешей ' + fc.n + ' (нужно 3: запад, восток 15.249 и 14.801)');
+  if (fc.holes !== 4) problems.push('фасад: вырезов под окна ' + fc.holes + ' (нужно 4)');
+  if (!fc.hid || !fc.shown) problems.push('фасад: не следует за ползунком «Стены»');
+  if (fc.std !== 'MeshStandardMaterial') problems.push('фасад: в визуализации материал ' + fc.std);
+  for (const [name, x, z, th] of [['facade-west', -4.5, 3.4, Math.PI / 2 + 0.35], ['facade-east', 20.0, 6.5, -Math.PI / 2 - 0.3]]) {
+    await page.evaluate(([x, z, th]) => { setView('fpv'); controls.setFPV(x, z, th); }, [x, z, th]); await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(outDir, name + '.png') });
+  }
   console.log(`  кадров/с: план ${fpsPlain}, визуализация ${fpsViz} (viewport 1400×1000, прогулка в кухне)`);
   await browser.close();
 

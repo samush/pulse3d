@@ -14,6 +14,7 @@ const MATERIALS={
   plinth:   {name:'плинтус белый',        rough:0.7},
   frame:    {name:'дверная коробка белая', rough:0.7},
   wall:     {name:'стена',                rough:0.95},
+  facade:   {name:'фасад (камень, панели)', rough:0.85, bump:0.2, albedo:0.95},
   furniture:{name:'мебель (концепт)',     rough:0.8},
 };
 const VIZ={on:false,ready:false,std:new Map(),basic:new Map()};
@@ -42,6 +43,7 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
     const fm=window.finishMats||{};
     Object.entries(fm).forEach(([k,b])=>{ VIZ.std.set(b,stdFor(k,b)); });
     VIZ.std.set(wallMat,stdFor('wall',wallMat));
+    facadeMats.forEach(b=>VIZ.std.set(b,stdFor('facade',b)));
     Object.values(ITEM_GROUPS).forEach(g=>g.traverse(o=>{ if(o.isMesh&&!VIZ.std.has(o.material)){ const b=o.material; const m=new THREE.MeshStandardMaterial({color:b.color.clone(),roughness:MATERIALS.furniture.rough,metalness:0,transparent:b.transparent,opacity:b.opacity,emissive:b.type==='MeshBasicMaterial'?b.color.clone():0x000000}); VIZ.std.set(b,m); } }));
     VIZ.std.forEach((s,b)=>VIZ.basic.set(s,b));
     // sun with shadows on top of the existing lights
@@ -52,7 +54,7 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
   function apply(){ // effective state: visualization on and not in plan mode
     const on=VIZ.on&&!controls.plan;
     if(on) prepare();
-    if(VIZ.ready){ [finishGroup,tileGroup,wallGroup,wallGroupR].forEach(g=>swap(g,on)); Object.values(ITEM_GROUPS).forEach(g=>swap(g,on)); }
+    if(VIZ.ready){ [finishGroup,tileGroup,wallGroup,wallGroupR,facadeGroup].forEach(g=>swap(g,on)); Object.values(ITEM_GROUPS).forEach(g=>swap(g,on)); }
     renderer.outputEncoding=on?THREE.sRGBEncoding:THREE.LinearEncoding;
     renderer.toneMapping=on?THREE.ACESFilmicToneMapping:THREE.NoToneMapping; renderer.toneMappingExposure=on?0.75:1.0;
     renderer.shadowMap.enabled=on; renderer.shadowMap.type=THREE.PCFSoftShadowMap;

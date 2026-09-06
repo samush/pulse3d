@@ -280,6 +280,34 @@ baseGeo.rotateX(-Math.PI/2); baseGeo.translate(0,-0.12,0);
 const baseMat=new THREE.MeshLambertMaterial({color:0xcfcabf});
 scene.add(new THREE.Mesh(baseGeo,baseMat));
 
+// facade: cladding on the outer faces that carry windows (sand stone tiles, dark panels around windows, white floor belt — as on the real building)
+var facadeGroup=new THREE.Group(), facadeMats=[]; // one material per face: each face has its own canvas
+(function(){
+  const PX=96, BELT=0.37, Y0=-0.12, HT=H-Y0, STRIP=0.35; // px per metre; belt covers the slab edge and the wall foot
+  const o=PLAN.outer, faces=[];
+  for(let i=0;i<o.length;i++){ const a=o[i], b=o[(i+1)%o.length]; if(Math.abs(a[0]-b[0])<1e-6) faces.push({i,x:a[0],z0:Math.min(a[1],b[1]),z1:Math.max(a[1],b[1]),wins:[]}); } // only x=const faces carry windows in this plan
+  PLAN.windows.forEach(w=>{ const f=faces.filter(f=>f.z0<w.z1&&f.z1>w.z0).sort((p,q)=>Math.abs(p.x-w.x)-Math.abs(q.x-w.x))[0]; if(f) f.wins.push(w); }); // room 3 window hangs past its face: nearest face by x, hole clipped below
+  faces.forEach(({i,x,z0,z1,wins})=>{
+    if(!wins.length) return;
+    const L=z1-z0, nx=wins[0].nx, u=z=>Math.min(L-0.01,Math.max(0.01,nx>0?z1-z:z-z0)); // local u runs along the face so the front side looks outward; 1 cm inset keeps holes off the shape edge
+    const c=document.createElement('canvas'); c.width=Math.round(L*PX); c.height=Math.round(HT*PX); const g=c.getContext('2d');
+    const rect=(u0,u1,y0,y1,col)=>{ g.fillStyle=col; g.fillRect(u0*PX,(HT-y1)*PX,(u1-u0)*PX,(y1-y0)*PX); };
+    const tones=['#c9b47f','#c2ab74','#d0bc8a','#bda66c','#d6c497','#b8a068'];
+    g.fillStyle='#a9945f'; g.fillRect(0,0,c.width,c.height); // joints
+    for(let ty=0;ty*0.6<HT;ty++) for(let tx=0;tx*0.6<L;tx++){ const k=(tx*7+ty*13+i*3)%tones.length; rect(tx*0.6+0.005,(tx+1)*0.6-0.005,ty*0.6+0.005,(ty+1)*0.6-0.005,tones[k]); }
+    wins.forEach(w=>{ const u0=Math.max(0,Math.min(u(w.z0),u(w.z1))-STRIP), u1=Math.min(L,Math.max(u(w.z0),u(w.z1))+STRIP); rect(u0,u1,0,HT,'#45484b'); rect(u0+0.02,u1-0.02,0,HT,'#4d5054'); });
+    rect(0,L,0,BELT,'#e6e4de');
+    const mat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)}); facadeMats.push(mat);
+    const sh=new THREE.Shape(); sh.moveTo(0,0); sh.lineTo(L,0); sh.lineTo(L,HT); sh.lineTo(0,HT); sh.closePath();
+    sh.holes=wins.map(w=>{ const p=new THREE.Path(), u0=Math.min(u(w.z0),u(w.z1)), u1=Math.max(u(w.z0),u(w.z1)); p.moveTo(u0,w.y0-Y0); p.lineTo(u1,w.y0-Y0); p.lineTo(u1,w.y1-Y0); p.lineTo(u0,w.y1-Y0); p.closePath(); return p; });
+    const geo=new THREE.ShapeGeometry(sh); const uv=geo.attributes.uv; for(let k=0;k<uv.count;k++) uv.setXY(k,uv.getX(k)/L,uv.getY(k)/HT);
+    geo.rotateY(nx>0?Math.PI/2:-Math.PI/2);
+    const m=new THREE.Mesh(geo,mat); m.position.set(x+nx*0.005,Y0,nx>0?z1:z0);
+    facadeGroup.add(m);
+  });
+})();
+scene.add(facadeGroup);
+
 // cubes
 const cubeGroup=new THREE.Group();
 const edgeMat=new THREE.LineBasicMaterial({color:0x2c5aa0,transparent:true,opacity:.6});
@@ -396,8 +424,8 @@ const wop=document.getElementById('wop'),wov=document.getElementById('wov');
 const fade=(m,v)=>{ m.opacity=v; m.transparent=v<0.999; m.depthWrite=v>=0.5; m.needsUpdate=true; const s=window.VIZ&&VIZ.std.get(m); if(s) fade(s,v); }; // PBR twin follows the basic material
 wop.addEventListener('input',()=>{
   const v=wop.value/100;
-  fade(wallMat,v);
-  wallGroup.visible=v>0.01;
+  fade(wallMat,v); facadeMats.forEach(m=>fade(m,v));
+  wallGroup.visible=v>0.01; facadeGroup.visible=v>0.01;
   wallGroupR.visible=v>0.01&&document.getElementById('kwall').checked;
   wallEdgeMat.opacity=1;
   // настенная отделка следует за стенами: та же прозрачность, скрывается вместе с ними; пол не трогаем
