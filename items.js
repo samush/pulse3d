@@ -408,7 +408,7 @@ const PHYS={}; // id → boxes
     // Room box: x 8.172–9.872, z 8.122–9.872, door on the east wall z 8.55–9.25. Basin, mirror and towel rail on the north side,
     // cistern box and toilet on the south. Tiles follow PLAN.baths (north face at z 8.181, west at x 8.222, others wall+0.02), so wall-mounted parts start in front of them.
     // The passage strip x 8.872–9.872 × z 8.55–9.25 stays empty except the tub, which ends it (free depth ≥ 0.80, check.js).
-    {id:'tub',type:'ванна акриловая каплевидная 1.60 вдоль западной стены: северный торец 0.45, выпуклая кромка расширяется к южному торцу 0.99 у короба и унитаза',room:9,layer:'bath',pos:[8.172,8.147],rot:0,size:[0.99,0.58,1.60],fixed:'wall',
+    {id:'tub',type:'ванна акриловая каплевидная 1.60 вдоль западной стены: северный торец 0.45, выпуклая кромка расширяется к южному торцу 0.99 у короба и унитаза',room:9,layer:'bath',pos:[8.172,8.147],rot:0,size:[0.99,0.58,1.60],glb:'models/tub.glb',fixed:'wall',
      build(b,g){
        const L=1.60, W=0.05;
        // outer edge width from the wall: one monotone parabola 0.45 → 0.99, widest at the south end by the toilet (convex outline,

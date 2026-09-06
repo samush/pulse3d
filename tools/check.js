@@ -306,6 +306,10 @@ const { chromium } = require('playwright');
     const one = ['sw3', 'sw4', 'sw6', 'sock14', 'sock15', 'sock16', 'sock17', 'sock18', 'sock19', 'sock20', 'led4', 'led5'], ids = ['mcab', 'mward', 'mconsole', 'vanity', 'vmirror', 'mtv', 'mrug', 'mcurtain', 'mlight', 'bra5', 'bra6', 'bra7', 'bra8'].concat(one);
     const bad = ids.filter(id => !fit(id)); one.forEach(id => { if (PHYS[id].length !== 1) bad.push(id + ':phys'); }); return bad; });
   if (fitD.length) problems.push('этап D: детали вне size или proxy розеток/LED не один бокс: ' + fitD.join(' '));
+  // realism-all stage E: tub GLB loaded without warnings, its 5 proxy boxes untouched
+  const tubE = await page.evaluate(async () => { const g = ITEM_GROUPS.tub; for (let i = 0; i < 100 && !g.userData.glbLoaded && !(VIZ.loadErrors || []).some(s => s.startsWith('tub:')); i++) await new Promise(r => setTimeout(r, 100));
+    return { loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), boxes: PHYS.tub.length }; });
+  if (!tubE.loaded || tubE.warn || tubE.boxes !== 5) problems.push('glb: tub — ' + JSON.stringify(tubE));
   // realism-all stage E: wc and wc8 share one GLB (3 geometries), loaded without warnings, proxies as before
   const wcE = await page.evaluate(async () => { const ids = ['wc', 'wc8']; for (let i = 0; i < 100 && !ids.every(id => ITEM_GROUPS[id].userData.glbLoaded || (VIZ.loadErrors || []).some(s => s.startsWith(id + ':'))); i++) await new Promise(r => setTimeout(r, 100));
     const geos = new Set(); ids.forEach(id => ITEM_GROUPS[id].traverse(o => { if (o.isMesh) geos.add(o.geometry); }));
