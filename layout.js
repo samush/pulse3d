@@ -58,14 +58,14 @@
       const o=aabb(it.id);
       const ox=Math.min(b[2],o[2])-Math.max(b[0],o[0]), oz=Math.min(b[3],o[3])-Math.max(b[1],o[1]);
       if(ox>0.005&&oz>0.005){ if(hits3d(id,it.id)) w.push('пересекается с '+it.id+' ('+it.type+')'); }
-      else if(onFloor(id)&&onFloor(it.id)){ const gap=minGap(id,it.id); if(gap!=null) w.push('проход до '+it.id+' '+gap.toFixed(2)+' м (< '+PASS+')'); }
+      else if(it.room===u.room&&onFloor(id)&&onFloor(it.id)){ const gap=minGap(id,it.id); if(gap!=null) w.push('проход до '+it.id+' '+gap.toFixed(2)+' м (< '+PASS+')'); }
     });
     return w;
   }
   const bbox=id=>new THREE.Box3().setFromObject(ITEM_GROUPS[id]);
   const passive=id=>{ const bb=bbox(id); return bb.min.y>=1.9||bb.max.y<=0.02; }; // hanging (above head) or flat (rug) items block nothing
   const onFloor=id=>bbox(id).min.y<0.05; // passage matters only between floor-standing items
-  // narrowest corridor between parts of two items (below head height) that face each other along one axis;
+  // narrowest corridor between parts of two items of the same room (a wall separates rooms, so no corridor across them) (below head height) that face each other along one axis;
   // per part, not per item box: the loft bed's box covers the empty space under it; diagonal corners are not a corridor
   function minGap(a,b){ let best=null; const P=id=>PHYS[id].map(m=>new THREE.Box3().setFromObject(m)).filter(x=>x.min.y<1.9);
     P(a).forEach(x=>P(b).forEach(y=>{ const ox=Math.min(x.max.x,y.max.x)-Math.max(x.min.x,y.min.x), oz=Math.min(x.max.z,y.max.z)-Math.max(x.min.z,y.min.z);
