@@ -114,49 +114,48 @@ const PHYS={}; // id → boxes
      }},
     // ---- kids room 1 (tasks/room1-kid/README.md, marks M1–M30) ----
     // Room box: x 0.896–5.445, z 1.874–4.864. Wall-mounted boxes sit 0.02–0.03 in front of the wall so they show over the wallpaper (0.015).
-    {id:'kidbed',type:'кровать-чердак с лестницей-комодом и полкой хранения',room:1,layer:'kid',pos:[2.835,1.884],rot:0,size:[2.6,2.6,2.97],fixed:'wall',build:kidBedBuild(2.0,mat.oak,mat.terra)},
-    {id:'kiddesk',type:'угловой стол: вдоль окна 2.39 м и вдоль южной стены 1.23 м',room:1,layer:'kid',pos:[0.896,2.474],rot:0,size:[1.234,0.72,2.39],fixed:'wall',
-     build(b){
-       b(0,0.45,0.68,0.72,0,2.39,mat.hpl); b(0.45,1.234,0.68,0.72,1.79,2.39,mat.hpl);                 // worktop: west wing (depth 0.45, like the shelf unit) and south wing (depth 0.60)
-       b(0.02,0.43,0,0.68,0,0.02,mat.kbody); b(1.214,1.234,0,0.68,1.81,2.37,mat.kbody);               // end panels: north (at the shelf unit) and east
-       b(0.05,0.43,0,0.68,0.98,1.0,mat.kbody);                                                        // middle support under the west wing, clear of the chair
-       b(0.10,0.20,0.72,0.725,0.59,1.19,mat.knob);                                                     // vent grille over the radiator, 0.60 × 0.10
-     }},
-    {id:'kidped',type:'тумба с 3 ящиками у торца стола, столешница вровень',room:1,layer:'kid',pos:[2.13,4.364],rot:0,size:[0.42,0.72,0.50],fixed:'wall',
-     build(b){ b(0.02,0.40,0,0.68,0.02,0.50,mat.kbody); b(0,0.42,0.68,0.72,0,0.50,mat.hpl);
-       [0.06,0.26,0.46].forEach(y=>{ b(0.02,0.40,y,y+0.18,0,0.02,mat.oak); b(0.135,0.285,y+0.11,y+0.13,-0.015,0,mat.knob); }); }}, // drawer fronts to the room
-    {id:'kidchair',type:'рабочее кресло, регулируемое',room:1,layer:'kid',pos:[1.30,3.60],rot:0,size:[0.55,0.85,0.55],
+    {id:'kidbed',type:'кровать-чердак с лестницей-комодом и полкой хранения',room:1,layer:'kid',pos:[2.835,1.884],rot:0,size:[2.6,2.6,2.97],fixed:'wall',build:kidBedBuild(2.0,mat.wdoor,mat.cushion)},
+    {id:'kiddesk',type:'стол прямой 1.94 × 0.60 вдоль южной стены, от западной стены до стойки кровати; стеллаж у окна стоит на его западном краю',room:1,layer:'kid',pos:[0.896,4.264],rot:0,size:[1.939,0.72,0.60],fixed:'wall',
+     build(b){ b(0,1.939,0.68,0.72,0,0.60,mat.kbody); b(0.02,0.04,0,0.68,0.02,0.58,mat.kbody); b(1.899,1.919,0,0.68,0.02,0.58,mat.kbody); }}, // worktop, end panels (the pedestal carries the east half)
+    {id:'kidped',type:'тумба с 3 ящиками под столом у восточного торца, фасады к комнате',room:1,layer:'kid',pos:[2.375,4.364],rot:0,size:[0.42,0.68,0.50],
+     build(b){ b(0.02,0.40,0,0.68,0.02,0.50,mat.kbody);
+       [0.06,0.26,0.46].forEach(y=>{ b(0.02,0.40,y,y+0.18,0,0.02,mat.wdoor); b(0.135,0.285,y+0.11,y+0.13,-0.015,0,mat.knob); }); }},
+    {id:'kidchair',type:'рабочее кресло, регулируемое, лицом к столу',room:1,layer:'kid',pos:[1.55,4.20],rot:270,size:[0.55,0.85,0.55],
      build(b,g){
-       b(0.05,0.50,0.42,0.47,0.05,0.50,mat.terra); b(0.50,0.55,0.47,0.85,0.08,0.47,mat.terra);      // seat and back, faces the window
+       b(0.05,0.50,0.42,0.47,0.05,0.50,mat.cushion); b(0.50,0.55,0.47,0.85,0.08,0.47,mat.cushion);   // seat and back; rot 270 puts the back on the north side
        const c=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.39,10),mat.knob); c.position.set(0.275,0.225,0.275); g.add(c); // gas lift
        b(0.03,0.52,0,0.03,0.26,0.29,mat.knob); b(0.26,0.29,0,0.03,0.03,0.52,mat.knob);                // base cross
      }},
-    {id:'kidshelf',type:'стеллаж узкий в углу, фасадом к двери',room:1,layer:'kid',pos:[0.896,2.474],rot:270,size:[0.60,2.70,0.43],fixed:'wall',
+    {id:'kidshelf',type:'стеллаж узкий в северо-западном углу, фасадом к двери; 0.50 вдоль стены — на 0.10 уже, чтобы открыть окно',room:1,layer:'kid',pos:[0.896,2.374],rot:270,size:[0.50,2.70,0.43],fixed:'wall',
      build(b){
-       const W=0.60, D=0.40, t=0.02;
-       b(0,W,0,t,0,D,mat.kbody); b(0,W,2.7-t,2.7,0,D,mat.kbody); b(0,W,t,2.7-t,0,t,mat.oak);           // bottom, top, oak back
+       const W=0.50, D=0.40, t=0.02;
+       b(0,W,0,t,0,D,mat.kbody); b(0,W,2.7-t,2.7,0,D,mat.kbody); b(0,W,t,2.7-t,0,t,mat.wpanel);           // bottom, top, oak back
        b(0,t,t,2.7-t,t,D,mat.kbody); b(W-t,W,t,2.7-t,t,D,mat.kbody);                                  // sides
        [0.90,1.27,1.63,2.00].forEach(y=>b(t,W-t,y-t,y,t,D,mat.kbody));                                 // shelves: closed 0–0.9, open cells 0.9–2.0, attic 2.0–2.7
-       b(t+0.003,W-t-0.003,t+0.003,0.90-t-0.003,D,D+0.018,mat.oak); b(W/2-0.005,W/2+0.005,0.78,0.86,D+0.018,D+0.03,mat.knob);   // lower door
-       b(t+0.003,W-t-0.003,2.0+0.003,2.7-t-0.003,D,D+0.018,mat.oak); b(W/2-0.005,W/2+0.005,2.05,2.13,D+0.018,D+0.03,mat.knob); // attic door
+       b(t+0.003,W-t-0.003,t+0.003,0.90-t-0.003,D,D+0.018,mat.wpanel); b(W/2-0.005,W/2+0.005,0.78,0.86,D+0.018,D+0.03,mat.knob);   // lower door
+       b(t+0.003,W-t-0.003,2.0+0.003,2.7-t-0.003,D,D+0.018,mat.wpanel); b(W/2-0.005,W/2+0.005,2.05,2.13,D+0.018,D+0.03,mat.knob); // attic door
      }},
-    {id:'kidshelf2',type:'стеллаж узкий с открытыми полками в юго-западном углу, от стола до потолка',room:1,layer:'kid',pos:[0.896,4.864],rot:270,size:[0.60,2.70,0.25],fixed:'wall',
+    {id:'kidshelf2',type:'стеллаж узкий с открытыми полками в юго-западном углу, от стола до потолка; 0.50 вдоль стены',room:1,layer:'kid',pos:[0.896,4.864],rot:270,size:[0.50,2.70,0.25],fixed:'wall',
      build(b){
-       const W=0.60, D=0.25, t=0.02, Y0=0.72; // shallow: 0.20 of the desk stays usable in front of it
-       b(0,W,Y0,Y0+t,0,D,mat.kbody); b(0,W,2.7-t,2.7,0,D,mat.kbody); b(0,W,Y0+t,2.7-t,0,t,mat.oak);   // bottom on the desk, top, oak back
+       const W=0.50, D=0.25, t=0.02, Y0=0.72; // shallow: 0.20 of the desk stays usable in front of it
+       b(0,W,Y0,Y0+t,0,D,mat.kbody); b(0,W,2.7-t,2.7,0,D,mat.kbody); b(0,W,Y0+t,2.7-t,0,t,mat.wpanel);   // bottom on the desk, top, oak back
        b(0,t,Y0+t,2.7-t,t,D,mat.kbody); b(W-t,W,Y0+t,2.7-t,t,D,mat.kbody);                        // sides
        [1.20,1.70,2.20].forEach(y=>b(t,W-t,y-t,y,t,D,mat.kbody));                                  // 4 open cells
      }},
-    {id:'kidshelf3',type:'полка над окном между стеллажами, одна открытая ячейка',room:1,layer:'kid',pos:[0.896,2.474],rot:0,size:[0.40,2.70,1.79],fixed:'wall',
-     build(b){ b(0,0.40,2.30,2.32,0,1.79,mat.kbody); b(0,0.40,2.68,2.70,0,1.79,mat.kbody); b(0,0.02,2.32,2.68,0,1.79,mat.oak); }}, // bottom, top, oak back over the window lintel
+    {id:'kidshelf3',type:'полка над окном между стеллажами, одна открытая ячейка 1.99',room:1,layer:'kid',pos:[0.896,2.374],rot:0,size:[0.40,2.70,1.99],fixed:'wall',
+     build(b){ b(0,0.40,2.30,2.32,0,1.99,mat.kbody); b(0,0.40,2.68,2.70,0,1.99,mat.kbody); b(0,0.02,2.32,2.68,0,1.99,mat.wpanel); }},
+    {id:'windowseat1',type:'лежанка у окна между стеллажами с 2 глубокими ящиками и матрасиком, 1.89 × 0.60 (как в комнате 2)',room:1,layer:'kid',pos:[0.896,2.374],rot:0,size:[0.60,0.65,1.89],fixed:'wall',
+     build(b){ const L=1.89, D=0.60; b(0.02,0.55,0,0.05,0.05,L-0.05,mat.dark); b(0,0.58,0.05,0.45,0,L,mat.body);
+       [0.01,L/2+0.005].forEach(z=>{ b(0.58,0.60,0.06,0.44,z,z+L/2-0.015,mat.wdoor); b(0.60,0.615,0.24,0.26,z+0.39,z+0.54,mat.handle); }); // deep drawers, fronts east
+       b(0,0.58,0.45,0.53,0.02,L-0.02,mat.kmat); [0.05,L-0.35].forEach(z=>b(0.10,0.50,0.53,0.65,z,z+0.30,mat.pillow)); }},   // mattress and two pillows at the shelf units // bottom, top, oak back over the window lintel
     {id:'kidsofa',type:'диванчик в нише под кроватью',room:1,layer:'kid',pos:[4.65,2.05],rot:0,size:[0.75,0.80,1.60],
      build(b){
-       b(0,0.75,0.10,0.45,0,1.60,mat.fabric); b(0.60,0.75,0.45,0.80,0,1.60,mat.fabric);            // seat and back to the east wall
-       b(0,0.60,0.45,0.60,0,0.15,mat.fabric); b(0,0.60,0.45,0.60,1.45,1.60,mat.fabric);              // armrests
+       b(0,0.75,0.10,0.45,0,1.60,mat.sofa); b(0.60,0.75,0.45,0.80,0,1.60,mat.sofa);            // seat and back to the east wall
+       b(0,0.60,0.45,0.60,0,0.15,mat.sofa); b(0,0.60,0.45,0.60,1.45,1.60,mat.sofa);              // armrests
        [[0.03,0.03],[0.69,0.03],[0.03,1.54],[0.69,1.54]].forEach(([x,z])=>b(x,x+0.03,0,0.10,z,z+0.03,mat.knob)); // legs
      }},
     {id:'kidrug',type:'ковёр моющийся',room:1,layer:'kid',pos:[2.15,2.60],rot:0,size:[1.60,0.01,1.70],
-     build(b){ b(0,1.6,0,0.01,0,1.7,mat.rug); }},
+     build(b){ b(0,1.6,0,0.01,0,1.7,mat.wpanel); }},
     {id:'projector',type:'проектор короткофокусный на потолке (throw ≈0.57, экран M13)',room:1,layer:'kid',pos:[2.15,3.235],rot:0,size:[0.30,2.70,0.25],fixed:'wall',
      build(b,g){ b(0,0.30,2.44,2.56,0,0.25,mat.kbody); b(0.02,0.06,2.47,2.53,-0.005,0,mat.knob); const c=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.14,8),mat.knob); c.position.set(0.15,2.63,0.125); g.add(c); }}, // body, lens to the west, bracket
     {id:'screen',type:'кассета моторизованного экрана 1.70×0.96 под полкой (свёрнут)',room:1,layer:'kid',pos:[0.99,2.474],rot:0,size:[0.12,2.30,1.79],fixed:'wall',
@@ -178,7 +177,7 @@ const PHYS={}; // id → boxes
     {id:'sock2',type:'розетки 2+2 USB у стола, восточный торец',room:1,layer:'kid',pos:[2.06,4.834],rot:0,size:[0.08,0.94,0.01],fixed:'wall',build(b){ b(0,0.08,0.86,0.94,0,0.01,mat.lamp); }},
     {id:'sock3',type:'розетка + USB в нише под кроватью, вывод HDMI от проектора',room:1,layer:'kid',pos:[5.415,3.69],rot:0,size:[0.01,0.44,0.08],fixed:'wall',build(b){ b(0,0.01,0.36,0.44,0,0.08,mat.lamp); }},
     {id:'sock4',type:'розетка у изголовья кровати (ночник, телефон)',room:1,layer:'kid',pos:[4.66,1.894],rot:0,size:[0.08,2.09,0.01],fixed:'wall',build(b){ b(0,0.08,2.01,2.09,0,0.01,mat.lamp); }},
-    {id:'sock5',type:'розетка общего назначения (пылесос, увлажнитель)',room:1,layer:'kid',pos:[2.56,4.834],rot:0,size:[0.08,0.34,0.01],fixed:'wall',build(b){ b(0,0.08,0.26,0.34,0,0.01,mat.lamp); }},
+    {id:'sock5',type:'розетка общего назначения (пылесос, увлажнитель), восточнее стойки кровати',room:1,layer:'kid',pos:[2.96,4.834],rot:0,size:[0.08,0.34,0.01],fixed:'wall',build(b){ b(0,0.08,0.26,0.34,0,0.01,mat.lamp); }},
     {id:'sock6',type:'розетка в потолке для проектора',room:1,layer:'kid',pos:[2.26,3.51],rot:0,size:[0.08,2.70,0.08],fixed:'wall',build(b){ b(0,0.08,2.69,2.70,0,0.08,mat.lamp); }},
     {id:'sock7',type:'розетка в потолке для мотора экрана',room:1,layer:'kid',pos:[1.06,2.11],rot:0,size:[0.08,2.70,0.08],fixed:'wall',build(b){ b(0,0.08,2.69,2.70,0,0.08,mat.lamp); }},
     // ---- kids room 2 (tasks/room2-kid/README.md, marks M1–M22; grey materials only) ----
