@@ -252,6 +252,15 @@ const { chromium } = require('playwright');
   // realism-living step 3: a GLB that fails to load leaves the procedural item and its proxy, error noted in VIZ.loadErrors
   const glbFallback = await page.evaluate(async () => { const n0 = ITEM_GROUPS.sofa.children.length, ok = await loadItemGlb('sofa', 'models/absent.glb');
     return ok === false && ITEM_GROUPS.sofa.children.length === n0 && PHYS.sofa.length === 1 && (VIZ.loadErrors || []).some(s => /sofa: models\/absent/.test(s)); });
+  // realism-living step 4: model validation — warnings for wrong units, offset pivot, floating bottom and a back on the wrong side; none for a correct model
+  const glbCheck = await page.evaluate(() => {
+    const box = (w, h, d, x, y, z, s = 1) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d)); m.position.set(x, y, z); m.scale.setScalar(s); const r = new THREE.Group(); r.add(m); return r; };
+    const good = new THREE.Group(); good.add(box(2, 0.42, 0.88, 1, 0.21, 0.44).children[0]); good.add(box(2, 0.43, 0.25, 1, 0.635, 0.755).children[0]); // seat block + back at z=size[2]
+    const front = new THREE.Group(); front.add(box(2, 0.42, 0.88, 1, 0.21, 0.44).children[0]); front.add(box(2, 0.43, 0.25, 1, 0.635, 0.125).children[0]);
+    const v = (m) => validateItemGlb('sofa', m, ITEM_GROUPS.sofa).join('|');
+    return { good: v(good) === '', units: /units/.test(v(box(200, 85, 88, 100, 42.5, 44))), pivot: /outside/.test(v(box(2, 0.85, 0.88, 0, 0.425, 0.44))), floor: /bottom/.test(v(box(2, 0.75, 0.88, 1, 0.475, 0.44))), facade: /facade/.test(v(front)) };
+  });
+  Object.entries(glbCheck).forEach(([k, ok]) => { if (!ok) problems.push('glb: проверка модели «' + k + '» не сработала (realism-living §9.4)'); });
   if (!glbFallback) problems.push('glb: при ошибке загрузки предмет не остался процедурным или ошибка не записана в VIZ.loadErrors');
   if (!g1.sofaOne || !g1.sofaRot) problems.push('proxy: диван не один бокс или не следует за поворотом (B02)');
   if (!g1.bedFew) problems.push('proxy: кровать-чердак/ванна не используют явные боксы (B02)');
