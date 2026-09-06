@@ -259,6 +259,13 @@ const { chromium } = require('playwright');
   if (!sofaGlb.loaded) problems.push('glb: models/sofa.glb не загрузился: ' + JSON.stringify(sofaGlb));
   else { if (sofaGlb.warn) problems.push('glb: sofa — предупреждения валидации: ' + sofaGlb.warn);
     if (sofaGlb.size !== '2,0.85,0.88' || sofaGlb.slots !== 'fabric,metal' || !sofaGlb.grey || sofaGlb.boxes !== 1) problems.push('glb: sofa — габарит/слоты/серый/proxy не сошлись: ' + JSON.stringify(sofaGlb)); }
+  // realism-living step 6: six chairs from one GLB — every chair loaded without warnings, one shared geometry per material, back on the table side
+  const chairGlb = await page.evaluate(async () => { const ids = [1, 2, 3, 4, 5, 6].map(i => 'chair' + i); for (let i = 0; i < 100 && !ids.every(id => ITEM_GROUPS[id].userData.glbLoaded); i++) await new Promise(r => setTimeout(r, 100));
+    const geos = new Set(), sizes = new Set(); let warn = ''; ids.forEach(id => { const g = ITEM_GROUPS[id]; warn += (g.userData.glbWarnings || []).join('|'); g.traverse(o => { if (o.isMesh) geos.add(o.geometry); }); const s = new THREE.Vector3(); new THREE.Box3().setFromObject(g).getSize(s); sizes.add([s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join()); });
+    const fits = [...sizes].every(t => { const [x, y, z] = t.split(',').map(Number); return Math.abs(x - 0.42) <= 0.03 && Math.abs(y - 0.9) <= 0.03 && Math.abs(z - 0.42) <= 0.03; }); // model fills its size within 3 cm
+    const backX = id => { const g = ITEM_GROUPS[id], inv = new THREE.Matrix4().copy(g.matrixWorld).invert(), v = new THREE.Vector3(); let sx = 0, n = 0; g.traverse(o => { if (!o.isMesh) return; const p = o.geometry.attributes.position; for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld).applyMatrix4(inv); if (v.y > 0.7) { sx += v.x; n++; } } }); return sx / n; };
+    return { loaded: ids.every(id => ITEM_GROUPS[id].userData.glbLoaded), warn, geos: geos.size, sizes: [...sizes].join(';'), west: backX('chair1') < 0.1, east: backX('chair4') > 0.32, boxes: PHYS.chair1.length, fits }; });
+  if (!chairGlb.loaded || chairGlb.warn || chairGlb.geos !== 2 || !chairGlb.fits || !chairGlb.west || !chairGlb.east || chairGlb.boxes !== 6) problems.push('glb: стулья — загрузка/общая geometry/габарит/сторона спинки/proxy не сошлись: ' + JSON.stringify(chairGlb));
   // realism-living step 4: model validation — warnings for wrong units, offset pivot, floating bottom and a back on the wrong side; none for a correct model
   const glbCheck = await page.evaluate(() => {
     const box = (w, h, d, x, y, z, s = 1) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d)); m.position.set(x, y, z); m.scale.setScalar(s); const r = new THREE.Group(); r.add(m); return r; };
