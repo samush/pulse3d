@@ -282,6 +282,10 @@ const { chromium } = require('playwright');
     const ids = ['kidlight2', 'desklamp2', 'bra3', 'bra4', 'blind2', 'sw2', 'sock9', 'sock10', 'sock11', 'sock12', 'sock13'];
     const bad = ids.filter(id => !fit(id)); ['sw2', 'sock9', 'sock10', 'sock11', 'sock12', 'sock13'].forEach(id => { if (PHYS[id].length !== 1) bad.push(id + ':phys'); }); return bad; });
   if (fitC.length) problems.push('этап C: детали вне size или proxy розеток не один бокс: ' + fitC.join(' '));
+  // realism-all stage A: tv, console, lamp, wardrobe, entry detailed — inside size, proxy counts as before
+  const cabA = await page.evaluate(() => { const fit = id => { const g = ITEM_GROUPS[id], bb = new THREE.Box3().setFromObject(g).applyMatrix4(new THREE.Matrix4().copy(g.matrixWorld).invert()), s = g.userData.size; return bb.min.x >= -0.001 && bb.min.y >= -0.001 && bb.min.z >= -0.001 && bb.max.x <= s[0] + 0.001 && bb.max.y <= s[1] + 0.001 && bb.max.z <= s[2] + 0.001; };
+    return Object.entries({ tv: 1, console: 1, lamp: 2, wardrobe: 16, entry: 7 }).filter(([id, n]) => !fit(id) || PHYS[id].length !== n).map(([id]) => id); });
+  if (cabA.length) problems.push('этап A: детали вне size или proxy изменился: ' + cabA.join(' '));
   // realism-all stage A: shared helpers — plate/round keep the item inside size with one proxy box; new slots reach VIZ
   const helpers = await page.evaluate(() => { const fit = id => { const g = ITEM_GROUPS[id], bb = new THREE.Box3().setFromObject(g), inv = new THREE.Matrix4().copy(g.matrixWorld).invert(); bb.applyMatrix4(inv); const s = g.userData.size; return bb.min.x >= -0.001 && bb.min.y >= -0.001 && bb.min.z >= -0.001 && bb.max.x <= s[0] + 0.001 && bb.max.y <= s[1] + 0.001 && bb.max.z <= s[2] + 0.001; };
     const n = id => { let k = 0; ITEM_GROUPS[id].traverse(o => { if (o.isMesh) k++; }); return k; };
