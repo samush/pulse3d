@@ -371,33 +371,37 @@ const PHYS={}; // id → boxes
        b(0.02,0.05,2.65,2.68,0,3.017,mat.body); b(0.02,0.08,1.15,2.64,0,0.15,mat.wpanel); b(0.02,0.08,0.02,2.64,2.867,3.017,mat.wpanel); }}, // rail starts after the cabinet; north bundle hemmed above the headboard
     {id:'mlight',type:'потолочный светильник Ø0.50, диммер',room:3,layer:'master',pos:[12.65,11.671],rot:180,size:[0.50,2.70,0.50],fixed:'wall',
      build(b,g){ b.phys(0,0.5,2.66,2.7,0,0.5); // proxy = pre-detail mesh AABBs (realism-all D1)
-       const c=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.25,0.04,32),mat.lamp); c.position.set(0.25,2.68,0.25); g.add(c); }},
+       lathe(g,[[0,2.662],[0.21,2.664],[0.247,2.68],[0.25,2.70],[0,2.70]],0.25,0.25,mat.plastic); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.18,32).rotateX(Math.PI/2).translate(0.25,2.661,0.25),mat.led)); }},
     {id:'bra5',type:'бра для чтения, западная сторона кровати',room:3,layer:'master',pos:[13.49,13.124],rot:180,size:[0.16,1.50,0.245],fixed:'wall',
-     build(b,g){ b.phys(0.03,0.13,1.35,1.45,0,0.02); b.phys(0.075,0.085,1.395,1.405,0.02,0.13); b.phys(0.02,0.14,1.34,1.46,0.105,0.225); // proxy = pre-detail mesh AABBs (realism-all D1)
-       b(0.03,0.13,1.35,1.45,0,0.02,mat.handle); b(0.075,0.085,1.395,1.405,0.02,0.13,mat.handle); const s=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.12,16),mat.lamp); s.position.set(0.08,1.40,0.165); g.add(s); }},
+     build(b,g){ b.phys(0.03,0.13,1.3499999999999999,1.45,0,0.02); b.phys(0.075,0.085,1.395,1.4049999999999998,0.02,0.13); b.phys(0.02,0.14,1.3399999999999999,1.46,0.105,0.225); // proxy = pre-detail mesh AABBs (realism-all D1)
+       b.round(0.03,0.13,1.3499999999999999,1.45,0,0.02,0.005,mat.plastic); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.09,10).rotateX(Math.PI/2).translate(0.08,1.4,0.065),mat.frame)); g.add(new THREE.Mesh(new THREE.SphereGeometry(0.012,12,8).translate(0.08,1.4,0.105),mat.frame)); // plate, swing arm Ø12, pivot
+       lathe(g,[[0.04,1.3399999999999999],[0.06,1.3499999999999999],[0.06,1.45],[0.04,1.46],[0.012,1.46],[0.012,1.45],[0.05,1.442],[0.05,1.3599999999999999],[0.04,1.3499999999999999]],0.08,0.165,mat.plastic); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.045,24).rotateX(Math.PI/2).translate(0.08,1.3479999999999999,0.165),mat.led)); }},
     {id:'bra6',type:'бра для чтения, восточная сторона кровати',room:3,layer:'master',pos:[14.49,13.124],rot:180,size:[0.16,1.50,0.245],fixed:'wall',
-     build(b,g){ b.phys(0.03,0.13,1.35,1.45,0,0.02); b.phys(0.075,0.085,1.395,1.405,0.02,0.13); b.phys(0.02,0.14,1.34,1.46,0.105,0.225); // proxy = pre-detail mesh AABBs (realism-all D1)
-       b(0.03,0.13,1.35,1.45,0,0.02,mat.handle); b(0.075,0.085,1.395,1.405,0.02,0.13,mat.handle); const s=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.12,16),mat.lamp); s.position.set(0.08,1.40,0.165); g.add(s); }},
+     build(b,g){ b.phys(0.03,0.13,1.3499999999999999,1.45,0,0.02); b.phys(0.075,0.085,1.395,1.4049999999999998,0.02,0.13); b.phys(0.02,0.14,1.3399999999999999,1.46,0.105,0.225); // proxy = pre-detail mesh AABBs (realism-all D1)
+       b.round(0.03,0.13,1.3499999999999999,1.45,0,0.02,0.005,mat.plastic); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.09,10).rotateX(Math.PI/2).translate(0.08,1.4,0.065),mat.frame)); g.add(new THREE.Mesh(new THREE.SphereGeometry(0.012,12,8).translate(0.08,1.4,0.105),mat.frame)); // plate, swing arm Ø12, pivot
+       lathe(g,[[0.04,1.3399999999999999],[0.06,1.3499999999999999],[0.06,1.45],[0.04,1.46],[0.012,1.46],[0.012,1.45],[0.05,1.442],[0.05,1.3599999999999999],[0.04,1.3499999999999999]],0.08,0.165,mat.plastic); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.045,24).rotateX(Math.PI/2).translate(0.08,1.3479999999999999,0.165),mat.led)); }},
     {id:'led4',type:'LED-лента под блоком ящиков, свет на изголовье',room:3,layer:'master',pos:[14.72,12.814],rot:180,size:[1.62,1.85,0.02],fixed:'wall',
-     build(b){ b(0,1.62,1.84,1.85,0,0.02,mat.led); }},
+     build(b){ b.led(0,1.62,1.84,1.85,0,0.02); }},
     {id:'bra7',type:'бра у зеркала, левое',room:3,layer:'master',pos:[11.48,10.022],rot:180,size:[0.16,1.60,0.245],fixed:'wall',
      build(b,g){ b.phys(0.03,0.13,1.45,1.55,0.225,0.245); b.phys(0.075,0.085,1.495,1.505,0.115,0.225); b.phys(0.02,0.14,1.44,1.56,0.02,0.14); // proxy = pre-detail mesh AABBs (realism-all D1)
-       b(0.03,0.13,1.45,1.55,0.225,0.245,mat.handle); b(0.075,0.085,1.495,1.505,0.115,0.225,mat.handle); const s=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.12,16),mat.lamp); s.position.set(0.08,1.50,0.08); g.add(s); }},
+       b.round(0.03,0.13,1.45,1.55,0.225,0.245,0.005,mat.plastic); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.085,10).rotateX(Math.PI/2).translate(0.08,1.5,0.1825),mat.frame)); g.add(new THREE.Mesh(new THREE.SphereGeometry(0.012,12,8).translate(0.08,1.5,0.14),mat.frame)); // plate on the wall z=0.245, arm to the shade
+       lathe(g,[[0.04,1.44],[0.06,1.45],[0.06,1.55],[0.04,1.56],[0.012,1.56],[0.012,1.55],[0.05,1.542],[0.05,1.46],[0.04,1.45]],0.08,0.08,mat.plastic); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.045,24).rotateX(Math.PI/2).translate(0.08,1.448,0.08),mat.led)); }},
     {id:'bra8',type:'бра у зеркала, правое',room:3,layer:'master',pos:[12.88,10.022],rot:180,size:[0.16,1.60,0.245],fixed:'wall',
      build(b,g){ b.phys(0.03,0.13,1.45,1.55,0.225,0.245); b.phys(0.075,0.085,1.495,1.505,0.115,0.225); b.phys(0.02,0.14,1.44,1.56,0.02,0.14); // proxy = pre-detail mesh AABBs (realism-all D1)
-       b(0.03,0.13,1.45,1.55,0.225,0.245,mat.handle); b(0.075,0.085,1.495,1.505,0.115,0.225,mat.handle); const s=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.12,16),mat.lamp); s.position.set(0.08,1.50,0.08); g.add(s); }},
+       b.round(0.03,0.13,1.45,1.55,0.225,0.245,0.005,mat.plastic); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.085,10).rotateX(Math.PI/2).translate(0.08,1.5,0.1825),mat.frame)); g.add(new THREE.Mesh(new THREE.SphereGeometry(0.012,12,8).translate(0.08,1.5,0.14),mat.frame)); // plate on the wall z=0.245, arm to the shade
+       lathe(g,[[0.04,1.44],[0.06,1.45],[0.06,1.55],[0.04,1.56],[0.012,1.56],[0.012,1.55],[0.05,1.542],[0.05,1.46],[0.04,1.45]],0.08,0.08,mat.plastic); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.045,24).rotateX(Math.PI/2).translate(0.08,1.448,0.08),mat.led)); }},
     {id:'led5',type:'LED-подсветка по нижней кромке ТВ',room:3,layer:'master',pos:[14.37,9.837],rot:180,size:[0.92,1.07,0.01],fixed:'wall',
-     build(b){ b(0,0.92,1.06,1.07,0,0.01,mat.led); }},
-    {id:'sw3',type:'выключатель у двери, 2 клавиши: общий свет M13 + бра/LED',room:3,layer:'master',pos:[10.051,10.921],rot:180,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b(0,0.01,0.91,0.99,0,0.08,mat.lamp); }},
-    {id:'sw4',type:'проходной выключатель у кровати, 2 клавиши (над изголовьем)',room:3,layer:'master',pos:[13.42,13.124],rot:180,size:[0.08,1.24,0.01],fixed:'wall',build(b){ b(0,0.08,1.16,1.24,0,0.01,mat.lamp); }},
+     build(b){ b.led(0,0.92,1.06,1.07,0,0.01); }},
+    {id:'sw3',type:'выключатель у двери, 2 клавиши: общий свет M13 + бра/LED',room:3,layer:'master',pos:[10.051,10.921],rot:180,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.91,0.99,0,0.08,mat.plastic,{keys:2}); }},
+    {id:'sw4',type:'проходной выключатель у кровати, 2 клавиши (над изголовьем)',room:3,layer:'master',pos:[13.42,13.124],rot:180,size:[0.08,1.24,0.01],fixed:'wall',build(b){ b.plate(0,0.08,1.16,1.24,0,0.01,mat.plastic,{keys:2}); }},
     // sockets: flat boxes 0.08 × 0.08 × 0.01 on the wall, purpose in the caption
-    {id:'sock14',type:'розетки 2+2 USB у западного края изголовья (над изголовьем 1.10)',room:3,layer:'master',pos:[13.28,13.124],rot:180,size:[0.08,1.24,0.01],fixed:'wall',build(b){ b(0,0.08,1.16,1.24,0,0.01,mat.lamp); }},
-    {id:'sock15',type:'розетка + USB у восточного края изголовья (над изголовьем 1.10)',room:3,layer:'master',pos:[14.6,13.124],rot:180,size:[0.08,1.24,0.01],fixed:'wall',build(b){ b(0,0.08,1.16,1.24,0,0.01,mat.lamp); }},
-    {id:'sock16',type:'розетка для кондиционера внутри секции',room:3,layer:'master',pos:[14.35,13.124],rot:180,size:[0.08,2.34,0.01],fixed:'wall',build(b){ b(0,0.08,2.26,2.34,0,0.01,mat.lamp); }},
-    {id:'sock17',type:'медиаблок за телевизором (2 розетки + ТВ/RJ-45 + HDMI)',room:3,layer:'master',pos:[13.95,9.807],rot:180,size:[0.08,1.34,0.01],fixed:'wall',build(b){ b(0,0.08,1.26,1.34,0,0.01,mat.lamp); }},
-    {id:'sock18',type:'розетки у консоли',room:3,layer:'master',pos:[13.95,9.807],rot:180,size:[0.08,0.39,0.01],fixed:'wall',build(b){ b(0,0.08,0.31,0.39,0,0.01,mat.lamp); }},
-    {id:'sock19',type:'розетки + USB у туалетного столика (фен, плойка)',room:3,layer:'master',pos:[12.8,9.807],rot:180,size:[0.08,0.94,0.01],fixed:'wall',build(b){ b(0,0.08,0.86,0.94,0,0.01,mat.lamp); }},
-    {id:'sock20',type:'розетка общего назначения (увлажнитель, пылесос)',room:3,layer:'master',pos:[10.66,13.124],rot:180,size:[0.08,0.34,0.01],fixed:'wall',build(b){ b(0,0.08,0.26,0.34,0,0.01,mat.lamp); }},
+    {id:'sock14',type:'розетки 2+2 USB у западного края изголовья (над изголовьем 1.10)',room:3,layer:'master',pos:[13.28,13.124],rot:180,size:[0.08,1.24,0.01],fixed:'wall',build(b){ b.plate(0,0.08,1.16,1.24,0,0.01,mat.plastic,{keys:2}); }},
+    {id:'sock15',type:'розетка + USB у восточного края изголовья (над изголовьем 1.10)',room:3,layer:'master',pos:[14.6,13.124],rot:180,size:[0.08,1.24,0.01],fixed:'wall',build(b){ b.plate(0,0.08,1.16,1.24,0,0.01,mat.plastic); }},
+    {id:'sock16',type:'розетка для кондиционера внутри секции',room:3,layer:'master',pos:[14.35,13.124],rot:180,size:[0.08,2.34,0.01],fixed:'wall',build(b){ b.plate(0,0.08,2.26,2.34,0,0.01,mat.plastic); }},
+    {id:'sock17',type:'медиаблок за телевизором (2 розетки + ТВ/RJ-45 + HDMI)',room:3,layer:'master',pos:[13.95,9.807],rot:180,size:[0.08,1.34,0.01],fixed:'wall',build(b){ b.plate(0,0.08,1.26,1.34,0,0.01,mat.plastic,{keys:2}); }},
+    {id:'sock18',type:'розетки у консоли',room:3,layer:'master',pos:[13.95,9.807],rot:180,size:[0.08,0.39,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.31,0.39,0,0.01,mat.plastic); }},
+    {id:'sock19',type:'розетки + USB у туалетного столика (фен, плойка)',room:3,layer:'master',pos:[12.8,9.807],rot:180,size:[0.08,0.94,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.86,0.94,0,0.01,mat.plastic,{keys:2}); }},
+    {id:'sock20',type:'розетка общего назначения (увлажнитель, пылесос)',room:3,layer:'master',pos:[10.66,13.124],rot:180,size:[0.08,0.34,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.26,0.34,0,0.01,mat.plastic); }},
     // ---- bathroom 9 (tasks/bath9/README.md, marks M1–M18 mirrored across the door axis z 8.997; grey materials only) ----
     // Room box: x 8.172–9.872, z 8.122–9.872, door on the east wall z 8.55–9.25. Basin, mirror and towel rail on the north side,
     // cistern box and toilet on the south. Tiles follow PLAN.baths (north face at z 8.181, west at x 8.222, others wall+0.02), so wall-mounted parts start in front of them.
@@ -519,7 +523,7 @@ const PHYS={}; // id → boxes
      build(b,g){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.02,24),mat.wpanel); c.position.set(0.06,2.69,0.06); g.add(c); }},
     // electrics: flat boxes 0.08 × 0.08 × 0.01
     {id:'sock24',type:'скрытый вывод для полотенцесушителя, h 0.45',room:8,layer:'bath2',pos:[9.51,13.114],rot:0,size:[0.08,0.49,0.01],fixed:'wall',build(b){ b(0,0.08,0.41,0.49,0,0.01,mat.lamp); }},
-    {id:'sw6',type:'выключатель 2 клавиши (свет + вытяжка) и терморегулятор — в спальне 3 у двери санузла',room:3,layer:'bath2',pos:[10.041,12.06],rot:0,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b(0,0.01,0.91,0.99,0,0.08,mat.lamp); }},
+    {id:'sw6',type:'выключатель 2 клавиши (свет + вытяжка) и терморегулятор — в спальне 3 у двери санузла',room:3,layer:'bath2',pos:[10.041,12.06],rot:0,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.91,0.99,0,0.08,mat.plastic,{keys:2}); }},
     // ---- walk-in closet 6 (tasks/wardrobe6/README.md, marks M1–M13; grey materials only) ----
     // Room box: x 5.565–6.885, z 1.874–3.894, door on the south wall x 6.10–6.885 (opens out into corridor 5).
     // Linear layout: the deep system (0.60) along the west wall, the 0.40 end shelf on the north wall, only flat parts
