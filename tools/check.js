@@ -572,7 +572,7 @@ const { chromium } = require('playwright');
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
-  // floor-tile: one mesh in tileGroup at TILE=0.0075, contour area 24.35 (Gauss, without sills), sills come from PLAN.doors
+  // floor-tile: one mesh in tileGroup at TILE=0.0075, contour area 22.21 (Gauss, without sills; includes the removable wall footprint), sills come from PLAN.doors
   // (bath 9 sill follows doors[5]), the checkbox toggles tileGroup only, visualization gives the tile a MeshStandardMaterial
   const ft = await page.evaluate(() => {
     const meshes = []; tileGroup.traverse(o => { if (o.isMesh) meshes.push(o); });
@@ -587,15 +587,15 @@ const { chromium } = require('playwright');
     return { n: meshes.length, area: area(TILE_POLY), y, sillOk, toggle: hid && shown && tileKept, std, sills: TILE_SILLS.length };
   });
   if (ft.n !== 1) problems.push('плитка: мешей в tileGroup ' + ft.n + ' (нужен 1)');
-  if (Math.abs(ft.area - 24.35) > 0.05) problems.push('плитка: площадь контура ' + ft.area.toFixed(2) + ' (ожидалось 24.35)');
+  if (Math.abs(ft.area - 22.21) > 0.05) problems.push('плитка: площадь контура ' + ft.area.toFixed(2) + ' (ожидалось 22.21)');
   if (Math.abs(ft.y - 0.0075) > 1e-6) problems.push('плитка: высота меша ' + ft.y + ' (нужно 0.0075)');
   if (!ft.sillOk || ft.sills !== 7) problems.push('плитка: пороги не по PLAN.doors (санузел 9) или их не 7');
   if (!ft.toggle) problems.push('плитка: галочка «Плитка пол» не переключает слой или трогает отделку');
   if (ft.std !== 'MeshStandardMaterial') problems.push('плитка: в визуализации материал ' + ft.std);
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 7; controls.r = hh / TAN22; controls.target.set(8.2 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 7.4); controls.apply(); });
   await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'tile-top.png') });
-  await page.evaluate(() => { const hh = 1.6; controls.r = hh / TAN22; controls.target.set(10.9 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 4.2); controls.apply(); });
-  await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'tile-joint.png') });
+  await page.evaluate(() => { const hh = 1.6; controls.r = hh / TAN22; controls.target.set(10.3 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 5.8); document.getElementById('kwall').checked = false; document.getElementById('kwall').dispatchEvent(new Event('change')); controls.apply(); });
+  await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'tile-joint.png') }); await page.evaluate(() => { document.getElementById('kwall').checked = true; document.getElementById('kwall').dispatchEvent(new Event('change')); });
   await page.evaluate(() => controls.setFPV(7.0, 7.0, Math.PI / 2 - 0.5)); await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(outDir, 'tile-walk.png') });
   console.log(`  кадров/с: план ${fpsPlain}, визуализация ${fpsViz} (viewport 1400×1000, прогулка в кухне)`);

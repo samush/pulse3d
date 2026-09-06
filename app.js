@@ -766,9 +766,10 @@ var finishGroup=new THREE.Group();
     finishGroup.add(new THREE.Mesh(g,(r.id===7||r.id===8||r.id===9)?whiteMat:lamMat));
   });
 
-  // плитка второго слоя: коридор 5 + кухонная зона комнаты 4 (x 8.23–10.96) + порог двери «K»; контур плитки, план v2
+  // плитка второго слоя: коридор 5 + кухонная зона комнаты 4 (x 8.23–10.36, one tile row short of the wall stub 10.96) + the footprint
+  // of the removable L-wall (x 8.066–8.23 × z 5.516–6.464, z 6.287–6.464 × x 8.23–10.96) so no bare floor shows when it is hidden; контур плитки, план v2
   // (tasks/floor-tile/README.md). Numbers, not PLAN: remap does not move it — recompute by hand if the corridor changes.
-  window.TILE_POLY=[[5.608,4.033],[5.608,4.861],[6.336,4.861],[6.336,7.468],[8.161,7.468],[8.161,7.984],[10.008,7.984],[10.008,9.6],[10.904,9.6],[10.904,6.464],[9.75,6.464],[9.75,6.287],[10.96,6.287],[10.96,1.915],[8.23,1.915],[8.23,6.287],[8.85,6.287],[8.85,6.464],[8.066,6.464],[8.066,4.033]];
+  window.TILE_POLY=[[5.608,4.033],[5.608,4.861],[6.336,4.861],[6.336,7.468],[8.161,7.468],[8.161,7.984],[10.008,7.984],[10.008,9.6],[10.904,9.6],[10.904,6.464],[10.96,6.464],[10.96,6.287],[10.36,6.287],[10.36,1.915],[8.23,1.915],[8.23,5.516],[8.066,5.516],[8.066,4.033]];
   // door thresholds: tile runs into the wall from the corridor face to the leaf axis (PLAN.doors), the entrance door to the outer face
   window.TILE_SILLS=[{d:0,face:5.608},{d:1,face:4.033},{d:2,face:4.033},{d:3,face:10.904},{d:4,face:9.6},{d:5,face:10.008},{d:7,face:7.754,far:7.468}].map(({d,face,far})=>{
     const [cx,cz,o,w]=PLAN.doors[d], a=far!=null?far:(o==='v'?cx:cz), lo=Math.min(a,face), hi=Math.max(a,face);
