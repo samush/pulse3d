@@ -61,19 +61,29 @@ const PHYS={}; // id → boxes
     // ---- kitchen-living room 4 (sketch .local/R1.jpg) ----
     {id:'kitchen',type:'кухонный блок',room:4,layer:'kitchen',pos:[8.23,KN],rot:0,size:[0.68,2.69,3.59],fixed:'wall',
      build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.66,0,2.69,0,0.66); b.phys(0.66,0.68,0.3,2,0.02,0.64); b.phys(0,0.6,0.1,0.87,0.66,2.99); b.phys(0,0.62,0.87,0.91,0.66,2.99); b.phys(0.06,0.56,0.91,0.925,1.1,1.7); b.phys(0.1,0.5,0.905,0.93,2.2,2.65); b.phys(0.065,0.095,0.91,1.21,2.405,2.435); b.phys(0,0.36,1.45,2.69,0.66,2.99); b.phys(0,0.6,0,2.69,2.99,3.59); b.phys(0.6,0.62,0.8,1.4,3.04,3.54); b.phys(0.6,0.615,0.79,0.8,0.9,1.05); b.phys(0.6,0.615,0.79,0.8,1.5,1.65); b.phys(0.6,0.615,0.79,0.8,2.1,2.25); b.phys(0.6,0.615,0.79,0.8,2.7,2.85); b.phys(0.6,0.615,1.5,1.52,3.1,3.48); b.phys(0.13,0.27,0.925,0.929,1.18,1.32); b.phys(0.35,0.49,0.925,0.929,1.18,1.32); b.phys(0.13,0.27,0.925,0.929,1.48,1.62); b.phys(0.35,0.49,0.925,0.929,1.48,1.62);
-       b(0,0.66,0,2.69,0,0.66,mat.base);            // fridge column
-       b(0.66,0.68,0.3,2.0,0.02,0.64,mat.dark);      // fridge door
-       b(0,0.6,0.1,0.87,0.66,2.99,mat.base);         // base cabinets
-       b(0,0.62,0.87,0.91,0.66,2.99,mat.top);        // countertop
-       b(0.06,0.56,0.91,0.925,1.1,1.7,mat.dark);     // cooktop
-       b(0.1,0.5,0.905,0.93,2.2,2.65,mat.dark);      // sink
-       const f=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.015,0.3,8),mat.lamp); f.position.set(0.08,1.06,2.42); g.add(f); // faucet
-       b(0,0.36,1.45,2.69,0.66,2.99,mat.upper);      // wall cabinets up to the ceiling
-       b(0,0.6,0,2.69,2.99,3.59,mat.base);           // tall cabinet
-       b(0.6,0.62,0.8,1.4,3.04,3.54,mat.dark);       // oven
-       [0.9,1.5,2.1,2.7].forEach(z=>b(0.6,0.615,0.79,0.8,z,z+0.15,mat.handle));   // base cabinet handles (bars)
-       b(0.6,0.615,1.5,1.52,3.1,3.48,mat.handle);                                  // tall cabinet handle
-       [[0.2,1.25],[0.42,1.25],[0.2,1.55],[0.42,1.55]].forEach(([x,z])=>{ const r=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.004,24),mat.ring); r.position.set(x,0.927,z); g.add(r); }); // burners
+       // fronts face +x; carcasses are 20 mm behind the fronts so the 3 mm gaps read as dark lines; plinths recessed 50 mm
+       const gap=0.003, front=(y0,y1,z0,z1,m)=>b.round(0.58,0.60,y0+gap/2,y1-gap/2,z0+gap/2,z1-gap/2,0.001,m);
+       b(0,0.61,0.1,2.69,0,0.66,mat.hdark); b(0,0.56,0,0.1,0,0.66,mat.dark);                                     // fridge column carcass and plinth
+       b.round(0.61,0.65,0.3+gap/2,2.0-gap/2,0.02,0.64,0.002,mat.base); b.round(0.61,0.65,2.0+gap/2,2.69,0.02,0.64,0.002,mat.base); b.round(0.61,0.65,0.1,0.3-gap/2,0.02,0.64,0.002,mat.base); // fridge door, freezer above, drawer below
+       b.handle(0.65,1.4,0.06,0.5,'y','x'); b.handle(0.65,2.3,0.06,0.3,'y','x');
+       b(0,0.58,0.1,0.87,0.66,2.99,mat.hdark); b(0,0.55,0,0.1,0.66,2.99,mat.dark);                                // base run carcass and plinth
+       [[0.66,1.10,'door'],[1.10,1.70,'drawers'],[1.70,2.20,'drawers2'],[2.20,2.70,'door'],[2.70,2.99,'door']].forEach(([z0,z1,k])=>{
+         if(k==='door'){ front(0.1,0.87,z0,z1,mat.base); b.handle(0.60,0.80,(z0+z1)/2,0.16,'z','x'); }
+         else { const ys=k==='drawers'?[0.1,0.35,0.6,0.87]:[0.1,0.5,0.87]; for(let i=0;i<ys.length-1;i++){ front(ys[i],ys[i+1],z0,z1,mat.base); b.handle(0.60,ys[i+1]-0.05,(z0+z1)/2,0.2,'z','x'); } } });
+       const sh=rrectXZ(0.002,0.618,0.662,2.988,0.002); sh.holes.push(rrectXZ(0.10,0.50,2.20,2.65,0.02));                     // worktop 40 mm with the sink cut-out
+       g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.036,bevelThickness:0.002,bevelSize:0.002,bevelSegments:1,curveSegments:2}).rotateX(Math.PI/2).translate(0,0.908,0),mat.top));
+       b(0.10,0.50,0.72,0.73,2.20,2.65,mat.frame); [[0.10,0.11],[0.49,0.50]].forEach(([x0,x1])=>b(x0,x1,0.72,0.905,2.20,2.65,mat.frame)); [[2.20,2.21],[2.64,2.65]].forEach(([z0,z1])=>b(0.10,0.50,0.72,0.905,z0,z1,mat.frame)); // undermount bowl
+       const path=new THREE.CatmullRomCurve3([new THREE.Vector3(0.08,0.91,2.42),new THREE.Vector3(0.08,1.18,2.42),new THREE.Vector3(0.12,1.23,2.42),new THREE.Vector3(0.22,1.20,2.42),new THREE.Vector3(0.25,1.12,2.42)]);
+       g.add(new THREE.Mesh(new THREE.TubeGeometry(path,16,0.012,10),mat.handle)); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.02,16).translate(0.08,0.92,2.42),mat.handle)); // mixer and its base
+       b(0,0.012,0.91,1.45,0.66,2.99,mat.wpanel);                                                                   // splashback
+       b.round(0.06,0.56,0.908,0.918,1.1,1.7,0.001,mat.screen); [[0.2,1.25],[0.42,1.25],[0.2,1.55],[0.42,1.55]].forEach(([x,z])=>{ const r=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.002,24),mat.ring); r.position.set(x,0.919,z); g.add(r); }); // glass hob and burner marks
+       b(0,0.34,1.45,2.69,0.66,2.99,mat.hdark); for(let i=0;i<4;i++){ const z0=0.66+i*2.33/4, z1=z0+2.33/4; b.round(0.34,0.36,1.45+gap/2,2.69-gap/2,z0+gap/2,z1-gap/2,0.001,mat.upper); b.handle(0.36,1.50,(z0+z1)/2,0.16,'z','x'); } // wall units, 4 doors
+       b(0.34,0.50,1.45,1.50,1.10,1.70,mat.frame); b.round(0.50,0.51,1.45,1.50,1.10,1.70,0.001,mat.dark);              // hood under the wall units over the hob
+       b(0,0.58,0.1,2.69,2.99,3.59,mat.hdark); b(0,0.55,0,0.1,2.99,3.59,mat.dark);                                  // tall unit carcass and plinth
+       front(0.1,0.8,2.99,3.59,mat.base); b.handle(0.60,0.75,3.29,0.2,'z','x');
+       b.round(0.58,0.62,0.8+gap/2,1.4-gap/2,3.04,3.54,0.002,mat.dark); b(0.62,0.625,0.95,1.3,3.10,3.48,mat.screen); b.handle(0.62,1.35,3.29,0.4,'z','x'); // oven: front, glass, bar
+       front(1.4,2.69,2.99,3.59,mat.base); b.handle(0.60,1.55,3.29,0.3,'y','x');
+       function rrectXZ(x0,x1,z0,z1,r){ const w=x1-x0,d=z1-z0; const sh=new THREE.Shape(); sh.moveTo(x0+r,z0); sh.lineTo(x1-r,z0); sh.absarc(x1-r,z0+r,r,-Math.PI/2,0,false); sh.lineTo(x1,z1-r); sh.absarc(x1-r,z1-r,r,0,Math.PI/2,false); sh.lineTo(x0+r,z1); sh.absarc(x0+r,z1-r,r,Math.PI/2,Math.PI,false); sh.lineTo(x0,z0+r); sh.absarc(x0+r,z0+r,r,Math.PI,Math.PI*1.5,false); return sh; }
      }},
     {id:'table',type:'стол на 6 мест',room:4,layer:'kitchen',pos:[9.85,KN+0.04],rot:0,size:[0.8,0.76,1.8],
      build(b,g){ b.phys(0,0.8,0.72,0.76,0,1.8); b.phys(0.05,0.75,0.64,0.72,0.05,1.75); [[0.05,0.05],[0.7,0.05],[0.05,1.7],[0.7,1.7]].forEach(([x,z])=>b.phys(x,x+0.05,0,0.72,z,z+0.05)); // proxy = the old block AABBs (top, apron, legs)
@@ -549,7 +559,7 @@ const PHYS={}; // id → boxes
     // ---- shared detail helpers (tasks/realism-all/PLAN.md §3); all coordinates local, UV in metres ----
     const rrect=(w,h,r)=>{ const sh=new THREE.Shape(); r=Math.min(r,w/2,h/2); sh.moveTo(r,0); sh.lineTo(w-r,0); sh.absarc(w-r,r,r,-Math.PI/2,0,false); sh.lineTo(w,h-r); sh.absarc(w-r,h-r,r,0,Math.PI/2,false); sh.lineTo(r,h); sh.absarc(r,h-r,r,Math.PI/2,Math.PI,false); sh.lineTo(0,r); sh.absarc(r,r,r,Math.PI,Math.PI*1.5,false); return sh; };
     b.round=(x0,x1,y0,y1,z0,z1,r,m)=>{ // box with all edges rounded by r: rounded-rect shape extruded along the thinnest axis with a bevel r
-      const w=x1-x0,h=y1-y0,d=z1-z0, t=Math.min(w,h,d); r=Math.min(r,t/2-1e-4); const ex=(a,c)=>new THREE.ExtrudeGeometry(rrect(a-2*r,c-2*r,r),{depth:t-2*r,bevelThickness:r,bevelSize:r,bevelSegments:2,curveSegments:4});
+      const w=x1-x0,h=y1-y0,d=z1-z0, t=Math.min(w,h,d); r=Math.min(r,t/2-1e-4); const fine=r>=0.003, ex=(a,c)=>new THREE.ExtrudeGeometry(rrect(a-2*r,c-2*r,r),{depth:t-2*r,bevelThickness:r,bevelSize:r,bevelSegments:fine?2:1,curveSegments:fine?4:1}); // r < 3 mm reads as a chamfer: one segment is enough
       let geo; if(t===h) geo=ex(w,d).rotateX(Math.PI/2).translate(x0+r,y1-r,z0+r); else if(t===w) geo=ex(d,h).rotateY(-Math.PI/2).translate(x1-r,y0+r,z0+r); else geo=ex(w,h).translate(x0+r,y0+r,z0+r);
       const mesh=new THREE.Mesh(geo,m); g.add(mesh); return mesh; };
     b.plate=(x0,x1,y0,y1,z0,z1,m,o={})=>{ // wall plate of a socket/switch: 12 mm frame, keys recessed 2 mm on both faces; one proxy box for the whole item
