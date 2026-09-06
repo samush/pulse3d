@@ -302,7 +302,7 @@ const PHYS={}; // id → boxes
     {id:'sock20',type:'розетка общего назначения (увлажнитель, пылесос)',room:3,layer:'master',pos:[10.66,13.124],rot:180,size:[0.08,0.34,0.01],fixed:'wall',build(b){ b(0,0.08,0.26,0.34,0,0.01,mat.lamp); }},
     // ---- bathroom 9 (tasks/bath9/README.md, marks M1–M18 mirrored across the door axis z 8.997; grey materials only) ----
     // Room box: x 8.172–9.872, z 8.122–9.872, door on the east wall z 8.55–9.25. Basin, mirror and towel rail on the north side,
-    // cistern box and toilet on the south. Tiles sit 0.02 in front of the walls, so wall-mounted parts start at wall+0.02.
+    // cistern box and toilet on the south. Tiles follow PLAN.baths (north face at z 8.181, west at x 8.222, others wall+0.02), so wall-mounted parts start in front of them.
     // The passage strip x 8.872–9.872 × z 8.55–9.25 stays empty except the tub, which ends it (free depth ≥ 0.80, check.js).
     {id:'tub',type:'ванна акриловая каплевидная 1.60 вдоль западной стены: северный торец 0.45, выпуклая кромка расширяется к южному торцу 0.99 у короба и унитаза',room:9,layer:'bath',pos:[8.172,8.147],rot:0,size:[0.99,0.58,1.60],fixed:'wall',
      build(b,g){
@@ -336,24 +336,28 @@ const PHYS={}; // id → boxes
        b(0.02,0.34,0.20,0.40,0.16,0.48,mat.kmat); cyl(0.16,0.20,0.30,mat.kmat);                     // bowl: box at the back, round front to z 0
        b(0.03,0.33,0.40,0.42,0.16,0.46,mat.lamp); cyl(0.15,0.02,0.41,mat.lamp);                     // seat
      }},
-    {id:'basin',type:'раковина подвесная 0.85×0.38 вдоль северной стены, чаша 0.60×0.30 глубиной 0.10',room:9,layer:'bath',pos:[8.90,8.122],rot:0,size:[0.85,0.85,0.38],fixed:'wall',
+    {id:'basin',type:'раковина подвесная 0.85×0.36 вдоль северной стены, чаша 0.60×0.30 глубиной 0.10',room:9,layer:'bath',pos:[8.90,8.181],rot:0,size:[0.85,0.85,0.36],fixed:'wall',
      build(b,g){
-       b(0,0.85,0.70,0.75,0,0.38,mat.kmat);                                                          // slab, bowl floor at 0.75
-       b(0,0.125,0.75,0.85,0,0.38,mat.kmat); b(0.725,0.85,0.75,0.85,0,0.38,mat.kmat);               // rim around the bowl 0.125–0.725 × 0.04–0.34
-       b(0.125,0.725,0.75,0.85,0,0.04,mat.kmat); b(0.125,0.725,0.75,0.85,0.34,0.38,mat.kmat);
-       const d=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.004,16),mat.handle); d.position.set(0.425,0.752,0.19); g.add(d); // drain
+       b(0,0.85,0.70,0.75,0,0.36,mat.kmat);                                                          // slab, bowl floor at 0.75
+       b(0,0.125,0.75,0.85,0,0.36,mat.kmat); b(0.725,0.85,0.75,0.85,0,0.36,mat.kmat);               // rim around the bowl 0.125–0.725 × 0.03–0.33
+       b(0.125,0.725,0.75,0.85,0,0.03,mat.kmat); b(0.125,0.725,0.75,0.85,0.33,0.36,mat.kmat);
+       const d=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.004,16),mat.handle); d.position.set(0.425,0.752,0.18); g.add(d); // drain
      }},
-    {id:'basindrawer',type:'ящик под раковиной 0.85×0.33×0.18, подвесной, push-to-open',room:9,layer:'bath',pos:[8.90,8.122],rot:0,size:[0.85,0.68,0.33],fixed:'wall',
-     build(b){ b(0,0.85,0.50,0.68,0,0.31,mat.body); b(0.005,0.845,0.505,0.675,0.31,0.33,mat.wdoor); }},            // body, front to the south
-    {id:'bathmirror',type:'зеркало 0.85×1.00 без рамы, LED-контур сзади; низ 1.10 — над корпусом смесителя',room:9,layer:'bath',pos:[8.90,8.142],rot:0,size:[0.85,2.10,0.02],fixed:'wall',
-     build(b){ b(0,0.85,1.10,2.10,0,0.01,mat.led); b(0.01,0.84,1.11,2.09,0.01,0.02,mat.glass); }},                 // light halo behind, glass in front
+    {id:'basindrawer',type:'ящик под раковиной 0.85×0.31×0.18, подвесной, push-to-open',room:9,layer:'bath',pos:[8.90,8.181],rot:0,size:[0.85,0.68,0.31],fixed:'wall',
+     build(b){ b(0,0.85,0.50,0.68,0,0.29,mat.body); b(0.005,0.845,0.505,0.675,0.29,0.31,mat.wdoor); }},            // body, front to the south
+    {id:'bathmirror',type:'зеркало 0.96×1.20 прямоугольное со скруглёнными углами, LED-контур сзади; низ 1.10 — над корпусом смесителя',room:9,layer:'bath',pos:[8.795,8.185],rot:0,size:[0.96,2.30,0.02],fixed:'wall',
+     build(b,g){
+       const rr=(w,h,r)=>{ const s=new THREE.Shape(); s.moveTo(r,0); s.lineTo(w-r,0); s.quadraticCurveTo(w,0,w,r); s.lineTo(w,h-r); s.quadraticCurveTo(w,h,w-r,h); s.lineTo(r,h); s.quadraticCurveTo(0,h,0,h-r); s.lineTo(0,r); s.quadraticCurveTo(0,0,r,0); return s; };
+       const plate=(w,h,r,x,y,z,m)=>{ const mesh=new THREE.Mesh(new THREE.ExtrudeGeometry(rr(w,h,r),{depth:0.01,bevelEnabled:false}),m); mesh.position.set(x,y,z); g.add(mesh); };
+       plate(0.96,1.20,0.07,0,1.10,0,mat.led); plate(0.94,1.18,0.06,0.01,1.11,0.01,mat.glass);      // light halo behind, glass in front (faces south)
+     }},
     {id:'towelrail',type:'полотенцесушитель электрический 0.40×1.80 на простенке севернее двери, низ 0.45',room:9,layer:'bath',pos:[9.77,8.13],rot:0,size:[0.10,2.25,0.40],fixed:'wall',
      build(b){
        [0.03,0.34].forEach(z=>b(0.03,0.06,0.45,2.25,z,z+0.03,mat.lamp));                              // two vertical collectors
        for(let y=0.55;y<2.2;y+=0.10) b(0.035,0.055,y,y+0.02,0.06,0.34,mat.lamp);                     // rungs every 0.10
        [0.55,1.10,1.60,2.15].forEach(y=>[0.03,0.34].forEach(z=>b(0.06,0.10,y,y+0.03,z,z+0.03,mat.handle))); // wall brackets
      }},
-    {id:'basinmixer',type:'смеситель раковины настенный, излив 0.18; ось чаши x 9.325',room:9,layer:'bath',pos:[9.275,8.142],rot:0,size:[0.14,1.09,0.20],fixed:'wall',
+    {id:'basinmixer',type:'смеситель раковины настенный, излив 0.18; ось чаши x 9.325',room:9,layer:'bath',pos:[9.275,8.185],rot:0,size:[0.14,1.09,0.20],fixed:'wall',
      build(b){ b(0,0.10,1.00,1.09,0,0.02,mat.lamp); b(0.04,0.06,1.035,1.055,0.02,0.18,mat.lamp); b(0.10,0.14,1.04,1.05,0,0.02,mat.handle); }}, // body, spout, lever
     // ceiling: three IP44 spots Ø0.08 and the extractor fan Ø0.12 above the cistern box
     {id:'spot1',type:'точечный светильник над ванной, IP44',room:9,layer:'bath',pos:[8.48,8.96],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
