@@ -465,7 +465,7 @@ const { chromium } = require('playwright');
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
-  // bath8: the passage strip x 9.10–9.872 × z 12.20–13.00 × 0–2.10 is free of every part box of room 8 (tolerance 1e-6),
+  // bath8: shower along the whole west wall, glass on the toilet side, no basin; the passage strip x 9.10–9.872 × z 12.20–13.00 × 0–2.10 is free of every part box of room 8 (tolerance 1e-6),
   // toilet axis ≥ 0.35 from the east wall, no layout warnings (corners inside the polygon with the bump), grey materials
   const b8 = await page.evaluate(() => {
     const its = ITEMS.filter(it => it.layer === 'bath' && it.room === 8), bb = o => new THREE.Box3().setFromObject(o);
@@ -474,10 +474,14 @@ const { chromium } = require('playwright');
     const wc = bb(ITEM_GROUPS.wc8), axis = (wc.min.x + wc.max.x) / 2;
     const warn = its.concat(ITEMS.filter(it => it.id === 'sw6')).map(it => [it.id, LAY.warnings(it.id)]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
     const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
-    const tray = bb(ITEM_GROUPS.shower8), curbTop = bb(ITEM_GROUPS.curb8e).max.y, glassTop = bb(ITEM_GROUPS.glass8).max.y, glassEast = Math.max(bb(ITEM_GROUPS.glass8).max.x, bb(ITEM_GROUPS.curb8e).max.x);
-    return { n: its.length, inStrip, axisWall: 9.872 - axis, wcFront: wc.max.z, warn, colored, trayLow: tray.min.y, trayHigh: tray.max.y, curbTop, glassTop, glassEast };
+    const tray = bb(ITEM_GROUPS.shower8), curbTop = bb(ITEM_GROUPS.curb8e).max.y, glass = bb(ITEM_GROUPS.glass8), glassTop = glass.max.y, glassEast = Math.max(glass.max.x, bb(ITEM_GROUPS.curb8e).max.x);
+    const wcSide = glass.min.z <= 11.589 && glass.max.z >= 12.4 && wc.max.z <= glass.max.z, showerLen = tray.max.z - tray.min.z;
+    return { n: its.length, inStrip, axisWall: 9.872 - axis, wcFront: wc.max.z, warn, colored, trayLow: tray.min.y, trayHigh: tray.max.y, curbTop, glassTop, glassEast, wcSide, showerLen, basin: !!ITEM_GROUPS.basin8 };
   });
-  if (b8.n < 20) problems.push('санузел 8: предметов слоя bath ' + b8.n + ' (< 20)');
+  if (b8.n < 16) problems.push('санузел 8: предметов слоя bath ' + b8.n + ' (< 16)');
+  if (b8.basin) problems.push('санузел 8: раковины быть не должно');
+  if (b8.showerLen < 1.53) problems.push('санузел 8: душ не вдоль всей западной стены: ' + b8.showerLen.toFixed(2));
+  if (!b8.wcSide) problems.push('санузел 8: стекло не закрывает душ со стороны унитаза');
   if (b8.inStrip.length) problems.push('санузел 8: в полосе прохода: ' + b8.inStrip.join(', '));
   if (b8.axisWall < 0.35) problems.push('санузел 8: ось унитаза ближе 0.35 к стене: ' + b8.axisWall.toFixed(3));
   if (b8.wcFront > 12.2) problems.push('санузел 8: унитаз заходит в полосу прохода: z ' + b8.wcFront.toFixed(3));
