@@ -252,6 +252,13 @@ const { chromium } = require('playwright');
   // realism-living step 3: a GLB that fails to load leaves the procedural item and its proxy, error noted in VIZ.loadErrors
   const glbFallback = await page.evaluate(async () => { const n0 = ITEM_GROUPS.sofa.children.length, ok = await loadItemGlb('sofa', 'models/absent.glb');
     return ok === false && ITEM_GROUPS.sofa.children.length === n0 && PHYS.sofa.length === 1 && (VIZ.loadErrors || []).some(s => /sofa: models\/absent/.test(s)); });
+  // realism-living step 5: the sofa GLB replaced the procedural build — grey slot materials, no validation warnings, extent = size, proxy untouched
+  const sofaGlb = await page.evaluate(async () => { const g = ITEM_GROUPS.sofa; for (let i = 0; i < 100 && !g.userData.glbLoaded && !(VIZ.loadErrors || []).some(s => /^sofa:/.test(s)); i++) await new Promise(r => setTimeout(r, 100));
+    const bb = new THREE.Box3().setFromObject(g), s = new THREE.Vector3(); bb.getSize(s); const mats = new Set(); g.traverse(o => { if (o.isMesh) mats.add(o.material); });
+    return { loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), size: [s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join(), slots: [...mats].map(m => m.userData.slot).sort().join(), grey: [...mats].every(m => m.isMeshLambertMaterial && m.color.r === m.color.g && m.color.g === m.color.b), boxes: PHYS.sofa.length }; });
+  if (!sofaGlb.loaded) problems.push('glb: models/sofa.glb не загрузился: ' + JSON.stringify(sofaGlb));
+  else { if (sofaGlb.warn) problems.push('glb: sofa — предупреждения валидации: ' + sofaGlb.warn);
+    if (sofaGlb.size !== '2,0.85,0.88' || sofaGlb.slots !== 'fabric,metal' || !sofaGlb.grey || sofaGlb.boxes !== 1) problems.push('glb: sofa — габарит/слоты/серый/proxy не сошлись: ' + JSON.stringify(sofaGlb)); }
   // realism-living step 4: model validation — warnings for wrong units, offset pivot, floating bottom and a back on the wrong side; none for a correct model
   const glbCheck = await page.evaluate(() => {
     const box = (w, h, d, x, y, z, s = 1) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d)); m.position.set(x, y, z); m.scale.setScalar(s); const r = new THREE.Group(); r.add(m); return r; };
@@ -395,7 +402,7 @@ const { chromium } = require('playwright');
   await page.click('#viz'); await page.waitForTimeout(800);
   const viz = await page.evaluate((pj) => {
     const floor = finishGroup.children.find(o => o.geometry && o.geometry.type === 'ShapeGeometry');
-    const sofa = ITEM_GROUPS.sofa.children[0];
+    let sofa; ITEM_GROUPS.sofa.traverse(o => { if (!sofa && o.isMesh) sofa = o; }); // first mesh, whether procedural or the GLB model
     const lam = floor.material;
     return { std: lam.isMeshStandardMaterial && sofa.material.isMeshStandardMaterial, shadows: renderer.shadowMap.enabled && sun.castShadow && sofa.castShadow,
       maps: !!(lam.roughnessMap && lam.normalMap), scale: Math.abs(lam.map.repeat.x - 1 / MATERIALS.lam.size[0]) < 1e-9 && Math.abs(lam.roughnessMap.repeat.x - lam.map.repeat.x) < 1e-9,
