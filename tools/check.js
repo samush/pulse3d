@@ -22,11 +22,11 @@ const { chromium } = require('playwright');
   // без браузера smoke-тест не выполнен, а не «прошёл»
   let browser;
   try {
-    browser = await chromium.launch();
+    browser = await chromium.launch({ args: ['--allow-file-access-from-files'] }); // GLB models load over XHR from file:// too
   } catch (e1) {
     const alt = process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium';
     try {
-      browser = await chromium.launch({ executablePath: alt });
+      browser = await chromium.launch({ executablePath: alt, args: ['--allow-file-access-from-files'] });
     } catch (e2) {
       console.error('ПРОВАЛ: браузер не запустился, проверка сцены НЕ выполнена.\n' +
         '  1) chromium.launch(): ' + e1.message.split('\n')[0] + '\n' +
@@ -42,7 +42,7 @@ const { chromium } = require('playwright');
   page.on('console', m => {
     // необязательный внешний шрифт может не грузиться в оффлайне — не ошибка сцены
     const src = (m.location() && m.location().url) || '';
-    if (m.type() === 'error' && !/fonts\.googleapis|fonts\.gstatic|favicon\.ico/.test(src + m.text())) {
+    if (m.type() === 'error' && !/fonts\.googleapis|fonts\.gstatic|favicon\.ico|models\/absent\.glb/.test(src + m.text())) {
       problems.push('console: ' + m.text() + (src ? ' @ ' + src : ''));
     }
   });
@@ -249,6 +249,10 @@ const { chromium } = require('playwright');
     VIZ.set(false); setView('top');
     return out;
   });
+  // realism-living step 3: a GLB that fails to load leaves the procedural item and its proxy, error noted in VIZ.loadErrors
+  const glbFallback = await page.evaluate(async () => { const n0 = ITEM_GROUPS.sofa.children.length, ok = await loadItemGlb('sofa', 'models/absent.glb');
+    return ok === false && ITEM_GROUPS.sofa.children.length === n0 && PHYS.sofa.length === 1 && (VIZ.loadErrors || []).some(s => /sofa: models\/absent/.test(s)); });
+  if (!glbFallback) problems.push('glb: при ошибке загрузки предмет не остался процедурным или ошибка не записана в VIZ.loadErrors');
   if (!g1.sofaOne || !g1.sofaRot) problems.push('proxy: диван не один бокс или не следует за поворотом (B02)');
   if (!g1.bedFew) problems.push('proxy: кровать-чердак/ванна не используют явные боксы (B02)');
   if (!g1.gltf) problems.push('GLTFLoader.js не подключён (THREE.GLTFLoader)');

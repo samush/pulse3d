@@ -529,8 +529,28 @@ const PHYS={}; // id → boxes
     it.build(b,g);
     LAYERS[it.layer].add(g); ITEM_GROUPS[it.id]=g;
     poseGroup(g);
+    if(it.glb){ g.userData.glb=it.glb; loadItemGlb(it.id); }
     return g;
   }
+  // GLB model of an item: the procedural build stays as fallback and proxy; on success its meshes are replaced by the model.
+  // Material names inside the GLB are ITEM_MATS keys or slot names (fabric/wood/paint/metal) → same grey concept materials, VIZ twins keep working.
+  const slotMat=n=>{ if(!mat[n]){ if(!MATERIALS[n]) console.warn('glb: unknown material "'+n+'", grey furniture used'); mat[n]=M(0x8c8c8c); mat[n].userData.slot=n; } return mat[n]; };
+  function loadItemGlb(id,url){
+    const g=ITEM_GROUPS[id]; url=url||g.userData.glb;
+    const fail=e=>{ VIZ.loadErrors=(VIZ.loadErrors||[]).concat(id+': '+url); return false; };
+    return new Promise(res=>{
+      if(typeof THREE.GLTFLoader!=='function') return res(fail());
+      new THREE.GLTFLoader().load(url,gltf=>{
+        const model=gltf.scene;
+        model.traverse(o=>{ if(o.isMesh){ const name=o.material.name; o.material.dispose(); o.material=slotMat(name); } });
+        g.children.slice().forEach(c=>{ g.remove(c); c.traverse(o=>{ if(o.isMesh) o.geometry.dispose(); }); }); // procedural fallback out, its geometry freed
+        g.add(model); g.userData.glbLoaded=url;
+        if(window.VIZ&&VIZ.adopt) VIZ.adopt(g);
+        res(true);
+      },undefined,e=>res(fail(e)));
+    });
+  }
+  window.loadItemGlb=loadItemGlb;
   function poseGroup(g){ const u=g.userData; g.position.set(u.pos[0],0,u.pos[1]); g.rotation.y=-u.rot*Math.PI/180; g.updateMatrixWorld(true); rebuildPhys(g.userData.id); }
   const physMat=new THREE.MeshBasicMaterial({visible:false});
   function rebuildPhys(id){
