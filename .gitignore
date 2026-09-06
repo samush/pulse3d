@@ -5,5 +5,5 @@ secrets/*.key
 .local/**
 tools/out/
 node_modules
-package*.json
+package-lock.json
 __pycache__/

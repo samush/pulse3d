@@ -1,0 +1,7 @@
+{
+  "name": "pulse3d",
+  "private": true,
+  "description": "dev toolchain only: the page itself has no build and no runtime dependencies",
+  "scripts": { "check": "node tools/check.js" },
+  "devDependencies": { "playwright": "1.63.0" }
+}

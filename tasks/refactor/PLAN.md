@@ -7,6 +7,6 @@
 | 1 | A01 restore ID, A02 HTML при импорте, A04 битое сохранение не стирается | check.js: reload → новый ID; img в bind.item не выполняется; `{bad` в pulse3d.layout остаётся | done |
 | 2 | A05 версия плана при импорте, A03 единая смена режима (`setView`), A06 dispose/переиспользование | импорт plan:999 отклонён; прогулка+VIZ → «Разметка» выключает PBR; 60 выборов метки — плато geometries/textures | done |
 | 3 | G1: одна операция позы (`setItemPose` → хуки MK/LAY), bind проверяется после LAY; `proxy`-боксы; material slots | смена варианта обновляет conflict меток; proxy не зависит от числа мешей | done |
-| 4 | B06: seed текстур, закреплённый playwright, README/CLAUDE.md | два reload дают одинаковые карты | |
+| 4 | B06: seed текстур, закреплённый playwright, README/CLAUDE.md | два reload дают одинаковые карты | done |
 
 G2+ (миграция Three.js, PBR, HDR) — отдельное согласование, не в этом рефакторинге.

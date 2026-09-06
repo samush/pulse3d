@@ -48,7 +48,7 @@ python3 -m http.server 8000
 ## Проверка
 
 ```bash
-npm i --no-save playwright && npx playwright install chromium   # один раз на окружение
+npm i && npx playwright install chromium                        # один раз на окружение (версия закреплена в package.json)
 node tools/check.js                                              # локальная копия
 node tools/check.js https://samush.github.io/pulse3d/            # живая страница
 ```
@@ -56,4 +56,5 @@ node tools/check.js https://samush.github.io/pulse3d/            # живая с
 Тест проверяет загрузку без ошибок, 10 помещений и площади, вид «Сверху» и шаг в прогулке;
 скриншоты кладёт в `tools/out/`. Если Chromium не запускается, он выходит с кодом 2 и
 подсказкой по установке (системные библиотеки: `npx playwright install-deps chromium`, нужен root).
-Базовые скриншоты и сверка площадей на момент начала работ по плану: `tasks/baseline/`.
+Процедурные текстуры строятся с фиксированным seed, поэтому скриншоты двух прогонов совпадают попиксельно
+и годятся для сравнения до/после. Базовые скриншоты на момент начала работ по плану: `tasks/baseline/`.
