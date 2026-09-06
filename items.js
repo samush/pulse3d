@@ -198,48 +198,62 @@ const PHYS={}; // id → boxes
     // Room box: x 11.067–14.774, z 6.518–9.614, niche: south wall at z 9.519 east of x 13.477. Door on the west wall z 6.75–7.65.
     {id:'kidbed2',type:'кровать-чердак с лестницей-комодом, платформа 1.85, полка над дверью',room:2,layer:'kid2',pos:[13.467,9.614],rot:180,size:[2.4,2.6,2.97],fixed:'wall',build:kidBedBuild(1.85,mat.wdoor,mat.cushion,0.24)}, // M12 LED is part of the bed; tread 0.24 keeps the stairs west of the niche (x 13.477)
     {id:'kiddesk2',type:'письменный стол под платформой, 1.65 × 0.75',room:2,layer:'kid2',pos:[11.067,7.85],rot:0,size:[0.75,0.72,1.65],fixed:'wall',
-     build(b){ b(0,0.75,0.69,0.72,0,1.65,mat.body); b(0.02,0.73,0,0.69,0,0.02,mat.body); b(0.02,0.73,0,0.69,1.63,1.65,mat.body); b(0,0.05,0.62,0.69,0.02,1.63,mat.dark); }}, // top, side panels, cable channel at the wall
+     build(b){ b.phys(0,0.75,0.69,0.72,0,1.65); b.phys(0.02,0.73,0,0.69,0,0.02); b.phys(0.02,0.73,0,0.69,1.63,1.65); b.phys(0,0.05,0.62,0.69,0.02,1.63); // proxy = pre-detail mesh AABBs (realism-all C1)
+       b(0,0.75,0.69,0.72,0,1.65,mat.body); b(0.02,0.73,0,0.69,0,0.02,mat.body); b(0.02,0.73,0,0.69,1.63,1.65,mat.body); b(0,0.05,0.62,0.69,0.02,1.63,mat.dark); }}, // top, side panels, cable channel at the wall
     {id:'kidchair2',type:'рабочее кресло детское, регулируемое',room:2,layer:'kid2',pos:[11.75,8.40],rot:0,size:[0.55,0.85,0.55],
-     build(b,g){ b(0.05,0.50,0.42,0.47,0.05,0.50,mat.cushion); b(0.50,0.55,0.47,0.85,0.08,0.47,mat.cushion);
+     build(b,g){ b.phys(0.05,0.5,0.42,0.47,0.05,0.5); b.phys(0.5,0.55,0.47,0.85,0.08,0.47); b.phys(0.2512,0.2988,0.03,0.42,0.25,0.3); b.phys(0.03,0.52,0,0.03,0.26,0.29); b.phys(0.26,0.29,0,0.03,0.03,0.52); // proxy = pre-detail mesh AABBs (realism-all C1)
+       b(0.05,0.50,0.42,0.47,0.05,0.50,mat.cushion); b(0.50,0.55,0.47,0.85,0.08,0.47,mat.cushion);
        const c=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.39,10),mat.knob); c.position.set(0.275,0.225,0.275); g.add(c);
        b(0.03,0.52,0,0.03,0.26,0.29,mat.knob); b(0.26,0.29,0,0.03,0.03,0.52,mat.knob); }},
     {id:'deskshelf2',type:'полка над столом под платформой',room:2,layer:'kid2',pos:[11.087,7.90],rot:0,size:[0.22,1.28,1.55],fixed:'wall',
-     build(b){ b(0,0.22,1.25,1.28,0,1.55,mat.body); [0.05,1.48].forEach(z=>b(0,0.02,1.13,1.25,z,z+0.02,mat.body)); }},
+     build(b){ b.phys(0,0.22,1.25,1.28,0,1.55); [0.05,1.48].forEach(z=>b.phys(0,0.02,1.13,1.25,z,z+0.02)); // proxy = pre-detail mesh AABBs (realism-all C1)
+       b(0,0.22,1.25,1.28,0,1.55,mat.body); [0.05,1.48].forEach(z=>b(0,0.02,1.13,1.25,z,z+0.02,mat.body)); }},
     {id:'tower2n',type:'стеллаж-башня северная: низ шкаф со штангой, верх открытые ячейки',room:2,layer:'kid2',pos:[14.174,6.518],rot:0,size:[0.60,2.70,0.68],fixed:'wall',
-     build(b){ const t=0.02, D=0.68;
+     build(b){ b.phys(0,0.6,0,0.02,0,0.68); b.phys(0,0.6,2.68,2.7,0,0.68); b.phys(0.58,0.6,0.02,2.68,0,0.68); b.phys(0.02,0.58,0.02,2.68,0,0.02); b.phys(0.02,0.58,0.02,2.68,0.66,0.68); [1.50,1.90,2.30].forEach(y=>b.phys(0.02,0.58,y-0.02,y,0.02,0.66)); b.phys(0,0.02,0.023,1.477,0.023,0.657); b.phys(-0.015,0,0.75,0.95,0.33,0.35); // proxy = pre-detail mesh AABBs (realism-all C1)
+       const t=0.02, D=0.68;
        b(0,0.6,0,t,0,D,mat.body); b(0,0.6,2.7-t,2.7,0,D,mat.body); b(0.58,0.6,t,2.7-t,0,D,mat.body); b(0.02,0.58,t,2.7-t,0,t,mat.body); b(0.02,0.58,t,2.7-t,D-t,D,mat.body); // box, back at the east wall
        [1.50,1.90,2.30].forEach(y=>b(t,0.58,y-t,y,t,D-t,mat.body));                                  // shelves: closed 0–1.5, 3 open rows above
        b(0,t,t+0.003,1.50-t-0.003,t+0.003,D-t-0.003,mat.wdoor); b(-0.015,0,0.75,0.95,D/2-0.01,D/2+0.01,mat.handle); // wardrobe door on the west face
      }},
     {id:'tower2s',type:'стеллаж-башня южная: 2 ящика, открытые ячейки',room:2,layer:'kid2',pos:[14.174,8.90],rot:0,size:[0.60,2.70,0.619],fixed:'wall',
-     build(b){ const t=0.02, D=0.619;
+     build(b){ b.phys(0,0.6,0,0.02,0,0.619); b.phys(0,0.6,2.68,2.7,0,0.619); b.phys(0.58,0.6,0.02,2.68,0,0.619); b.phys(0.02,0.58,0.02,2.68,0,0.02); b.phys(0.02,0.58,0.02,2.68,0.599,0.619); [0.90,1.35,1.80,2.25].forEach(y=>b.phys(0.02,0.58,y-0.02,y,0.02,0.599)); [0.03,0.46].forEach(y=>{ b.phys(0,0.02,y,y+0.41,0.023,0.596); b.phys(-0.015,0,y+0.2,y+0.22,0.2345,0.3845); }); // proxy = pre-detail mesh AABBs (realism-all C1)
+       const t=0.02, D=0.619;
        b(0,0.6,0,t,0,D,mat.body); b(0,0.6,2.7-t,2.7,0,D,mat.body); b(0.58,0.6,t,2.7-t,0,D,mat.body); b(0.02,0.58,t,2.7-t,0,t,mat.body); b(0.02,0.58,t,2.7-t,D-t,D,mat.body);
        [0.90,1.35,1.80,2.25].forEach(y=>b(t,0.58,y-t,y,t,D-t,mat.body));                              // 4 open rows above the drawers
        [0.03,0.46].forEach(y=>{ b(0,t,y,y+0.41,t+0.003,D-t-0.003,mat.wdoor); b(-0.015,0,y+0.2,y+0.22,D/2-0.075,D/2+0.075,mat.handle); }); // drawer fronts west
      }},
     {id:'windowseat2',type:'лежанка у окна с 2 глубокими ящиками и матрасиком, 1.70 × 0.60',room:2,layer:'kid2',pos:[14.174,7.198],rot:0,size:[0.60,0.65,1.702],fixed:'wall',
-     build(b){ b(0.05,0.58,0,0.05,0.05,1.65,mat.dark); b(0.02,0.60,0.05,0.45,0,1.702,mat.body);
+     build(b){ b.phys(0.05,0.58,0,0.05,0.05,1.65); b.phys(0.02,0.6,0.05,0.45,0,1.702); [0.01,0.862].forEach(z=>{ b.phys(0,0.02,0.06,0.44,z,z+0.83); b.phys(-0.015,0,0.24,0.26,z+0.34,z+0.49); }); b.phys(0.02,0.6,0.45,0.53,0.02,1.682); [0.05,1.35].forEach(z=>b.phys(0.1,0.5,0.53,0.65,z,z+0.3)); // proxy = pre-detail mesh AABBs (realism-all C1)
+       b(0.05,0.58,0,0.05,0.05,1.65,mat.dark); b(0.02,0.60,0.05,0.45,0,1.702,mat.body);
        [0.01,0.862].forEach(z=>{ b(0,0.02,0.06,0.44,z,z+0.83,mat.wdoor); b(-0.015,0,0.24,0.26,z+0.34,z+0.49,mat.handle); }); // deep drawers, fronts west
        b(0.02,0.60,0.45,0.53,0.02,1.682,mat.kmat); [0.05,1.35].forEach(z=>b(0.10,0.50,0.53,0.65,z,z+0.30,mat.pillow)); }},   // mattress and two pillows at the towers
     {id:'gymwall',type:'шведская стенка 0.80, в распор пол–потолок, 12 перекладин',room:2,layer:'kid2',pos:[12.55,6.538],rot:0,size:[0.80,2.70,0.15],fixed:'wall',
-     build(b,g){ b(0,0.04,0,2.7,0.06,0.12,mat.lamp); b(0.76,0.80,0,2.7,0.06,0.12,mat.lamp);
+     build(b,g){ b.phys(0,0.04,0,2.7,0.06,0.12); b.phys(0.76,0.8,0,2.7,0.06,0.12); for(let y=0.30;y<=2.50+1e-6;y+=0.20) b.phys(0.02,0.78,y-0.0175,y+0.0175,0.0725,0.1075); // proxy = pre-detail mesh AABBs (realism-all C1)
+       b(0,0.04,0,2.7,0.06,0.12,mat.lamp); b(0.76,0.80,0,2.7,0.06,0.12,mat.lamp);
        for(let y=0.30;y<=2.50+1e-6;y+=0.20){ const r=new THREE.Mesh(new THREE.CylinderGeometry(0.0175,0.0175,0.76,12),mat.body); r.rotation.z=Math.PI/2; r.position.set(0.40,y,0.09); g.add(r); } }},
     {id:'pullup',type:'выносной турник шведской стенки, 2.35',room:2,layer:'kid2',pos:[12.50,6.538],rot:0,size:[0.90,2.36,0.55],fixed:'wall',
-     build(b,g){ b(0.02,0.05,2.32,2.36,0.02,0.55,mat.lamp); b(0.85,0.88,2.32,2.36,0.02,0.55,mat.lamp);
+     build(b,g){ b.phys(0.02,0.05,2.32,2.36,0.02,0.55); b.phys(0.85,0.88,2.32,2.36,0.02,0.55); b.phys(0,0.9,2.323,2.357,0.513,0.547); // proxy = pre-detail mesh AABBs (realism-all C1)
+       b(0.02,0.05,2.32,2.36,0.02,0.55,mat.lamp); b(0.85,0.88,2.32,2.36,0.02,0.55,mat.lamp);
        const r=new THREE.Mesh(new THREE.CylinderGeometry(0.017,0.017,0.90,12),mat.body); r.rotation.z=Math.PI/2; r.position.set(0.45,2.34,0.53); g.add(r); }},
     {id:'kidrug2',type:'ковёр-мат перед шведской стенкой',room:2,layer:'kid2',pos:[12.30,7.10],rot:0,size:[1.60,0.02,2.00],
-     build(b){ b(0,1.6,0,0.02,0,2.0,mat.wpanel); }},
+     build(b){ b.phys(0,1.6,0,0.02,0,2); // proxy = pre-detail mesh AABBs (realism-all C1)
+       b(0,1.6,0,0.02,0,2.0,mat.wpanel); }},
     {id:'kidlight2',type:'потолочный светильник Ø0.45, диммер',room:2,layer:'kid2',pos:[12.675,7.975],rot:0,size:[0.45,2.70,0.45],fixed:'wall',
-     build(b,g){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.225,0.225,0.04,32),mat.lamp); c.position.set(0.225,2.68,0.225); g.add(c); }},
+     build(b,g){ b.phys(0,0.45,2.66,2.7,0,0.45); // proxy = pre-detail mesh AABBs (realism-all C1)
+       const c=new THREE.Mesh(new THREE.CylinderGeometry(0.225,0.225,0.04,32),mat.lamp); c.position.set(0.225,2.68,0.225); g.add(c); }},
     {id:'desklamp2',type:'настольная лампа, гибкая штанга',room:2,layer:'kid2',pos:[11.45,9.20],rot:0,size:[0.20,1.20,0.20],
-     build(b,g){ b(0.07,0.13,0.72,0.77,0.07,0.13,mat.knob); const a=new THREE.Mesh(new THREE.CylinderGeometry(0.012,0.012,0.36,8),mat.knob); a.position.set(0.10,0.95,0.10); g.add(a);
+     build(b,g){ b.phys(0.07,0.13,0.72,0.77,0.07,0.13); b.phys(0.088,0.112,0.77,1.13,0.088,0.112); b.phys(0.02,0.18,1.1,1.2,0.02,0.18); // proxy = pre-detail mesh AABBs (realism-all C1)
+       b(0.07,0.13,0.72,0.77,0.07,0.13,mat.knob); const a=new THREE.Mesh(new THREE.CylinderGeometry(0.012,0.012,0.36,8),mat.knob); a.position.set(0.10,0.95,0.10); g.add(a);
        const s=new THREE.Mesh(new THREE.ConeGeometry(0.08,0.10,16,1,true),mat.lamp); s.position.set(0.10,1.15,0.10); g.add(s); }},
     {id:'bra3',type:'бра над лежанкой на торце северной башни, поворотное',room:2,layer:'kid2',pos:[14.394,7.198],rot:0,size:[0.16,1.40,0.245],fixed:'wall',
-     build(b,g){ b(0.03,0.13,1.25,1.35,0,0.02,mat.handle); b(0.075,0.085,1.295,1.305,0.02,0.13,mat.handle); const s=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.12,16),mat.lamp); s.position.set(0.08,1.30,0.165); g.add(s); }},
+     build(b,g){ b.phys(0.03,0.13,1.25,1.35,0,0.02); b.phys(0.075,0.085,1.295,1.305,0.02,0.13); b.phys(0.02,0.14,1.24,1.36,0.105,0.225); // proxy = pre-detail mesh AABBs (realism-all C1)
+       b(0.03,0.13,1.25,1.35,0,0.02,mat.handle); b(0.075,0.085,1.295,1.305,0.02,0.13,mat.handle); const s=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.12,16),mat.lamp); s.position.set(0.08,1.30,0.165); g.add(s); }},
     {id:'bra4',type:'бра для чтения над изголовьем, плоское',room:2,layer:'kid2',pos:[11.59,9.349],rot:0,size:[0.16,2.36,0.245],fixed:'wall',
-     build(b){ b(0.03,0.13,2.24,2.36,0.235,0.245,mat.knob); b(0.02,0.14,2.27,2.33,0.08,0.235,mat.lamp); }},
+     build(b){ b.phys(0.03,0.13,2.24,2.36,0.235,0.245); b.phys(0.02,0.14,2.27,2.33,0.08,0.235); // proxy = pre-detail mesh AABBs (realism-all C1)
+       b(0.03,0.13,2.24,2.36,0.235,0.245,mat.knob); b(0.02,0.14,2.27,2.33,0.08,0.235,mat.lamp); }},
     {id:'blind2',type:'кассета рулонной блэкаут-шторы над окном',room:2,layer:'kid2',pos:[14.694,7.31],rot:0,size:[0.08,2.38,1.48],fixed:'wall',
-     build(b){ b(0,0.08,2.30,2.38,0,1.48,mat.body); b(0.02,0.06,2.29,2.30,0.03,1.45,mat.knob); }},
+     build(b){ b.phys(0,0.08,2.3,2.38,0,1.48); b.phys(0.02,0.06,2.29,2.3,0.03,1.45); // proxy = pre-detail mesh AABBs (realism-all C1)
+       b(0,0.08,2.30,2.38,0,1.48,mat.body); b(0.02,0.06,2.29,2.30,0.03,1.45,mat.knob); }},
     {id:'sw2',type:'выключатель у двери, 2 клавиши: общий свет M11 + LED M12',room:2,layer:'kid2',pos:[11.38,6.538],rot:0,size:[0.08,0.99,0.01],fixed:'wall',build(b){ b(0,0.08,0.91,0.99,0,0.01,mat.lamp); }},
     // sockets: flat boxes 0.08 × 0.08 × 0.01 on the wall, purpose in the caption
     {id:'sock9',type:'розетки 2+2 USB над столом',room:2,layer:'kid2',pos:[11.087,8.57],rot:0,size:[0.01,0.94,0.08],fixed:'wall',build(b){ b(0,0.01,0.86,0.94,0,0.08,mat.lamp); }},
