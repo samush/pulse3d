@@ -280,29 +280,31 @@ baseGeo.rotateX(-Math.PI/2); baseGeo.translate(0,-0.12,0);
 const baseMat=new THREE.MeshLambertMaterial({color:0xcfcabf});
 scene.add(new THREE.Mesh(baseGeo,baseMat));
 
-// facade: cladding on the outer faces that carry windows (sand stone tiles, dark panels around windows, white floor belt — as on the real building)
+// facade: cladding on the street faces (sand stone tiles, dark panels around windows, white floor belt — as on the real building)
 var facadeGroup=new THREE.Group(), facadeMats=[]; // one material per face: each face has its own canvas
 (function(){
   const PX=96, BELT=0.37, Y0=-0.12, HT=H-Y0, STRIP=0.35; // px per metre; belt covers the slab edge and the wall foot
-  const o=PLAN.outer, faces=[];
-  for(let i=0;i<o.length;i++){ const a=o[i], b=o[(i+1)%o.length]; if(Math.abs(a[0]-b[0])<1e-6) faces.push({i,x:a[0],z0:Math.min(a[1],b[1]),z1:Math.max(a[1],b[1]),wins:[]}); } // only x=const faces carry windows in this plan
-  PLAN.windows.forEach(w=>{ const f=faces.filter(f=>f.z0<w.z1&&f.z1>w.z0).sort((p,q)=>Math.abs(p.x-w.x)-Math.abs(q.x-w.x))[0]; if(f) f.wins.push(w); }); // room 3 window hangs past its face: nearest face by x, hole clipped below
-  faces.forEach(({i,x,z0,z1,wins})=>{
-    if(!wins.length) return;
-    const L=z1-z0, nx=wins[0].nx, u=z=>Math.min(L-0.01,Math.max(0.01,nx>0?z1-z:z-z0)); // local u runs along the face so the front side looks outward; 1 cm inset keeps holes off the shape edge
+  const o=PLAN.outer, ccw=o.reduce((s,p,i)=>{ const q=o[(i+1)%o.length]; return s+p[0]*q[1]-q[0]*p[1]; },0)>0;
+  const faces=o.map((a,i)=>{ const b=o[(i+1)%o.length], dx=b[0]-a[0], dz=b[1]-a[1], L=Math.hypot(dx,dz), sg=ccw?1:-1; // outward normal: right of the edge for a CCW contour
+    const nx=sg*dz/L, nz=-sg*dx/L, tx=nz, tz=-nx, org=(dx*tx+dz*tz)>0?a:b; // tangent t is where local +X lands after rotateY(atan2(nx,nz))
+    return {i,L,nx,nz,lo:Math.min(a[1],b[1]),hi:Math.max(a[1],b[1]),u:p=>Math.min(L-0.01,Math.max(0.01,(p[0]-org[0])*tx+(p[1]-org[1])*tz)),org,wins:[]}; }); // 1 cm inset keeps holes off the shape edge
+  PLAN.windows.forEach(w=>{ const f=faces.filter(f=>Math.abs(f.nx)>0.5&&f.lo<w.z1&&f.hi>w.z0).sort((p,q)=>Math.abs(o[p.i][0]-w.x)-Math.abs(o[q.i][0]-w.x))[0]; if(f) f.wins.push(w); }); // room 3 window hangs past its face: nearest x-face by x, hole clipped
+  faces.forEach(({i,L,nx,nz,lo,u,org,wins})=>{
+    if(!wins.length&&!(nz<-0.5&&lo<minZ+1e-6)) return; // street faces: those with windows plus the blind north wall (not the corridor steps)
     const c=document.createElement('canvas'); c.width=Math.round(L*PX); c.height=Math.round(HT*PX); const g=c.getContext('2d');
     const rect=(u0,u1,y0,y1,col)=>{ g.fillStyle=col; g.fillRect(u0*PX,(HT-y1)*PX,(u1-u0)*PX,(y1-y0)*PX); };
     const tones=['#c9b47f','#c2ab74','#d0bc8a','#bda66c','#d6c497','#b8a068'];
     g.fillStyle='#a9945f'; g.fillRect(0,0,c.width,c.height); // joints
     for(let ty=0;ty*0.6<HT;ty++) for(let tx=0;tx*0.6<L;tx++){ const k=(tx*7+ty*13+i*3)%tones.length; rect(tx*0.6+0.005,(tx+1)*0.6-0.005,ty*0.6+0.005,(ty+1)*0.6-0.005,tones[k]); }
-    wins.forEach(w=>{ const u0=Math.max(0,Math.min(u(w.z0),u(w.z1))-STRIP), u1=Math.min(L,Math.max(u(w.z0),u(w.z1))+STRIP); rect(u0,u1,0,HT,'#45484b'); rect(u0+0.02,u1-0.02,0,HT,'#4d5054'); });
+    const span=w=>[u([w.x,w.z0]),u([w.x,w.z1])].sort((a,b)=>a-b);
+    wins.forEach(w=>{ const [a,b]=span(w), u0=Math.max(0,a-STRIP), u1=Math.min(L,b+STRIP); rect(u0,u1,0,HT,'#45484b'); rect(u0+0.02,u1-0.02,0,HT,'#4d5054'); });
     rect(0,L,0,BELT,'#e6e4de');
     const mat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)}); facadeMats.push(mat);
     const sh=new THREE.Shape(); sh.moveTo(0,0); sh.lineTo(L,0); sh.lineTo(L,HT); sh.lineTo(0,HT); sh.closePath();
-    sh.holes=wins.map(w=>{ const p=new THREE.Path(), u0=Math.min(u(w.z0),u(w.z1)), u1=Math.max(u(w.z0),u(w.z1)); p.moveTo(u0,w.y0-Y0); p.lineTo(u1,w.y0-Y0); p.lineTo(u1,w.y1-Y0); p.lineTo(u0,w.y1-Y0); p.closePath(); return p; });
+    sh.holes=wins.map(w=>{ const p=new THREE.Path(), [u0,u1]=span(w); p.moveTo(u0,w.y0-Y0); p.lineTo(u1,w.y0-Y0); p.lineTo(u1,w.y1-Y0); p.lineTo(u0,w.y1-Y0); p.closePath(); return p; });
     const geo=new THREE.ShapeGeometry(sh); const uv=geo.attributes.uv; for(let k=0;k<uv.count;k++) uv.setXY(k,uv.getX(k)/L,uv.getY(k)/HT);
-    geo.rotateY(nx>0?Math.PI/2:-Math.PI/2);
-    const m=new THREE.Mesh(geo,mat); m.position.set(x+nx*0.005,Y0,nx>0?z1:z0);
+    geo.rotateY(Math.atan2(nx,nz));
+    const m=new THREE.Mesh(geo,mat); m.position.set(org[0]+nx*0.005,Y0,org[1]+nz*0.005);
     facadeGroup.add(m);
   });
 })();
