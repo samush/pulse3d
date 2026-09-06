@@ -944,9 +944,11 @@ var finishGroup=new THREE.Group();
 
   // белый плинтус 10 см (от чистового пола) и обои вдоль стен (кроме санузлов и дверных проёмов)
   const plinthMat=new THREE.MeshBasicMaterial({color:0xffffff});
-  const loggiaMat=new THREE.MeshBasicMaterial({color:0x8e8f91}); // loggia 10 walls: grey paint as on the photos
-  window.wallFinMats=[wpMat,whiteWall,greyMat,woodMat,frameMat2,plinthMat,loggiaMat]; // гасятся ползунком «Стены»
-  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,loggia:loggiaMat,board:boardMat}; // для PBR-двойников (materials.js)
+  // matte greige paint (kitchen-living 4, master 3, corridor 5, loggia 10): flat colour with faint roller texture, canvas = 1 × 1 m
+  const paintTex=canvasTex(g=>{ g.fillStyle='#c3b8a9'; g.fillRect(0,0,256,256); for(let i=0;i<2500;i++){ g.fillStyle='rgba('+(Math.random()<0.5?'255,250,240':'120,105,90')+','+(0.03+0.05*Math.random())+')'; g.fillRect(Math.random()*256,Math.random()*256,1+Math.random()*2,1+Math.random()*2); } });
+  const paintMat=new THREE.MeshBasicMaterial({map:paintTex}); const PAINTED=new Set([3,4,5,10]);
+  window.wallFinMats=[wpMat,whiteWall,greyMat,woodMat,frameMat2,plinthMat,paintMat]; // гасятся ползунком «Стены»
+  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,paint:paintMat,board:boardMat}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
   // room 2, M10: finish block on the north wall behind the gym wall, 0.1–2.40, x 12.15–13.75; grey until the palette stage
   const accent2Mat=new THREE.MeshBasicMaterial({color:0xd6d6d3}); wallFinMats.push(accent2Mat); finishMats.accent2=accent2Mat;
@@ -1048,7 +1050,7 @@ var finishGroup=new THREE.Group();
           const g=new THREE.PlaneGeometry(L,y1-y0); scaleUV(g,L,y1-y0);
           g.rotateY(Math.atan2(nx,nz));
           // в постирочной 7 вместо обоев белая плитка, как в санузлах
-          const m=new THREE.Mesh(g,r.id===7?whiteWall:r.id===10?loggiaMat:wpMat); // laundry 7: white tile; loggia 10: grey paint
+          const m=new THREE.Mesh(g,r.id===7?whiteWall:PAINTED.has(r.id)?paintMat:wpMat); // laundry 7: white tile; PAINTED rooms: greige paint
           m.position.set((p0[0]+p1[0])/2,(y0+y1)/2,(p0[1]+p1[1])/2);
           grpFor((s0+s1)/2).add(m);
         }

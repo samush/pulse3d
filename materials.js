@@ -15,7 +15,7 @@ const MATERIALS={
   plinth:   {name:'плинтус белый',        rough:0.7},
   frame:    {name:'дверная коробка белая', rough:0.7},
   wall:     {name:'стена',                rough:0.95},
-  loggia:   {name:'лоджия, серая краска',  rough:0.9},
+  paint:    {name:'краска матовая, серо-бежевая', size:[1,1], rough:0.9, bump:0.15, albedo:0.9},
   facade:   {name:'фасад (камень, панели)', rough:0.85, bump:0.2, albedo:0.95},
   furniture:{name:'мебель (концепт)',     rough:0.8},
   // item material slots (items.js SLOTS): physical class of a detail, independent of its concept colour

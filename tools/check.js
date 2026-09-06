@@ -687,12 +687,12 @@ const { chromium } = require('playwright');
   const lg = await page.evaluate(() => {
     const frames = []; glassGroup.traverse(o => { if (o.isMesh && o.material === loggiaFrameMat) frames.push(o); });
     const bars = frames.filter(m => m.geometry.parameters.height > 0.9 && m.geometry.parameters.depth < 0.02).length;
-    const floor = [], walls = []; finishGroup.traverse(o => { if (!o.isMesh) return; const b = new THREE.Box3().setFromObject(o); if (b.min.x > 13.9 && b.max.x < 15.11 && b.min.z > 2.26 && b.max.z < 6.05) { if (b.max.y < 0.02) floor.push(o.material); else if (o.material === finishMats.loggia) walls.push(o); } });
+    const floor = [], walls = []; finishGroup.traverse(o => { if (!o.isMesh) return; const b = new THREE.Box3().setFromObject(o); if (b.min.x > 13.9 && b.max.x < 15.11 && b.min.z > 2.26 && b.max.z < 6.05) { if (b.max.y < 0.02) floor.push(o.material); else if (o.material === finishMats.paint) walls.push(o); } });
     return { frames: frames.length, bars, floorTile: floor.length === 1 && floor[0] === finishMats.tile, walls: walls.length };
   });
   if (lg.frames < 30 || lg.bars < 25) problems.push('лоджия 10: рам ' + lg.frames + ', прутьев ' + lg.bars + ' (ожидалось ≥30 и ≥25)');
   if (!lg.floorTile) problems.push('лоджия 10: пол не керамогранит');
-  if (lg.walls < 3) problems.push('лоджия 10: серых стеновых панелей ' + lg.walls + ' (< 3)');
+  if (lg.walls < 3) problems.push('лоджия 10: крашеных стеновых панелей ' + lg.walls + ' (< 3)');
   await page.evaluate(() => { setView('fpv'); controls.setFPV(14.45, 4.7, Math.PI / 2 + 0.3); }); await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(outDir, 'balcony10-glazing.png') });
   // floor layer 3: oak board over the living zone of room 4 (x 10.36–13.47) and the loggia, its own checkbox, PBR twin in visualization
