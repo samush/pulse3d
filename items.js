@@ -524,13 +524,15 @@ const PHYS={}; // id → boxes
   function poseGroup(g){ const u=g.userData; g.position.set(u.pos[0],0,u.pos[1]); g.rotation.y=-u.rot*Math.PI/180; g.updateMatrixWorld(true); rebuildPhys(g.userData.id); }
   const physMat=new THREE.MeshBasicMaterial({visible:false});
   function rebuildPhys(id){
-    (PHYS[id]||[]).forEach(m=>physGroup.remove(m)); PHYS[id]=[];
+    (PHYS[id]||[]).forEach(m=>{ physGroup.remove(m); m.geometry.dispose(); }); PHYS[id]=[];
     ITEM_GROUPS[id].traverse(o=>{ if(!o.isMesh) return; const bb=new THREE.Box3().setFromObject(o); const sz=new THREE.Vector3(); bb.getSize(sz);
       const m=new THREE.Mesh(new THREE.BoxGeometry(sz.x,sz.y,sz.z),physMat); bb.getCenter(m.position); m.userData.item=id; physGroup.add(m); PHYS[id].push(m); });
   }
   ITEMS.forEach(buildItem);
   physGroup.updateMatrixWorld(true);
   window.ITEMS=ITEMS;
+  // fingerprint of the geometry and catalogue: saved poses/marks carry it, a mismatch is reported instead of applied silently (A05)
+  window.SCENE_REV=(function(){ const s=JSON.stringify(PLAN)+ITEMS.map(i=>i.id+i.size.join()).join(); let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))|0; return (h>>>0).toString(16); })();
   // item corners on the plan (top view) with rotation — for markup, snapping and collisions
   window.itemCorners=function(id){
     const u=ITEM_GROUPS[id].userData, a=u.rot*Math.PI/180, c=Math.cos(a), s=Math.sin(a), [x,z]=u.pos, [w,,d]=u.size;

@@ -92,7 +92,7 @@
   }
   let hl=null;
   function highlight(){
-    if(hl){ scene.remove(hl); hl=null; }
+    if(hl){ scene.remove(hl); hl.geometry.dispose(); hl.material.dispose(); hl=null; }
     if(!LAY.sel) return;
     const bb=new THREE.Box3().setFromObject(LAY.sel);
     const g=new THREE.BoxGeometry(bb.max.x-bb.min.x+0.04,bb.max.y-bb.min.y+0.04,bb.max.z-bb.min.z+0.04);
@@ -125,13 +125,16 @@
   LAY.describe=describe; LAY.select=select; LAY.applyVariant=applyVariant; LAY.copyVariant=copyVariant;
 
   // ---------- persistence ----------
-  function dump(){ return {format:FORMAT,plan:PLAN.meta?PLAN.meta.version:1,cur:LAY.cur,variants:LAY.variants.filter(v=>!v.locked)}; }
+  function planVer(){ return PLAN.meta?PLAN.meta.version:1; }
+  function dump(){ return {format:FORMAT,plan:planVer(),rev:SCENE_REV,cur:LAY.cur,variants:LAY.variants.filter(v=>!v.locked)}; }
   function validate(d){ const e=[]; if(!d||typeof d!=='object') return ['не объект']; if(d.format!==FORMAT) e.push('формат '+d.format);
+    if(d.plan!==planVer()) e.push('план v'+d.plan+' вместо v'+planVer()+' — позы для другой геометрии');
     if(!Array.isArray(d.variants)) e.push('нет variants'); else d.variants.forEach((v,i)=>{ if(!v||typeof v.name!=='string'||(v.poses&&typeof v.poses!=='object')) e.push('вариант #'+(i+1)+' повреждён');
       else Object.entries(v.poses||{}).forEach(([id,p])=>{ if(!ITEM_GROUPS[id]) e.push('вариант «'+v.name+'»: неизвестный предмет '+id); else if(!p||!Array.isArray(p.pos)||p.pos.length!==2||!p.pos.every(Number.isFinite)||!Number.isFinite(p.rot)) e.push('вариант «'+v.name+'»: поза '+id+' повреждена'); }); });
     return e; }
   function persist(){ try{ if(LAY.badSave){ localStorage.setItem(KEY+'.bad',LAY.badSave); LAY.badSave=null; } localStorage.setItem(KEY,JSON.stringify(dump())); }catch(e){ setHint('Не удалось сохранить варианты: '+e.message); } }
-  function restore(d,save){ LAY.variants=[{name:'Исходная',locked:true,poses:{}}].concat(d.variants.map(v=>({name:v.name,poses:v.poses||{}}))); applyVariant(Math.min(Math.max(0,(d.cur|0)),LAY.variants.length-1),save); }
+  function restore(d,save){ LAY.variants=[{name:'Исходная',locked:true,poses:{}}].concat(d.variants.map(v=>({name:v.name,poses:v.poses||{}}))); applyVariant(Math.min(Math.max(0,(d.cur|0)),LAY.variants.length-1),save);
+    LAY.revNote=d.rev&&d.rev!==SCENE_REV?'геометрия или предметы менялись после сохранения (rev '+d.rev+' → '+SCENE_REV+'), проверьте расстановку':null; if(LAY.revNote) setHint(LAY.revNote); }
   function loadLocal(){ let raw=null; try{ raw=localStorage.getItem(KEY); }catch(e){}
     LAY.variants=[{name:'Исходная',locked:true,poses:{}}];
     if(!raw){ applyVariant(0,false); return; }
@@ -166,6 +169,5 @@
   addEventListener('keydown',e=>{ if(!LAY.on) return; const inField=/INPUT|TEXTAREA|SELECT/.test(document.activeElement&&document.activeElement.tagName);
     if(e.key==='Escape'){ if(inField){document.activeElement.blur();return;} if(LAY.tool){ LAY.tool=null; setHint('Отменено'); } else select(null); }
     if(inField) return; if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){ undo(); e.preventDefault(); } });
-  ['vTop','vFP'].forEach(id=>document.getElementById(id).addEventListener('click',()=>{ if(LAY.on&&!controls.plan) toggle(false); }));
   loadLocal();
 })();

@@ -48,7 +48,7 @@ const controls={
     this.r0=this.r;
     this.phi=Math.acos(Math.min(1,Math.max(-1,dy/this.r)));
     this.theta=Math.atan2(dx,dz);
-    this.apply();
+    this.apply(); syncMode();
   },
   fpv:false, plan:false, pos:new THREE.Vector3(),
   dir(){
@@ -62,7 +62,7 @@ const controls={
     const hh=Math.max((maxZ-minZ)/2*1.08, (maxX-minX)/2*1.08*innerHeight/aw); // половина видимой высоты, м
     this.r=hh/TAN22; this.r0=this.r; this.theta=0; this.phi=this.minPhi;
     this.target.set(cx-((PANEL_W-MAP_W)/2)*(2*hh/innerHeight),0,cz); // центр квартиры — в центре свободной области
-    this.apply();
+    this.apply(); syncMode();
   },
   lookDown(){ this.theta=0; this.phi=this.minPhi; this.apply(); }, // ровный план для разметки и расстановки
   setFPV(x,z,theta){
@@ -71,7 +71,7 @@ const controls={
     const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
     this.pos.set(x,1.57,z);
     this.theta=theta; this.phi=Math.PI/2+0.03;
-    this.apply();
+    this.apply(); syncMode();
   },
   apply(){
     camera=this.plan?ortho:persp;
@@ -211,6 +211,14 @@ function setView(kind){
   else if(kind==='door'){controls.setFPV(7.35,8.6,Math.PI);}
   else if(kind==='room4'){controls.setFPV(11.0,3.4,-0.75);}
   else{const d=fitDist(0.78);controls.setPose(cx+d*0.72,d*0.82,cz+d*0.77,cx,0,cz);}
+}
+function syncMode(){ // called by every camera-mode switch (setPlan/setFPV/setPose): UI, plan tools and render mode follow the camera (A03)
+  fpvhint.hidden=!controls.fpv; walkpad.hidden=!controls.fpv;
+  panbtn.hidden=controls.fpv; panbtn.classList.remove('on');
+  document.querySelector('.hint').textContent=controls.plan?'ЛКМ — вращать · колесо — масштаб · ПКМ или пробел — сдвиг':'ЛКМ — вращать · колесо — зум · ПКМ или пробел — сдвиг';
+  if(window.MK&&MK.on&&!controls.plan) MK.toggle(false);
+  if(window.LAY&&LAY.on&&!controls.plan) LAY.toggle(false);
+  if(window.VIZ) VIZ.apply();
 }
 
 // lights
@@ -460,11 +468,6 @@ function sizeTouchButtons(){
   document.documentElement.style.setProperty('--wkjs',wk+'px');
 }
 sizeTouchButtons(); addEventListener('resize',sizeTouchButtons);
-['vTop','vFP'].forEach(id=>document.getElementById(id).addEventListener('click',()=>{
-  fpvhint.hidden=!controls.fpv; walkpad.hidden=!controls.fpv;
-  panbtn.hidden=controls.fpv; panbtn.classList.remove('on');
-  document.querySelector('.hint').textContent=controls.plan?'ЛКМ — вращать · колесо — масштаб · ПКМ или пробел — сдвиг':'ЛКМ — вращать · колесо — зум · ПКМ или пробел — сдвиг';
-}));
 // экранные кнопки прогулки ставят те же флаги, что и клавиатура
 walkpad.querySelectorAll('button').forEach(b=>{
   const set=v=>e=>{e.preventDefault();walkKeys[b.dataset.key]=v;};

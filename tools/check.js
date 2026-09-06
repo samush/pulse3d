@@ -198,6 +198,36 @@ const { chromium } = require('playwright');
   if (!g0.imp || !g0.noImg) problems.push('разметка: ID предмета из импорта вставлен как HTML (A02)');
   if (!g0b.kept) problems.push('сохранения: повреждённый localStorage перезаписан при загрузке (A04)');
   if (!g0b.backed) problems.push('сохранения: повреждённая строка не сохранена в *.bad перед перезаписью (A04)');
+  // A05: a variant saved for another plan version is a conflict, poses stay; a changed geometry fingerprint is reported but applied
+  const a05 = await page.evaluate(() => {
+    const p0 = ITEM_GROUPS.sofa.userData.pos.slice(); const doc = v => JSON.stringify({ format: 1, plan: v, cur: 1, variants: [{ name: 'чужой', poses: { sofa: { pos: [1, 1], rot: 0 } } }] });
+    const rejected = !LAY.importText(doc(999)) && ITEM_GROUPS.sofa.userData.pos.join() === p0.join() && LAY.variants.length === 1;
+    const ok = LAY.importText(JSON.stringify({ ...JSON.parse(doc(PLAN.meta.version)), rev: 'deadbeef' })); const noted = !!LAY.revNote && ITEM_GROUPS.sofa.userData.pos.join() === '1,1';
+    LAY.variants.splice(1); LAY.applyVariant(0); return { rejected, ok, noted, rev: typeof SCENE_REV === 'string' && LAY.dump().rev === SCENE_REV };
+  });
+  if (!a05.rejected) problems.push('расстановка: вариант для другого плана применён без конфликта (A05)');
+  if (!a05.ok || !a05.noted || !a05.rev) problems.push('расстановка: fingerprint геометрии не сохраняется или не сообщается (A05)');
+  // A03: walk + visualization → «Разметка» button must land in plan with flat materials, whatever path led there
+  await page.click('#vFP'); await page.waitForTimeout(200);
+  await page.evaluate(() => VIZ.set(true)); await page.waitForTimeout(300);
+  await page.click('#mkBtn'); await page.waitForTimeout(200);
+  const a03 = await page.evaluate(() => { const out = { plan: controls.plan, mk: MK.on, viz: VIZ.active, shadows: renderer.shadowMap.enabled, wall: wallGroup.children[0].material.type, pref: VIZ.on };
+    MK.toggle(false); setView('door'); out.back = VIZ.active && renderer.shadowMap.enabled && !document.getElementById('walkpad').hidden; VIZ.set(false); setView('top'); return out; });
+  if (!a03.plan || !a03.mk || a03.viz || a03.shadows || a03.wall !== 'MeshBasicMaterial') problems.push('режимы: разметка из прогулки с визуализацией оставила PBR/тени (A03): ' + JSON.stringify(a03));
+  if (!a03.pref || !a03.back) problems.push('режимы: предпочтение визуализации потеряно или программный setView не вернул её (A03)');
+  // A06: selecting the same mark / item many times must not grow GPU resources
+  const a06 = await page.evaluate(async () => {
+    const frame = () => new Promise(r => requestAnimationFrame(r)); const mem = () => ({ g: renderer.info.memory.geometries, t: renderer.info.memory.textures });
+    MK.toggle(true); const m = MK.addRect([3, 3], 1, 0.5, 0); const m2 = MK.addSeg([4, 4], [5, 4]);
+    for (let i = 0; i < 5; i++) { MK.select(m); await frame(); MK.select(m2); await frame(); }
+    const b0 = mem();
+    for (let i = 0; i < 30; i++) { MK.select(m); await frame(); MK.select(m2); await frame(); MK.edit(m, { w: 1 + i * 0.01 }); await frame(); }
+    const b1 = mem(); MK.marks.slice().forEach(k => MK.remove(k)); MK.toggle(false);
+    LAY.toggle(true); for (let i = 0; i < 3; i++) { LAY.select('sofa'); await frame(); LAY.select(null); await frame(); }
+    const c0 = mem(); for (let i = 0; i < 30; i++) { LAY.select('sofa'); await frame(); LAY.select('table'); await frame(); } LAY.select(null); await frame(); const c1 = mem(); LAY.toggle(false);
+    return { dg: b1.g - b0.g, dt: b1.t - b0.t, lg: c1.g - c0.g };
+  });
+  if (a06.dg > 0 || a06.dt > 0 || a06.lg > 0) problems.push('ресурсы: выбор метки/предмета накапливает geometries/textures (A06): ' + JSON.stringify(a06));
   if (!mk.bind) problems.push('разметка: привязка к краю дивана не сработала');
   if (!mk.wall) problems.push('разметка: описание настенной точки неверно');
   if (!mk.reject) problems.push('разметка: битый импорт не отклонён или стёр метки');

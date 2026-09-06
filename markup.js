@@ -113,38 +113,45 @@
   const matLine=new THREE.LineBasicMaterial({color:0xd32f2f}), matLineSel=new THREE.LineBasicMaterial({color:0x2c5aa0});
   const matBox=new THREE.MeshBasicMaterial({color:0xd32f2f,transparent:true,opacity:0.18,depthWrite:false});
   const matBoxSel=new THREE.MeshBasicMaterial({color:0x2c5aa0,transparent:true,opacity:0.22,depthWrite:false});
+  // shared marker geometries and a label cache: redraw() reuses them, per-mark geometry is disposed on rebuild (A06)
+  const geoPt=new THREE.CylinderGeometry(0.07,0.07,0.02,20), geoDot=new THREE.CylinderGeometry(0.05,0.05,0.02,16), geoAnchor=new THREE.CylinderGeometry(0.06,0.06,0.02,16);
+  const labels=new Map(); // text → SpriteMaterial
   function label(text,x,z,y){
-    const c=document.createElement('canvas'); c.width=128; c.height=48; const g=c.getContext('2d');
-    g.font='bold 30px system-ui,sans-serif'; g.textAlign='center'; g.textBaseline='middle';
-    g.fillStyle='rgba(255,255,255,0.85)'; g.fillRect(0,0,128,48); g.fillStyle='#26282c'; g.fillText(text,64,24);
-    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));
+    let sm=labels.get(text);
+    if(!sm){ const c=document.createElement('canvas'); c.width=128; c.height=48; const g=c.getContext('2d');
+      g.font='bold 30px system-ui,sans-serif'; g.textAlign='center'; g.textBaseline='middle';
+      g.fillStyle='rgba(255,255,255,0.85)'; g.fillRect(0,0,128,48); g.fillStyle='#26282c'; g.fillText(text,64,24);
+      sm=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}); labels.set(text,sm); }
+    const sp=new THREE.Sprite(sm); sp.userData.label=text;
     sp.scale.set(0.6,0.225,1); sp.position.set(x,y,z); sp.renderOrder=20; return sp;
   }
+  function own(o){ o.userData.own=true; return o; } // geometry unique to this object, freed on the next redraw
   function redraw(){
-    while(group.children.length) group.remove(group.children[0]);
+    while(group.children.length){ const o=group.children[0]; group.remove(o); if(o.userData.own) o.geometry.dispose(); }
     MK.marks.forEach(m=>{
       const sel=m===MK.sel, y=m.y0||0;
       if(m.type==='point'){
-        const d=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.02,20),sel?matSel:matPt);
+        const d=new THREE.Mesh(geoPt,sel?matSel:matPt);
         d.position.set(m.pts[0][0],y+0.01,m.pts[0][1]); group.add(d);
         group.add(label(m.id,m.pts[0][0],m.pts[0][1],y+0.4));
       } else if(m.type==='seg'){
         const g=new THREE.BufferGeometry().setFromPoints(m.pts.map(p=>new THREE.Vector3(p[0],y+0.02,p[1])));
-        group.add(new THREE.Line(g,sel?matLineSel:matLine));
-        m.pts.forEach(p=>{const d=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.02,16),sel?matSel:matPt); d.position.set(p[0],y+0.01,p[1]); group.add(d);});
+        group.add(own(new THREE.Line(g,sel?matLineSel:matLine)));
+        m.pts.forEach(p=>{const d=new THREE.Mesh(geoDot,sel?matSel:matPt); d.position.set(p[0],y+0.01,p[1]); group.add(d);});
         const mid=[(m.pts[0][0]+m.pts[1][0])/2,(m.pts[0][1]+m.pts[1][1])/2];
         group.add(label(m.id+' '+segLen(m).toFixed(2)+' м',mid[0],mid[1],y+0.4));
       } else {
         const h=Math.max(0.02,(m.y1||0)-(m.y0||0));
-        const b=new THREE.Mesh(new THREE.BoxGeometry(m.w,h,m.d),sel?matBoxSel:matBox);
+        const b=own(new THREE.Mesh(new THREE.BoxGeometry(m.w,h,m.d),sel?matBoxSel:matBox));
         b.geometry.translate(m.w/2,h/2,m.d/2); b.rotation.y=-m.rot*Math.PI/180; b.position.set(m.pts[0][0],y,m.pts[0][1]); group.add(b);
-        const e=new THREE.LineSegments(new THREE.EdgesGeometry(b.geometry),sel?matLineSel:matLine); e.rotation.copy(b.rotation); e.position.copy(b.position); group.add(e);
+        const e=own(new THREE.LineSegments(new THREE.EdgesGeometry(b.geometry),sel?matLineSel:matLine)); e.rotation.copy(b.rotation); e.position.copy(b.position); group.add(e);
         const c=rectCorners(m); const cx=(c[0][0]+c[2][0])/2, cz=(c[0][1]+c[2][1])/2;
         group.add(label(m.id,cx,cz,y+h+0.3));
-        const a=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.02,16),sel?matSel:matPt); a.position.set(m.pts[0][0],y+0.02,m.pts[0][1]); group.add(a); // anchor point
+        const a=new THREE.Mesh(geoAnchor,sel?matSel:matPt); a.position.set(m.pts[0][0],y+0.02,m.pts[0][1]); group.add(a); // anchor point
       }
     });
-    MK.draft.forEach(p=>{const d=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.02,16),matSel); d.position.set(p[0],0.02,p[1]); group.add(d);});
+    MK.draft.forEach(p=>{const d=new THREE.Mesh(geoDot,matSel); d.position.set(p[0],0.02,p[1]); group.add(d);});
+    const used=new Set(group.children.map(o=>o.userData.label)); labels.forEach((sm,t)=>{ if(!used.has(t)){ sm.map.dispose(); sm.dispose(); labels.delete(t); } });
   }
   function segLen(m){ return Math.hypot(m.pts[1][0]-m.pts[0][0], m.pts[1][1]-m.pts[0][1]); }
 
@@ -260,7 +267,7 @@
   // ---------- persistence: localStorage + file ----------
   const KEY='pulse3d.marks', FORMAT=1;
   function planVer(){ return PLAN.meta?PLAN.meta.version:1; }
-  function dump(){ return {format:FORMAT,plan:planVer(),next:MK.next,marks:MK.marks.map(m=>{const c=Object.assign({},m); delete c.conflict; return c;})}; }
+  function dump(){ return {format:FORMAT,plan:planVer(),rev:SCENE_REV,next:MK.next,marks:MK.marks.map(m=>{const c=Object.assign({},m); delete c.conflict; return c;})}; }
   function validate(d){ // list of format errors; empty means the data is usable
     const err=[]; if(!d||typeof d!=='object') return ['не объект'];
     if(d.format!==FORMAT) err.push('формат '+d.format+' вместо '+FORMAT);
@@ -280,7 +287,7 @@
   function restore(d,source){ // load the data; returns status text
     MK.marks=d.marks.map(m=>Object.assign({name:'',y0:0,y1:m.type==='rect'?0.9:0,dir:'S'},m)); // defaults for optional fields the card reads
     MK.next=Math.max(d.next||1,...MK.marks.map(m=>parseInt(m.id.slice(1))+1),1); MK.hist=[]; MK.sel=null;
-    const notes=[]; if(d.plan!==planVer()) notes.push('план v'+d.plan+' → v'+planVer()+': координаты оставлены как есть, проверьте метки');
+    const notes=[]; if(d.plan!==planVer()) notes.push('план v'+d.plan+' → v'+planVer()+': координаты оставлены как есть, проверьте метки'); else if(d.rev&&d.rev!==SCENE_REV) notes.push('геометрия или предметы менялись после сохранения, проверьте метки');
     let moved=0; MK.marks.forEach(m=>{ if(m.bind){ const e=bindEdge(m.bind); const p=m.pts[0]; const cur=(m.bind.side==='W'||m.bind.side==='E')?p[0]:p[1];
       if(e==null){ m.conflict='предмета нет'; moved++; } else if(Math.abs(e-cur)>0.001){ m.conflict='предмет сдвинулся'; moved++; } } });
     if(moved) notes.push('привязок с конфликтом: '+moved+' (метки не перенесены)');
@@ -339,8 +346,6 @@
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){ undo(); e.preventDefault(); }
     if(e.key==='1') setTool('point'); if(e.key==='2') setTool('seg'); if(e.key==='3') setTool('rect');
   });
-  // leaving the plan turns markup off, marks are kept
-  ['vTop','vFP'].forEach(id=>document.getElementById(id).addEventListener('click',()=>{ if(MK.on&&!controls.plan) toggle(false); }));
   group.visible=true;
   loadLocal();
 })();

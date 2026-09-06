@@ -69,7 +69,6 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
   VIZ.apply=apply;
   VIZ.set=function(on){ VIZ.on=!!on; try{ localStorage.setItem(KEY,VIZ.on?'1':'0'); }catch(e){} const cb=document.getElementById('viz'); if(cb) cb.checked=VIZ.on; apply(); };
   document.getElementById('viz').addEventListener('change',e=>VIZ.set(e.target.checked));
-  ['vTop','vFP'].forEach(id=>document.getElementById(id).addEventListener('click',()=>setTimeout(apply,0)));
   let saved=null; try{ saved=localStorage.getItem(KEY); }catch(e){}
   if(saved==='1') VIZ.set(true); else apply();
 })();
