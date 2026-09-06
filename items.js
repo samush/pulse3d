@@ -24,7 +24,7 @@ const PHYS={}; // id → boxes
     tulle:new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:0.3,side:THREE.DoubleSide}),
   };
   // material slot = physical class for the visualization twin (B04); concept colours stay grey, MATERIALS[slot] gives roughness/metalness/emissive
-  const SLOTS={chrome:['handle','knob','ring'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle'],emitter:['led'],screen:['screen'],wood:['table'],paint:['chair'],plastic:['plastic'],ceramic:['ceramic'],acrylic:['acrylic'],leather:['leather'],mirror:['mirror']};
+  const SLOTS={chrome:['handle','knob','ring'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle'],emitter:['led'],screen:['screen'],wood:['table'],paint:['chair','base','upper','door','body','wbody','wdoor','wpanel','kbody'],plastic:['plastic'],ceramic:['ceramic'],acrylic:['acrylic'],leather:['leather'],mirror:['mirror']};
   Object.entries(SLOTS).forEach(([slot,keys])=>keys.forEach(k=>{ mat[k].userData.slot=slot; }));
   window.ITEM_MATS=mat;
   const chair=(backEast)=>(b,g)=>{ // chair 0.42×0.42, back on the west or east side
