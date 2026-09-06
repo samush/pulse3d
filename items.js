@@ -192,22 +192,22 @@ const PHYS={}; // id → boxes
        b(0.03,0.52,0,0.03,0.26,0.29,mat.knob); b(0.26,0.29,0,0.03,0.03,0.52,mat.knob); }},
     {id:'deskshelf2',type:'полка над столом под платформой',room:2,layer:'kid',pos:[11.087,7.90],rot:0,size:[0.22,1.28,1.55],fixed:'wall',
      build(b){ b(0,0.22,1.25,1.28,0,1.55,mat.body); [0.05,1.48].forEach(z=>b(0,0.02,1.13,1.25,z,z+0.02,mat.body)); }},
-    {id:'tower2n',type:'стеллаж-башня северная: низ шкаф со штангой, верх открытые ячейки',room:2,layer:'kid',pos:[14.074,6.518],rot:0,size:[0.70,2.70,0.78],fixed:'wall',
-     build(b){ const t=0.02, D=0.78;
-       b(0,0.7,0,t,0,D,mat.body); b(0,0.7,2.7-t,2.7,0,D,mat.body); b(0.68,0.7,t,2.7-t,0,D,mat.body); b(0.02,0.68,t,2.7-t,0,t,mat.body); b(0.02,0.68,t,2.7-t,D-t,D,mat.body); // box, back at the east wall
-       [1.50,1.90,2.30].forEach(y=>b(t,0.68,y-t,y,t,D-t,mat.body));                                  // shelves: closed 0–1.5, 3 open rows above
+    {id:'tower2n',type:'стеллаж-башня северная: низ шкаф со штангой, верх открытые ячейки',room:2,layer:'kid',pos:[14.174,6.518],rot:0,size:[0.60,2.70,0.68],fixed:'wall',
+     build(b){ const t=0.02, D=0.68;
+       b(0,0.6,0,t,0,D,mat.body); b(0,0.6,2.7-t,2.7,0,D,mat.body); b(0.58,0.6,t,2.7-t,0,D,mat.body); b(0.02,0.58,t,2.7-t,0,t,mat.body); b(0.02,0.58,t,2.7-t,D-t,D,mat.body); // box, back at the east wall
+       [1.50,1.90,2.30].forEach(y=>b(t,0.58,y-t,y,t,D-t,mat.body));                                  // shelves: closed 0–1.5, 3 open rows above
        b(0,t,t+0.003,1.50-t-0.003,t+0.003,D-t-0.003,mat.wdoor); b(-0.015,0,0.75,0.95,D/2-0.01,D/2+0.01,mat.handle); // wardrobe door on the west face
      }},
-    {id:'tower2s',type:'стеллаж-башня южная: 2 ящика, открытые ячейки',room:2,layer:'kid',pos:[14.074,8.80],rot:0,size:[0.70,2.70,0.719],fixed:'wall',
-     build(b){ const t=0.02, D=0.719;
-       b(0,0.7,0,t,0,D,mat.body); b(0,0.7,2.7-t,2.7,0,D,mat.body); b(0.68,0.7,t,2.7-t,0,D,mat.body); b(0.02,0.68,t,2.7-t,0,t,mat.body); b(0.02,0.68,t,2.7-t,D-t,D,mat.body);
-       [0.90,1.35,1.80,2.25].forEach(y=>b(t,0.68,y-t,y,t,D-t,mat.body));                              // 4 open rows above the drawers
+    {id:'tower2s',type:'стеллаж-башня южная: 2 ящика, открытые ячейки',room:2,layer:'kid',pos:[14.174,8.90],rot:0,size:[0.60,2.70,0.619],fixed:'wall',
+     build(b){ const t=0.02, D=0.619;
+       b(0,0.6,0,t,0,D,mat.body); b(0,0.6,2.7-t,2.7,0,D,mat.body); b(0.58,0.6,t,2.7-t,0,D,mat.body); b(0.02,0.58,t,2.7-t,0,t,mat.body); b(0.02,0.58,t,2.7-t,D-t,D,mat.body);
+       [0.90,1.35,1.80,2.25].forEach(y=>b(t,0.58,y-t,y,t,D-t,mat.body));                              // 4 open rows above the drawers
        [0.03,0.46].forEach(y=>{ b(0,t,y,y+0.41,t+0.003,D-t-0.003,mat.wdoor); b(-0.015,0,y+0.2,y+0.22,D/2-0.075,D/2+0.075,mat.handle); }); // drawer fronts west
      }},
-    {id:'windowseat2',type:'лежанка у окна с 2 глубокими ящиками и матрасиком',room:2,layer:'kid',pos:[14.074,7.30],rot:0,size:[0.70,0.65,1.50],fixed:'wall',
-     build(b){ b(0.05,0.68,0,0.05,0.05,1.45,mat.dark); b(0.02,0.70,0.05,0.45,0,1.50,mat.body);
-       [0.01,0.76].forEach(z=>{ b(0,0.02,0.06,0.44,z,z+0.73,mat.wdoor); b(-0.015,0,0.24,0.26,z+0.29,z+0.44,mat.handle); }); // deep drawers, fronts west
-       b(0.02,0.70,0.45,0.53,0.02,1.48,mat.kmat); [0.05,1.15].forEach(z=>b(0.10,0.60,0.53,0.65,z,z+0.30,mat.pillow)); }},   // mattress and two pillows at the towers
+    {id:'windowseat2',type:'лежанка у окна с 2 глубокими ящиками и матрасиком, 1.70 × 0.60',room:2,layer:'kid',pos:[14.174,7.198],rot:0,size:[0.60,0.65,1.702],fixed:'wall',
+     build(b){ b(0.05,0.58,0,0.05,0.05,1.65,mat.dark); b(0.02,0.60,0.05,0.45,0,1.702,mat.body);
+       [0.01,0.862].forEach(z=>{ b(0,0.02,0.06,0.44,z,z+0.83,mat.wdoor); b(-0.015,0,0.24,0.26,z+0.34,z+0.49,mat.handle); }); // deep drawers, fronts west
+       b(0.02,0.60,0.45,0.53,0.02,1.682,mat.kmat); [0.05,1.35].forEach(z=>b(0.10,0.50,0.53,0.65,z,z+0.30,mat.pillow)); }},   // mattress and two pillows at the towers
     {id:'gymwall',type:'шведская стенка 0.80, в распор пол–потолок, 12 перекладин',room:2,layer:'kid',pos:[12.55,6.538],rot:0,size:[0.80,2.70,0.15],fixed:'wall',
      build(b,g){ b(0,0.04,0,2.7,0.06,0.12,mat.lamp); b(0.76,0.80,0,2.7,0.06,0.12,mat.lamp);
        for(let y=0.30;y<=2.50+1e-6;y+=0.20){ const r=new THREE.Mesh(new THREE.CylinderGeometry(0.0175,0.0175,0.76,12),mat.body); r.rotation.z=Math.PI/2; r.position.set(0.40,y,0.09); g.add(r); } }},
@@ -221,7 +221,7 @@ const PHYS={}; // id → boxes
     {id:'desklamp2',type:'настольная лампа, гибкая штанга',room:2,layer:'kid',pos:[11.45,9.20],rot:0,size:[0.20,1.20,0.20],
      build(b,g){ b(0.07,0.13,0.72,0.77,0.07,0.13,mat.knob); const a=new THREE.Mesh(new THREE.CylinderGeometry(0.012,0.012,0.36,8),mat.knob); a.position.set(0.10,0.95,0.10); g.add(a);
        const s=new THREE.Mesh(new THREE.ConeGeometry(0.08,0.10,16,1,true),mat.lamp); s.position.set(0.10,1.15,0.10); g.add(s); }},
-    {id:'bra3',type:'бра над лежанкой на торце северной башни, поворотное',room:2,layer:'kid',pos:[14.32,7.298],rot:0,size:[0.16,1.40,0.245],fixed:'wall',
+    {id:'bra3',type:'бра над лежанкой на торце северной башни, поворотное',room:2,layer:'kid',pos:[14.394,7.198],rot:0,size:[0.16,1.40,0.245],fixed:'wall',
      build(b,g){ b(0.03,0.13,1.25,1.35,0,0.02,mat.handle); b(0.075,0.085,1.295,1.305,0.02,0.13,mat.handle); const s=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.12,16),mat.lamp); s.position.set(0.08,1.30,0.165); g.add(s); }},
     {id:'bra4',type:'бра для чтения над изголовьем, плоское',room:2,layer:'kid',pos:[11.59,9.349],rot:0,size:[0.16,2.36,0.245],fixed:'wall',
      build(b){ b(0.03,0.13,2.24,2.36,0.235,0.245,mat.knob); b(0.02,0.14,2.27,2.33,0.08,0.235,mat.lamp); }},
