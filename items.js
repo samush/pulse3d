@@ -1,9 +1,9 @@
 // Interior items as data. Each item is a THREE.Group with a permanent id and userData
 // {id, type, room, layer, pos:[x,z], rot, size:[w,h,d], fixed}. Parts are built in item-local coords: x right 0..w,
 // z down 0..d (at rot=0), y from the finished floor; pos is the north-west corner at rot=0, rot is degrees clockwise
-// in top view (same as markup rectangles). fixed:'wall' moves only along its wall. Layers: kitchen/hall/laundry/kid (room 1)/kid2 (room 2)/master/bath (room 9)/bath2 (room 8)/wardrobe.
-var furnGroup=new THREE.Group(), hallGroup=new THREE.Group(), laundryGroup=new THREE.Group(), kidGroup=new THREE.Group(), kid2Group=new THREE.Group(), masterGroup=new THREE.Group(), bathGroup=new THREE.Group(), bath2Group=new THREE.Group(), wardrobeGroup=new THREE.Group();
-const LAYERS={kitchen:furnGroup,hall:hallGroup,laundry:laundryGroup,kid:kidGroup,kid2:kid2Group,master:masterGroup,bath:bathGroup,bath2:bath2Group,wardrobe:wardrobeGroup};
+// in top view (same as markup rectangles). fixed:'wall' moves only along its wall. Layers: kitchen/hall/laundry/kid (room 1)/kid2 (room 2)/master/bath (room 9)/bath2 (room 8)/wardrobe/balcony.
+var furnGroup=new THREE.Group(), hallGroup=new THREE.Group(), laundryGroup=new THREE.Group(), kidGroup=new THREE.Group(), kid2Group=new THREE.Group(), masterGroup=new THREE.Group(), bathGroup=new THREE.Group(), bath2Group=new THREE.Group(), wardrobeGroup=new THREE.Group(), balconyGroup=new THREE.Group();
+const LAYERS={kitchen:furnGroup,hall:hallGroup,laundry:laundryGroup,kid:kidGroup,kid2:kid2Group,master:masterGroup,bath:bathGroup,bath2:bath2Group,wardrobe:wardrobeGroup,balcony:balconyGroup};
 const ITEM_GROUPS={}; // id → group
 // Walk obstacles: one axis-aligned box per item mesh (bed legs block, the platform above the head does not).
 // Kept apart from visibility layers: a hidden layer is still physically there.
@@ -470,6 +470,47 @@ const PHYS={}; // id → boxes
      build(b){ b(0,0.02,1.98,2.00,0,1.55,mat.led); }},
     {id:'sw7',type:'датчик движения + выключатель в коридоре у двери гардеробной: свет M9+M10 от датчика, клавиша — принудительно',room:5,layer:'wardrobe',pos:[5.76,4.033],rot:0,size:[0.08,0.99,0.01],fixed:'wall',build(b){ b(0,0.08,0.91,0.99,0,0.01,mat.lamp); }},
     {id:'sock25',type:'розетка у двери для пылесоса и утюга, h 0.30',room:6,layer:'wardrobe',pos:[6.875,3.55],rot:0,size:[0.01,0.34,0.08],fixed:'wall',build(b){ b(0,0.01,0.26,0.34,0,0.08,mat.lamp); }},
+    // ---- loggia 10 (tasks/balcony10/README.md, marks M1–M13; grey materials only) ----
+    // Room box: x 13.91–15.1, z 2.268–6.043; glazing on the east wall z 2.40–5.90, opening from the kitchen on the west wall z 2.80–4.60 (top 2.10).
+    // South end: cantilevered desk and the IT shelf above it; north end: the shelving unit. Nothing else stands on the floor,
+    // the opening zone x 13.91–14.4 × z 2.80–4.60 stays clear (check.js).
+    {id:'bdesk',type:'подвесной стол 1.19×0.80 во всю ширину у южного торца, верх 0.75, консоли к южной и западной стенам, уголок у стекла; под столом пусто',room:10,layer:'balcony',pos:[13.91,5.24],rot:0,size:[1.19,0.75,0.80],fixed:'wall',
+     build(b){
+       b(0,1.19,0.71,0.75,0,0.80,mat.table);                                                         // top 0.04
+       b(0,1.19,0.66,0.71,0.75,0.80,mat.dark); b(0,0.05,0.66,0.71,0,0.75,mat.dark); b(1.14,1.19,0.66,0.71,0.30,0.50,mat.dark); // angle consoles 0.05 right under the top: south wall, west wall, bracket by the glass
+     }},
+    {id:'bchair',type:'стул 0.45 с прямой спинкой до 0.90, задвинут под стол на 0.29',room:10,layer:'balcony',pos:[14.28,4.95],rot:0,size:[0.45,0.90,0.45],
+     build(b){
+       b(0,0.45,0.42,0.46,0,0.45,mat.chair); b(0,0.45,0.46,0.90,0,0.04,mat.chair);                    // seat, straight back on the north side
+       [[0.02,0.02],[0.40,0.02],[0.02,0.40],[0.40,0.40]].forEach(([x,z])=>b(x,x+0.03,0,0.42,z,z+0.03,mat.chair)); // legs
+     }},
+    {id:'itshelf',type:'полка-ИТ-хаб 1.19×0.60 над столом, плита 0.05 на 2.00–2.05, бортик 0.03 спереди, вырез 0.05×0.30 под кабели у южной стены; до потолка 0.65',room:10,layer:'balcony',pos:[13.91,5.44],rot:0,size:[1.19,2.08,0.60],fixed:'wall',
+     build(b){
+       b(0,1.19,2.00,2.05,0,0.55,mat.body); b(0,0.445,2.00,2.05,0.55,0.60,mat.body); b(0.745,1.19,2.00,2.05,0.55,0.60,mat.body); // plate with the cable notch x 0.445–0.745 at the wall
+       b(0,1.19,2.05,2.08,0,0.03,mat.body);                                                           // front lip
+       b(0,1.19,1.95,2.00,0.55,0.60,mat.dark); b(0,0.05,1.95,2.00,0,0.55,mat.dark);                   // consoles to the south and west walls
+     }},
+    {id:'bshelf',type:'стеллаж 1.19×0.40 у северного торца, верх 2.05: 3 закрытых ящика по 0.25, выше 4 ряда открытых секций с перегородкой по центру; площадка 2.05–2.70 под ИТ-устройства',room:10,layer:'balcony',pos:[13.91,2.268],rot:0,size:[1.19,2.05,0.40],fixed:'wall',
+     build(b){
+       b(0,0.02,0,2.05,0,0.40,mat.body); b(1.17,1.19,0,2.05,0,0.40,mat.body); b(0.02,1.17,2.03,2.05,0,0.40,mat.body); b(0.02,1.17,0.03,0.05,0,0.40,mat.body); // sides, top, bottom
+       for(let i=0;i<3;i++){ const y0=0.25*i; b(0.02,1.17,y0+0.005,y0+0.245,0.38,0.40,mat.door); } // drawer fronts 0–0.75, push-to-open
+       [0.75,1.075,1.40,1.725].forEach(y=>b(0.02,1.17,y,y+0.02,0,0.40,mat.body));                    // open shelves, pitch 0.325
+       b(0.585,0.605,0.77,2.03,0,0.40,mat.body);                                                     // centre divider x 14.505
+     }},
+    {id:'cable10',type:'кабель-канал 0.06×0.04 по западной стене на 2.23–2.27, выше проёма в кухню (2.10): питание и сеть между полкой и стеллажом',room:10,layer:'balcony',pos:[13.91,2.40],rot:0,size:[0.06,2.27,3.00],fixed:'wall',
+     build(b){ b(0,0.06,2.23,2.27,0,3.00,mat.wpanel); }},
+    // electrics: flat boxes 0.08 × 0.08 × 0.01
+    {id:'sock26',type:'розеточный блок ИТ над полкой: 6 розеток + ввод Ethernet, отдельная линия, h 2.25',room:10,layer:'balcony',pos:[14.17,6.033],rot:0,size:[0.08,2.29,0.01],fixed:'wall',build(b){ b(0,0.08,2.21,2.29,0,0.01,mat.lamp); }},
+    {id:'sock27',type:'розетки 2+2 USB над столешницей у восточного края, h 0.90',room:10,layer:'balcony',pos:[14.77,6.033],rot:0,size:[0.08,0.94,0.01],fixed:'wall',build(b){ b(0,0.08,0.86,0.94,0,0.01,mat.lamp); }},
+    {id:'sock28',type:'розеточный блок над стеллажом: 4 розетки для площадки 2.05–2.70, h 2.25',room:10,layer:'balcony',pos:[14.17,2.268],rot:0,size:[0.08,2.29,0.01],fixed:'wall',build(b){ b(0,0.08,2.21,2.29,0,0.01,mat.lamp); }},
+    {id:'sock29',type:'розетка в открытой секции стеллажа 0.75–1.075 (зарядки), h 1.00',room:10,layer:'balcony',pos:[14.77,2.268],rot:0,size:[0.08,1.04,0.01],fixed:'wall',build(b){ b(0,0.08,0.96,1.04,0,0.01,mat.lamp); }},
+    {id:'led7',type:'LED-лента под передней кромкой ИТ-полки, свет на столешницу, 4000 K; выключатель на торце полки',room:10,layer:'balcony',pos:[13.95,5.44],rot:0,size:[1.11,2.00,0.02],fixed:'wall',
+     build(b){ b(0,1.11,1.98,2.00,0,0.02,mat.led); }},
+    {id:'blight',type:'линейный потолочный светильник 2.20×0.04 по оси лоджии от проёма до стула, 4000 K',room:10,layer:'balcony',pos:[14.48,2.90],rot:0,size:[0.04,2.70,2.20],fixed:'wall',
+     build(b){ b(0,0.04,2.68,2.70,0,2.20,mat.led); }},
+    {id:'sw8',type:'выключатель потолочного света на западной стене южнее проёма, h 0.95',room:10,layer:'balcony',pos:[13.91,4.73],rot:0,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b(0,0.01,0.91,0.99,0,0.08,mat.lamp); }},
+    {id:'blinds10',type:'рулонные солнцезащитные шторы: кассеты по верху остекления z 2.40–5.90 (собраны)',room:10,layer:'balcony',pos:[15.02,2.40],rot:0,size:[0.08,2.30,3.50],fixed:'wall',
+     build(b){ b(0,0.08,2.22,2.30,0,3.50,mat.wpanel); }},
   ];
   function buildItem(it){
     const g=new THREE.Group();
@@ -508,3 +549,4 @@ document.getElementById('furnMaster').addEventListener('change',e=>masterGroup.v
 document.getElementById('furnBath').addEventListener('change',e=>bathGroup.visible=e.target.checked);
 document.getElementById('furnBath2').addEventListener('change',e=>bath2Group.visible=e.target.checked);
 document.getElementById('furnWardrobe').addEventListener('change',e=>wardrobeGroup.visible=e.target.checked);
+document.getElementById('furnBalcony').addEventListener('change',e=>balconyGroup.visible=e.target.checked);

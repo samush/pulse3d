@@ -527,6 +527,38 @@ const { chromium } = require('playwright');
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
+  // balcony10: nothing under the desk below its consoles (0.66) except the chair, the IT shelf plate and the shelving unit top at 2.05
+  // (0.65 to the ceiling), the cable duct above the kitchen opening (≥ 2.10), the opening zone x 13.91–14.4 × z 2.80–4.60 free of
+  // floor-standing parts, items inside room 10, no layout warnings, grey materials
+  const b10 = await page.evaluate(() => {
+    const its = ITEMS.filter(it => it.layer === 'balcony'), bb = o => new THREE.Box3().setFromObject(o);
+    const inside = its.filter(it => { const r = PLAN.rooms.find(q => q.id === it.room), xs = r.poly.map(q => q[0]), zs = r.poly.map(q => q[1]); const b = bb(ITEM_GROUPS[it.id]);
+      return b.min.x < Math.min(...xs) - 0.001 || b.max.x > Math.max(...xs) + 0.001 || b.min.z < Math.min(...zs) - 0.001 || b.max.z > Math.max(...zs) + 0.001; }).map(it => it.id);
+    const hit = (box, m) => { const b = bb(m); const e = 1e-6; return b.min.x < box.max.x - e && b.max.x > box.min.x + e && b.min.z < box.max.z - e && b.max.z > box.min.z + e && b.min.y < box.max.y - e && b.max.y > box.min.y + e; };
+    const under = new THREE.Box3(new THREE.Vector3(13.91, 0, 5.24), new THREE.Vector3(15.1, 0.66, 6.043));
+    const underDesk = its.filter(it => it.id !== 'bchair' && PHYS[it.id].some(m => hit(under, m))).map(it => it.id);
+    const plate = bb(ITEM_GROUPS.itshelf.children[0]).max.y, shelfTop = bb(ITEM_GROUPS.bshelf).max.y, lip = bb(ITEM_GROUPS.itshelf).max.y;
+    const duct = bb(ITEM_GROUPS.cable10);
+    const zone = new THREE.Box3(new THREE.Vector3(13.91, 0, 2.8), new THREE.Vector3(14.4, 0.05, 4.6));
+    const inZone = its.filter(it => PHYS[it.id].some(m => hit(zone, m))).map(it => it.id);
+    const warn = its.map(it => [it.id, LAY.warnings(it.id)]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
+    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
+    return { n: its.length, inside, underDesk, plate, shelfTop, lip, ductMin: duct.min.y, ductZ: [duct.min.z, duct.max.z], inZone, warn, colored };
+  });
+  if (b10.n < 13) problems.push('лоджия 10: предметов слоя balcony ' + b10.n + ' (< 13)');
+  if (b10.inside.length) problems.push('лоджия 10: предметы вне помещения: ' + b10.inside.join(', '));
+  if (b10.underDesk.length) problems.push('лоджия 10: под столом ниже 0.66: ' + b10.underDesk.join(', '));
+  if (Math.abs(b10.plate - 2.05) > 1e-6 || Math.abs(b10.shelfTop - 2.05) > 1e-6 || b10.lip > 2.08 + 1e-6) problems.push('лоджия 10: верх полки/стеллажа не 2.05: ' + [b10.plate, b10.shelfTop, b10.lip].map(v => v.toFixed(3)).join(', '));
+  if (b10.ductMin < 2.1 || b10.ductZ[0] > 2.8 || b10.ductZ[1] < 4.6) problems.push('лоджия 10: кабель-канал не выше проёма: низ ' + b10.ductMin.toFixed(2) + ', z ' + b10.ductZ.map(v => v.toFixed(2)).join('–'));
+  if (b10.inZone.length) problems.push('лоджия 10: в зоне проёма: ' + b10.inZone.join(', '));
+  if (b10.warn.length) problems.push('лоджия 10: предупреждения расстановки:\n    ' + b10.warn.join('\n    '));
+  if (b10.colored.length) problems.push('лоджия 10: цветные материалы у ' + b10.colored.join(', '));
+  await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 2.1; controls.r = hh / TAN22; controls.target.set(14.5 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 4.15); controls.apply(); });
+  await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'balcony10-top.png') });
+  for (const [name, x, z, th] of [['balcony10-desk', 14.3, 3.9, 0.15], ['balcony10-shelf', 14.6, 4.7, Math.PI + 0.1]]) {
+    await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(outDir, name + '.png') });
+  }
   console.log(`  кадров/с: план ${fpsPlain}, визуализация ${fpsViz} (viewport 1400×1000, прогулка в кухне)`);
   await browser.close();
 
