@@ -235,6 +235,7 @@ const { chromium } = require('playwright');
     out.sofaOne = PHYS.sofa.length === 1 && ext('sofa').join() === '2,0.75,0.88';
     setItemPose('sofa', null, 90); out.sofaRot = ext('sofa').join() === '0.88,0.75,2'; setItemPose('sofa', null, 0);
     out.bedFew = PHYS.kidbed.length === 9 && PHYS.tub.length === 5 && ITEM_GROUPS.kidbed.children.length > 20;
+    out.gltf = typeof THREE.GLTFLoader === 'function'; // realism-living step 2: vendored loader r128
     out.living = PHYS.table.length === 6 && PHYS.chair1.length === 6 && PHYS.sofa.length === 1 && ext('table').join() === '0.8,0.76,1.8' && ext('chair1').join() === '0.42,0.9,0.42'; // realism-living step 1: fixed proxies
     const p0 = ITEM_GROUPS.sofa.userData.pos.slice(); MK.toggle(true);
     const m = MK.addPoint([p0[0], p0[1] + 0.2]); MK.edit(m, { bind: { item: 'sofa', side: 'W' } });
@@ -250,6 +251,7 @@ const { chromium } = require('playwright');
   });
   if (!g1.sofaOne || !g1.sofaRot) problems.push('proxy: диван не один бокс или не следует за поворотом (B02)');
   if (!g1.bedFew) problems.push('proxy: кровать-чердак/ванна не используют явные боксы (B02)');
+  if (!g1.gltf) problems.push('GLTFLoader.js не подключён (THREE.GLTFLoader)');
   if (!g1.living) problems.push('proxy: стол/стул/диван — число боксов не 6/6/1 или габарит изменился (realism-living §2)');
   if (!g1.hooks) problems.push('поза: метка с привязкой не получила/не сняла конфликт при переносе (B02/B03)');
   if (!g1.slots) problems.push('материалы: слоты предметов не различаются в визуализации (B04)');
