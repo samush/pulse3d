@@ -245,7 +245,7 @@ const PHYS={}; // id → boxes
        b.round(0,0.75,0.69,0.72,0,1.65,0.003,mat.body); [0,1.63].forEach(z=>b.round(0.02,0.73,0,0.69,z,z+0.02,0.002,mat.body));            // top with 3 mm chamfer on side panels
        b(0,0.05,0.62,0.64,0.02,1.63,mat.dark); b(0,0.05,0.67,0.69,0.02,1.63,mat.dark); b(0,0.01,0.64,0.67,0.02,1.63,mat.dark);              // cable channel: open slot towards the room
        [0.40,1.20].forEach(z=>{ b(0.01,0.30,0.66,0.69,z,z+0.03,mat.frame); b(0.01,0.04,0.40,0.66,z,z+0.03,mat.frame); }); }}, // top, side panels, cable channel at the wall
-    {id:'kidchair2',type:'рабочее кресло детское, регулируемое',room:2,layer:'kid2',pos:[11.75,8.40],rot:0,size:[0.55,0.85,0.55],
+    {id:'kidchair2',type:'рабочее кресло детское, регулируемое',room:2,layer:'kid2',pos:[11.75,8.40],rot:0,size:[0.55,0.85,0.55],glb:'models/kidchair.glb',
      build(b,g){ b.phys(0.05,0.5,0.42,0.47,0.05,0.5); b.phys(0.5,0.55,0.47,0.85,0.08,0.47); b.phys(0.2512,0.2988,0.03,0.42,0.25,0.3); b.phys(0.03,0.52,0,0.03,0.26,0.29); b.phys(0.26,0.29,0,0.03,0.03,0.52); // proxy = pre-detail mesh AABBs (realism-all C1)
        b(0.05,0.50,0.42,0.47,0.05,0.50,mat.cushion); b(0.50,0.55,0.47,0.85,0.08,0.47,mat.cushion);
        const c=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.39,10),mat.knob); c.position.set(0.275,0.225,0.275); g.add(c);
