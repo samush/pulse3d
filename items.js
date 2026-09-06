@@ -56,6 +56,7 @@ const PHYS={}; // id → boxes
          b((x0+x1)/2-0.075,(x0+x1)/2+0.075,top-0.07,top-0.05,0.52,0.54,mat.knob);
          b(x0,x1,top+0.885,top+0.915,0.02,0.05,front); }                                          // handrail segments on the north wall, tread + 0.90
   };
+  const lathe=(g,pts,cx,cz,m,seg=32)=>{ const mesh=new THREE.Mesh(new THREE.LatheGeometry(pts.map(([r,y])=>new THREE.Vector2(r,y)),seg).translate(cx,0,cz),m); g.add(mesh); return mesh; }; // profile [[r,y]…], y rising → faces outward; a profile that comes back down inside makes a closed shell
   const KN=1.915; // north wall of kitchen-living room 4
   const ITEMS=[
     // ---- kitchen-living room 4 (sketch .local/R1.jpg) ----
@@ -250,27 +251,36 @@ const PHYS={}; // id → boxes
        b(0,1.6,0,0.02,0,2.0,mat.wpanel); }},
     {id:'kidlight2',type:'потолочный светильник Ø0.45, диммер',room:2,layer:'kid2',pos:[12.675,7.975],rot:0,size:[0.45,2.70,0.45],fixed:'wall',
      build(b,g){ b.phys(0,0.45,2.66,2.7,0,0.45); // proxy = pre-detail mesh AABBs (realism-all C1)
-       const c=new THREE.Mesh(new THREE.CylinderGeometry(0.225,0.225,0.04,32),mat.lamp); c.position.set(0.225,2.68,0.225); g.add(c); }},
+       lathe(g,[[0,2.662],[0.19,2.664],[0.222,2.68],[0.225,2.70],[0,2.70]],0.225,0.225,mat.plastic);                          // shallow dish flush with the ceiling
+       g.add(new THREE.Mesh(new THREE.CircleGeometry(0.16,32).rotateX(Math.PI/2).translate(0.225,2.661,0.225),mat.led)); }},
     {id:'desklamp2',type:'настольная лампа, гибкая штанга',room:2,layer:'kid2',pos:[11.45,9.20],rot:0,size:[0.20,1.20,0.20],
      build(b,g){ b.phys(0.07,0.13,0.72,0.77,0.07,0.13); b.phys(0.088,0.112,0.77,1.13,0.088,0.112); b.phys(0.02,0.18,1.1,1.2,0.02,0.18); // proxy = pre-detail mesh AABBs (realism-all C1)
-       b(0.07,0.13,0.72,0.77,0.07,0.13,mat.knob); const a=new THREE.Mesh(new THREE.CylinderGeometry(0.012,0.012,0.36,8),mat.knob); a.position.set(0.10,0.95,0.10); g.add(a);
-       const s=new THREE.Mesh(new THREE.ConeGeometry(0.08,0.10,16,1,true),mat.lamp); s.position.set(0.10,1.15,0.10); g.add(s); }},
+       g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.075,0.02,24).translate(0.10,0.73,0.10),mat.plastic));           // weighted base on the desk top
+       const neck=new THREE.QuadraticBezierCurve3(new THREE.Vector3(0.10,0.74,0.10),new THREE.Vector3(0.10,1.16,0.10),new THREE.Vector3(0.12,1.16,0.12));
+       g.add(new THREE.Mesh(new THREE.TubeGeometry(neck,24,0.006,10,false),mat.frame));                                       // gooseneck Ø12
+       lathe(g,[[0.075,1.10],[0.08,1.105],[0.03,1.195],[0.02,1.20],[0.012,1.20],[0.012,1.19],[0.07,1.11],[0.065,1.10]],0.12,0.12,mat.plastic); // conical shade, open below
+       g.add(new THREE.Mesh(new THREE.CircleGeometry(0.05,24).rotateX(Math.PI/2).translate(0.12,1.108,0.12),mat.led)); }},
     {id:'bra3',type:'бра над лежанкой на торце северной башни, поворотное',room:2,layer:'kid2',pos:[14.394,7.198],rot:0,size:[0.16,1.40,0.245],fixed:'wall',
      build(b,g){ b.phys(0.03,0.13,1.25,1.35,0,0.02); b.phys(0.075,0.085,1.295,1.305,0.02,0.13); b.phys(0.02,0.14,1.24,1.36,0.105,0.225); // proxy = pre-detail mesh AABBs (realism-all C1)
-       b(0.03,0.13,1.25,1.35,0,0.02,mat.handle); b(0.075,0.085,1.295,1.305,0.02,0.13,mat.handle); const s=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.12,16),mat.lamp); s.position.set(0.08,1.30,0.165); g.add(s); }},
+       b.round(0.03,0.13,1.25,1.35,0,0.02,0.005,mat.plastic);                                                                  // wall plate on the tower end
+       g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.09,10).rotateX(Math.PI/2).translate(0.08,1.30,0.065),mat.frame)); // swing arm Ø12 to the shade side
+       g.add(new THREE.Mesh(new THREE.SphereGeometry(0.012,12,8).translate(0.08,1.30,0.105),mat.frame));                      // pivot on the shade
+       lathe(g,[[0.04,1.24],[0.06,1.25],[0.06,1.35],[0.04,1.36],[0.012,1.36],[0.012,1.35],[0.05,1.342],[0.05,1.26],[0.04,1.25]],0.08,0.165,mat.plastic); // cylindrical shade, open below
+       g.add(new THREE.Mesh(new THREE.CircleGeometry(0.045,24).rotateX(Math.PI/2).translate(0.08,1.248,0.165),mat.led)); }},
     {id:'bra4',type:'бра для чтения над изголовьем, плоское',room:2,layer:'kid2',pos:[11.59,9.349],rot:0,size:[0.16,2.36,0.245],fixed:'wall',
      build(b){ b.phys(0.03,0.13,2.24,2.36,0.235,0.245); b.phys(0.02,0.14,2.27,2.33,0.08,0.235); // proxy = pre-detail mesh AABBs (realism-all C1)
-       b(0.03,0.13,2.24,2.36,0.235,0.245,mat.knob); b(0.02,0.14,2.27,2.33,0.08,0.235,mat.lamp); }},
+       b.round(0.03,0.13,2.24,2.36,0.235,0.245,0.004,mat.plastic); b.round(0.02,0.14,2.27,2.33,0.08,0.235,0.012,mat.plastic); b(0.035,0.125,2.266,2.271,0.09,0.20,mat.led); }},
     {id:'blind2',type:'кассета рулонной блэкаут-шторы над окном',room:2,layer:'kid2',pos:[14.694,7.31],rot:0,size:[0.08,2.38,1.48],fixed:'wall',
-     build(b){ b.phys(0,0.08,2.3,2.38,0,1.48); b.phys(0.02,0.06,2.29,2.3,0.03,1.45); // proxy = pre-detail mesh AABBs (realism-all C1)
-       b(0,0.08,2.30,2.38,0,1.48,mat.body); b(0.02,0.06,2.29,2.30,0.03,1.45,mat.knob); }},
-    {id:'sw2',type:'выключатель у двери, 2 клавиши: общий свет M11 + LED M12',room:2,layer:'kid2',pos:[11.38,6.538],rot:0,size:[0.08,0.99,0.01],fixed:'wall',build(b){ b(0,0.08,0.91,0.99,0,0.01,mat.lamp); }},
+     build(b,g){ b.phys(0,0.08,2.3,2.38,0,1.48); b.phys(0.02,0.06,2.29,2.3,0.03,1.45); // proxy = pre-detail mesh AABBs (realism-all C1)
+       g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.039,0.039,1.44,24).rotateX(Math.PI/2).translate(0.04,2.34,0.74),mat.plastic)); // cassette Ø78
+       [0,1.46].forEach(z=>b.round(0,0.08,2.30,2.38,z,z+0.02,0.006,mat.plastic)); b(0.02,0.06,2.29,2.30,0.03,1.45,mat.frame); }},
+    {id:'sw2',type:'выключатель у двери, 2 клавиши: общий свет M11 + LED M12',room:2,layer:'kid2',pos:[11.38,6.538],rot:0,size:[0.08,0.99,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.91,0.99,0,0.01,mat.plastic,{keys:2}); }},
     // sockets: flat boxes 0.08 × 0.08 × 0.01 on the wall, purpose in the caption
-    {id:'sock9',type:'розетки 2+2 USB над столом',room:2,layer:'kid2',pos:[11.087,8.57],rot:0,size:[0.01,0.94,0.08],fixed:'wall',build(b){ b(0,0.01,0.86,0.94,0,0.08,mat.lamp); }},
-    {id:'sock10',type:'блок ПК под столом: 3 розетки + RJ-45',room:2,layer:'kid2',pos:[11.087,9.22],rot:0,size:[0.01,0.34,0.08],fixed:'wall',build(b){ b(0,0.01,0.26,0.34,0,0.08,mat.lamp); }},
-    {id:'sock11',type:'розетка у изголовья (ночник)',room:2,layer:'kid2',pos:[11.38,9.584],rot:0,size:[0.08,2.09,0.01],fixed:'wall',build(b){ b(0,0.08,2.01,2.09,0,0.01,mat.lamp); }},
-    {id:'sock12',type:'розетка у лежанки (зарядка), в нише',room:2,layer:'kid2',pos:[13.83,9.489],rot:0,size:[0.08,0.34,0.01],fixed:'wall',build(b){ b(0,0.08,0.26,0.34,0,0.01,mat.lamp); }},
-    {id:'sock13',type:'розетка у шведской стенки (увлажнитель)',room:2,layer:'kid2',pos:[12.23,6.538],rot:0,size:[0.08,0.34,0.01],fixed:'wall',build(b){ b(0,0.08,0.26,0.34,0,0.01,mat.lamp); }},
+    {id:'sock9',type:'розетки 2+2 USB над столом',room:2,layer:'kid2',pos:[11.087,8.57],rot:0,size:[0.01,0.94,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.86,0.94,0,0.08,mat.plastic,{keys:2}); }},
+    {id:'sock10',type:'блок ПК под столом: 3 розетки + RJ-45',room:2,layer:'kid2',pos:[11.087,9.22],rot:0,size:[0.01,0.34,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.26,0.34,0,0.08,mat.plastic); }},
+    {id:'sock11',type:'розетка у изголовья (ночник)',room:2,layer:'kid2',pos:[11.38,9.584],rot:0,size:[0.08,2.09,0.01],fixed:'wall',build(b){ b.plate(0,0.08,2.01,2.09,0,0.01,mat.plastic); }},
+    {id:'sock12',type:'розетка у лежанки (зарядка), в нише',room:2,layer:'kid2',pos:[13.83,9.489],rot:0,size:[0.08,0.34,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.26,0.34,0,0.01,mat.plastic); }},
+    {id:'sock13',type:'розетка у шведской стенки (увлажнитель)',room:2,layer:'kid2',pos:[12.23,6.538],rot:0,size:[0.08,0.34,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.26,0.34,0,0.01,mat.plastic); }},
     // ---- master bedroom 3 (tasks/room3-master/README.md, marks M1–M28; grey materials only) ----
     // Room box: x 10.021–14.76, z 9.777–13.144. Items are built as if against the north wall and turned 180° (rot 180, pos = SE corner): the composition faces north. Wall-mounted boxes sit 0.02–0.03 in front of the wall (wallpaper at 0.015).
     {id:'mbed',type:'кровать 160×200 с мягким изголовьем',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[1.70,1.10,2.20],fixed:'wall',
