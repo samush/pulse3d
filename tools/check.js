@@ -551,9 +551,9 @@ const { chromium } = require('playwright');
   const combos = await page.evaluate(() => {
     const wall = () => wallGroup.children[0].material, floor = () => finishGroup.children.find(o => o.geometry && o.geometry.type === 'ShapeGeometry').material, glass = () => { let g; glassGroup.traverse(o => { if (!g && o.isMesh && o.material.transparent) g = o; }); return g; }, gm0 = glass().material, out = {};
     setView('door'); const ceilM = () => ceilGroup.children[0].material;
-    for (const mats of [true, false]) for (const scheme of ['neutral', 'lamps']) { VIZ.set(mats); LIGHTING.set(scheme); const w = wall();
-      out[(mats ? 'real' : 'neutral') + '-' + scheme] = w.isMeshStandardMaterial && floor().isMeshStandardMaterial && (mats ? !!floor().map : !floor().map) && ceilM().isMeshStandardMaterial && renderer.shadowMap.enabled && renderer.outputEncoding === THREE.sRGBEncoding && (scheme === 'lamps' ? sun.intensity === 0 : sun.intensity > 0) && glass().material.transparent && glass().material.opacity === gm0.opacity && VIZ.active === mats && LIGHTING.scheme === scheme; }
-    setView('top'); out.plan = wall().isMeshBasicMaterial && !renderer.shadowMap.enabled && VIZ.on === false && LIGHTING.scheme === 'lamps'; // prefs survive the plan
+    for (const mats of [true, false]) for (const scheme of ['neutral', 'lamps', 'illusion']) { VIZ.set(mats); LIGHTING.set(scheme); const w = wall();
+      out[(mats ? 'real' : 'neutral') + '-' + scheme] = w.isMeshStandardMaterial && floor().isMeshStandardMaterial && (mats ? !!floor().map : !floor().map) && ceilM().isMeshStandardMaterial && renderer.shadowMap.enabled && renderer.outputEncoding === THREE.sRGBEncoding && (scheme === 'neutral' ? sun.intensity > 0 : sun.intensity === 0) && glass().material.transparent && glass().material.opacity === gm0.opacity && VIZ.active === mats && LIGHTING.scheme === scheme; }
+    setView('top'); out.plan = wall().isMeshBasicMaterial && !renderer.shadowMap.enabled && VIZ.on === false && LIGHTING.scheme === 'illusion'; // prefs survive the plan
     setView('door'); out.back = VIZ.mode === 'neutral' && sun.intensity === 0; VIZ.set(true); return out; });
   Object.entries(combos).forEach(([k, ok]) => { if (!ok) problems.push('материалы × свет: комбинация «' + k + '» не сошлась (materials-lighting M0 §3)'); });
   // materials-lighting M0: whatever the load order (GLBs finish after the controls were toggled), every mesh of every swapped group carries the twin of the current mode
@@ -709,6 +709,13 @@ const { chromium } = require('playwright');
     out.ledSplit = !LIGHTING.emitters('g4.main').includes(ITEM_MATS.led) && LIGHTING.emitters('g9.mirror').includes(ITEM_MATS.mirrorLed);
     LIGHTING.group('g4.sofa', true); out.back = by('ceil4_8').intensity > 0 && by('ceil4_8').castShadow && led('g4.sofa').every(m => m.emissiveIntensity === 1);
     LIGHTING.set('neutral'); out.neutral = L.every(l => l.intensity === 0 && !l.castShadow) && sun.castShadow && led('g4.sofa').every(m => m.emissiveIntensity === 1); LIGHTING.set('lamps');
+    // L3 p.5: illusion (the default) — one shadowless point per room instead of the catalogue, diffusers glow, a group switch dims its room light and diffusers
+    LIGHTING.set('illusion'); const R = LIGHTING.roomLights, rl = n => R.find(l => l.name === n);
+    out.illusion = LIGHTING.schemes[0] === 'illusion' && document.getElementById('light').options[0].value === 'illusion' && R.length === PLAN.rooms.length && R.every(l => l.isPointLight && l.visible && l.intensity > 0 && !l.castShadow) && L.every(l => l.intensity === 0 && !l.visible && !l.castShadow)
+      && sun.intensity === 0 && !sun.castShadow && scene.environment === LIGHTING.environment('lamps') && led('g4.main').every(m => m.emissiveIntensity === 1);
+    LIGHTING.group('g4.main', false); out.illusion = out.illusion && rl('room4').intensity === 0 && rl('room9').intensity > 0 && led('g4.main').every(m => m.emissiveIntensity === 0); LIGHTING.group('g4.main', true);
+    LIGHTING.scope('near'); controls.setFPV(9.3, 9.45, 0); LIGHTING.tick(0); out.illusion = out.illusion && rl('room9').intensity > 0 && rl('room5').intensity > 0 && rl('room1').intensity === 0 && R.every(l => l.visible); LIGHTING.scope('all'); // near: bath 9 and its neighbour through the door shine, a room behind walls does not
+    LIGHTING.set('neutral'); out.illusion = out.illusion && R.every(l => !l.visible && l.intensity === 0); LIGHTING.set('lamps');
     // L2: every group is its own switch — off dims exactly its sources and diffusers, nothing shared with another group
     out.groups = Object.keys(LIGHTING.groups).every(g => { LIGHTING.group(g, false); const mine = L.filter(l => l.userData.group === g), rest = L.filter(l => l.userData.group !== g), others = Object.keys(LIGHTING.groups).filter(o => o !== g).flatMap(led);
       const ok = mine.length > 0 && mine.every(l => l.intensity === 0 && !l.castShadow) && rest.every(l => l.intensity > 0) && led(g).length > 0 && led(g).every(m => m.emissiveIntensity === 0) && others.every(m => m.emissiveIntensity === 1) && !led(g).some(m => others.includes(m)); LIGHTING.group(g, true); return ok; });
@@ -730,7 +737,7 @@ const { chromium } = require('playwright');
     document.getElementById('avatarOn').checked = true; setView('door');
     LIGHTING.set('neutral'); VIZ.set(false); setView('top'); return out;
   });
-  ['catalogue', 'on', 'env', 'pose', 'group', 'ledSplit', 'back', 'neutral', 'groups', 'near'].forEach(k => { if (!l1[k]) problems.push('свет: ' + k + ' — не по materials-lighting L1 (§6, lighting.js)'); });
+  ['catalogue', 'on', 'env', 'pose', 'group', 'ledSplit', 'back', 'neutral', 'illusion', 'groups', 'near'].forEach(k => { if (!l1[k]) problems.push('свет: ' + k + ' — не по materials-lighting L1 (§6, lighting.js)'); });
   if (!l1.wall.ok) problems.push('свет: стена не перекрывает источник (за стеной ' + l1.wall.dark + ', в проёме ' + l1.wall.lit + ')');
   // L1 frames: kitchen from the door, from the work zone to the sofa, the work zone itself, the evening scene (only table + sofa), bath 9 in front of the mirror
   for (const [name, x, z, tx, tz, off] of [['l1-kitchen-door', 12.6, 5.6, 8.6, 2.6], ['l1-kitchen-sofa', 9.0, 3.0, 12.5, 5.8], ['l1-kitchen-work', 10.8, 4.9, 8.6, 3.3], ['l1-kitchen-evening', 12.6, 5.6, 8.6, 2.6, 'g4.work,g4.splash,g4.main'], ['l1-bath9-front', 9.3, 9.45, 9.27, 8.2],

@@ -28,7 +28,7 @@
 | `items.js` | мебель как данные: `ITEMS` (id, тип, помещение, слой, `pos`, `rot`, `size`, `fixed`), детали в локальных координатах; `setItemPose(id,pos,rot)`, `itemCorners(id)` |
 | `layout.js` | режим «Расстановка»: выбор предмета в плане, перенос/поворот, варианты расстановки (`window.LAY`), предупреждения |
 | `materials.js` | библиотека материалов `MATERIALS` (размер рисунка в метрах, шероховатость, рельеф) и режим «Визуализация» (`window.VIZ`): PBR-двойники |
-| `lighting.js` | световые схемы (`window.LIGHTING`): нейтральный свет (hemi + sun с тенями), environment, единый пайплайн sRGB/ACES/exposure для 3D |
+| `lighting.js` | световые схемы (`window.LIGHTING`): «иллюзия» по умолчанию (один источник на комнату без теней), нейтральный свет (hemi + sun с тенями), светильники квартиры (каталог `LIGHTS`), environment, единый пайплайн sRGB/ACES/exposure для 3D |
 | `markup.js` | режим «Разметка» в плане: точка/отрезок/прямоугольник, карточка метки, «Скопировать для агента» (`window.MK`) |
 | `three.min.js` | впендоренный three.js — не редактировать |
 | `GLTFLoader.js` | загрузчик GLB из three.js r128 (`examples/js/loaders`), глобальный `THREE.GLTFLoader` — не редактировать |

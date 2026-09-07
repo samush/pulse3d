@@ -6,8 +6,9 @@
 // Plan view stays unlit and linear so its flat colours read as authored; the sRGB + ACES + constant-exposure
 // pipeline applies to every lit 3D combination and never changes per material, room or texture. L3: only the camera's room
 // (all groups) and its neighbours through doorways (ceiling spots within NEAR metres) feed the shaders, padded to a constant
-// light count so walking never recompiles programs; shadow maps render on demand, not every frame.
-const LIGHTING={scheme:'neutral',lit:false,exposure:0.75,schemes:['neutral','lamps'],groups:{},lights:[]};
+// light count so walking never recompiles programs; shadow maps render on demand, not every frame. The illusion scheme (L3 p.5, the
+// default) trades the catalogue for one wide shadowless point per room built from its g<room>.main spots, glowing diffusers and more fill.
+const LIGHTING={scheme:'illusion',lit:false,exposure:0.75,schemes:['illusion','neutral','lamps'],groups:{},lights:[],roomLights:[]};
 window.LIGHTING=LIGHTING;
 const hemi=new THREE.HemisphereLight(0xffffff,0xa8a49c,1.0); scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffffff,0.55); sun.position.set(-6,14,-8); scene.add(sun);
@@ -93,13 +94,14 @@ window.LIGHTS=LIGHTS;
   sun.target.position.set(cx,0,cz); scene.add(sun.target);
   // neutral scheme: the lit pipeline (ACES + sRGB) needs less light than the linear concept, otherwise white walls burn out.
   // lamps scheme: no sun, an explicit weak fill standing in for bounced light, and the LIGHTS catalogue
-  const NEUTRAL={lit:{sun:0.9,hemi:0.45},flat:{sun:0.55,hemi:1.0}}, LAMPS={sun:0,hemi:0.15};
+  const NEUTRAL={lit:{sun:0.9,hemi:0.45},flat:{sun:0.55,hemi:1.0}}, LAMPS={sun:0,hemi:0.15}, ILLUSION={sun:0,hemi:0.2}; // illusion: no shadows, so the fill stands in for the bounce a real room would have
   const KELVIN={2700:0xffa957,3000:0xffb46b,3500:0xffc489,4000:0xffd1a3}; // sRGB black-body approximations (lighting-plan.md §1), converted once
   const BASE={spot:1.8,point:1.2}; // intensity of weight 1.0 in the legacy light model; tuned on the kitchen and bath 9 frames
+  const ROOM={y:2.3,reach:1.6,maxW:2.5,base:1.0}; // illusion room light: below the ceiling so it spreads, cutoff = reach x the farthest corner, weight = sum of its spots capped
   const KEY='pulse3d.light';
   const envs={};
   function environment(scheme){ // procedural room for reflections (mirror, chrome, glass) and ambient IBL, prefiltered once per scheme:
-    scheme=scheme||LIGHTING.scheme; if(envs[scheme]) return envs[scheme]; // neutral — grey box, light ceiling, bright window; lamps — dim warm box without a window (bounced lamp light, not daylight)
+    scheme=(scheme||LIGHTING.scheme)==='neutral'?'neutral':'lamps'; if(envs[scheme]) return envs[scheme]; // illusion shares the lamps box // neutral — grey box, light ceiling, bright window; lamps — dim warm box without a window (bounced lamp light, not daylight)
     const lamps=scheme==='lamps', s=new THREE.Scene(), Bm=c=>new THREE.MeshBasicMaterial({color:c,side:THREE.BackSide});
     s.add(new THREE.Mesh(new THREE.BoxGeometry(8,3,8),Bm(lamps?0x2a2826:0x8a8a8a))); const ceil=new THREE.Mesh(new THREE.PlaneGeometry(8,8),new THREE.MeshBasicMaterial({color:lamps?0x4a4640:0xd8d8d8})); ceil.rotation.x=Math.PI/2; ceil.position.y=1.49; s.add(ceil);
     if(!lamps){ const win=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.6),new THREE.MeshBasicMaterial({color:0xffffff})); win.position.set(0,0.2,-3.99); s.add(win); }
@@ -122,6 +124,12 @@ window.LIGHTS=LIGHTS;
       set.add(o.material); });
   });
   LIGHTING.emitters=g=>[...(emitters[g]||[])];
+  // ---- L3 p.5 illusion: one wide point per room without shadow, at the centre of its g<room>.main ceiling spots (else all its ceiling spots), switched by that group;
+  // no shadow means walls do not stop it, so the cutoff ends just past the room's own corners and only the camera's room and its neighbours shine
+  PLAN.rooms.forEach(r=>{ const spots=LIGHTING.lights.filter(l=>l.userData.ceiling&&l.userData.room===r.id), main=spots.filter(l=>l.userData.group==='g'+r.id+'.main'), src=main.length?main:spots; if(!src.length) return;
+    const c=src.reduce((a,l)=>a.add(new THREE.Vector3(...l.userData.at)),new THREE.Vector3()).divideScalar(src.length), corner=Math.max(...r.poly.map(([x,z])=>Math.hypot(x-c.x,ROOM.y,z-c.z)));
+    const l=new THREE.PointLight(src[0].color,0,corner*ROOM.reach,2); l.position.set(c.x,ROOM.y,c.z); l.name='room'+r.id; l.visible=false;
+    l.userData={group:src[0].userData.group,room:r.id,w:Math.min(ROOM.maxW,src.reduce((s,l)=>s+l.userData.w,0))}; scene.add(l); LIGHTING.roomLights.push(l); });
   // ---- L3: rooms around the camera. Doors are frames only, so every doorway and the balcony opening links two rooms.
   const inPoly=(p,x,z)=>{ let c=false; for(let i=0,j=p.length-1;i<p.length;j=i++){ const [xi,zi]=p[i],[xj,zj]=p[j]; if((zi>z)!==(zj>z)&&x<(xj-xi)*(z-zi)/(zj-zi)+xi) c=!c; } return c; };
   const roomAt=(x,z)=>{ const r=PLAN.rooms.find(r=>inPoly(r.poly,x,z)); return r?r.id:0; };
@@ -137,17 +145,19 @@ window.LIGHTS=LIGHTS;
     LIGHTING.lights.forEach(l=>{ const t=l.userData.type; if(!active.has(l)&&n[t]<POOL[t]){ pad.add(l); n[t]++; } });
   }
   function sync(){ // sources and diffusers from scheme × group × room state; a source off has no shadow pass either
-    const lamps=LIGHTING.lit&&LIGHTING.scheme==='lamps'; if(lamps&&scope==='near') pick();
+    const lamps=LIGHTING.lit&&LIGHTING.scheme==='lamps', ill=LIGHTING.lit&&LIGHTING.scheme==='illusion'; if((lamps||ill)&&scope==='near') pick();
+    const nearRoom=r=>scope==='all'||!room||r===room||(NEIGH[room]&&NEIGH[room].has(r));
+    LIGHTING.roomLights.forEach(l=>{ const on=ill&&LIGHTING.groups[l.userData.group]!==false&&nearRoom(l.userData.room); l.intensity=on?ROOM.base*l.userData.w:0; l.visible=ill; }); // all stay visible: constant count, no recompiles when a group or room changes
     let sh=scope==='all'?Infinity:SHADOWS; // the catalogue lists each room's shadow candidate first, so the cap keeps the camera's room
     LIGHTING.lights.forEach(l=>{ const on=lamps&&LIGHTING.groups[l.userData.group]!==false&&(scope==='all'||active.has(l)); l.intensity=on?BASE[l.userData.type]*l.userData.w:0; l.castShadow=on&&l.userData.shadow&&(scope==='all'||l.userData.room===room)&&sh-->0; l.visible=on||(lamps&&scope==='near'&&pad.has(l)); }); // hidden lights leave the shaders
     renderer.shadowMap.needsUpdate=true;
-    if(window.VIZ&&VIZ.ready) Object.entries(emitters).forEach(([g,set])=>{ const on=!lamps||LIGHTING.groups[g]!==false; set.forEach(b=>VIZ.twins(b).forEach(m=>{ m.emissiveIntensity=on?1:0; })); }); // neutral scheme: every diffuser glows, as before L1
+    if(window.VIZ&&VIZ.ready) Object.entries(emitters).forEach(([g,set])=>{ const on=!(lamps||ill)||LIGHTING.groups[g]!==false; set.forEach(b=>VIZ.twins(b).forEach(m=>{ m.emissiveIntensity=on?1:0; })); }); // neutral scheme: every diffuser glows, as before L1
   }
   renderer.shadowMap.autoUpdate=false; // static scene: shadow maps render when sync() asks (scheme, group, room, pose) and once a second as a catch-all for late GLBs and toggles
   let lastShadow=0, lastKey='';
   LIGHTING.tick=function(t){ // called from the render loop; re-picks sources only when the camera changes room or moves half a metre
     if(t-lastShadow>1000){ renderer.shadowMap.needsUpdate=true; lastShadow=t; }
-    if(!(LIGHTING.lit&&LIGHTING.scheme==='lamps')||scope!=='near') return;
+    if(!LIGHTING.lit||LIGHTING.scheme==='neutral'||scope!=='near') return;
     const p=controls.fpv?controls.pos:controls.target, k=roomAt(p.x,p.z)+':'+Math.round(p.x*2)+':'+Math.round(p.z*2); if(k===lastKey) return; lastKey=k; sync();
   };
   LIGHTING.shadows=function(n){ if(n!=null){ SHADOWS=Math.max(0,n|0); lastKey=''; sync(); } return SHADOWS; }; // per-frame cap in the near scope
@@ -156,21 +166,21 @@ window.LIGHTS=LIGHTS;
   LIGHTING.dirty=()=>{ renderer.shadowMap.needsUpdate=true; }; if(window.POSE_HOOKS) POSE_HOOKS.push(LIGHTING.dirty); // a moved item moves its shadow (and its lamp)
   LIGHTING.group=function(id,on){ if(!(id in LIGHTING.groups)) return; LIGHTING.groups[id]=on!==false; sync(); }; // one switch key: intensity + emissive of its own group only
   LIGHTING.apply=function(lit){ // lit = 3D view with the fixed pipeline; false = plan view (flat, linear, no shadows)
-    LIGHTING.lit=lit=!!lit; const lamps=lit&&LIGHTING.scheme==='lamps', n=!lit?NEUTRAL.flat:lamps?LAMPS:NEUTRAL.lit;
-    sun.intensity=n.sun; hemi.intensity=n.hemi; sun.castShadow=!lamps; // a sun at 0 would still render its 2048 shadow map
+    LIGHTING.lit=lit=!!lit; const lamps=lit&&LIGHTING.scheme==='lamps', art=lit&&LIGHTING.scheme!=='neutral', n=!lit?NEUTRAL.flat:lamps?LAMPS:art?ILLUSION:NEUTRAL.lit;
+    sun.intensity=n.sun; hemi.intensity=n.hemi; sun.castShadow=!art; // a sun at 0 would still render its 2048 shadow map
     renderer.outputEncoding=lit?THREE.sRGBEncoding:THREE.LinearEncoding;
     renderer.toneMapping=lit?THREE.ACESFilmicToneMapping:THREE.NoToneMapping; renderer.toneMappingExposure=LIGHTING.exposure;
     renderer.shadowMap.enabled=lit;
-    renderer.setPixelRatio(Math.min(devicePixelRatio,lamps?1.25:2)); // L3 p.4: Retina at 2 is 4x the fragments for every lamp; the illusion does not need it
+    renderer.setPixelRatio(Math.min(devicePixelRatio,art?1.25:2)); // L3 p.4: Retina at 2 is 4x the fragments for every lamp; the illusion does not need it
     scene.environment=lit?environment():null;
     sync();
   };
   LIGHTING.set=function(scheme){ // user choice, remembered; re-applies the current view state
-    if(!LIGHTING.schemes.includes(scheme)) scheme='neutral';
+    if(!LIGHTING.schemes.includes(scheme)) scheme='illusion';
     LIGHTING.scheme=scheme; try{ localStorage.setItem(KEY,scheme); }catch(e){}
     const sel=document.getElementById('light'); if(sel) sel.value=scheme; LIGHTING.apply(LIGHTING.lit);
   };
   document.getElementById('light').addEventListener('change',e=>LIGHTING.set(e.target.value));
   let saved=null; try{ saved=localStorage.getItem(KEY); }catch(e){}
-  LIGHTING.set(saved||'neutral');
+  LIGHTING.set(saved||'illusion');
 })();
