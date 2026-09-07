@@ -13,7 +13,7 @@ BX.forEach(bx=>BY.forEach(by=>add(new THREE.SphereGeometry(0.011,10,6).translate
 add(rbox(1.60,0.20,2.00,0.05,0.05,0.35,0.10,{m:2,step:0.15,crown:0.015}),'kmat');             // mattress 0.35–0.55 (+ dome)
 add(piping(0.05,0.10,1.60,2.00,0.05,0.45),'kmat');
 [0.12,0.88].forEach(x=>add(rbox(0.70,0.12,0.45,0.06,x,0.55,0.15,{m:2,step:0.12,crown:0.02}),'pillow')); // pillows
-add(rbox(1.50,0.06,1.30,0.03,0.10,0.55,0.85,{m:2,step:0.15,crown:0.01}),'cushion');           // blanket at the feet
-add(rbox(1.50,0.03,0.25,0.015,0.10,0.61,0.85,{m:1,step:0.15}),'cushion');                       // folded-back edge
+add(rbox(1.50,0.06,1.30,0.03,0.10,0.55,0.85,{m:2,step:0.15,crown:0.01}),'cover');             // blanket at the feet
+add(rbox(1.50,0.03,0.25,0.015,0.10,0.61,0.85,{m:1,step:0.15}),'cover');                         // folded-back edge
 const {buf,triangles}=toGlb(parts); const out=path.join(__dirname,'../../models/mbed.glb'); fs.writeFileSync(out,buf);
 console.log(out,(buf.length/1024).toFixed(0)+' KB',triangles+' triangles');

@@ -262,8 +262,9 @@ const { chromium } = require('playwright');
     return ok === false && ITEM_GROUPS.sofa.children.length === n0 && PHYS.sofa.length === 1 && (VIZ.loadErrors || []).some(s => /sofa: models\/absent/.test(s)); });
   // realism-living step 5: the sofa GLB replaced the procedural build — grey slot materials, no validation warnings, extent = size, proxy untouched
   const sofaGlb = await page.evaluate(async () => { const g = ITEM_GROUPS.sofa; for (let i = 0; i < 100 && !g.userData.glbLoaded && !(VIZ.loadErrors || []).some(s => /^sofa:/.test(s)); i++) await new Promise(r => setTimeout(r, 100));
-    const bb = new THREE.Box3().setFromObject(g), s = new THREE.Vector3(); bb.getSize(s); const mats = new Set(); g.traverse(o => { if (o.isMesh) mats.add(o.material); });
-    return { loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), size: [s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join(), slots: [...mats].map(m => m.userData.slot).sort().join(), grey: [...mats].every(m => m.isMeshLambertMaterial && m.color.r === m.color.g && m.color.g === m.color.b), boxes: PHYS.sofa.length }; });
+    const bb = new THREE.Box3().setFromObject(g), s = new THREE.Vector3(); bb.getSize(s); const mats = new Set(), names = []; g.traverse(o => { if (o.isMesh) { mats.add(o.material); names.push(o.userData.glbMat); } });
+    return { loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), size: [s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join(), slots: [...new Set([...mats].map(m => m.userData.slot))].sort().join(), grey: [...mats].every(m => m.isMeshLambertMaterial && m.color.r === m.color.g && m.color.g === m.color.b), boxes: PHYS.sofa.length, names: [...new Set(names)].sort().join() }; });
+  if (sofaGlb.loaded && sofaGlb.names !== 'cushion,metal,piping,upholstery') problems.push('glb: sofa — имена покрытий в userData.glbMat: ' + sofaGlb.names + ' (materials-lighting M1b)');
   if (!sofaGlb.loaded) problems.push('glb: models/sofa.glb не загрузился: ' + JSON.stringify(sofaGlb));
   else { if (sofaGlb.warn) problems.push('glb: sofa — предупреждения валидации: ' + sofaGlb.warn);
     if (sofaGlb.size !== '2,0.85,0.88' || sofaGlb.slots !== 'fabric,metal' || !sofaGlb.grey || sofaGlb.boxes !== 1) problems.push('glb: sofa — габарит/слоты/серый/proxy не сошлись: ' + JSON.stringify(sofaGlb)); }
@@ -293,7 +294,7 @@ const { chromium } = require('playwright');
   // realism-all stage C: windowseat2 GLB replaced the procedural build — slot materials, no validation warnings, extent = size, 9 proxy boxes kept
   const wsGlb = await page.evaluate(async () => { const g = ITEM_GROUPS.windowseat2; for (let i = 0; i < 100 && !g.userData.glbLoaded && !(VIZ.loadErrors || []).some(s => /^windowseat2:/.test(s)); i++) await new Promise(r => setTimeout(r, 100));
     const bb = new THREE.Box3().setFromObject(g), s = new THREE.Vector3(); bb.getSize(s); const mats = new Set(); g.traverse(o => { if (o.isMesh) mats.add(o.material); });
-    return { loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), size: [s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join(), slots: [...mats].map(m => m.userData.slot).sort().join(), boxes: PHYS.windowseat2.length }; });
+    return { loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), size: [s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join(), slots: [...new Set([...mats].map(m => m.userData.slot))].sort().join(), boxes: PHYS.windowseat2.length }; });
   if (!wsGlb.loaded) problems.push('glb: models/windowseat2.glb не загрузился: ' + JSON.stringify(wsGlb));
   else if (wsGlb.warn || wsGlb.size !== '0.61,0.65,1.7' || wsGlb.slots !== 'cabinetPaint,chrome,fabric' || wsGlb.boxes !== 9) problems.push('glb: windowseat2 — предупреждения/габарит/слоты/proxy не сошлись: ' + JSON.stringify(wsGlb));
   // realism-all stage A: pouf and washer GLB loaded without warnings, proxies as before
