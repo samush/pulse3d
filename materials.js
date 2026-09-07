@@ -81,7 +81,7 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS; window.COATINGS=COATINGS;
     return mirrorEnvRT.texture;
   }
   VIZ.mirrorEnv=mirrorEnv; VIZ.mirrorEnvBuilds=()=>mirrorEnvBuilds;
-  VIZ.mirrorEnvIntensity={neutral:1.0,lamps:0.35}; // per light scheme: with lamps off the mirror must not stay a bright picture; L1 tunes the lamps value
+  VIZ.mirrorEnvIntensity={neutral:1.0,lamps:0.5}; // per light scheme: with lamps off the mirror must not stay a bright picture; 0.5 chosen in L1 on the bath 9 frame
   function stdFor(key,basic){ // PBR twin of a simple material; maps from the same image, same repeat
     const spec=MATERIALS[key]||MATERIALS.furniture; const m=new THREE.MeshStandardMaterial({color:basic.color?basic.color.clone():0xffffff,roughness:spec.rough,metalness:spec.metal||0,transparent:basic.transparent,opacity:basic.opacity,depthWrite:basic.depthWrite,side:basic.side,emissive:spec.emissive?basic.color.clone():0x000000});
     m.color.multiplyScalar(spec.albedo!=null?spec.albedo:0.85); // white paint/tile reflect ~85 %, otherwise ACES burns everything out
