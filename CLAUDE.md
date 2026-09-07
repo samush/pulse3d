@@ -55,7 +55,7 @@
   Один файл на несколько предметов кэшируется и клонируется с общей geometry; `glbRot` (градусы по часовой, как `rot`) поворачивает модель внутри группы вокруг центра footprint.
   Модели генерируются скриптами `tools/models/*.js` (node + `three.min.js`), см. `models/README.md`.
 - Материалы деталей (`ITEM_MATS`) несут `userData.slot` — физический класс для визуализации
-  (`chrome`, `metal`, `glass`, `fabric`, `emitter`, `screen`, `wood`, `paint`; остальное — `furniture`), параметры в `MATERIALS[slot]`. UV боксов `b()` — в метрах.
+  (`chrome`, `metal`, `glass`, `fabric`, `emitter`, `screen`, `wood`, `cabinetPaint`; остальное — `furniture`), параметры в `MATERIALS[slot]`. UV боксов `b()` — в метрах.
   Helper'ы деталей в `buildItem`: `b.round` (бокс с фаской), `b.rrect` (скруглённый прямоугольник-`Shape`), `b.plate` (рамка розетки/выключателя, сама объявляет proxy), `b.spot`, `b.led`, `b.handle` — описание в `tasks/realism-all/PLAN.md` §3.
   Серый цвет концепта от слота не зависит.
 - `SCENE_REV` — fingerprint геометрии и каталога (PLAN + id/size предметов); пишется в экспорт разметки
