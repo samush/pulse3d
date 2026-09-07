@@ -539,7 +539,7 @@ var sillGroup=new THREE.Group();
     const sw=(w.z1-w.z0)+0.12;
     const g=new THREE.BoxGeometry(0.75,0.05,sw);
     const m=new THREE.Mesh(g,sMat);
-    m.position.set(w.x-w.nx*0.14, w.y0-0.025, (w.z0+w.z1)/2);
+    m.position.set(w.x-w.nx*0.14, w.y0-0.015, (w.z0+w.z1)/2); // top 1 cm above the wall block under the window: coplanar tops z-fight in the walk
     sillGroup.add(m);
     const e=new THREE.LineSegments(new THREE.EdgesGeometry(g),eMat);
     e.position.copy(m.position);
