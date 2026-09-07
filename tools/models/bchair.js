@@ -10,7 +10,7 @@ const rail=(w,h,d,x,y,z)=>new THREE.BoxGeometry(w,h,d).translate(x+w/2,y+h/2,z+d
 [0.035,0.415].forEach(z=>add(rail(0.345,0.03,0.03,0.0525,0.385,z-0.015),'paint'));            // rails along x
 X.forEach(x=>add(rail(0.03,0.03,0.315,x-0.015,0.385,0.0675),'paint'));                          // rails along z
 add(rbox(0.43,0.015,0.43,0.003,0.01,0.415,0.01,{m:1,step:0.1}),'paint');                       // plywood seat
-add(rbox(0.39,0.04,0.39,0.015,0.03,0.43,0.03,{m:2,step:0.05,crown:0.008}),'fabric');           // cushion
+add(rbox(0.39,0.04,0.39,0.015,0.03,0.43,0.03,{m:2,step:0.05,crown:0.008}),'cushion');          // cushion
 add(rbox(0.35,0.33,0.015,0.004,0.05,0.55,0.02,{m:1,step:0.1}),'paint');                        // back panel between the posts
 const {buf,triangles}=toGlb(parts); const out=path.join(__dirname,'../../models/bchair.glb'); fs.writeFileSync(out,buf);
 console.log(out,(buf.length/1024).toFixed(0)+' KB',triangles+' triangles');

@@ -753,7 +753,7 @@ const PHYS={}; // id → boxes
   }
   // GLB model of an item: the procedural build stays as fallback and proxy; on success its meshes are replaced by the model.
   // Material names inside the GLB are ITEM_MATS keys or slot names (fabric/wood/paint/metal; `paint` in a GLB is the cabinetPaint slot) → same grey concept materials, VIZ twins keep working.
-  const GLB_MATS={fabric:mat.sofa,metal:mat.frame,wood:mat.table,paint:mat.chair,chrome:mat.handle,glass:mat.glass,plastic:mat.plastic,ceramic:mat.ceramic,acrylic:mat.acrylic,leather:mat.leather,mirror:mat.mirror,led:mat.led}; // slot name in the GLB → grey concept material carrying that slot
+  const GLB_MATS={fabric:mat.sofa,metal:mat.frame,wood:mat.table,paint:mat.chair,chrome:mat.handle,glass:mat.glass,plastic:mat.plastic,ceramic:mat.ceramic,acrylic:mat.acrylic,leather:mat.leather,mirror:mat.mirror,led:mat.led,upholstery:mat.sofa,piping:mat.sofa,cover:mat.cushion}; // slot or coating name in the GLB → grey concept material carrying that slot
   const slotMat=n=>{ if(mat[n]&&!GLB_MATS[n]) return mat[n]; if(!GLB_MATS[n]){ console.warn('glb: unknown material "'+n+'", grey used'); GLB_MATS[n]=M(0x8c8c8c); GLB_MATS[n].userData.slot=n; } return GLB_MATS[n]; };
   // Model checks on load (console warnings, never exceptions): metres, Box3 inside size ±1 cm, bottom at y=0, pivot at the NW corner,
   // facade like the procedural version (centroid of the top quarter offset from the footprint centre points the same way — back of a chair/sofa).
@@ -776,7 +776,7 @@ const PHYS={}; // id → boxes
   window.validateItemGlb=validateItemGlb;
   const GLB_CACHE={}; // url → promise of the loaded scene; items sharing a file get clones with shared geometry (6 chairs = one geometry)
   const fetchGlb=url=>GLB_CACHE[url]||(GLB_CACHE[url]=new Promise((res,rej)=>{ if(typeof THREE.GLTFLoader!=='function') return rej(new Error('no GLTFLoader'));
-    new THREE.GLTFLoader().load(url,gltf=>{ gltf.scene.traverse(o=>{ if(o.isMesh){ const name=o.material.name; o.material.dispose(); o.material=slotMat(name); } }); res(gltf.scene); },undefined,rej); }));
+    new THREE.GLTFLoader().load(url,gltf=>{ gltf.scene.traverse(o=>{ if(o.isMesh){ const name=o.material.name; o.userData.glbMat=name; o.material.dispose(); o.material=slotMat(name); } }); res(gltf.scene); },undefined,rej); })); // glbMat = coating name from the generator, survives clone() for M1a presets
   function loadItemGlb(id,url){
     const g=ITEM_GROUPS[id]; url=url||g.userData.glb;
     return fetchGlb(url).then(scene=>{
