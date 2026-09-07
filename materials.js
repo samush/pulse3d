@@ -35,8 +35,27 @@ const MATERIALS={
   mirror:   {name:'зеркало',              rough:0.02, metal:1}, // reflects the procedural room environment (VIZ only)
   ceiling:  {name:'потолок натяжной матовый', rough:0.9, albedo:0.95},
 };
-const VIZ={on:false,ready:false,mode:'basic',std:new Map(),neutral:new Map(),basic:new Map()}; // mode: basic (plan) | neutral | std (real coatings)
-window.VIZ=VIZ; window.MATERIALS=MATERIALS;
+// Coatings (materials-lighting M1a): a real surface finish on top of a class. `class` names the MATERIALS entry (physical
+// class), `dir` the local texture set (textures/MANIFEST.md: color = sRGB albedo, normal = OpenGL linear, rough = absolute
+// roughness), `size` the metres one map covers, `rotation` degrees of the pattern, `maps` which files to use (default all
+// three), `color` a plain sRGB hex used when the set has no albedo. Nothing is assigned by default: VIZ.coat / VIZ.coatFinish
+// (M2, M4) choose the coating per item detail or finish; without one the twin stays the grey concept material.
+const COATINGS={
+  oakFloor:    {name:'дуб, доска пола',      class:'wood',   dir:'textures/oakFloor',     size:[1.2,1.2]},
+  oakFurniture:{name:'дуб, шпон мебели',     class:'wood',   dir:'textures/oakFurniture', size:[1.83,1.83], rotation:90}, // grain along U after the turn: length of tops and shelves
+  cabinetPaint:{name:'крашеный МДФ, бежевый', class:'cabinetPaint', dir:'textures/cabinetPaint', size:[1,1], maps:['normal','rough'], color:0xd9c9ad, normalScale:0.25},
+  wallPaint:   {name:'краска стен, тёплая светлая', class:'wallPaint', dir:'textures/wallPaint', size:[1,1], maps:['normal','rough'], color:0xe6ddd0, normalScale:0.15},
+  sofaWeave:   {name:'обивочная ткань, плетение', class:'fabric', dir:'textures/sofaWeave',   size:[0.4,0.4]},
+  rugPile:     {name:'ковёр, ворс',           class:'fabric', dir:'textures/rugPile',      size:[1.7,1.7]},
+  curtainLinen:{name:'штора, лён',            class:'fabric', dir:'textures/curtainLinen', size:[0.5,0.5]},
+  stoneCounter:{name:'камень столешницы',     class:'facade', dir:'textures/stoneCounter', size:[1.5,1.5]},
+  stoneSplash: {name:'камень фартука, гранит', class:'facade', dir:'textures/stoneSplash', size:[1,1]},
+  tile6060:    {name:'плитка 600×600',        class:'white',  dir:'textures/tile6060',     size:[0.6,0.6]},
+  tile60120:   {name:'керамогранит 600×1200', class:'tile',   dir:'textures/tile60120',    size:[1.2,1.2]},
+  plastic:     {name:'пластик матовый',       class:'plastic', dir:'textures/plastic',     size:[0.5,0.5], maps:['normal','rough'], normalScale:0.3},
+};
+const VIZ={on:false,ready:false,mode:'basic',std:new Map(),neutral:new Map(),basic:new Map(),variants:new Map(),textures:new Map(),finishCoat:{},loadErrors:[]}; // mode: basic (plan) | neutral | std (real coatings); variants: basic → Map(coating → twin)
+window.VIZ=VIZ; window.MATERIALS=MATERIALS; window.COATINGS=COATINGS;
 (function(){
   const KEY='pulse3d.viz';
   // ---- maps from the color canvas: roughness = inverted brightness (lighter is smoother), normals — Sobel over height
@@ -56,6 +75,28 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
       if(spec.image){ new THREE.TextureLoader().load(spec.image,t=>{ t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/spec.size[0],1/spec.size[1]); t.encoding=THREE.sRGBEncoding; m.map=t; m.needsUpdate=true; },undefined,()=>{ VIZ.loadErrors=(VIZ.loadErrors||[]).concat(key+': '+spec.image); }); } }
     return m;
   }
+  // ---- coatings: one texture object per (file, size, rotation), one Standard twin per (basic material, coating); shared by every mesh using both
+  function texture(url,spec,srgb){ const key=url+'|'+spec.size.join('x')+'|'+(spec.rotation||0); let t=VIZ.textures.get(key); if(t) return t;
+    t=new THREE.TextureLoader().load(url,undefined,undefined,()=>{ VIZ.loadErrors.push(url); t.userData.failed=true; t.dispatchEvent({type:'failed'}); }); t.userData={}; // r128 Texture has no userData of its own
+    t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/spec.size[0],1/spec.size[1]); t.center.set(0.5,0.5); t.rotation=(spec.rotation||0)*Math.PI/180;
+    t.encoding=srgb?THREE.sRGBEncoding:THREE.LinearEncoding; t.userData.key=key; VIZ.textures.set(key,t); return t; } // encoding fixed once here; coating maps are never shared with the flat concept
+  function variant(basic,coating){ // twin of `basic` wearing `coating`; unknown coating → the plain class twin, noted once
+    const spec=COATINGS[coating]; if(!spec){ if(!VIZ.loadErrors.includes('coating: '+coating)){ VIZ.loadErrors.push('coating: '+coating); console.warn('coating "'+coating+'" unknown, class twin used'); } return VIZ.std.get(basic); }
+    let vs=VIZ.variants.get(basic); if(!vs){ vs=new Map(); VIZ.variants.set(basic,vs); } if(vs.has(coating)) return vs.get(coating);
+    const cls=MATERIALS[spec.class]||MATERIALS.furniture, maps=spec.maps||['color','normal','rough'];
+    const m=new THREE.MeshStandardMaterial({roughness:maps.includes('rough')?1:(spec.rough!=null?spec.rough:cls.rough),metalness:spec.metal!=null?spec.metal:(cls.metal||0),transparent:basic.transparent,opacity:basic.opacity,depthWrite:basic.depthWrite,side:basic.side});
+    if(maps.includes('color')) m.color.set(0xffffff); else if(spec.color!=null) m.color.set(spec.color).convertSRGBToLinear(); else { m.color.copy(basic.color).multiplyScalar(cls.albedo!=null?cls.albedo:0.85); } // albedo map or an sRGB hex converted once; never the map darkened by the concept grey
+    const put=(file,prop,srgb)=>{ const t=texture(spec.dir+'/'+file+'.jpg',spec,srgb); m[prop]=t; const drop=()=>{ if(m[prop]===t){ m[prop]=null; if(prop==='map'&&spec.color!=null) m.color.set(spec.color).convertSRGBToLinear(); m.needsUpdate=true; } }; if(t.userData.failed) drop(); else t.addEventListener('failed',drop); }; // a failed file leaves the flat preset, the model stays
+    if(maps.includes('color')) put('color','map',true); if(maps.includes('normal')){ put('normal','normalMap',false); const ns=spec.normalScale!=null?spec.normalScale:1; m.normalScale.set(ns,ns); } if(maps.includes('rough')) put('rough','roughnessMap',false);
+    m.userData.coating=coating; vs.set(coating,m); VIZ.basic.set(m,basic); return m;
+  }
+  const ITEM_KEYS=new Map(); // concept material → its ITEM_MATS key, so an item override can name a detail material ('pillow') and not only a class ('fabric')
+  function coatingFor(group,basic){ // item override by material key, then by slot, then '*'; a value of null cancels
+    const c=group.userData.coat||(ITEMS_BY_ID[group.userData.id]||{}).coat; if(!c) return null;
+    if(!ITEM_KEYS.size) Object.entries(ITEM_MATS).forEach(([k,m])=>ITEM_KEYS.set(m,k));
+    const key=ITEM_KEYS.get(basic), slot=basic.userData.slot||'furniture';
+    return (key&&key in c)?c[key]:(slot in c)?c[slot]:c['*']||null; }
+  let ITEMS_BY_ID={}; const FINISH_KEYS=new Map(); // basic finish material → finishMats key
   function neutralFor(basic){ // grey Standard twin without maps: same colour, transparency and sides, one roughness for every class
     const slot=basic.userData.slot, m=new THREE.MeshStandardMaterial({color:basic.color?basic.color.clone():0xffffff,roughness:0.8,metalness:0,transparent:basic.transparent,opacity:basic.opacity,depthWrite:basic.depthWrite,side:basic.side,emissive:slot==='emitter'?basic.color.clone():0x000000});
     m.color.multiplyScalar(0.85); return m;
@@ -63,7 +104,8 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
   function twins(k,b){ VIZ.std.set(b,stdFor(k,b)); VIZ.neutral.set(b,neutralFor(b)); }
   function prepare(){ // build the twins once
     if(VIZ.ready) return; VIZ.ready=true;
-    const fm=window.finishMats||{};
+    const fm=window.finishMats||{}; Object.entries(fm).forEach(([k,b])=>FINISH_KEYS.set(b,k)); FINISH_KEYS.set(wallMat,'wall'); FINISH_KEYS.set(ceilMat,'ceiling'); facadeMats.forEach(b=>FINISH_KEYS.set(b,'facade'));
+    (window.ITEMS||[]).forEach(it=>{ ITEMS_BY_ID[it.id]=it; });
     Object.entries(fm).forEach(([k,b])=>twins(k,b));
     twins('wall',wallMat); twins('ceiling',ceilMat);
     facadeMats.forEach(b=>twins('facade',b));
@@ -73,7 +115,10 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
   const NO_CAST=new Set([finishGroup,tileGroup,boardGroup]);
   function swap(root,mode){ // mode: 'basic' | 'neutral' | 'std'; any twin maps back to its basic first, so the source state does not matter
     const lit=mode!=='basic', cast=lit&&!NO_CAST.has(root)&&root!==ceilGroup; // ceiling never casts: it would block the neutral sun from above (L1 revisits for lamps)
-    root.traverse(o=>{ if(!o.isMesh) return; const b=VIZ.basic.get(o.material)||o.material, m=mode==='std'?VIZ.std.get(b):mode==='neutral'?VIZ.neutral.get(b):b; if(m) o.material=m; o.castShadow=cast; o.receiveShadow=lit; }); }
+    const item=root.userData&&root.userData.id!=null&&ITEM_GROUPS[root.userData.id]===root; // item groups take per-item coatings, finish groups the global finish coating
+    root.traverse(o=>{ if(!o.isMesh) return; const b=VIZ.basic.get(o.material)||o.material; let m=mode==='std'?VIZ.std.get(b):mode==='neutral'?VIZ.neutral.get(b):b;
+      if(mode==='std'&&m){ const c=item?coatingFor(root,b):VIZ.finishCoat[FINISH_KEYS.get(b)]; if(c) m=variant(b,c); }
+      if(m) o.material=m; o.castShadow=cast; o.receiveShadow=lit; }); }
   function apply(){ // effective state from the camera (plan is flat) and the two controls; light is applied here too, materials stay as chosen
     const lit=!controls.plan, mode=!lit?'basic':VIZ.on?'std':'neutral';
     if(lit) prepare();
@@ -88,6 +133,10 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
   VIZ.adopt=function(root){ // meshes added after prepare (GLB models): twins for their materials, then the current mode
     if(!VIZ.ready) return; root.traverse(o=>{ if(o.isMesh&&!VIZ.std.has(o.material)&&!VIZ.basic.has(o.material)){ const b=o.material; twins(b.userData.slot||'furniture',b); VIZ.basic.set(VIZ.std.get(b),b); VIZ.basic.set(VIZ.neutral.get(b),b); } }); swap(root,VIZ.mode); };
   VIZ.apply=apply;
+  VIZ.twins=b=>[VIZ.std.get(b),VIZ.neutral.get(b),...(VIZ.variants.get(b)||new Map()).values()].filter(Boolean); // every lit twin of a concept material (wall slider)
+  VIZ.coat=function(id,key,coating){ // item override: key = ITEM_MATS key, slot name or '*'; coating = COATINGS key or null; only this item is re-swapped
+    const g=ITEM_GROUPS[id]; if(!g) return; const c=g.userData.coat=Object.assign({},(ITEMS_BY_ID[id]||{}).coat,g.userData.coat); c[key]=coating; if(VIZ.ready&&VIZ.mode==='std') swap(g,'std'); };
+  VIZ.coatFinish=function(key,coating){ VIZ.finishCoat[key]=coating; if(VIZ.ready&&VIZ.mode==='std') [finishGroup,tileGroup,boardGroup,wallGroup,wallGroupR,facadeGroup,ceilGroup].forEach(g=>swap(g,'std')); }; // finish key of finishMats, 'wall', 'facade' or 'ceiling'
   VIZ.set=function(on){ VIZ.on=!!on; try{ localStorage.setItem(KEY,VIZ.on?'1':'0'); }catch(e){} const cb=document.getElementById('mats'); if(cb) cb.checked=VIZ.on; apply(); };
   document.getElementById('mats').addEventListener('change',e=>VIZ.set(e.target.checked));
   let saved=null; try{ saved=localStorage.getItem(KEY); }catch(e){}
