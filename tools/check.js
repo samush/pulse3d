@@ -550,6 +550,12 @@ const { chromium } = require('playwright');
     setView('top'); out.plan = wall().isMeshBasicMaterial && !renderer.shadowMap.enabled && VIZ.on === false && LIGHTING.scheme === 'lamps'; // prefs survive the plan
     setView('door'); out.back = VIZ.mode === 'neutral' && sun.intensity === 0; VIZ.set(true); return out; });
   Object.entries(combos).forEach(([k, ok]) => { if (!ok) problems.push('материалы × свет: комбинация «' + k + '» не сошлась (materials-lighting M0 §3)'); });
+  // materials-lighting M0: whatever the load order (GLBs finish after the controls were toggled), every mesh of every swapped group carries the twin of the current mode
+  const twinsOk = await page.evaluate(() => { const groups = [finishGroup, tileGroup, boardGroup, wallGroup, wallGroupR, facadeGroup, ceilGroup, ...Object.values(ITEM_GROUPS)], bad = [], glb = Object.values(ITEM_GROUPS).filter(g => g.userData.glbLoaded).length;
+    const pass = (mode) => groups.forEach(g => g.traverse(o => { if (!o.isMesh) return; const b = VIZ.basic.get(o.material) || o.material, want = mode === 'std' ? VIZ.std.get(b) : mode === 'neutral' ? VIZ.neutral.get(b) : b; if (o.material !== want) bad.push(mode + ':' + (g.userData.id || g.name || '?') + ':' + o.material.type); }));
+    setView('door'); VIZ.set(true); pass('std'); VIZ.set(false); pass('neutral'); setView('top'); pass('basic'); VIZ.set(true); setView('door'); pass('std'); setView('top'); // leaves materials on for the reload check below
+    return { bad: bad.slice(0, 8), n: bad.length, glb }; });
+  if (twinsOk.n || twinsOk.glb < 15) problems.push('материалы: меши не в материале текущего режима (' + twinsOk.n + ', GLB ' + twinsOk.glb + '): ' + twinsOk.bad.join(' '));
   await page.reload(); await page.waitForTimeout(2500);
   const vizKept = await page.evaluate(() => { const ok = VIZ.on && document.getElementById('mats').checked && LIGHTING.scheme === 'lamps' && document.getElementById('light').value === 'lamps'; VIZ.set(false); LIGHTING.set('neutral'); return ok; });
   if (!viz.std) problems.push('визуализация: материалы не PBR');
