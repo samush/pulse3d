@@ -726,7 +726,7 @@ const { chromium } = require('playwright');
     LIGHTING.scope('near'); document.getElementById('avatarOn').checked = false; controls.setFPV(9.3, 9.45, 0); LIGHTING.tick(0); const a9 = LIGHTING.active(), vis = () => L.filter(l => l.visible).length, v9 = vis(), kidHidden = by('kidlight').visible === false, sh9 = by('spot3').castShadow && !by('ceil4_2').castShadow;
     controls.setFPV(12.6, 5.6, 0); LIGHTING.tick(0); const a4 = LIGHTING.active();
     out.near = a9.room === 9 && ['spot1', 'spot2', 'spot3', 'bathmirror', 'ceil5_4'].every(n => a9.lights.includes(n)) && !a9.lights.some(n => /^(kidlight|ceil4_1|ceil3_1|ceil1_1)$/.test(n)) && kidHidden && sh9
-      && a4.room === 4 && a4.lights.includes('ceil4_1') && !a4.lights.includes('spot1') && v9 === vis() && v9 <= 22 && !renderer.shadowMap.autoUpdate;
+      && a4.room === 4 && a4.lights.includes('ceil4_1') && !a4.lights.includes('spot1') && v9 === vis() && v9 <= 22 && a9.shadows <= 1 && a4.shadows <= 1 && !renderer.shadowMap.autoUpdate; // L3 p.3: one shadow map per frame
     document.getElementById('avatarOn').checked = true; setView('door');
     LIGHTING.set('neutral'); VIZ.set(false); setView('top'); return out;
   });
