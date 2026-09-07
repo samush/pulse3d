@@ -45,6 +45,7 @@ const COATINGS={
   oakFloor:    {name:'дуб, доска пола',      class:'wood',   dir:'textures/oakFloor',     size:[1.2,1.2], tint:[0.9,0.86,0.82]},
   oakFurniture:{name:'дуб, шпон мебели',     class:'wood',   dir:'textures/oakFurniture', size:[1.83,1.83], tint:[0.74,0.7,0.66]}, // grain along V = along legs/posts and the table length (z); muted against the reference
   cabinetPaint:{name:'крашеный МДФ, бежевый', class:'cabinetPaint', dir:'textures/cabinetPaint', size:[1,1], maps:['normal','rough'], color:0xd9c9ad, normalScale:0.25},
+  whiteEnamel: {name:'белая эмаль, техника',    class:'cabinetPaint', dir:'textures/cabinetPaint', size:[1,1], maps:['normal','rough'], color:0xeeece8, normalScale:0.15}, // M4-3: washer/dryer body — the cabinetPaint set is beige, appliances are white
   wallPaint:   {name:'краска стен, тёплая светлая', class:'wallPaint', dir:'textures/wallPaint', size:[1,1], maps:['normal'], rough:0.9, color:0xe6ddd0, normalScale:0.08}, // Paint004 rough map gives glossy blotches under the environment; flat 0.9 instead,
   sofaWeave:   {name:'обивочная ткань, плетение', class:'fabric', dir:'textures/sofaWeave',   size:[0.4,0.4], tint:[1.9,1.8,1.65]}, // Fabric030 is authored dark grey; scaled to the light greige of the reference
   rugPile:     {name:'ковёр, ворс',           class:'fabric', dir:'textures/rugPile',      size:[1.7,1.7]},
@@ -53,9 +54,10 @@ const COATINGS={
   stoneSplash: {name:'камень фартука, гранит', class:'facade', dir:'textures/stoneSplash', size:[0.8,0.8], tint:[0.85,0.85,0.85]}, // 0.8 m per map: grain readable from the table without shouting
   tile6060:    {name:'плитка 600×600',        class:'white',  dir:'textures/tile6060',     size:[0.6,0.6], maps:['color','normal'], rough:0.35}, // rough maps of both tile sets are mirror-polished (0.07); §4.3 range 0.25–0.55
   tile60120:   {name:'керамогранит 600×1200', class:'tile',   dir:'textures/tile60120',    size:[1.2,1.2], maps:['color','normal'], rough:0.35},
+  tile6060grey:{name:'плитка 600×600, серая',  class:'grey',   dir:'textures/tile6060',     size:[0.6,0.6], maps:['color','normal'], rough:0.35, tint:[0.38,0.38,0.4]}, // M4-4: same set as tile6060 (shared textures), darkened to the grey marble of the bath west walls
   plastic:     {name:'пластик матовый',       class:'plastic', dir:'textures/plastic',     size:[0.5,0.5], maps:['normal','rough'], normalScale:0.3},
 };
-const VIZ={on:false,ready:false,mode:'basic',std:new Map(),neutral:new Map(),basic:new Map(),variants:new Map(),textures:new Map(),finishCoat:{board:'oakFloor',tile:'tile60120',wallPaint:'wallPaint',wood:'oakFurniture'},loadErrors:[]}; // finishCoat: global coating per finish key (M2: oak boards, 60×120 stone, wall paint, oak jambs) // mode: basic (plan) | neutral | std (real coatings); variants: basic → Map(coating → twin)
+const VIZ={on:false,ready:false,mode:'basic',std:new Map(),neutral:new Map(),basic:new Map(),variants:new Map(),textures:new Map(),finishCoat:{board:'oakFloor',tile:'tile60120',wallPaint:'wallPaint',wood:'oakFurniture',white:'tile6060',whiteWall:'tile6060',grey:'tile6060grey'},loadErrors:[]}; // finishCoat: global coating per finish key (M2: oak boards, 60×120 stone, wall paint, oak jambs; M4: 60×60 tiles of rooms 7/8/9) // mode: basic (plan) | neutral | std (real coatings); variants: basic → Map(coating → twin)
 window.VIZ=VIZ; window.MATERIALS=MATERIALS; window.COATINGS=COATINGS;
 (function(){
   const KEY='pulse3d.viz';

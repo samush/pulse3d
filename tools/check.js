@@ -627,6 +627,7 @@ const { chromium } = require('playwright');
     await page.evaluate(([x, z, th, on]) => { VIZ.set(on); controls.setFPV(x, z, th); }, [x, z, th, on]); await page.waitForTimeout(on ? 1500 : 400); await page.screenshot({ path: path.join(outDir, 'm4-1-' + name + (on ? '-on' : '-off') + '.png') }); }
   // materials-lighting M4-3/M4-4: rooms 5, 7, 10, 8, 9 — main surfaces wear the coatings from kitchen.md rules; one on/off frame per room
   const M4 = { hall5: { items: [['wardrobe', 'door', 'cabinetPaint'], ['wardrobe', 'body', 'cabinetPaint'], ['wardrobe', 'hdark', 'class'], ['entry', 'door', 'cabinetPaint'], ['sw5', 'plastic', 'plastic'], ['pouf', 'glb:leather', 'class']], pose: [9.1, 6.6, 9.1, 7.7] },
+    laundry7: { items: [['washer', 'glb:plastic', 'plastic'], ['washer', 'glb:paint', 'whiteEnamel'], ['washer', 'glb:chrome', 'class']], finish: [['white', 'tile6060'], ['whiteWall', 'tile6060'], ['grey', 'tile6060grey']], pose: [7.6, 3.7, 7.35, 2.6] },
   };
   const m4 = await page.evaluate(async (M4) => {
     VIZ.set(true); const wait = async f => { for (let i = 0; i < 100 && !f(); i++) await new Promise(r => setTimeout(r, 100)); return !!f(); };
@@ -634,6 +635,8 @@ const { chromium } = require('playwright');
     const on = (id, test) => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh && test(o)) set.add(o.material.userData.coating || 'class'); }); return [...set].sort().join(); };
     const sel = k => k.startsWith('glb:') ? (o => o.userData.glbMat === k.slice(4)) : (o => (VIZ.basic.get(o.material) || o.material) === ITEM_MATS[k]);
     const bad = []; Object.entries(M4).forEach(([room, r]) => r.items.forEach(([id, k, want]) => { const got = on(id, sel(k)); if (got !== want) bad.push(room + ': ' + id + '.' + k + ' = ' + (got || 'нет меша') + ', ожидалось ' + want); }));
+    const fin = {}; [finishGroup, wallGroup, wallGroupR].forEach(g => g.traverse(o => { if (!o.isMesh) return; const k = Object.keys(finishMats).find(k => finishMats[k] === (VIZ.basic.get(o.material) || o.material)); if (k && !fin[k]) fin[k] = o.material; }));
+    Object.entries(M4).forEach(([room, r]) => (r.finish || []).forEach(([k, want]) => { const m = fin[k]; if (!m || m.userData.coating !== want || m.roughnessMap || m.roughness !== 0.35) bad.push(room + ': отделка ' + k + ' = ' + (m ? m.userData.coating : 'нет меша') + ', ожидалось ' + want + ' с явной rough 0.35'); }));
     return bad; }, M4);
   m4.forEach(msg => problems.push('материалы комнат: ' + msg + ' (materials-lighting M4)'));
   for (const [room, r] of Object.entries(M4)) for (const on of [true, false]) {
