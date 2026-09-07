@@ -758,7 +758,8 @@ const { chromium } = require('playwright');
   await page.reload(); await page.waitForTimeout(2500);
   const scen2 = await page.evaluate(async () => {
     const u = ITEM_GROUPS.sofa.userData; const kept = LAY.variants[LAY.cur].name === 'по метке' && Math.abs(u.pos[1] - 2.6) < 1e-9 && MK.marks.some(k => k.name === 'место под диван');
-    controls.setFPV(13.0, 4.4, Math.PI); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp' })); await new Promise(r => setTimeout(r, 1500)); window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowUp' }));
+    controls.setFPV(13.0, 4.4, Math.PI); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); // the first FPV frame after a reload compiles shaders for seconds on software GL: walk only once the view has rendered
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp' })); await new Promise(r => setTimeout(r, 1500)); window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowUp' }));
     const stopped = controls.pos.z > 2.6 + 0.88 + 0.25 && controls.pos.z < 2.6 + 0.88 + 0.7; // уперся в южный край дивана на новом месте
     LAY.variants.splice(LAY.cur, 1); LAY.applyVariant(0); MK.marks.slice().forEach(k => MK.remove(k));
     return { kept, stopped, z: controls.pos.z.toFixed(2) };
