@@ -592,7 +592,7 @@ const { chromium } = require('playwright');
   const m2 = await page.evaluate(async () => {
     setView('door'); VIZ.set(true); LIGHTING.set('neutral'); const wait = async f => { for (let i = 0; i < 100 && !f(); i++) await new Promise(r => setTimeout(r, 100)); return !!f(); };
     const on = (id, test) => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh && test(o)) set.add(o.material.userData.coating || 'class'); }); return [...set].sort().join(); };
-    const key = k => o => (VIZ.basic.get(o.material) || o.material) === ITEM_MATS[k], glb = n => o => o.userData.glbMat === n;
+    const key = k => o => { const b = VIZ.basic.get(o.material) || o.material; return b === ITEM_MATS[k] || (k === 'led' && b.name.startsWith('led:')); }, glb = n => o => o.userData.glbMat === n;
     const out = { fronts: on('kitchen', key('base')) === 'cabinetPaint' && on('kitchen', key('upper')) === 'cabinetPaint' && on('console', key('base')) === 'cabinetPaint',
       stone: on('kitchen', key('top')) === 'stoneCounter' && on('kitchen', key('wpanel')) === 'stoneSplash', carcass: on('kitchen', key('hdark')) === 'class' && on('kitchen', key('handle')) === 'class',
       oak: on('table', key('table')) === 'oakFurniture' && ['chair1', 'chair6'].every(id => on(id, glb('paint')) === 'oakFurniture'), pads: on('chair1', glb('cushion')) === 'sofaWeave',
@@ -612,7 +612,7 @@ const { chromium } = require('playwright');
     ['kidchair', 'kidchair2', 'sock1'].forEach(id => { ITEM_GROUPS[id].userData.coat = null; }); VIZ.set(false); VIZ.set(true); LIGHTING.set('neutral'); const wait = async f => { for (let i = 0; i < 100 && !f(); i++) await new Promise(r => setTimeout(r, 100)); return !!f(); }; // drop the M1a overrides, back to the ITEMS coats
     const loaded = await wait(() => ['kidchair', 'kidchair2', 'windowseat1', 'windowseat2', 'kidsofa'].every(id => ITEM_GROUPS[id].userData.glbLoaded));
     const on = (id, test) => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh && test(o)) set.add(o.material.userData.coating || 'class'); }); return [...set].sort().join(); };
-    const key = k => o => (VIZ.basic.get(o.material) || o.material) === ITEM_MATS[k], glb = n => o => o.userData.glbMat === n, cab = o => ['kbody', 'body', 'wdoor', 'wpanel'].some(k => key(k)(o));
+    const key = k => o => { const b = VIZ.basic.get(o.material) || o.material; return b === ITEM_MATS[k] || (k === 'led' && b.name.startsWith('led:')); }, glb = n => o => o.userData.glbMat === n, cab = o => ['kbody', 'body', 'wdoor', 'wpanel'].some(k => key(k)(o));
     let tulle; ITEM_GROUPS.curtain.traverse(o => { if (!tulle && o.isMesh && (VIZ.basic.get(o.material) || o.material) === ITEM_MATS.tulle) tulle = o.material; });
     return { loaded,
       casework: ['kidbed', 'kiddesk', 'kidped', 'kidshelf', 'kidbed2', 'tower2n', 'deskshelf2'].every(id => on(id, cab) === 'cabinetPaint') && on('windowseat1', glb('wdoor')) === 'cabinetPaint' && on('windowseat2', glb('paint')) === 'cabinetPaint',
@@ -707,10 +707,11 @@ const { chromium } = require('playwright');
   // L1 frames: kitchen from the door, from the work zone to the sofa, the work zone itself, the evening scene (only table + sofa), bath 9 in front of the mirror
   for (const [name, x, z, tx, tz, off] of [['l1-kitchen-door', 12.6, 5.6, 8.6, 2.6], ['l1-kitchen-sofa', 9.0, 3.0, 12.5, 5.8], ['l1-kitchen-work', 10.8, 4.9, 8.6, 3.3], ['l1-kitchen-evening', 12.6, 5.6, 8.6, 2.6, 'g4.work,g4.splash,g4.main'], ['l1-bath9-front', 9.3, 9.45, 9.27, 8.2],
     ['l2-kid1-door', 4.9, 4.5, 2.4, 2.6], ['l2-kid1-desk', 3.0, 2.6, 2.0, 4.8], ['l2-kid1-evening', 1.5, 4.5, 4.9, 2.9, 'g1.main,g1.desk,g1.track'],
-    ['l2-kid2-bed', 11.9, 7.2, 13.2, 9.0], ['l2-kid2-desk', 13.3, 9.1, 11.5, 8.9], ['l2-kid2-wall', 13.4, 8.2, 12.9, 6.6], ['l2-kid2-evening', 11.9, 7.2, 13.2, 9.0, 'g2.main,g2.desk']]) { // L2 frames: room from the door, desk/gallery wall, evening (bed zone only)
+    ['l2-kid2-bed', 11.9, 7.2, 13.2, 9.0], ['l2-kid2-desk', 13.3, 9.1, 11.5, 8.9], ['l2-kid2-wall', 13.4, 8.2, 12.9, 6.6], ['l2-kid2-evening', 11.9, 7.2, 13.2, 9.0, 'g2.main,g2.desk'],
+    ['l2-master-bed', 12.3, 10.6, 13.9, 12.6], ['l2-master-vanity', 10.6, 12.0, 12.1, 10.0], ['l2-master-evening', 12.3, 10.6, 13.9, 12.6, 'g3.main,g3.vanity']]) { // L2 frames: room from the door, desk/gallery wall, evening (bed zone only)
     await page.evaluate(([x, z, tx, tz, off]) => { VIZ.set(true); LIGHTING.set('lamps'); document.getElementById('avatarOn').checked = false; const cb = document.getElementById('ceil'); cb.checked = true; cb.dispatchEvent(new Event('change'));
       Object.keys(LIGHTING.groups).forEach(g => LIGHTING.group(g, !(off || '').split(',').includes(g))); controls.setFPV(x, z, Math.atan2(tx - x, tz - z)); }, [x, z, tx, tz, off]); await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(outDir, name + '.png') });
+    await page.screenshot({ path: path.join(outDir, name + '.png'), timeout: 120000 }); // shadowed lamp frames exceed the 30 s default on software GL
   }
   await page.evaluate(() => { document.getElementById('avatarOn').checked = true; const cb = document.getElementById('ceil'); cb.checked = false; cb.dispatchEvent(new Event('change')); LIGHTING.set('neutral'); VIZ.set(false); setView('top'); });
   if (!viz.shadows) problems.push('визуализация: тени не включены');

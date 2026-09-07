@@ -45,6 +45,17 @@ const LIGHTS=[
   {id:'bra3',item:'bra3',group:'g2.seat',type:'spot',at:[14.47,1.25,7.37],to:[14.5,0.65,7.9],k:2700,w:0.5,angle:0.6,distance:4},
   {id:'bra4',item:'bra4',group:'g2.read',type:'spot',at:[11.67,2.27,9.50],to:[12.0,1.9,9.3],k:2700,w:0.4,angle:0.6,distance:4},
   {id:'kidbed2',item:'kidbed2',group:'g2.bed',type:'point',at:[12.247,1.69,8.69],k:3000,w:0.3,distance:2},
+  // room 3 (L2-1): mlight replaced by a 2x2 grid over the free floor (L0g removed the plafond); nothing above the bed
+  {id:'ceil3_1',item:'ceil3_1',group:'g3.main',type:'spot',at:[10.80,2.68,10.60],k:3000,w:1.0,shadow:true},
+  {id:'ceil3_2',item:'ceil3_2',group:'g3.main',type:'spot',at:[12.20,2.68,10.60],k:3000,w:1.0},
+  {id:'ceil3_3',item:'ceil3_3',group:'g3.main',type:'spot',at:[10.80,2.68,12.20],k:3000,w:1.0},
+  {id:'ceil3_4',item:'ceil3_4',group:'g3.main',type:'spot',at:[12.20,2.68,12.20],k:3000,w:1.0},
+  {id:'bra5',item:'bra5',group:'g3.read',type:'spot',at:[13.41,1.35,12.96],to:[13.41,0.7,12.3],k:2700,w:0.4,angle:0.6,distance:4},
+  {id:'bra6',item:'bra6',group:'g3.read',type:'spot',at:[14.41,1.35,12.96],to:[14.41,0.7,12.3],k:2700,w:0.4,angle:0.6,distance:4},
+  {id:'led4',item:'led4',group:'g3.head',type:'point',at:[13.91,1.84,12.82],k:2700,w:0.3,distance:1.5},
+  {id:'bra7',item:'bra7',group:'g3.vanity',type:'spot',at:[11.40,1.45,9.94],to:[12.1,1.3,10.4],k:3000,w:0.5,angle:0.6,distance:4},
+  {id:'bra8',item:'bra8',group:'g3.vanity',type:'spot',at:[12.80,1.45,9.94],to:[12.1,1.3,10.4],k:3000,w:0.5,angle:0.6,distance:4},
+  {id:'led5',item:'led5',group:'g3.tv',type:'point',at:[13.91,1.06,9.83],k:3000,w:0.2,distance:1.5},
 ];
 window.LIGHTS=LIGHTS;
 (function(){
@@ -86,7 +97,7 @@ window.LIGHTS=LIGHTS;
   LIGHTING.emitters=g=>[...(emitters[g]||[])];
   function sync(){ // sources and diffusers from scheme × group state; a source off has no shadow pass either
     const lamps=LIGHTING.lit&&LIGHTING.scheme==='lamps';
-    LIGHTING.lights.forEach(l=>{ const on=lamps&&LIGHTING.groups[l.userData.group]!==false; l.intensity=on?BASE[l.userData.type]*l.userData.w:0; l.castShadow=on&&l.userData.shadow; });
+    LIGHTING.lights.forEach(l=>{ const on=lamps&&LIGHTING.groups[l.userData.group]!==false; l.intensity=on?BASE[l.userData.type]*l.userData.w:0; l.castShadow=on&&l.userData.shadow; l.visible=on; }); // hidden lights leave the shaders: the neutral scheme and switched-off groups do not pay for the whole catalogue
     if(window.VIZ&&VIZ.ready) Object.entries(emitters).forEach(([g,set])=>{ const on=!lamps||LIGHTING.groups[g]!==false; set.forEach(b=>VIZ.twins(b).forEach(m=>{ m.emissiveIntensity=on?1:0; })); }); // neutral scheme: every diffuser glows, as before L1
   }
   LIGHTING.group=function(id,on){ if(!(id in LIGHTING.groups)) return; LIGHTING.groups[id]=on!==false; sync(); }; // one switch key: intensity + emissive of its own group only
