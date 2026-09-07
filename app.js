@@ -429,7 +429,7 @@ document.getElementById('finish').addEventListener('change',e=>finishGroup.visib
 document.getElementById('tileFloor').addEventListener('change',e=>tileGroup.visible=e.target.checked);
 document.getElementById('boardFloor').addEventListener('change',e=>boardGroup.visible=e.target.checked);
 const wop=document.getElementById('wop'),wov=document.getElementById('wov');
-const fade=(m,v)=>{ m.opacity=v; m.transparent=v<0.999; m.depthWrite=v>=0.5; m.needsUpdate=true; const s=window.VIZ&&VIZ.std.get(m); if(s) fade(s,v); }; // PBR twin follows the basic material
+const fade=(m,v)=>{ m.opacity=v; m.transparent=v<0.999; m.depthWrite=v>=0.5; m.needsUpdate=true; if(window.VIZ) [VIZ.std.get(m),VIZ.neutral.get(m)].forEach(s=>s&&fade(s,v)); }; // PBR and neutral twins follow the basic material
 wop.addEventListener('input',()=>{
   const v=wop.value/100;
   fade(wallMat,v); facadeMats.forEach(m=>fade(m,v));
@@ -673,7 +673,7 @@ var walkKeys={ArrowUp:false,ArrowDown:false,ArrowLeft:false,ArrowRight:false,
   KeyW:false,KeyS:false,KeyA:false,KeyD:false};
 var lastT=0;
 function walkStep(t){
-  const dt=Math.min((t-lastT)/1000,0.06); lastT=t;
+  const dt=Math.min((t-lastT)/1000,0.25); lastT=t; // clamp keeps a stalled tab from teleporting; 0.25 keeps the walking speed down to 4 fps (lit walk on software GL)
   if(!controls.fpv) return;
   const fwd=(walkKeys.ArrowUp||walkKeys.KeyW?1:0)-(walkKeys.ArrowDown||walkKeys.KeyS?1:0);
   const strafe=(walkKeys.KeyD?1:0)-(walkKeys.KeyA?1:0);
@@ -723,11 +723,11 @@ scene.add(avatar);
 document.getElementById('avatarOn').addEventListener('change',()=>controls.apply()); // the walk keeps running, only the figure hides
 
 // потолок (по умолчанию выключен)
-var ceilGroup=new THREE.Group();
+var ceilGroup=new THREE.Group(); var ceilMat=new THREE.MeshBasicMaterial({color:0xfaf8f5,side:THREE.DoubleSide});
 PLAN.rooms.forEach(r=>{
   const g=new THREE.ShapeGeometry(toShape(r.poly));
   g.rotateX(-Math.PI/2); g.translate(0,H-0.005,0);
-  ceilGroup.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xfaf8f5,side:THREE.DoubleSide})));
+  ceilGroup.add(new THREE.Mesh(g,ceilMat));
 });
 ceilGroup.visible=false;
 scene.add(ceilGroup);
