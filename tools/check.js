@@ -523,7 +523,9 @@ const { chromium } = require('playwright');
     const lam = floor.material;
     return { std: lam.isMeshStandardMaterial && sofa.material.isMeshStandardMaterial, shadows: renderer.shadowMap.enabled && sun.castShadow && sofa.castShadow,
       maps: !!(lam.roughnessMap && lam.normalMap), scale: Math.abs(lam.map.repeat.x - 1 / MATERIALS.lam.size[0]) < 1e-9 && Math.abs(lam.roughnessMap.repeat.x - lam.map.repeat.x) < 1e-9,
-      tone: renderer.toneMapping === THREE.ACESFilmicToneMapping && renderer.outputEncoding === THREE.sRGBEncoding, geom: JSON.stringify(PLAN) === pj && Math.abs(ITEM_GROUPS.sofa.userData.pos[0] - 11.35) < 1e-9 };
+      tone: renderer.toneMapping === THREE.ACESFilmicToneMapping && renderer.outputEncoding === THREE.sRGBEncoding,
+      pipe: LIGHTING.lit && renderer.toneMappingExposure === LIGHTING.exposure && !renderer.physicallyCorrectLights && scene.environment === LIGHTING.environment() && !camera.children.some(o => o.isLight) && sun.target.parent === scene, // M0: one fixed pipeline, fixed neutral light, nothing follows the camera
+      geom: JSON.stringify(PLAN) === pj && Math.abs(ITEM_GROUPS.sofa.userData.pos[0] - 11.35) < 1e-9 };
   }, planJson);
   const fpsViz = await fps();
   // review 2026-09-05: wall slider drives the PBR twins and does not hide the balcony threshold; ceiling returns after plan
@@ -545,6 +547,7 @@ const { chromium } = require('playwright');
   if (!viz.shadows) problems.push('визуализация: тени не включены');
   if (!viz.maps || !viz.scale) problems.push('визуализация: карты шероховатости/рельефа отсутствуют или масштаб не совпадает');
   if (!viz.tone) problems.push('визуализация: tone mapping / sRGB не включены');
+  if (!viz.pipe) problems.push('свет: пайплайн/нейтральная схема не зафиксированы (materials-lighting M0, lighting.js)');
   if (!viz.geom) problems.push('визуализация: изменилась геометрия или позы');
   if (!vizKept) problems.push('визуализация: режим не восстановился после перезагрузки');
   // T12: сквозной сценарий — метка → текст для агента → размещение предмета по числам из текста → вариант → перезагрузка → прогулка

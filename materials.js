@@ -1,7 +1,8 @@
 // Material library and "Visualization" mode. Plan mode draws the scene with flat unlit materials (outlines and
-// dimensions); visualization uses MeshStandardMaterial with color, roughness and bump maps, ACES tone mapping, sRGB
-// and sun shadows. MATERIALS keeps pattern size in metres (UV in metres, so it holds on any surface), roughness and
-// bump strength; maps are built from the color canvas, an optional `image` falls back to it on load error.
+// dimensions); visualization uses MeshStandardMaterial with color, roughness and bump maps. Light schemes, shadows,
+// environment and the image pipeline live in lighting.js. MATERIALS keeps pattern size in metres (UV in metres, so
+// it holds on any surface), roughness and bump strength; maps are built from the color canvas, an optional `image`
+// falls back to it on load error.
 const MATERIALS={
   lam:      {name:'ламинат серый',        size:[1.9,1.9], rough:0.55, bump:0.35},
   white:    {name:'плитка белый мрамор, пол', size:[0.6,0.6], rough:0.25, bump:0.15},
@@ -61,32 +62,19 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS;
     facadeMats.forEach(b=>VIZ.std.set(b,stdFor('facade',b)));
     Object.values(ITEM_GROUPS).forEach(g=>g.traverse(o=>{ if(o.isMesh&&!VIZ.std.has(o.material)){ const b=o.material; VIZ.std.set(b,stdFor(b.userData.slot||'furniture',b)); } }));
     VIZ.std.forEach((s,b)=>VIZ.basic.set(s,b));
-    // sun with shadows on top of the existing lights
-    sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); const sc=sun.shadow.camera; sc.left=-9; sc.right=9; sc.top=8; sc.bottom=-8; sc.near=1; sc.far=40; sun.shadow.bias=-0.0006; sun.shadow.normalBias=0.02;
-    sun.target.position.set(cx,0,cz); scene.add(sun.target);
-    // procedural room environment for reflections (mirror, chrome, glass): a grey box with a bright window panel, prefiltered once
-    const env=new THREE.Scene(), Bm=c=>new THREE.MeshBasicMaterial({color:c,side:THREE.BackSide});
-    env.add(new THREE.Mesh(new THREE.BoxGeometry(8,3,8),Bm(0x8a8a8a))); const ceil=new THREE.Mesh(new THREE.PlaneGeometry(8,8),new THREE.MeshBasicMaterial({color:0xd8d8d8})); ceil.rotation.x=Math.PI/2; ceil.position.y=1.49; env.add(ceil);
-    const win=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.6),new THREE.MeshBasicMaterial({color:0xffffff})); win.position.set(0,0.2,-3.99); env.add(win);
-    const pm=new THREE.PMREMGenerator(renderer); VIZ.env=pm.fromScene(env,0.04).texture; pm.dispose();
   }
   function swap(root,toStd){ root.traverse(o=>{ if(!o.isMesh) return; const m=toStd?VIZ.std.get(o.material):VIZ.basic.get(o.material); if(m) o.material=m; if(toStd){ o.castShadow=root!==finishGroup&&root!==tileGroup&&root!==boardGroup; o.receiveShadow=true; } else { o.castShadow=false; o.receiveShadow=false; } }); }
   function apply(){ // effective state: visualization on and not in plan mode
     const on=VIZ.on&&!controls.plan;
     if(on) prepare();
     if(VIZ.ready){ [finishGroup,tileGroup,boardGroup,wallGroup,wallGroupR,facadeGroup].forEach(g=>swap(g,on)); Object.values(ITEM_GROUPS).forEach(g=>swap(g,on)); }
-    renderer.outputEncoding=on?THREE.sRGBEncoding:THREE.LinearEncoding;
-    renderer.toneMapping=on?THREE.ACESFilmicToneMapping:THREE.NoToneMapping; renderer.toneMappingExposure=on?0.75:1.0;
-    renderer.shadowMap.enabled=on; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    LIGHTING.apply(on);
     // color maps are shared by the simple and PBR material: encoding is set once per texture by mode
     if(VIZ.ready){ const seen=new Set(); const enc=on?THREE.sRGBEncoding:THREE.LinearEncoding;
       VIZ.std.forEach((s,b)=>{ [s.map,b.map].forEach(t=>{ if(t&&!seen.has(t)){ seen.add(t); if(t.encoding!==enc){ t.encoding=enc; t.needsUpdate=true; } } }); s.needsUpdate=true; b.needsUpdate=true; }); }
-    sun.intensity=on?0.9:0.55; if(hemiLight) hemiLight.intensity=on?0.45:1.0; // ACES + sRGB: total light is lower than in flat mode, otherwise white walls burn out
-    scene.environment=on?VIZ.env:null; // reflections only in the visualization
     renderer.compile&&renderer.compile(scene,camera);
     VIZ.active=on;
   }
-  const hemiLight=scene.children.find(o=>o.isHemisphereLight);
   VIZ.adopt=function(root){ // meshes added after prepare (GLB models): twins for their materials, then the current mode
     if(!VIZ.ready) return; root.traverse(o=>{ if(o.isMesh&&!VIZ.std.has(o.material)&&!VIZ.basic.has(o.material)){ const b=o.material, s=stdFor(b.userData.slot||'furniture',b); VIZ.std.set(b,s); VIZ.basic.set(s,b); } }); swap(root,VIZ.active); };
   VIZ.apply=apply;

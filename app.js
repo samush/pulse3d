@@ -221,11 +221,6 @@ function syncMode(){ // called by every camera-mode switch (setPlan/setFPV/setPo
   if(window.VIZ) VIZ.apply();
 }
 
-// lights
-scene.add(new THREE.HemisphereLight(0xffffff,0xa8a49c,1.0));
-const sun=new THREE.DirectionalLight(0xffffff,0.55);
-sun.position.set(-6,14,-8);scene.add(sun);
-
 function toShape(poly){
   const s=new THREE.Shape();
   poly.forEach((p,i)=>{ i?s.lineTo(p[0],-p[1]):s.moveTo(p[0],-p[1]); });
