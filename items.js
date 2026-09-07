@@ -675,26 +675,26 @@ const PHYS={}; // id → boxes
     // Room box: x 13.91–15.1, z 2.268–6.043; glazing on the east wall z 2.40–5.90, opening from the kitchen on the west wall z 3.353–4.971 (top 2.10).
     // South end: cantilevered desk and the IT shelf above it; north end: the shelving unit. Nothing else stands on the floor,
     // the opening zone x 13.91–14.4 × z of the opening stays clear (check.js).
-    {id:'bdesk',type:'подвесной стол 1.19×0.80 во всю ширину у южного торца, верх 0.75, консоли к южной и западной стенам, уголок у стекла; под столом пусто',room:10,layer:'balcony',pos:[13.91,5.24],rot:0,size:[1.19,0.75,0.80],fixed:'wall',
+    {id:'bdesk',type:'подвесной стол 1.19×0.80 во всю ширину у южного торца, верх 0.75, консоли к южной и западной стенам, уголок у стекла; под столом пусто',room:10,layer:'balcony',pos:[13.91,5.24],rot:0,size:[1.19,0.75,0.80],coat:{table:'oakFurnitureX'}, /* M4-3: 1.19 m top along x, grain along the long side */ fixed:'wall',
      build(b){[[0,0.05,0.66,0.71,0,0.75],[0,1.19,0.66,0.71,0.75,0.8],[0,1.19,0.71,0.75,0,0.8],[1.14,1.19,0.66,0.71,0.3,0.5]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
        
        b.round(0,1.19,0.71,0.75,0,0.80,0.003,mat.table);                                             // top 0.04 with a 3 mm bevel
        b(0,1.19,0.66,0.71,0.75,0.80,mat.frame); b(0,1.19,0.70,0.71,0.70,0.75,mat.frame); b(0,0.05,0.66,0.71,0,0.75,mat.frame); b(0,0.05,0.70,0.71,0.05,0.75,mat.frame); b(1.14,1.19,0.66,0.71,0.30,0.50,mat.frame); // steel angle consoles under the top: south wall, west wall, bracket by the glass
      }},
-    {id:'bchair',type:'стул 0.45 с прямой спинкой до 0.90, задвинут под стол на 0.24',room:10,layer:'balcony',pos:[14.28,5.00],rot:0,size:[0.45,0.90,0.45],glb:'models/bchair.glb',
+    {id:'bchair',type:'стул 0.45 с прямой спинкой до 0.90, задвинут под стол на 0.24',room:10,layer:'balcony',pos:[14.28,5.00],rot:0,size:[0.45,0.90,0.45],coat:CHAIR4,glb:'models/bchair.glb',
      build(b){[[0,0.45,0.42,0.46,0,0.45],[0,0.45,0.46,0.9,0,0.04],[0.02,0.05,0,0.42,0.02,0.05],[0.02,0.05,0,0.42,0.4,0.43],[0.4,0.43,0,0.42,0.02,0.05],[0.4,0.43,0,0.42,0.4,0.43]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
        
        b(0,0.45,0.42,0.46,0,0.45,mat.chair); b(0,0.45,0.46,0.90,0,0.04,mat.chair);                    // seat, straight back on the north side
        [[0.02,0.02],[0.40,0.02],[0.02,0.40],[0.40,0.40]].forEach(([x,z])=>b(x,x+0.03,0,0.42,z,z+0.03,mat.chair)); // legs
      }},
-    {id:'itshelf',type:'полка-ИТ-хаб 1.19×0.60 над столом, плита 0.05 на 2.00–2.05, бортик 0.03 спереди, вырез 0.05×0.30 под кабели у южной стены; до потолка 0.65',room:10,layer:'balcony',pos:[13.91,5.44],rot:0,size:[1.19,2.08,0.60],fixed:'wall',
+    {id:'itshelf',type:'полка-ИТ-хаб 1.19×0.60 над столом, плита 0.05 на 2.00–2.05, бортик 0.03 спереди, вырез 0.05×0.30 под кабели у южной стены; до потолка 0.65',room:10,layer:'balcony',pos:[13.91,5.44],rot:0,size:[1.19,2.08,0.60],coat:{body:'cabinetPaint'},fixed:'wall',
      build(b){[[0,0.05,1.95,2,0,0.55],[0,1.19,1.95,2,0.55,0.6],[0,1.19,2,2.05,0,0.55],[0,0.445,2,2.05,0.55,0.6],[0,1.19,2.05,2.08,0,0.03],[0.745,1.19,2,2.05,0.55,0.6]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
        
        b.round(0,1.19,2.00,2.05,0,0.55,0.003,mat.body); b(0,0.445,2.00,2.05,0.55,0.60,mat.body); b(0.745,1.19,2.00,2.05,0.55,0.60,mat.body); // plate with the cable notch x 0.445–0.745 at the wall
        b.round(0,1.19,2.05,2.08,0,0.03,0.003,mat.body);                                               // front lip
        b(0,1.19,1.95,2.00,0.55,0.60,mat.frame); b(0,1.19,1.99,2.00,0.50,0.55,mat.frame); b(0,0.05,1.95,2.00,0,0.55,mat.frame); b(0,0.05,1.99,2.00,0.05,0.55,mat.frame); // steel angle consoles to the south and west walls
      }},
-    {id:'bshelf',type:'стеллаж 1.19×0.40 у северного торца, верх 2.05: 3 закрытых ящика по 0.25, выше 4 ряда открытых секций с перегородкой по центру; площадка 2.05–2.70 под ИТ-устройства',room:10,layer:'balcony',pos:[13.91,2.268],rot:0,size:[1.19,2.05,0.40],fixed:'wall',
+    {id:'bshelf',type:'стеллаж 1.19×0.40 у северного торца, верх 2.05: 3 закрытых ящика по 0.25, выше 4 ряда открытых секций с перегородкой по центру; площадка 2.05–2.70 под ИТ-устройства',room:10,layer:'balcony',pos:[13.91,2.268],rot:0,size:[1.19,2.05,0.40],coat:{body:'cabinetPaint',wpanel:'cabinetPaint',door:'cabinetPaint'},fixed:'wall',
      build(b){[[0,0.02,0,2.05,0,0.4],[0.02,1.17,0.005,0.245,0.38,0.4],[0.02,1.17,0.03,0.05,0,0.4],[0.02,1.17,0.255,0.495,0.38,0.4],[0.02,1.17,0.505,0.745,0.38,0.4],[0.02,1.17,0.75,0.77,0,0.4],[0.02,1.17,1.075,1.095,0,0.4],[0.02,1.17,1.4,1.42,0,0.4],[0.02,1.17,1.725,1.745,0,0.4],[0.02,1.17,2.03,2.05,0,0.4],[0.585,0.605,0.77,2.03,0,0.4],[1.17,1.19,0,2.05,0,0.4]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
        
        const p=0.018;
@@ -703,19 +703,19 @@ const PHYS={}; // id → boxes
        [0.75,1.075,1.40,1.725].forEach(y=>b(p,1.19-p,y,y+p,0.006,0.40,mat.body));                     // open shelves, pitch 0.325
        b(0.586,0.604,0.75+p,2.05-p,0.006,0.40,mat.body);                                              // centre divider x 14.505
      }},
-    {id:'cable10',type:'кабель-канал 0.06×0.04 по западной стене на 2.23–2.27, выше проёма в кухню (2.10): питание и сеть между полкой и стеллажом',room:10,layer:'balcony',pos:[13.91,2.40],rot:0,size:[0.06,2.27,3.00],fixed:'wall',
+    {id:'cable10',type:'кабель-канал 0.06×0.04 по западной стене на 2.23–2.27, выше проёма в кухню (2.10): питание и сеть между полкой и стеллажом',room:10,layer:'balcony',pos:[13.91,2.40],rot:0,size:[0.06,2.27,3.00],coat:PLASTIC,fixed:'wall',
      build(b){ b.phys(0,0.06,2.23,2.27,0,3); b.round(0,0.06,2.23,2.27,0,3.00,0.002,mat.plastic); b(0.0595,0.0602,2.2475,2.2525,0,3.00,mat.dark); }}, // trunking with a snap-on cover, seam line on the face
     // electrics: flat boxes 0.08 × 0.08 × 0.01
-    {id:'sock26',type:'розеточный блок ИТ над полкой: 6 розеток + ввод Ethernet, отдельная линия, h 2.25',room:10,layer:'balcony',pos:[14.17,6.033],rot:0,size:[0.08,2.29,0.01],fixed:'wall',build(b){ b.plate(0,0.08,2.21,2.29,0,0.01,mat.plastic,{keys:3}); }},
-    {id:'sock27',type:'розетки 2+2 USB над столешницей у восточного края, h 0.90',room:10,layer:'balcony',pos:[14.77,6.033],rot:0,size:[0.08,0.94,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.86,0.94,0,0.01,mat.plastic,{keys:2}); }},
-    {id:'sock28',type:'розеточный блок над стеллажом: 4 розетки для площадки 2.05–2.70, h 2.25',room:10,layer:'balcony',pos:[14.17,2.268],rot:0,size:[0.08,2.29,0.01],fixed:'wall',build(b){ b.plate(0,0.08,2.21,2.29,0,0.01,mat.plastic,{keys:2}); }},
-    {id:'sock29',type:'розетка в открытой секции стеллажа 0.75–1.075 (зарядки), h 1.00',room:10,layer:'balcony',pos:[14.77,2.268],rot:0,size:[0.08,1.04,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.96,1.04,0,0.01); }},
+    {id:'sock26',type:'розеточный блок ИТ над полкой: 6 розеток + ввод Ethernet, отдельная линия, h 2.25',room:10,layer:'balcony',pos:[14.17,6.033],rot:0,size:[0.08,2.29,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,2.21,2.29,0,0.01,mat.plastic,{keys:3}); }},
+    {id:'sock27',type:'розетки 2+2 USB над столешницей у восточного края, h 0.90',room:10,layer:'balcony',pos:[14.77,6.033],rot:0,size:[0.08,0.94,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.86,0.94,0,0.01,mat.plastic,{keys:2}); }},
+    {id:'sock28',type:'розеточный блок над стеллажом: 4 розетки для площадки 2.05–2.70, h 2.25',room:10,layer:'balcony',pos:[14.17,2.268],rot:0,size:[0.08,2.29,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,2.21,2.29,0,0.01,mat.plastic,{keys:2}); }},
+    {id:'sock29',type:'розетка в открытой секции стеллажа 0.75–1.075 (зарядки), h 1.00',room:10,layer:'balcony',pos:[14.77,2.268],rot:0,size:[0.08,1.04,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.96,1.04,0,0.01); }},
     {id:'led7',type:'LED-лента под передней кромкой ИТ-полки, свет на столешницу, 4000 K; выключатель на торце полки',room:10,layer:'balcony',pos:[13.95,5.44],rot:0,size:[1.11,2.00,0.02],fixed:'wall',
      build(b){ b.phys(0,1.11,1.98,2,0,0.02); b(0,1.11,1.98,2.00,0,0.02,mat.frame); b(0.005,1.105,1.9795,1.98,0.003,0.017,mat.led); }}, // profile with the diffuser strip
     {id:'blight',type:'линейный потолочный светильник 2.20×0.04 по оси лоджии от проёма до стула, 4000 K',room:10,layer:'balcony',pos:[14.48,2.90],rot:0,size:[0.04,2.70,2.20],fixed:'wall',
      build(b){ b.phys(0,0.04,2.68,2.7,0,2.2); b(0,0.04,2.68,2.70,0,2.20,mat.frame); b(0.005,0.035,2.6795,2.68,0.01,2.19,mat.led); }}, // profile with the diffuser strip
     {id:'sw8',type:'выключатель потолочного света на западной стене южнее проёма (проём до 4.971), h 0.95',room:10,layer:'balcony',pos:[13.91,5.02],rot:0,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.91,0.99,0,0.08); }},
-    {id:'blinds10',type:'рулонные солнцезащитные шторы: кассеты по верху остекления z 2.40–5.90 (собраны)',room:10,layer:'balcony',pos:[15.02,2.40],rot:0,size:[0.08,2.30,3.50],fixed:'wall',
+    {id:'blinds10',type:'рулонные солнцезащитные шторы: кассеты по верху остекления z 2.40–5.90 (собраны)',room:10,layer:'balcony',pos:[15.02,2.40],rot:0,size:[0.08,2.30,3.50],coat:PLASTIC,fixed:'wall',
      build(b,g){ b.phys(0,0.08,2.22,2.3,0,3.5); [[0.005,1.74],[1.76,3.495]].forEach(([z0,z1])=>{ g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,z1-z0,20).rotateX(Math.PI/2).translate(0.04,2.26,(z0+z1)/2),mat.plastic)); [z0,z1-0.01].forEach(z=>b(0.01,0.07,2.22,2.30,z,z+0.01,mat.frame)); }); }}, // two roller cassettes Ø80 with end brackets
   ];
   function buildItem(it){
