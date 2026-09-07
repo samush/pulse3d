@@ -731,7 +731,8 @@ const { chromium } = require('playwright');
     ['l2-kid1-door', 4.9, 4.5, 2.4, 2.6], ['l2-kid1-desk', 3.0, 2.6, 2.0, 4.8], ['l2-kid1-evening', 1.5, 4.5, 4.9, 2.9, 'g1.main,g1.desk,g1.track'],
     ['l2-kid2-bed', 11.9, 7.2, 13.2, 9.0], ['l2-kid2-desk', 13.3, 9.1, 11.5, 8.9], ['l2-kid2-wall', 13.4, 8.2, 12.9, 6.6], ['l2-kid2-evening', 11.9, 7.2, 13.2, 9.0, 'g2.main,g2.desk'],
     ['l2-master-bed', 12.3, 10.6, 13.9, 12.6], ['l2-master-vanity', 10.6, 12.0, 12.1, 10.0], ['l2-master-evening', 12.3, 10.6, 13.9, 12.6, 'g3.main,g3.vanity'],
-    ['l2-hall5-entry', 9.0, 7.0, 6.4, 7.2], ['l2-hall5-north', 7.2, 6.3, 7.2, 4.2], ['l2-hall5-east', 10.45, 7.0, 10.45, 9.5]]) { // L2 frames: room from the door, desk/gallery wall, evening (bed zone only)
+    ['l2-hall5-entry', 9.0, 7.0, 6.4, 7.2], ['l2-hall5-north', 7.2, 6.3, 7.2, 4.2], ['l2-hall5-east', 10.45, 7.0, 10.45, 9.5],
+    ['l2-wardrobe6', 6.6, 3.85, 6.2, 2.0], ['l2-laundry7', 7.5, 4.3, 7.35, 2.6]]) { // L2 frames: room from the door, desk/gallery wall, evening (bed zone only)
     await page.evaluate(([x, z, tx, tz, off]) => { VIZ.set(true); LIGHTING.set('lamps'); document.getElementById('avatarOn').checked = false; const cb = document.getElementById('ceil'); cb.checked = true; cb.dispatchEvent(new Event('change'));
       Object.keys(LIGHTING.groups).forEach(g => LIGHTING.group(g, !(off || '').split(',').includes(g))); controls.setFPV(x, z, Math.atan2(tx - x, tz - z)); }, [x, z, tx, tz, off]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png'), timeout: 120000 }); // shadowed lamp frames exceed the 30 s default on software GL
@@ -757,7 +758,8 @@ const { chromium } = require('playwright');
   await page.reload(); await page.waitForTimeout(2500);
   const scen2 = await page.evaluate(async () => {
     const u = ITEM_GROUPS.sofa.userData; const kept = LAY.variants[LAY.cur].name === 'по метке' && Math.abs(u.pos[1] - 2.6) < 1e-9 && MK.marks.some(k => k.name === 'место под диван');
-    controls.setFPV(13.0, 4.4, Math.PI); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp' })); await new Promise(r => setTimeout(r, 1500)); window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowUp' }));
+    controls.setFPV(13.0, 4.4, Math.PI); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); // the first FPV frame after a reload compiles shaders for seconds on software GL: walk only once the view has rendered
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp' })); await new Promise(r => setTimeout(r, 1500)); window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowUp' }));
     const stopped = controls.pos.z > 2.6 + 0.88 + 0.25 && controls.pos.z < 2.6 + 0.88 + 0.7; // уперся в южный край дивана на новом месте
     LAY.variants.splice(LAY.cur, 1); LAY.applyVariant(0); MK.marks.slice().forEach(k => MK.remove(k));
     return { kept, stopped, z: controls.pos.z.toFixed(2) };

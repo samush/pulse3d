@@ -65,6 +65,12 @@ const LIGHTS=[
   {id:'ceil5_4',item:'ceil5_4',group:'g5.corr',type:'spot',at:[9.30,2.68,7.00],k:3000,w:1.0},
   {id:'ceil5_5',item:'ceil5_5',group:'g5.corr',type:'spot',at:[10.45,2.68,8.10],k:3000,w:0.8},
   {id:'ceil5_6',item:'ceil5_6',group:'g5.corr',type:'spot',at:[10.45,2.68,9.30],k:3000,w:0.8},
+  // rooms 6 and 7 (L2-2): the wardrobe keeps its 4000 K linear light + rail LED; the laundry gets one wide recessed point
+  {id:'wlighta',item:'wlight',group:'g6.main',type:'spot',at:[6.50,2.68,2.40],k:4000,w:0.8,angle:0.8},
+  {id:'wlightb',item:'wlight',group:'g6.main',type:'spot',at:[6.50,2.68,3.35],k:4000,w:0.8,angle:0.8},
+  {id:'led6a',item:'led6',group:'g6.rail',type:'point',at:[6.14,1.98,2.30],k:4000,w:0.3,distance:1.5},
+  {id:'led6b',item:'led6',group:'g6.rail',type:'point',at:[6.14,1.98,3.05],k:4000,w:0.3,distance:1.5},
+  {id:'ceil7_1',item:'ceil7_1',group:'g7.main',type:'spot',at:[7.50,2.68,3.45],k:4000,w:1.0,angle:0.8},
 ];
 window.LIGHTS=LIGHTS;
 (function(){
