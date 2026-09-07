@@ -38,23 +38,24 @@ const MATERIALS={
 // Coatings (materials-lighting M1a): a real surface finish on top of a class. `class` names the MATERIALS entry (physical
 // class), `dir` the local texture set (textures/MANIFEST.md: color = sRGB albedo, normal = OpenGL linear, rough = absolute
 // roughness), `size` the metres one map covers, `rotation` degrees of the pattern, `maps` which files to use (default all
-// three), `color` a plain sRGB hex used when the set has no albedo. Nothing is assigned by default: VIZ.coat / VIZ.coatFinish
+// three), `color` a plain sRGB hex used when the set has no albedo, `tint` linear RGB multipliers over the albedo map
+// (a scale, not a recolour: >1 lightens a set authored dark), `rough` an explicit roughness when the rough map is dropped. Nothing is assigned by default: VIZ.coat / VIZ.coatFinish
 // (M2, M4) choose the coating per item detail or finish; without one the twin stays the grey concept material.
 const COATINGS={
-  oakFloor:    {name:'дуб, доска пола',      class:'wood',   dir:'textures/oakFloor',     size:[1.2,1.2]},
-  oakFurniture:{name:'дуб, шпон мебели',     class:'wood',   dir:'textures/oakFurniture', size:[1.83,1.83], rotation:90}, // grain along U after the turn: length of tops and shelves
+  oakFloor:    {name:'дуб, доска пола',      class:'wood',   dir:'textures/oakFloor',     size:[1.2,1.2], tint:[0.9,0.86,0.82]},
+  oakFurniture:{name:'дуб, шпон мебели',     class:'wood',   dir:'textures/oakFurniture', size:[1.83,1.83], tint:[0.74,0.7,0.66]}, // grain along V = along legs/posts and the table length (z); muted against the reference
   cabinetPaint:{name:'крашеный МДФ, бежевый', class:'cabinetPaint', dir:'textures/cabinetPaint', size:[1,1], maps:['normal','rough'], color:0xd9c9ad, normalScale:0.25},
-  wallPaint:   {name:'краска стен, тёплая светлая', class:'wallPaint', dir:'textures/wallPaint', size:[1,1], maps:['normal','rough'], color:0xe6ddd0, normalScale:0.15},
-  sofaWeave:   {name:'обивочная ткань, плетение', class:'fabric', dir:'textures/sofaWeave',   size:[0.4,0.4]},
+  wallPaint:   {name:'краска стен, тёплая светлая', class:'wallPaint', dir:'textures/wallPaint', size:[1,1], maps:['normal'], rough:0.9, color:0xe6ddd0, normalScale:0.08}, // Paint004 rough map gives glossy blotches under the environment; flat 0.9 instead,
+  sofaWeave:   {name:'обивочная ткань, плетение', class:'fabric', dir:'textures/sofaWeave',   size:[0.4,0.4], tint:[1.9,1.8,1.65]}, // Fabric030 is authored dark grey; scaled to the light greige of the reference
   rugPile:     {name:'ковёр, ворс',           class:'fabric', dir:'textures/rugPile',      size:[1.7,1.7]},
   curtainLinen:{name:'штора, лён',            class:'fabric', dir:'textures/curtainLinen', size:[0.5,0.5]},
-  stoneCounter:{name:'камень столешницы',     class:'facade', dir:'textures/stoneCounter', size:[1.5,1.5]},
-  stoneSplash: {name:'камень фартука, гранит', class:'facade', dir:'textures/stoneSplash', size:[1,1]},
-  tile6060:    {name:'плитка 600×600',        class:'white',  dir:'textures/tile6060',     size:[0.6,0.6]},
-  tile60120:   {name:'керамогранит 600×1200', class:'tile',   dir:'textures/tile60120',    size:[1.2,1.2]},
+  stoneCounter:{name:'камень столешницы',     class:'facade', dir:'textures/stoneCounter', size:[1.5,1.5], maps:['color','normal'], rough:0.3, tint:[0.62,0.6,0.58]}, // Marble024 rough map is polished (0.11); §4.3: no excessive gloss, darker than the splash
+  stoneSplash: {name:'камень фартука, гранит', class:'facade', dir:'textures/stoneSplash', size:[0.8,0.8], tint:[0.85,0.85,0.85]}, // 0.8 m per map: grain readable from the table without shouting
+  tile6060:    {name:'плитка 600×600',        class:'white',  dir:'textures/tile6060',     size:[0.6,0.6], maps:['color','normal'], rough:0.35}, // rough maps of both tile sets are mirror-polished (0.07); §4.3 range 0.25–0.55
+  tile60120:   {name:'керамогранит 600×1200', class:'tile',   dir:'textures/tile60120',    size:[1.2,1.2], maps:['color','normal'], rough:0.35},
   plastic:     {name:'пластик матовый',       class:'plastic', dir:'textures/plastic',     size:[0.5,0.5], maps:['normal','rough'], normalScale:0.3},
 };
-const VIZ={on:false,ready:false,mode:'basic',std:new Map(),neutral:new Map(),basic:new Map(),variants:new Map(),textures:new Map(),finishCoat:{},loadErrors:[]}; // mode: basic (plan) | neutral | std (real coatings); variants: basic → Map(coating → twin)
+const VIZ={on:false,ready:false,mode:'basic',std:new Map(),neutral:new Map(),basic:new Map(),variants:new Map(),textures:new Map(),finishCoat:{board:'oakFloor',tile:'tile60120',wallPaint:'wallPaint',wood:'oakFurniture'},loadErrors:[]}; // finishCoat: global coating per finish key (M2: oak boards, 60×120 stone, wall paint, oak jambs) // mode: basic (plan) | neutral | std (real coatings); variants: basic → Map(coating → twin)
 window.VIZ=VIZ; window.MATERIALS=MATERIALS; window.COATINGS=COATINGS;
 (function(){
   const KEY='pulse3d.viz';
@@ -100,17 +101,17 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS; window.COATINGS=COATINGS;
     let vs=VIZ.variants.get(basic); if(!vs){ vs=new Map(); VIZ.variants.set(basic,vs); } if(vs.has(coating)) return vs.get(coating);
     const cls=MATERIALS[spec.class]||MATERIALS.furniture, maps=spec.maps||['color','normal','rough'];
     const m=new THREE.MeshStandardMaterial({roughness:maps.includes('rough')?1:(spec.rough!=null?spec.rough:cls.rough),metalness:spec.metal!=null?spec.metal:(cls.metal||0),transparent:basic.transparent,opacity:basic.opacity,depthWrite:basic.depthWrite,side:basic.side});
-    if(maps.includes('color')) m.color.set(0xffffff); else if(spec.color!=null) m.color.set(spec.color).convertSRGBToLinear(); else { m.color.copy(basic.color).multiplyScalar(cls.albedo!=null?cls.albedo:0.85); } // albedo map or an sRGB hex converted once; never the map darkened by the concept grey
+    if(maps.includes('color')){ m.color.set(0xffffff); if(spec.tint) m.color.setRGB(...spec.tint); } else if(spec.color!=null) m.color.set(spec.color).convertSRGBToLinear(); else { m.color.copy(basic.color).multiplyScalar(cls.albedo!=null?cls.albedo:0.85); } // albedo map or an sRGB hex converted once; never the map darkened by the concept grey
     const put=(file,prop,srgb)=>{ const t=texture(spec.dir+'/'+file+'.jpg',spec,srgb); m[prop]=t; const drop=()=>{ if(m[prop]===t){ m[prop]=null; if(prop==='map'&&spec.color!=null) m.color.set(spec.color).convertSRGBToLinear(); m.needsUpdate=true; } }; if(t.userData.failed) drop(); else t.addEventListener('failed',drop); }; // a failed file leaves the flat preset, the model stays
     if(maps.includes('color')) put('color','map',true); if(maps.includes('normal')){ put('normal','normalMap',false); const ns=spec.normalScale!=null?spec.normalScale:1; m.normalScale.set(ns,ns); } if(maps.includes('rough')) put('rough','roughnessMap',false);
     m.userData.coating=coating; vs.set(coating,m); VIZ.basic.set(m,basic); return m;
   }
   const ITEM_KEYS=new Map(); // concept material → its ITEM_MATS key, so an item override can name a detail material ('pillow') and not only a class ('fabric')
-  function coatingFor(group,basic){ // item override by material key, then by slot, then '*'; a value of null cancels
+  function coatingFor(group,basic,mesh){ // item override by GLB material name, then ITEM_MATS key, then slot, then '*'; a value of null cancels
     const c=group.userData.coat||(ITEMS_BY_ID[group.userData.id]||{}).coat; if(!c) return null;
     if(!ITEM_KEYS.size) Object.entries(ITEM_MATS).forEach(([k,m])=>ITEM_KEYS.set(m,k));
-    const key=ITEM_KEYS.get(basic), slot=basic.userData.slot||'furniture';
-    return (key&&key in c)?c[key]:(slot in c)?c[slot]:c['*']||null; }
+    const gm=mesh.userData.glbMat, key=ITEM_KEYS.get(basic), slot=basic.userData.slot||'furniture';
+    return (gm&&gm in c)?c[gm]:(key&&key in c)?c[key]:(slot in c)?c[slot]:c['*']||null; }
   let ITEMS_BY_ID={}; const FINISH_KEYS=new Map(); // basic finish material → finishMats key
   function neutralFor(basic){ // grey Standard twin without maps: same colour, transparency and sides, one roughness for every class
     const slot=basic.userData.slot, m=new THREE.MeshStandardMaterial({color:basic.color?basic.color.clone():0xffffff,roughness:0.8,metalness:0,transparent:basic.transparent,opacity:basic.opacity,depthWrite:basic.depthWrite,side:basic.side,emissive:slot==='emitter'?basic.color.clone():0x000000});
@@ -132,7 +133,7 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS; window.COATINGS=COATINGS;
     const lit=mode!=='basic', cast=lit&&!NO_CAST.has(root)&&root!==ceilGroup; // ceiling never casts: it would block the neutral sun from above (L1 revisits for lamps)
     const item=root.userData&&root.userData.id!=null&&ITEM_GROUPS[root.userData.id]===root; // item groups take per-item coatings, finish groups the global finish coating
     root.traverse(o=>{ if(!o.isMesh) return; const b=VIZ.basic.get(o.material)||o.material; let m=mode==='std'?VIZ.std.get(b):mode==='neutral'?VIZ.neutral.get(b):b;
-      if(mode==='std'&&m){ const c=item?coatingFor(root,b):VIZ.finishCoat[FINISH_KEYS.get(b)]; if(c) m=variant(b,c); }
+      if(mode==='std'&&m){ const c=item?coatingFor(root,b,o):VIZ.finishCoat[FINISH_KEYS.get(b)]; if(c) m=variant(b,c); }
       if(m) o.material=m; o.castShadow=cast; o.receiveShadow=lit; }); }
   function apply(){ // effective state from the camera (plan is flat) and the two controls; light is applied here too, materials stay as chosen
     const lit=!controls.plan, mode=!lit?'basic':VIZ.on?'std':'neutral';
