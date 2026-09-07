@@ -248,7 +248,7 @@ const { chromium } = require('playwright');
     LAY.variants.splice(1); LAY.applyVariant(0); MK.marks.slice().forEach(k => MK.remove(k)); MK.toggle(false);
     out.hooks = c0 && c1 && c2 && c3 && c4;
     VIZ.set(true); setView('door');
-    const std = k => VIZ.std.get(ITEM_MATS[k]);
+    const std = k => VIZ.std.get(k === 'led' ? LIGHTING.emitters(Object.keys(LIGHTING.groups)[0])[0] : ITEM_MATS[k]); // led: every diffuser wears a per-group clone (lighting.js), the base material has no twin
     out.slots = std('handle').metalness > 0.5 && std('cushion').roughness > 0.9 && std('led').emissive.getHex() !== 0 && std('body').metalness === 0;
     out.slots2 = std('table').roughness === MATERIALS.wood.rough && std('chair').roughness === MATERIALS.cabinetPaint.rough; // realism-living step 7: wood/cabinetPaint slots
     const tg = ITEM_GROUPS.table, tbb = new THREE.Box3().setFromObject(tg), ts = new THREE.Vector3(); tbb.getSize(ts); const kinds = {}; tg.children.forEach(o => { kinds[o.geometry.type] = (kinds[o.geometry.type] || 0) + 1; });
@@ -732,7 +732,8 @@ const { chromium } = require('playwright');
     ['l2-kid2-bed', 11.9, 7.2, 13.2, 9.0], ['l2-kid2-desk', 13.3, 9.1, 11.5, 8.9], ['l2-kid2-wall', 13.4, 8.2, 12.9, 6.6], ['l2-kid2-evening', 11.9, 7.2, 13.2, 9.0, 'g2.main,g2.desk'],
     ['l2-master-bed', 12.3, 10.6, 13.9, 12.6], ['l2-master-vanity', 10.6, 12.0, 12.1, 10.0], ['l2-master-evening', 12.3, 10.6, 13.9, 12.6, 'g3.main,g3.vanity'],
     ['l2-hall5-entry', 9.0, 7.0, 6.4, 7.2], ['l2-hall5-north', 7.2, 6.3, 7.2, 4.2], ['l2-hall5-east', 10.45, 7.0, 10.45, 9.5],
-    ['l2-wardrobe6', 6.6, 3.85, 6.2, 2.0], ['l2-laundry7', 7.5, 4.3, 7.35, 2.6]]) { // L2 frames: room from the door, desk/gallery wall, evening (bed zone only)
+    ['l2-wardrobe6', 6.6, 3.85, 6.2, 2.0], ['l2-laundry7', 7.5, 4.3, 7.35, 2.6],
+    ['l2-bath8', 9.6, 12.3, 8.5, 12.8], ['l2-bath8-cove', 9.6, 12.5, 8.6, 11.5, 'g8.main'], ['l2-balcony10', 14.5, 5.8, 14.5, 3.0]]) { // L2 frames: room from the door, desk/gallery wall, evening (bed zone only)
     await page.evaluate(([x, z, tx, tz, off]) => { VIZ.set(true); LIGHTING.set('lamps'); document.getElementById('avatarOn').checked = false; const cb = document.getElementById('ceil'); cb.checked = true; cb.dispatchEvent(new Event('change'));
       Object.keys(LIGHTING.groups).forEach(g => LIGHTING.group(g, !(off || '').split(',').includes(g))); controls.setFPV(x, z, Math.atan2(tx - x, tz - z)); }, [x, z, tx, tz, off]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png'), timeout: 120000 }); // shadowed lamp frames exceed the 30 s default on software GL
