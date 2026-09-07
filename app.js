@@ -1103,4 +1103,4 @@ function drawMap(){
   mapCtx.fillStyle='#d32f2f'; mapCtx.fill();
   mapCtx.lineWidth=1.5; mapCtx.strokeStyle='#fff'; mapCtx.stroke();
 }
-(function loop(t){requestAnimationFrame(loop);walkStep(t||0);controls.update();placeTip();drawMap();renderer.render(scene,camera);})(0);
+(function loop(t){requestAnimationFrame(loop);walkStep(t||0);controls.update();placeTip();drawMap();if(window.LIGHTING)LIGHTING.tick(t||0);renderer.render(scene,camera);})(0);
