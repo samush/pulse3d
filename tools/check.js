@@ -591,6 +591,33 @@ const { chromium } = require('playwright');
   await page.reload(); await page.waitForTimeout(2500);
   const vizKept = await page.evaluate(() => { const ok = VIZ.on && document.getElementById('mats').checked && LIGHTING.scheme === 'lamps' && document.getElementById('light').value === 'lamps'; VIZ.set(false); LIGHTING.set('neutral'); return ok; });
   if (!viz.std) problems.push('визуализация: материалы не PBR');
+  // materials-lighting M3: every mirror-slot glass sits in front of its finish (mirrors.md), the mirror twin carries its own env map
+  // (not scene.environment), the map is prefiltered once whatever the toggles, its intensity follows the light scheme, bathmirror halo is its own emitter
+  const mir = await page.evaluate(() => {
+    const box = (id, pick) => { const g = ITEM_GROUPS[id], b = new THREE.Box3(); g.updateMatrixWorld(true); g.traverse(o => { if (o.isMesh && pick(o)) b.expandByObject(o); }); return b; };
+    const isM = o => o.material.userData.slot === 'mirror', near = (a, b) => Math.abs(a - b) < 2e-3;
+    const ids = []; Object.values(ITEM_GROUPS).forEach(g => g.traverse(o => { if (o.isMesh && isM(o) && !ids.includes(g.userData.id)) ids.push(g.userData.id); }));
+    const gm = box('mirror', isM), gv = box('vmirror', isM), gb = box('bathmirror', isM), gw = box('wmirror', isM), hb = box('bathmirror', o => o.material === ITEM_MATS.mirrorLed), vb = box('vmirror', o => !isM(o));
+    const geom = { mirror: near(gm.min.x, 6.366) && near(gm.max.x, 6.371), vmirror: near(gv.max.z, 9.823) && near(gv.min.z, 9.818) && near(vb.min.z, 9.797), bathmirror: near(gb.min.z, 8.195) && near(gb.max.z, 8.205) && near(hb.min.z, 8.185),
+      wmirror: near(gw.min.x, 6.845) && near(gw.max.x, 6.849), halo: ITEM_MATS.mirrorLed.userData.slot === 'emitter' && ITEM_MATS.led !== ITEM_MATS.mirrorLed };
+    let haloElsewhere = 0; Object.values(ITEM_GROUPS).forEach(g => { if (g.userData.id !== 'bathmirror') g.traverse(o => { if (o.isMesh && o.material === ITEM_MATS.mirrorLed) haloElsewhere++; }); });
+    setView('door'); VIZ.set(true); const std = VIZ.std.get(ITEM_MATS.mirror), neu = VIZ.neutral.get(ITEM_MATS.mirror), halo = VIZ.std.get(ITEM_MATS.mirrorLed);
+    const env = { own: !!std.envMap && std.envMap === VIZ.mirrorEnv() && std.envMap !== scene.environment && std.envMap !== LIGHTING.environment(), pbr: std.metalness === 1 && std.roughness >= 0.04 && std.roughness <= 0.10,
+      neutral: !neu.envMap && neu.metalness === 0, halo: halo.emissive.getHex() !== 0 };
+    const i0 = std.envMapIntensity; LIGHTING.set('lamps'); const i1 = std.envMapIntensity; env.dims = i1 < i0 && i0 === 1;
+    VIZ.set(false); VIZ.set(true); setView('top'); setView('door'); LIGHTING.set('neutral'); const builds = VIZ.mirrorEnvBuilds();
+    VIZ.set(false); setView('top'); return { ids: ids.sort(), geom, haloElsewhere, env, builds };
+  });
+  if (mir.ids.join() !== 'bathmirror,mirror,vmirror,wmirror') problems.push('зеркала: слот mirror у ' + mir.ids.join(',') + ' (mirrors.md: bathmirror, mirror, vmirror, wmirror)');
+  Object.entries(mir.geom).forEach(([k, ok]) => { if (!ok) problems.push('зеркала: ' + k + ' — стекло/подложка не по mirrors.md (materials-lighting M3)'); });
+  if (mir.haloElsewhere) problems.push('зеркала: mirrorLed используется вне bathmirror (' + mir.haloElsewhere + ')');
+  Object.entries(mir.env).forEach(([k, ok]) => { if (!ok) problems.push('зеркала: env-карта — ' + k + ' (materials-lighting M3 §5)'); });
+  if (mir.builds !== 1) problems.push('зеркала: PMREM зеркала собрана ' + mir.builds + ' раз (нужно 1)');
+  for (const [name, x, z, tx, tz] of [['m3-bath9-front', 9.3, 9.45, 9.27, 8.2], ['m3-bath9-tub', 8.45, 9.4, 9.27, 8.2], ['m3-bath9-side', 9.75, 8.4, 8.9, 8.2], ['m3-hall5-door', 7.3, 7.4, 6.37, 6.5], ['m3-hall5-north', 6.62, 5.3, 6.37, 6.6], ['m3-hall5-south', 6.62, 7.7, 6.37, 6.3]]) {
+    await page.evaluate(([x, z, tx, tz]) => { VIZ.set(true); document.getElementById('avatarOn').checked = false; controls.setFPV(x, z, Math.atan2(tx - x, tz - z)); }, [x, z, tx, tz]); await page.waitForTimeout(300); // figure hidden: it stands in front of the glass
+    await page.screenshot({ path: path.join(outDir, name + '.png') });
+  }
+  await page.evaluate(() => { document.getElementById('avatarOn').checked = true; VIZ.set(false); setView('top'); });
   if (!viz.shadows) problems.push('визуализация: тени не включены');
   if (!viz.maps || !viz.scale) problems.push('визуализация: карты шероховатости/рельефа отсутствуют или масштаб не совпадает');
   if (!viz.tone) problems.push('визуализация: tone mapping / sRGB не включены');

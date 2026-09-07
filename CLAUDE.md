@@ -83,6 +83,7 @@
   Назначение: `VIZ.coat(id, ключ ITEM_MATS | слот | '*', покрытие|null)` на предмет (или поле `coat:{fabric:'sofaWeave'}` в `ITEMS`),
   `VIZ.coatFinish('board'|'wall'|'facade'|'ceiling'|ключ finishMats, покрытие)` на отделку. Двойник кэшируется по (исходный материал, покрытие),
   текстура — по (файл, размер, поворот): одинаковое покрытие у шести стульев — один материал. Без назначения двойник остаётся серым концептом.
+- Зеркала (слот `mirror`): явный `envMap` из `VIZ.mirrorEnv()` — своя PMREM-карта без окна, не `scene.environment`; яркость по схеме света `VIZ.mirrorEnvIntensity`. Подсветка `bathmirror` — `ITEM_MATS.mirrorLed`, свой emitter для группы `g9.mirror`.
 - Поздний GLB получает текущие материалы через `VIZ.adopt`. В headless-прогоне (software GL) прогулка ~5–6 кадров/с в любом режиме.
 
 ## Столкновения в прогулке

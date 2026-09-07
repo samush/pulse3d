@@ -32,7 +32,7 @@ const MATERIALS={
   ceramic:  {name:'керамика (сантехника)', rough:0.12},
   acrylic:  {name:'акрил (ванна)',        rough:0.2},
   leather:  {name:'кожа (изголовье, пуфы)', rough:0.6},
-  mirror:   {name:'зеркало',              rough:0.02, metal:1}, // reflects the procedural room environment (VIZ only)
+  mirror:   {name:'зеркало',              rough:0.06, metal:1}, // own neutral env map (VIZ.mirrorEnv), not scene.environment — materials-lighting M3
   ceiling:  {name:'потолок натяжной матовый', rough:0.9, albedo:0.95},
 };
 // Coatings (materials-lighting M1a): a real surface finish on top of a class. `class` names the MATERIALS entry (physical
@@ -68,9 +68,24 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS; window.COATINGS=COATINGS;
     for(let y=0;y<h;y++) for(let x=0;x<w;x++){ const dx=(at(x+1,y)-at(x-1,y))*strength, dy=(at(x,y+1)-at(x,y-1))*strength; const n=new THREE.Vector3(-dx,-dy,1).normalize(); const i=(y*w+x)*4;
       id.data[i]=(n.x*0.5+0.5)*255; id.data[i+1]=(n.y*0.5+0.5)*255; id.data[i+2]=(n.z*0.5+0.5)*255; id.data[i+3]=255; } g.putImageData(id,0,0); return c; }
   function texLike(src,canvas){ const t=new THREE.CanvasTexture(canvas); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.copy(src.repeat); return t; }
+  let mirrorEnvRT=null, mirrorEnvBuilds=0;
+  function mirrorEnv(){ // neutral room stand-in for mirrors: light ceiling, dark floor, two soft strip lights, no window; prefiltered once, temporaries freed
+    if(mirrorEnvRT) return mirrorEnvRT.texture;
+    const s=new THREE.Scene(), Bm=c=>new THREE.MeshBasicMaterial({color:c,side:THREE.BackSide}), Fm=c=>new THREE.MeshBasicMaterial({color:c});
+    s.add(new THREE.Mesh(new THREE.BoxGeometry(8,2.8,8),Bm(0x8c8a86)));
+    const floor=new THREE.Mesh(new THREE.PlaneGeometry(8,8),Fm(0x3a3936)); floor.rotation.x=-Math.PI/2; floor.position.y=-1.39; s.add(floor);
+    const ceil=new THREE.Mesh(new THREE.PlaneGeometry(8,8),Fm(0xcfcdc8)); ceil.rotation.x=Math.PI/2; ceil.position.y=1.39; s.add(ceil);
+    [-1.6,1.6].forEach(z=>{ const strip=new THREE.Mesh(new THREE.PlaneGeometry(3.2,0.28),Fm(0xfff4e0)); strip.rotation.x=Math.PI/2; strip.position.set(0,1.38,z); s.add(strip); });
+    const pm=new THREE.PMREMGenerator(renderer); mirrorEnvRT=pm.fromScene(s,0.06); pm.dispose(); mirrorEnvBuilds++;
+    s.traverse(o=>{ if(o.isMesh){ o.geometry.dispose(); o.material.dispose(); } });
+    return mirrorEnvRT.texture;
+  }
+  VIZ.mirrorEnv=mirrorEnv; VIZ.mirrorEnvBuilds=()=>mirrorEnvBuilds;
+  VIZ.mirrorEnvIntensity={neutral:1.0,lamps:0.35}; // per light scheme: with lamps off the mirror must not stay a bright picture; L1 tunes the lamps value
   function stdFor(key,basic){ // PBR twin of a simple material; maps from the same image, same repeat
     const spec=MATERIALS[key]||MATERIALS.furniture; const m=new THREE.MeshStandardMaterial({color:basic.color?basic.color.clone():0xffffff,roughness:spec.rough,metalness:spec.metal||0,transparent:basic.transparent,opacity:basic.opacity,depthWrite:basic.depthWrite,side:basic.side,emissive:spec.emissive?basic.color.clone():0x000000});
     m.color.multiplyScalar(spec.albedo!=null?spec.albedo:0.85); // white paint/tile reflect ~85 %, otherwise ACES burns everything out
+    if(key==='mirror'){ m.envMap=mirrorEnv(); m.color.set(0xf2f4f6); Object.defineProperty(m,'envMapIntensity',{get:()=>{ const v=VIZ.mirrorEnvIntensity[LIGHTING.scheme]; return v==null?1:v; }}); } // explicit map, light neutral tint; intensity read per frame, so LIGHTING.set alone is enough
     if(basic.map&&basic.map.image){ m.map=basic.map; if(spec.bump){ m.roughnessMap=texLike(basic.map,roughMap(basic.map.image,spec.rough)); m.normalMap=texLike(basic.map,normalMap(basic.map.image,4)); m.normalScale=new THREE.Vector2(spec.bump,spec.bump); }
       if(spec.image){ new THREE.TextureLoader().load(spec.image,t=>{ t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/spec.size[0],1/spec.size[1]); t.encoding=THREE.sRGBEncoding; m.map=t; m.needsUpdate=true; },undefined,()=>{ VIZ.loadErrors=(VIZ.loadErrors||[]).concat(key+': '+spec.image); }); } }
     return m;
