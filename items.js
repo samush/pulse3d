@@ -109,6 +109,26 @@ const PHYS={}; // id → boxes
        g.add(new THREE.Mesh(new THREE.LatheGeometry([[0.012,0.16],[0.03,0.155],[0.07,0.09],[0.11,0.03],[0.13,0]].map(([r,y])=>new THREE.Vector2(r,y)),24).translate(0.13,1.74,0.5),mat.plastic)); // shade Ø0.26, open at the bottom
        g.add(new THREE.Mesh(new THREE.SphereGeometry(0.025,12,8).translate(0.13,1.80,0.5),mat.led)); // bulb
      }},
+    {id:'ceil4_1',type:'точечный светильник Ø0.08 встроенный, рабочая зона кухни, северная треть столешницы',room:4,layer:'kitchen',pos:[9.21,2.41],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil4_2',type:'точечный светильник Ø0.08 встроенный, рабочая зона кухни, варочная и мойка',room:4,layer:'kitchen',pos:[9.21,3.66],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil4_3',type:'точечный светильник Ø0.08 встроенный, рабочая зона кухни, южная треть, духовка',room:4,layer:'kitchen',pos:[9.21,4.91],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil4_4',type:'точечный светильник Ø0.08 встроенный, над северной половиной стола',room:4,layer:'kitchen',pos:[10.21,2.31],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil4_5',type:'точечный светильник Ø0.08 встроенный, над южной половиной стола',room:4,layer:'kitchen',pos:[10.21,3.31],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil4_6',type:'точечный светильник Ø0.08 встроенный, общий свет, проход между столом и диваном',room:4,layer:'kitchen',pos:[11.06,4.16],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil4_7',type:'точечный светильник Ø0.08 встроенный, общий свет, центр гостиной у выхода на лоджию',room:4,layer:'kitchen',pos:[12.46,4.16],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil4_8',type:'точечный светильник Ø0.08 встроенный, над западной половиной дивана, 2700 K',room:4,layer:'kitchen',pos:[11.81,5.21],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil4_9',type:'точечный светильник Ø0.08 встроенный, над восточной половиной дивана, 2700 K',room:4,layer:'kitchen',pos:[12.81,5.21],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'led8',type:'LED-лента под передней кромкой верхних шкафов кухни, свет на фартук, 3000 K',room:4,layer:'kitchen',pos:[8.55,2.575],rot:0,size:[0.03,1.45,2.33],fixed:'wall',
+     build(b){ b.led(0,0.03,1.43,1.45,0,2.33); }}, // profile hangs under the cabinet bottom (y 1.45), flush with the door fronts (x 8.59)
     {id:'tv',type:'телевизор 58"',room:4,layer:'kitchen',pos:[11.85,KN+0.02],rot:0,size:[1.3,1.75,0.04],fixed:'wall',build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,1.3,1,1.75,0,0.04);
        b.round(0,1.3,1.0,1.75,0.008,0.028,0.002,mat.dark); b(0.008,1.292,1.008,1.742,0.028,0.031,mat.screen); // slim panel with an 8 mm bezel, screen 3 mm proud
        b(0.35,0.95,1.0,1.012,0.02,0.034,mat.frame); b(0.45,0.85,1.2,1.5,0,0.008,mat.frame); // bottom strip and wall bracket
@@ -139,6 +159,18 @@ const PHYS={}; // id → boxes
        b(0.315,0.318,0.855,0.865,0.07,0.14,mat.handle); b(0.315,0.318,0.855,0.865,0.26,0.33,mat.handle);                 // flush finger pulls
        b.led(0.01,0.03,1.15,1.85,0.10,0.13); b.led(0.01,0.03,1.15,1.85,0.27,0.30);                                       // two vertical light profiles (they declare their own proxies)
      }},
+    {id:'ceil5_1',type:'точечный светильник Ø0.08 встроенный, входная зона перед дверью, полочка и зеркало сбоку',room:5,layer:'hall',pos:[7.16,7.01],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil5_2',type:'точечный светильник Ø0.08 встроенный, середина северного участка коридора',room:5,layer:'hall',pos:[7.16,5.56],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil5_3',type:'точечный светильник Ø0.08 встроенный, у дверей комнат 1, 6 и 7',room:5,layer:'hall',pos:[7.16,4.36],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil5_4',type:'точечный светильник Ø0.08 встроенный, у двери на кухню и шкафа в нише',room:5,layer:'hall',pos:[9.26,6.96],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil5_5',type:'точечный светильник Ø0.08 встроенный, поворот к двери комнаты 2',room:5,layer:'hall',pos:[10.41,8.06],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil5_6',type:'точечный светильник Ø0.08 встроенный, у дверей комнаты 3 и санузла 9',room:5,layer:'hall',pos:[10.41,9.26],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
     {id:'mirror',type:'зеркало',room:5,layer:'hall',pos:[6.346,6.05],rot:0,size:[0.025,2.4,0.9],fixed:'wall',
      build(b){ b.phys(0,0.025,0.15,2.40,0,0.9); b.round(0,0.02,0.15,2.40,0,0.9,0.01,mat.frame); b.round(0.02,0.025,0.16,2.39,0.01,0.89,0.002,mat.mirror); }}, // backing board with rounded corners, 5 mm mirror glass
     {id:'pouf',type:'пуфик',room:5,layer:'hall',pos:[6.396,6.75],rot:0,size:[0.4,0.45,0.6],glb:'models/pouf.glb',
@@ -152,6 +184,8 @@ const PHYS={}; // id → boxes
          b(0.05,0.55,y1-0.12,y1-0.04,0.6,0.61,mat.wpanel);
        });
      }},
+    {id:'ceil7_1',type:'точечный светильник Ø0.08 встроенный, постирочная, площадка перед машинами, 4000 K',room:7,layer:'laundry',pos:[7.46,3.41],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
     // ---- kids room 1 (tasks/room1-kid/README.md, marks M1–M30) ----
     // Room box: x 0.896–5.445, z 1.874–4.864. Wall-mounted boxes sit 0.02–0.03 in front of the wall so they show over the wallpaper (0.015).
     {id:'kidbed',type:'кровать-чердак с лестницей-комодом и полкой хранения',room:1,layer:'kid',pos:[2.835,1.884],rot:0,size:[2.6,2.6,2.97],fixed:'wall',build:kidBedBuild(2.0,mat.wdoor,mat.cushion)},
@@ -223,6 +257,8 @@ const PHYS={}; // id → boxes
      build(b,g){ b.phys(0,0.50,2.66,2.70,0,0.50); g.add(new THREE.Mesh(new THREE.LatheGeometry([[0,2.70],[0.25,2.70],[0.25,2.675],[0.235,2.66],[0.21,2.66],[0.21,2.665],[0,2.665]].map(([r,y])=>new THREE.Vector2(r,y)),32).translate(0.25,0,0.25),mat.plastic)); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.21,32).rotateX(Math.PI/2).translate(0.25,2.664,0.25),mat.led)); }}, // plafond Ø0.50 (lathe) with the emitter disc
     {id:'track',type:'трек с 2 спотами на галерейную стену',room:1,layer:'kid',pos:[1.90,4.22],rot:0,size:[2.20,2.70,0.06],fixed:'wall',
      build(b,g){ b.phys(0,2.2,2.67,2.70,0.015,0.045); [0.6,1.6].forEach(x=>b.phys(x,x+0.06,2.55,2.67,0,0.06)); b(0,2.2,2.67,2.70,0.015,0.045,mat.frame); [0.6,1.6].forEach(x=>{ g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,0.02,8).translate(x+0.03,2.66,0.03),mat.frame)); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.10,20).translate(x+0.03,2.60,0.03),mat.frame)); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.025,20).rotateX(Math.PI/2).translate(x+0.03,2.549,0.03),mat.led)); }); }}, // track profile, two spots Ø60 on stems
+    {id:'ceil1_1',type:'точечный светильник Ø0.08 встроенный, над столом (западная половина), 3000 K',room:1,layer:'kid',pos:[1.46,4.41],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
     {id:'bra1',type:'бра над диванчиком, поворотное',room:1,layer:'kid',pos:[5.20,2.79],rot:0,size:[0.245,1.35,0.16],fixed:'wall',
      build(b,g){ b.phys(0.195,0.215,1.20,1.30,0.03,0.13); b.phys(0.10,0.195,1.245,1.255,0.075,0.085); b.phys(0.02,0.14,1.19,1.31,0.02,0.14); b.round(0.20,0.215,1.20,1.30,0.03,0.13,0.004,mat.frame); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.12,10).rotateZ(Math.PI/2).translate(0.14,1.25,0.08),mat.frame)); // wall plate, arm Ø12
        g.add(new THREE.Mesh(new THREE.LatheGeometry([[0,1.31],[0.055,1.31],[0.065,1.29],[0.065,1.20],[0.06,1.20],[0.06,1.29],[0.05,1.30],[0,1.30]].map(([r,y])=>new THREE.Vector2(r,y)),24).translate(0.08,0,0.08),mat.plastic)); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.05,24).rotateX(Math.PI/2).translate(0.08,1.205,0.08),mat.led)); }}, // shade (lathe) with the lamp disc
@@ -307,6 +343,12 @@ const PHYS={}; // id → boxes
     {id:'bra4',type:'бра для чтения над изголовьем, плоское',room:2,layer:'kid2',pos:[11.59,9.349],rot:0,size:[0.16,2.36,0.245],fixed:'wall',
      build(b){ b.phys(0.03,0.13,2.24,2.36,0.235,0.245); b.phys(0.02,0.14,2.27,2.33,0.08,0.235); // proxy = pre-detail mesh AABBs (realism-all C1)
        b.round(0.03,0.13,2.24,2.36,0.235,0.245,0.004,mat.plastic); b.round(0.02,0.14,2.27,2.33,0.08,0.235,0.012,mat.plastic); b(0.035,0.125,2.266,2.271,0.09,0.20,mat.led); }},
+    {id:'ceil2_1',type:'точечный светильник Ø0.08 встроенный, проход к лежанке между платформой и башнями',room:2,layer:'kid2',pos:[13.81,7.96],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil2_2',type:'точечный светильник Ø0.08 встроенный, входная зона у двери и шведская стенка',room:2,layer:'kid2',pos:[11.66,7.06],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil2_3',type:'мебельный врезной светильник Ø0.08 в плите платформы кровати над столом, 3500 K; едет за кроватью',room:2,layer:'kid2',pos:[11.66,8.56],rot:0,size:[0.08,1.7,0.08],attach:'kidbed2',
+     build(b){ b.spot(0.04,0.04,0.04,1.7); }},
     {id:'blind2',type:'кассета рулонной блэкаут-шторы над окном',room:2,layer:'kid2',pos:[14.694,7.31],rot:0,size:[0.08,2.38,1.48],fixed:'wall',
      build(b,g){ b.phys(0,0.08,2.3,2.38,0,1.48); b.phys(0.02,0.06,2.29,2.3,0.03,1.45); // proxy = pre-detail mesh AABBs (realism-all C1)
        g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.039,0.039,1.44,24).rotateX(Math.PI/2).translate(0.04,2.34,0.74),mat.plastic)); // cassette Ø78
@@ -371,9 +413,14 @@ const PHYS={}; // id → boxes
        b(0.02,0.05,2.65,2.68,0,3.017,mat.frame);                                                                        // ceiling track
        const fold=(z0,y0,y1)=>{ const pl=new THREE.PlaneGeometry(0.15,y1-y0,48,1).rotateY(Math.PI/2).translate(0,(y0+y1)/2,z0+0.075), p=pl.attributes.position; for(let i=0;i<p.count;i++) p.setX(i,0.05+0.028*Math.sin((p.getZ(i)-z0)*2*Math.PI/0.0167)); pl.computeVertexNormals(); g.add(new THREE.Mesh(pl,mat.drape)); };
        fold(0,1.15,2.64); fold(2.867,0.02,2.64); }}, // rail starts after the cabinet; north bundle hemmed above the headboard
-    {id:'mlight',type:'потолочный светильник Ø0.50, диммер',room:3,layer:'master',pos:[12.65,11.671],rot:180,size:[0.50,2.70,0.50],fixed:'wall',
-     build(b,g){ b.phys(0,0.5,2.66,2.7,0,0.5); // proxy = pre-detail mesh AABBs (realism-all D1)
-       lathe(g,[[0,2.662],[0.21,2.664],[0.247,2.68],[0.25,2.70],[0,2.70]],0.25,0.25,mat.plastic); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.18,32).rotateX(Math.PI/2).translate(0.25,2.661,0.25),mat.led)); }},
+    {id:'ceil3_1',type:'точечный светильник Ø0.08 встроенный, вход, пол у двери',room:3,layer:'master',pos:[10.76,10.56],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil3_2',type:'точечный светильник Ø0.08 встроенный, зона перед туалетным столиком',room:3,layer:'master',pos:[12.16,10.56],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil3_3',type:'точечный светильник Ø0.08 встроенный, юго-западный угол, ковёр',room:3,layer:'master',pos:[10.76,12.16],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
+    {id:'ceil3_4',type:'точечный светильник Ø0.08 встроенный, фасады шкафа и край кровати',room:3,layer:'master',pos:[12.16,12.16],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
+     build(b){ b.spot(0.04,0.04,0.04); }},
     {id:'bra5',type:'бра для чтения, западная сторона кровати',room:3,layer:'master',pos:[13.49,13.124],rot:180,size:[0.16,1.50,0.245],fixed:'wall',
      build(b,g){ b.phys(0.03,0.13,1.3499999999999999,1.45,0,0.02); b.phys(0.075,0.085,1.395,1.4049999999999998,0.02,0.13); b.phys(0.02,0.14,1.3399999999999999,1.46,0.105,0.225); // proxy = pre-detail mesh AABBs (realism-all D1)
        b.round(0.03,0.13,1.3499999999999999,1.45,0,0.02,0.005,mat.plastic); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.09,10).rotateX(Math.PI/2).translate(0.08,1.4,0.065),mat.frame)); g.add(new THREE.Mesh(new THREE.SphereGeometry(0.012,12,8).translate(0.08,1.4,0.105),mat.frame)); // plate, swing arm Ø12, pivot

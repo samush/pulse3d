@@ -302,12 +302,12 @@ const { chromium } = require('playwright');
   if (glbA.length) problems.push('glb: этап A — пуф/стиралка не загрузились чисто: ' + glbA.join(' '));
   // realism-all stage D: proxies for the room 3 items repeat the old mesh AABBs (count + union extent)
   const proxD = await page.evaluate(() => { const ext = id => { const bb = new THREE.Box3(); PHYS[id].forEach(m => bb.union(new THREE.Box3().setFromObject(m))); const s = new THREE.Vector3(); bb.getSize(s); return [s.x, s.y, s.z].map(v => Math.round(v * 1000) / 1000).join(); };
-    const want = { mbed: [7, '1.7,1.1,2.2'], mcab: [31, '1.7,0.85,0.365'], mward: [13, '1,2.7,0.59'], mtv: [2, '0.97,0.56,0.04'], mconsole: [5, '1.2,0.18,0.345'], vanity: [5, '1,0.75,0.45'], vmirror: [3, '1.14,0.59,0.025'], vpouf: [5, '0.4,0.45,0.4'], mrug: [1, '2,0.01,2'], mcurtain: [3, '0.06,2.66,3.017'], mlight: [1, '0.5,0.04,0.5'], bra5: [3, '0.12,0.12,0.225'], bra6: [3, '0.12,0.12,0.225'], bra7: [3, '0.12,0.12,0.225'], bra8: [3, '0.12,0.12,0.225'] };
+    const want = { mbed: [7, '1.7,1.1,2.2'], mcab: [31, '1.7,0.85,0.365'], mward: [13, '1,2.7,0.59'], mtv: [2, '0.97,0.56,0.04'], mconsole: [5, '1.2,0.18,0.345'], vanity: [5, '1,0.75,0.45'], vmirror: [3, '1.14,0.59,0.025'], vpouf: [5, '0.4,0.45,0.4'], mrug: [1, '2,0.01,2'], mcurtain: [3, '0.06,2.66,3.017'], bra5: [3, '0.12,0.12,0.225'], bra6: [3, '0.12,0.12,0.225'], bra7: [3, '0.12,0.12,0.225'], bra8: [3, '0.12,0.12,0.225'] };
     return Object.entries(want).filter(([id, [n, e]]) => PHYS[id].length !== n || ext(id) !== e || !ITEM_GROUPS[id].userData.proxy.length).map(([id]) => id + ':' + PHYS[id].length + ':' + ext(id)); });
   if (proxD.length) problems.push('proxy: этап D — число боксов/габарит не сошлись: ' + proxD.join(' '));
   // realism-all stage D: detailed room 3 items stay inside size (+1 mm); plates and LED strips carry one proxy box equal to the item
   const fitD = await page.evaluate(() => { const fit = id => { const g = ITEM_GROUPS[id], bb = new THREE.Box3().setFromObject(g), inv = new THREE.Matrix4().copy(g.matrixWorld).invert(); bb.applyMatrix4(inv); const s = g.userData.size; return bb.min.x >= -0.001 && bb.min.y >= -0.001 && bb.min.z >= -0.001 && bb.max.x <= s[0] + 0.001 && bb.max.y <= s[1] + 0.001 && bb.max.z <= s[2] + 0.001; };
-    const one = ['sw3', 'sw4', 'sw6', 'sock14', 'sock15', 'sock16', 'sock17', 'sock18', 'sock19', 'sock20', 'led4', 'led5'], ids = ['mcab', 'mward', 'mconsole', 'vanity', 'vmirror', 'mtv', 'mrug', 'mcurtain', 'mlight', 'bra5', 'bra6', 'bra7', 'bra8'].concat(one);
+    const one = ['sw3', 'sw4', 'sw6', 'sock14', 'sock15', 'sock16', 'sock17', 'sock18', 'sock19', 'sock20', 'led4', 'led5'], ids = ['mcab', 'mward', 'mconsole', 'vanity', 'vmirror', 'mtv', 'mrug', 'mcurtain', 'bra5', 'bra6', 'bra7', 'bra8'].concat(one);
     const bad = ids.filter(id => !fit(id)); one.forEach(id => { if (PHYS[id].length !== 1) bad.push(id + ':phys'); }); return bad; });
   if (fitD.length) problems.push('этап D: детали вне size или proxy розеток/LED не один бокс: ' + fitD.join(' '));
   // realism-all stage E: procedural bath items stay inside size
@@ -358,7 +358,7 @@ const { chromium } = require('playwright');
     const bad = ids.filter(id => { const g = ITEM_GROUPS[id], tol = g.userData.glbLoaded ? 0.011 : 0.0011, bb = new THREE.Box3().setFromObject(g).applyMatrix4(new THREE.Matrix4().copy(g.matrixWorld).invert()), s = g.userData.size; return !(bb.min.x >= -tol && bb.min.y >= -tol && bb.min.z >= -tol && bb.max.x <= s[0] + tol && bb.max.y <= s[1] + tol && bb.max.z <= s[2] + tol); });
     const slot = id => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh) set.add(o.material.userData.slot || 'furniture'); }); return [...set].sort().join(); };
     return { n: ids.length, bad, rug: ITEM_GROUPS.kidrug.children[0].geometry.type === 'ExtrudeGeometry', sw1: slot('sw1') === 'furniture,plastic' && PHYS.sw1.length === 1, curtain: slot('curtain') === 'fabric,metal', bed: ITEM_GROUPS.kidbed.children.length > 50 }; });
-  if (stageBFit.n !== 25 || stageBFit.bad.length) problems.push('детская 1: предметы вне size (realism-all §0): ' + stageBFit.bad.join(', '));
+  if (stageBFit.n !== 26 || stageBFit.bad.length) problems.push('детская 1: предметы вне size (realism-all §0): ' + stageBFit.bad.join(', '));
   if (!stageBFit.rug || !stageBFit.sw1 || !stageBFit.curtain || !stageBFit.bed) problems.push('детская 1: ковёр/выключатель/тюль/кровать не детализированы (realism-all §8): ' + JSON.stringify(stageBFit));
   // realism-all stage B: kidsofa/kidchair/windowseat1 GLBs replaced the procedural builds — no validation warnings, grey materials, proxies untouched
   const stageBGlb = await page.evaluate(async () => { const ids = ['kidsofa', 'kidchair', 'kidchair2', 'windowseat1', 'bchair']; for (let i = 0; i < 100 && !ids.every(id => ITEM_GROUPS[id].userData.glbLoaded || (VIZ.loadErrors || []).some(s => s.startsWith(id + ':'))); i++) await new Promise(r => setTimeout(r, 100));
@@ -459,6 +459,11 @@ const { chromium } = require('playwright');
     const t = 0.03; return !(bb.min.x >= u.pos[0] - t && bb.max.x <= u.pos[0] + u.size[0] + t && bb.min.z >= u.pos[1] - t && bb.max.z <= u.pos[1] + u.size[2] + t && bb.min.y >= -t && bb.max.y <= u.size[1] + t); }).map(it => it.id));
   if (fit.length) problems.push('предметы вышли за свой габарит: ' + fit.join(', '));
 
+  // L0g: recessed ceiling spots exist with an emitter disc and a proxy each; mlight is gone; the fingerprint moved with the catalogue
+  const l0g = await page.evaluate(() => { const ids = ITEMS.filter(it => /^ceil\d+_\d+$/.test(it.id)).map(it => it.id);
+    const emit = ids.every(id => { const s = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh && o.material.userData) s.add(o.material.userData.slot); }); return s.has('emitter') && PHYS[id].length === 1; });
+    return { n: ids.length, emit, gone: !ITEM_GROUPS.mlight && !ITEMS.some(it => it.id === 'mlight'), led8: !!ITEM_GROUPS.led8 }; });
+  if (l0g.n !== 24 || !l0g.emit || !l0g.gone || !l0g.led8) problems.push('L0g: потолочные точки ' + JSON.stringify(l0g));
   if (!items.uniq) problems.push('предметы: ID не уникальны');
   if (!items.moved) problems.push('предметы: перенос дивана не сдвинул все детали');
   if (!items.tvSame) problems.push('предметы: перенос дивана задел телевизор');
