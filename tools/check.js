@@ -695,7 +695,7 @@ const { chromium } = require('playwright');
   // materials-lighting L1: apartment lamps — catalogue sources live in their item groups and follow the pose, one group = intensity + emissive
   // of its own diffusers only, sun off in the lamps scheme, environment per scheme, a wall blocks light while a doorway lets it through
   const l1 = await page.evaluate(() => {
-    setView('door'); VIZ.set(true); LIGHTING.set('lamps'); const out = {}, L = LIGHTING.lights, by = n => L.find(l => l.name === n);
+    setView('door'); VIZ.set(true); LIGHTING.set('lamps'); LIGHTING.scope('all'); const out = {}, L = LIGHTING.lights, by = n => L.find(l => l.name === n); // L3: the catalogue checks look at every source, not only the rooms around the camera
     out.catalogue = L.length === LIGHTS.length && LIGHTS.every(s => by(s.id) && by(s.id).parent === ITEM_GROUPS[s.item]) && L.every(l => !l.isSpotLight || l.target.parent === l.parent);
     out.on = L.every(l => l.intensity > 0) && sun.intensity === 0 && !sun.castShadow && L.filter(l => l.castShadow).length === LIGHTS.filter(s => s.shadow).length;
     out.env = scene.environment === LIGHTING.environment('lamps') && LIGHTING.environment('neutral') !== LIGHTING.environment('lamps');
@@ -722,9 +722,15 @@ const { chromium } = require('playwright');
     const lit = probe(8.9), dark = probe(8.2); scene.remove(ctl); scene.remove(ctl.target); ctl.dispose(); rt.dispose();
     Object.keys(LIGHTING.groups).forEach(g => LIGHTING.group(g, true));
     out.wall = { lit: +lit.toFixed(3), dark: +dark.toFixed(3), ok: lit > 0.25 && lit > 3 * dark };
+    // L3: near scope — the camera's room shines whole, a neighbour only through its doorway ceiling spots within reach, the rest padded at zero so the visible count stays constant; shadows render on demand
+    LIGHTING.scope('near'); document.getElementById('avatarOn').checked = false; controls.setFPV(9.3, 9.45, 0); LIGHTING.tick(0); const a9 = LIGHTING.active(), vis = () => L.filter(l => l.visible).length, v9 = vis(), kidHidden = by('kidlight').visible === false, sh9 = by('spot3').castShadow && !by('ceil4_2').castShadow;
+    controls.setFPV(12.6, 5.6, 0); LIGHTING.tick(0); const a4 = LIGHTING.active();
+    out.near = a9.room === 9 && ['spot1', 'spot2', 'spot3', 'bathmirror', 'ceil5_4'].every(n => a9.lights.includes(n)) && !a9.lights.some(n => /^(kidlight|ceil4_1|ceil3_1|ceil1_1)$/.test(n)) && kidHidden && sh9
+      && a4.room === 4 && a4.lights.includes('ceil4_1') && !a4.lights.includes('spot1') && v9 === vis() && v9 <= 22 && !renderer.shadowMap.autoUpdate;
+    document.getElementById('avatarOn').checked = true; setView('door');
     LIGHTING.set('neutral'); VIZ.set(false); setView('top'); return out;
   });
-  ['catalogue', 'on', 'env', 'pose', 'group', 'ledSplit', 'back', 'neutral', 'groups'].forEach(k => { if (!l1[k]) problems.push('свет: ' + k + ' — не по materials-lighting L1 (§6, lighting.js)'); });
+  ['catalogue', 'on', 'env', 'pose', 'group', 'ledSplit', 'back', 'neutral', 'groups', 'near'].forEach(k => { if (!l1[k]) problems.push('свет: ' + k + ' — не по materials-lighting L1 (§6, lighting.js)'); });
   if (!l1.wall.ok) problems.push('свет: стена не перекрывает источник (за стеной ' + l1.wall.dark + ', в проёме ' + l1.wall.lit + ')');
   // L1 frames: kitchen from the door, from the work zone to the sofa, the work zone itself, the evening scene (only table + sofa), bath 9 in front of the mirror
   for (const [name, x, z, tx, tz, off] of [['l1-kitchen-door', 12.6, 5.6, 8.6, 2.6], ['l1-kitchen-sofa', 9.0, 3.0, 12.5, 5.8], ['l1-kitchen-work', 10.8, 4.9, 8.6, 3.3], ['l1-kitchen-evening', 12.6, 5.6, 8.6, 2.6, 'g4.work,g4.splash,g4.main'], ['l1-bath9-front', 9.3, 9.45, 9.27, 8.2],
