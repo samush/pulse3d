@@ -429,7 +429,7 @@ document.getElementById('finish').addEventListener('change',e=>finishGroup.visib
 document.getElementById('tileFloor').addEventListener('change',e=>tileGroup.visible=e.target.checked);
 document.getElementById('boardFloor').addEventListener('change',e=>boardGroup.visible=e.target.checked);
 const wop=document.getElementById('wop'),wov=document.getElementById('wov');
-const fade=(m,v)=>{ m.opacity=v; m.transparent=v<0.999; m.depthWrite=v>=0.5; m.needsUpdate=true; if(window.VIZ) [VIZ.std.get(m),VIZ.neutral.get(m)].forEach(s=>s&&fade(s,v)); }; // PBR and neutral twins follow the basic material
+const fade=(m,v)=>{ m.opacity=v; m.transparent=v<0.999; m.depthWrite=v>=0.5; m.needsUpdate=true; if(window.VIZ) VIZ.twins(m).forEach(s=>fade(s,v)); }; // every lit twin follows the basic material
 wop.addEventListener('input',()=>{
   const v=wop.value/100;
   fade(wallMat,v); facadeMats.forEach(m=>fade(m,v));

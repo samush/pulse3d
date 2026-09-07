@@ -39,14 +39,14 @@ const { chromium } = require('playwright');
   const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
   const problems = [];
   // materials-lighting M0: MATERIALS is an object literal, so a duplicate key silently overwrites the first one — check the source text
-  { const src = fs.readFileSync(path.join(root, 'materials.js'), 'utf8').match(/const MATERIALS=\{([\s\S]*?)\n\};/)[1];
+  for (const name of ['MATERIALS', 'COATINGS']) { const src = fs.readFileSync(path.join(root, 'materials.js'), 'utf8').match(new RegExp('const ' + name + '=\\{([\\s\\S]*?)\\n\\};'))[1];
     const keys = [...src.matchAll(/^\s*([A-Za-z_]\w*)\s*:/gm)].map(m => m[1]), dup = keys.filter((k, i) => keys.indexOf(k) !== i);
-    if (dup.length) problems.push('материалы: дубли ключей MATERIALS: ' + dup.join(', ')); }
+    if (dup.length) problems.push('материалы: дубли ключей ' + name + ': ' + dup.join(', ')); }
   page.on('pageerror', e => problems.push('pageerror: ' + e.message));
   page.on('console', m => {
     // необязательный внешний шрифт может не грузиться в оффлайне — не ошибка сцены
     const src = (m.location() && m.location().url) || '';
-    if (m.type() === 'error' && !/fonts\.googleapis|fonts\.gstatic|favicon\.ico|models\/absent\.glb/.test(src + m.text())) {
+    if (m.type() === 'error' && !/fonts\.googleapis|fonts\.gstatic|favicon\.ico|models\/absent\.glb|textures\/absent\//.test(src + m.text())) {
       problems.push('console: ' + m.text() + (src ? ' @ ' + src : ''));
     }
   });
@@ -562,6 +562,32 @@ const { chromium } = require('playwright');
     setView('door'); VIZ.set(true); pass('std'); VIZ.set(false); pass('neutral'); setView('top'); pass('basic'); VIZ.set(true); setView('door'); pass('std'); setView('top'); // leaves materials on for the reload check below
     return { bad: bad.slice(0, 8), n: bad.length, glb }; });
   if (twinsOk.n || twinsOk.glb < 15) problems.push('материалы: меши не в материале текущего режима (' + twinsOk.n + ', GLB ' + twinsOk.glb + '): ' + twinsOk.bad.join(' '));
+  // materials-lighting M1a: coatings — every preset names a known class and existing local files; presets are not assigned by default
+  const coatSpec = await page.evaluate(() => Object.entries(COATINGS).map(([k, s]) => [k, s.class in MATERIALS, s.dir, s.maps || ['color', 'normal', 'rough']]));
+  coatSpec.forEach(([k, cls, dir, maps]) => { if (!cls) problems.push('покрытия: ' + k + ' ссылается на неизвестный класс'); maps.forEach(f => { if (!fs.existsSync(path.join(root, dir, f + '.jpg'))) problems.push('покрытия: ' + k + ' — нет файла ' + dir + '/' + f + '.jpg'); }); });
+  // M1a: a coating on one item does not touch its neighbour sharing the concept material; equal coatings share one twin; unknown coating and missing file fall back with a note; finishes and the wall slider follow
+  const coat = await page.evaluate(async () => {
+    const wait = async f => { for (let i = 0; i < 100 && !f(); i++) await new Promise(r => setTimeout(r, 100)); return !!f(); };
+    await wait(() => ['chair1', 'chair2', 'chair3', 'chair4'].every(id => ITEM_GROUPS[id].userData.glbLoaded));
+    setView('door'); VIZ.set(true); LIGHTING.set('neutral');
+    const mesh = id => { let m; ITEM_GROUPS[id].traverse(o => { if (!m && o.isMesh && (VIZ.basic.get(o.material) || o.material) === ITEM_MATS.chair) m = o; }); return m; };
+    const a = mesh('chair1'), b = mesh('chair2'), std = VIZ.std.get(ITEM_MATS.chair), out = {}, ready = m => !!(m.map && m.map.image && m.map.image.width > 0);
+    VIZ.coat('chair1', 'cabinetPaint', 'oakFurniture'); out.loaded = await wait(() => ready(a.material));
+    out.own = a.material !== std && a.material.userData.coating === 'oakFurniture' && VIZ.basic.get(a.material) === ITEM_MATS.chair; out.neighbour = b.material === std;
+    out.maps = out.loaded && !!(a.material.normalMap && a.material.roughnessMap) && a.material.roughness === 1 && a.material.map.encoding === THREE.sRGBEncoding && a.material.normalMap.encoding === THREE.LinearEncoding && a.material.color.getHex() === 0xffffff;
+    out.repeat = out.loaded && Math.abs(a.material.map.repeat.x - 1 / 1.83) < 1e-9 && Math.abs(a.material.map.rotation - Math.PI / 2) < 1e-9;
+    VIZ.coat('chair2', 'cabinetPaint', 'oakFurniture'); out.shared = b.material === a.material; VIZ.coat('chair2', 'cabinetPaint', null); out.back = b.material === std;
+    VIZ.coat('chair3', 'cabinetPaint', 'nosuch'); out.unknown = mesh('chair3').material === std && VIZ.loadErrors.includes('coating: nosuch'); VIZ.coat('chair3', 'cabinetPaint', null);
+    COATINGS.brokenTest = { class: 'wood', dir: 'textures/absent', size: [1, 1] }; const n0 = ITEM_GROUPS.chair4.children.length; VIZ.coat('chair4', 'cabinetPaint', 'brokenTest'); const m4 = mesh('chair4').material;
+    out.broken = await wait(() => VIZ.loadErrors.some(s => /textures\/absent\/color/.test(s))) && m4.isMeshStandardMaterial && !m4.map && !m4.normalMap && ITEM_GROUPS.chair4.children.length === n0 && mesh('chair4').material === m4; VIZ.coat('chair4', 'cabinetPaint', null); delete COATINGS.brokenTest;
+    VIZ.coatFinish('board', 'oakFloor'); let bm; boardGroup.traverse(o => { if (!bm && o.isMesh) bm = o.material; }); out.finish = !!bm && bm.userData.coating === 'oakFloor' && await wait(() => ready(bm));
+    VIZ.coatFinish('wall', 'wallPaint'); const set = v => { const sl = document.getElementById('wop'); sl.value = v; sl.dispatchEvent(new Event('input')); }; set(50); const wv = VIZ.variants.get(wallMat).get('wallPaint');
+    out.fade = Math.abs(wv.opacity - 0.5) < 1e-9 && wv.color.getHex() !== 0xffffff && !wv.map && !!wv.normalMap; set(100); VIZ.coatFinish('wall', null); VIZ.coatFinish('board', null);
+    out.neutral = (VIZ.set(false), a.material === VIZ.neutral.get(ITEM_MATS.chair)); VIZ.set(true); // coating never leaks into the neutral mode
+    const cycle = () => { for (let i = 0; i < 3; i++) { VIZ.coat('chair1', 'cabinetPaint', 'oakFurniture'); VIZ.set(false); VIZ.set(true); VIZ.coat('chair1', 'cabinetPaint', null); VIZ.coatFinish('board', 'oakFloor'); VIZ.coatFinish('board', null); renderer.render(scene, camera); } };
+    const mem = () => JSON.stringify(renderer.info.memory) + '|' + VIZ.textures.size + '|' + [...VIZ.variants.values()].reduce((n, m) => n + m.size, 0);
+    cycle(); const m1 = mem(); cycle(); out.stable = mem() === m1; out.mem = m1; LIGHTING.set('lamps'); return out; }); // lamps: the reload check below expects it
+  Object.entries(coat).forEach(([k, ok]) => { if (k !== 'mem' && !ok) problems.push('покрытия: «' + k + '» не сошлось (materials-lighting M1a): ' + coat.mem); });
   await page.reload(); await page.waitForTimeout(2500);
   const vizKept = await page.evaluate(() => { const ok = VIZ.on && document.getElementById('mats').checked && LIGHTING.scheme === 'lamps' && document.getElementById('light').value === 'lamps'; VIZ.set(false); LIGHTING.set('neutral'); return ok; });
   if (!viz.std) problems.push('визуализация: материалы не PBR');
