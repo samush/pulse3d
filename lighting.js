@@ -114,7 +114,7 @@ window.LIGHTS=LIGHTS;
     l.color.set(KELVIN[L.k]||0xffffff).convertSRGBToLinear(); l.name=L.id; l.userData={group:L.group,w:L.w,type:L.type,shadow:!!L.shadow,room:+L.group.match(/^g(\d+)\./)[1],at:L.at,ceiling:L.type==='spot'&&L.at[1]>=2.5};
     g.updateMatrixWorld(true); l.position.copy(g.worldToLocal(new THREE.Vector3(...L.at))); g.add(l);
     if(l.isSpotLight){ const to=L.to||[L.at[0],0,L.at[2]]; l.target.position.copy(g.worldToLocal(new THREE.Vector3(...to))); g.add(l.target); }
-    if(L.shadow){ l.shadow.mapSize.set(1024,1024); l.shadow.camera.near=0.15; l.shadow.camera.far=L.distance||6; l.shadow.bias=-0.0005; l.shadow.normalBias=0.02; }
+    if(L.shadow){ l.shadow.mapSize.set(512,512); l.shadow.camera.near=0.15; l.shadow.camera.far=L.distance||6; l.shadow.bias=-0.0005; l.shadow.normalBias=0.02; }
     LIGHTING.lights.push(l); if(!(L.group in LIGHTING.groups)) LIGHTING.groups[L.group]=true;
     const set=emitters[L.group]||(emitters[L.group]=new Set());
     g.traverse(o=>{ if(!o.isMesh||!o.material.userData||o.material.userData.slot!=='emitter') return;
@@ -128,7 +128,7 @@ window.LIGHTS=LIGHTS;
   const NEIGH={}, link=(a,b)=>{ if(!a||!b||a===b) return; (NEIGH[a]=NEIGH[a]||new Set()).add(b); (NEIGH[b]=NEIGH[b]||new Set()).add(a); };
   PLAN.doors.forEach(([cx,cz,o])=>{ const dx=o==='v'?0.3:0, dz=o==='h'?0.3:0; link(roomAt(cx+dx,cz+dz),roomAt(cx-dx,cz-dz)); });
   PLAN.openings.forEach(o=>{ const z=(o.z0+o.z1)/2; link(roomAt(o.x0-0.2,z),roomAt(o.x1+0.2,z)); });
-  const NEAR=4, POOL={spot:16,point:6}; // neighbour reach in metres; constant visible counts per type (padding at intensity 0) so programs are compiled once
+  const NEAR=4, POOL={spot:16,point:6}; let SHADOWS=1; // shadow maps per frame (L3 p.3): one candidate of the camera's room is enough for the illusion; 0 switches them off // neighbour reach in metres; constant visible counts per type (padding at intensity 0) so programs are compiled once
   let scope='near', room=0, key='', active=new Set(), pad=new Set();
   function pick(){ // active = sources that shine; pad = extra hidden-at-zero sources keeping the counts constant
     const p=controls.fpv?controls.pos:controls.target, r=roomAt(p.x,p.z)||room; room=r; active=new Set(); pad=new Set();
@@ -138,7 +138,8 @@ window.LIGHTS=LIGHTS;
   }
   function sync(){ // sources and diffusers from scheme × group × room state; a source off has no shadow pass either
     const lamps=LIGHTING.lit&&LIGHTING.scheme==='lamps'; if(lamps&&scope==='near') pick();
-    LIGHTING.lights.forEach(l=>{ const on=lamps&&LIGHTING.groups[l.userData.group]!==false&&(scope==='all'||active.has(l)); l.intensity=on?BASE[l.userData.type]*l.userData.w:0; l.castShadow=on&&l.userData.shadow; l.visible=on||(lamps&&scope==='near'&&pad.has(l)); }); // hidden lights leave the shaders
+    let sh=scope==='all'?Infinity:SHADOWS; // the catalogue lists each room's shadow candidate first, so the cap keeps the camera's room
+    LIGHTING.lights.forEach(l=>{ const on=lamps&&LIGHTING.groups[l.userData.group]!==false&&(scope==='all'||active.has(l)); l.intensity=on?BASE[l.userData.type]*l.userData.w:0; l.castShadow=on&&l.userData.shadow&&(scope==='all'||l.userData.room===room)&&sh-->0; l.visible=on||(lamps&&scope==='near'&&pad.has(l)); }); // hidden lights leave the shaders
     renderer.shadowMap.needsUpdate=true;
     if(window.VIZ&&VIZ.ready) Object.entries(emitters).forEach(([g,set])=>{ const on=!lamps||LIGHTING.groups[g]!==false; set.forEach(b=>VIZ.twins(b).forEach(m=>{ m.emissiveIntensity=on?1:0; })); }); // neutral scheme: every diffuser glows, as before L1
   }
@@ -149,6 +150,7 @@ window.LIGHTS=LIGHTS;
     if(!(LIGHTING.lit&&LIGHTING.scheme==='lamps')||scope!=='near') return;
     const p=controls.fpv?controls.pos:controls.target, k=roomAt(p.x,p.z)+':'+Math.round(p.x*2)+':'+Math.round(p.z*2); if(k===lastKey) return; lastKey=k; sync();
   };
+  LIGHTING.shadows=function(n){ if(n!=null){ SHADOWS=Math.max(0,n|0); lastKey=''; sync(); } return SHADOWS; }; // per-frame cap in the near scope
   LIGHTING.scope=function(s){ if(s) { scope=s==='all'?'all':'near'; lastKey=''; sync(); } return scope; }; // 'all' = whole catalogue (tests, reference frames); 'near' = rooms around the camera
   LIGHTING.active=()=>({room,lights:[...active].map(l=>l.name),visible:LIGHTING.lights.filter(l=>l.visible).length,shadows:LIGHTING.lights.filter(l=>l.castShadow).length});
   LIGHTING.dirty=()=>{ renderer.shadowMap.needsUpdate=true; }; if(window.POSE_HOOKS) POSE_HOOKS.push(LIGHTING.dirty); // a moved item moves its shadow (and its lamp)
