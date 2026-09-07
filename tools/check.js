@@ -630,6 +630,7 @@ const { chromium } = require('playwright');
     laundry7: { items: [['washer', 'glb:plastic', 'plastic'], ['washer', 'glb:paint', 'whiteEnamel'], ['washer', 'glb:chrome', 'class']], finish: [['white', 'tile6060'], ['whiteWall', 'tile6060'], ['grey', 'tile6060grey']], pose: [7.6, 3.7, 7.35, 2.6] },
     balcony10: { items: [['bdesk', 'table', 'oakFurnitureX'], ['bdesk', 'frame', 'class'], ['bchair', 'glb:paint', 'oakFurniture'], ['bchair', 'glb:cushion', 'sofaWeave'], ['bshelf', 'wpanel', 'cabinetPaint'], ['bshelf', 'dark', 'class'], ['itshelf', 'body', 'cabinetPaint'], ['sock26', 'plastic', 'plastic'], ['blinds10', 'plastic', 'plastic']], pose: [14.3, 3.9, 14.6, 5.9] },
     bath9: { items: [['basindrawer', 'wdoor', 'cabinetPaint'], ['wcbox', 'body', 'tile6060'], ['wcbox', 'plastic', 'plastic'], ['basin', 'ceramic', 'class'], ['tub', 'glb:acrylic', 'class'], ['wc', 'glb:ceramic', 'class'], ['wc', 'glb:plastic', 'plastic'], ['bathmirror', 'mirror', 'class'], ['towelrail', 'handle', 'class']], pose: [9.6, 9.0, 10.1, 7.6] },
+    bath8: { items: [['shower8', 'top', 'tile6060'], ['curb8e', 'top', 'tile6060'], ['niche8', 'body', 'tile6060'], ['wcbox8', 'body', 'tile6060'], ['cove8', 'body', 'class'], ['glass8', 'glass', 'class'], ['wc8', 'glb:ceramic', 'class'], ['drain8', 'handle', 'class'], ['fan8', 'plastic', 'plastic']], pose: [9.8, 12.6, 8.4, 12.3] },
   };
   const m4 = await page.evaluate(async (M4) => {
     VIZ.set(true); const wait = async f => { for (let i = 0; i < 100 && !f(); i++) await new Promise(r => setTimeout(r, 100)); return !!f(); };
