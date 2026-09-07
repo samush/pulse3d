@@ -161,6 +161,7 @@ window.LIGHTS=LIGHTS;
     renderer.outputEncoding=lit?THREE.sRGBEncoding:THREE.LinearEncoding;
     renderer.toneMapping=lit?THREE.ACESFilmicToneMapping:THREE.NoToneMapping; renderer.toneMappingExposure=LIGHTING.exposure;
     renderer.shadowMap.enabled=lit;
+    renderer.setPixelRatio(Math.min(devicePixelRatio,lamps?1.25:2)); // L3 p.4: Retina at 2 is 4x the fragments for every lamp; the illusion does not need it
     scene.environment=lit?environment():null;
     sync();
   };
