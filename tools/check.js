@@ -558,7 +558,7 @@ const { chromium } = require('playwright');
   Object.entries(combos).forEach(([k, ok]) => { if (!ok) problems.push('материалы × свет: комбинация «' + k + '» не сошлась (materials-lighting M0 §3)'); });
   // materials-lighting M0: whatever the load order (GLBs finish after the controls were toggled), every mesh of every swapped group carries the twin of the current mode
   const twinsOk = await page.evaluate(() => { const groups = [finishGroup, tileGroup, boardGroup, wallGroup, wallGroupR, facadeGroup, ceilGroup, ...Object.values(ITEM_GROUPS)], bad = [], glb = Object.values(ITEM_GROUPS).filter(g => g.userData.glbLoaded).length;
-    const pass = (mode) => groups.forEach(g => g.traverse(o => { if (!o.isMesh) return; const b = VIZ.basic.get(o.material) || o.material, want = mode === 'std' ? VIZ.std.get(b) : mode === 'neutral' ? VIZ.neutral.get(b) : b; if (o.material !== want) bad.push(mode + ':' + (g.userData.id || g.name || '?') + ':' + o.material.type); }));
+    const pass = (mode) => groups.forEach(g => g.traverse(o => { if (!o.isMesh) return; const b = VIZ.basic.get(o.material) || o.material, want = mode === 'std' ? VIZ.std.get(b) : mode === 'neutral' ? VIZ.neutral.get(b) : b; if (o.material !== want && !(mode === 'std' && o.material.userData.coating && VIZ.basic.get(o.material) === b)) bad.push(mode + ':' + (g.userData.id || g.name || '?') + ':' + o.material.type); }));
     setView('door'); VIZ.set(true); pass('std'); VIZ.set(false); pass('neutral'); setView('top'); pass('basic'); VIZ.set(true); setView('door'); pass('std'); setView('top'); // leaves materials on for the reload check below
     return { bad: bad.slice(0, 8), n: bad.length, glb }; });
   if (twinsOk.n || twinsOk.glb < 15) problems.push('материалы: меши не в материале текущего режима (' + twinsOk.n + ', GLB ' + twinsOk.glb + '): ' + twinsOk.bad.join(' '));
@@ -568,26 +568,46 @@ const { chromium } = require('playwright');
   // M1a: a coating on one item does not touch its neighbour sharing the concept material; equal coatings share one twin; unknown coating and missing file fall back with a note; finishes and the wall slider follow
   const coat = await page.evaluate(async () => {
     const wait = async f => { for (let i = 0; i < 100 && !f(); i++) await new Promise(r => setTimeout(r, 100)); return !!f(); };
-    await wait(() => ['chair1', 'chair2', 'chair3', 'chair4'].every(id => ITEM_GROUPS[id].userData.glbLoaded));
+    await wait(() => ['kidchair', 'kidchair2', 'sock1'].every(id => ITEM_GROUPS[id].userData.glbLoaded)); // chairs without a default coating (room 4 chairs carry one since M2)
     setView('door'); VIZ.set(true); LIGHTING.set('neutral');
-    const mesh = id => { let m; ITEM_GROUPS[id].traverse(o => { if (!m && o.isMesh && (VIZ.basic.get(o.material) || o.material) === ITEM_MATS.chair) m = o; }); return m; };
-    const a = mesh('chair1'), b = mesh('chair2'), std = VIZ.std.get(ITEM_MATS.chair), out = {}, ready = m => !!(m.map && m.map.image && m.map.image.width > 0);
-    VIZ.coat('chair1', 'cabinetPaint', 'oakFurniture'); out.loaded = await wait(() => ready(a.material));
-    out.own = a.material !== std && a.material.userData.coating === 'oakFurniture' && VIZ.basic.get(a.material) === ITEM_MATS.chair; out.neighbour = b.material === std;
-    out.maps = out.loaded && !!(a.material.normalMap && a.material.roughnessMap) && a.material.roughness === 1 && a.material.map.encoding === THREE.sRGBEncoding && a.material.normalMap.encoding === THREE.LinearEncoding && a.material.color.getHex() === 0xffffff;
-    out.repeat = out.loaded && Math.abs(a.material.map.repeat.x - 1 / 1.83) < 1e-9 && Math.abs(a.material.map.rotation - Math.PI / 2) < 1e-9;
-    VIZ.coat('chair2', 'cabinetPaint', 'oakFurniture'); out.shared = b.material === a.material; VIZ.coat('chair2', 'cabinetPaint', null); out.back = b.material === std;
-    VIZ.coat('chair3', 'cabinetPaint', 'nosuch'); out.unknown = mesh('chair3').material === std && VIZ.loadErrors.includes('coating: nosuch'); VIZ.coat('chair3', 'cabinetPaint', null);
-    COATINGS.brokenTest = { class: 'wood', dir: 'textures/absent', size: [1, 1] }; const n0 = ITEM_GROUPS.chair4.children.length; VIZ.coat('chair4', 'cabinetPaint', 'brokenTest'); const m4 = mesh('chair4').material;
-    out.broken = await wait(() => VIZ.loadErrors.some(s => /textures\/absent\/color/.test(s))) && m4.isMeshStandardMaterial && !m4.map && !m4.normalMap && ITEM_GROUPS.chair4.children.length === n0 && mesh('chair4').material === m4; VIZ.coat('chair4', 'cabinetPaint', null); delete COATINGS.brokenTest;
-    VIZ.coatFinish('board', 'oakFloor'); let bm; boardGroup.traverse(o => { if (!bm && o.isMesh) bm = o.material; }); out.finish = !!bm && bm.userData.coating === 'oakFloor' && await wait(() => ready(bm));
+    const mesh = id => { let m; ITEM_GROUPS[id].traverse(o => { if (!m && o.isMesh && (VIZ.basic.get(o.material) || o.material) === ITEM_MATS.plastic) m = o; }); return m; };
+    const a = mesh('kidchair'), b = mesh('kidchair2'), std = VIZ.std.get(ITEM_MATS.plastic), out = {}, ready = m => !!(m.map && m.map.image && m.map.image.width > 0);
+    VIZ.coat('kidchair', 'plastic', 'oakFurniture'); out.loaded = await wait(() => ready(a.material));
+    out.own = a.material !== std && a.material.userData.coating === 'oakFurniture' && VIZ.basic.get(a.material) === ITEM_MATS.plastic; out.neighbour = b.material === std;
+    out.maps = out.loaded && !!(a.material.normalMap && a.material.roughnessMap) && a.material.roughness === 1 && a.material.map.encoding === THREE.sRGBEncoding && a.material.normalMap.encoding === THREE.LinearEncoding && Math.abs(a.material.color.r - (COATINGS.oakFurniture.tint || [1])[0]) < 1e-6; // albedo map: colour is the tint scale, never the concept grey
+    out.repeat = out.loaded && Math.abs(a.material.map.repeat.x - 1 / 1.83) < 1e-9 && Math.abs(a.material.map.rotation - (COATINGS.oakFurniture.rotation || 0) * Math.PI / 180) < 1e-9;
+    VIZ.coat('kidchair2', 'plastic', 'oakFurniture'); out.shared = b.material === a.material; VIZ.coat('kidchair2', 'plastic', null); out.back = b.material === std;
+    VIZ.coat('kidchair2', 'plastic', 'nosuch'); out.unknown = mesh('kidchair2').material === std && VIZ.loadErrors.includes('coating: nosuch'); VIZ.coat('kidchair2', 'plastic', null);
+    COATINGS.brokenTest = { class: 'wood', dir: 'textures/absent', size: [1, 1] }; const n0 = ITEM_GROUPS.sock1.children.length; VIZ.coat('sock1', 'plastic', 'brokenTest'); const m4 = mesh('sock1').material;
+    out.broken = await wait(() => VIZ.loadErrors.some(s => /textures\/absent\/color/.test(s))) && m4.isMeshStandardMaterial && !m4.map && !m4.normalMap && ITEM_GROUPS.sock1.children.length === n0 && mesh('sock1').material === m4; VIZ.coat('sock1', 'plastic', null); delete COATINGS.brokenTest;
+    const prevBoard = VIZ.finishCoat.board; VIZ.coatFinish('board', 'oakFloor'); let bm; boardGroup.traverse(o => { if (!bm && o.isMesh) bm = o.material; }); out.finish = !!bm && bm.userData.coating === 'oakFloor' && await wait(() => ready(bm));
     VIZ.coatFinish('wall', 'wallPaint'); const set = v => { const sl = document.getElementById('wop'); sl.value = v; sl.dispatchEvent(new Event('input')); }; set(50); const wv = VIZ.variants.get(wallMat).get('wallPaint');
-    out.fade = Math.abs(wv.opacity - 0.5) < 1e-9 && wv.color.getHex() !== 0xffffff && !wv.map && !!wv.normalMap; set(100); VIZ.coatFinish('wall', null); VIZ.coatFinish('board', null);
-    out.neutral = (VIZ.set(false), a.material === VIZ.neutral.get(ITEM_MATS.chair)); VIZ.set(true); // coating never leaks into the neutral mode
-    const cycle = () => { for (let i = 0; i < 3; i++) { VIZ.coat('chair1', 'cabinetPaint', 'oakFurniture'); VIZ.set(false); VIZ.set(true); VIZ.coat('chair1', 'cabinetPaint', null); VIZ.coatFinish('board', 'oakFloor'); VIZ.coatFinish('board', null); renderer.render(scene, camera); } };
+    out.fade = Math.abs(wv.opacity - 0.5) < 1e-9 && wv.color.getHex() !== 0xffffff && !wv.map && !!wv.normalMap; set(100); VIZ.coatFinish('wall', null); VIZ.coatFinish('board', prevBoard);
+    out.neutral = (VIZ.set(false), a.material === VIZ.neutral.get(ITEM_MATS.plastic)); VIZ.set(true); // coating never leaks into the neutral mode
+    const cycle = () => { for (let i = 0; i < 3; i++) { VIZ.coat('kidchair', 'plastic', 'oakFurniture'); VIZ.set(false); VIZ.set(true); VIZ.coat('kidchair', 'plastic', null); VIZ.coatFinish('board', 'oakFloor'); VIZ.coatFinish('board', null); VIZ.coatFinish('board', prevBoard); renderer.render(scene, camera); } };
     const mem = () => JSON.stringify(renderer.info.memory) + '|' + VIZ.textures.size + '|' + [...VIZ.variants.values()].reduce((n, m) => n + m.size, 0);
     cycle(); const m1 = mem(); cycle(); out.stable = mem() === m1; out.mem = m1; LIGHTING.set('lamps'); return out; }); // lamps: the reload check below expects it
   Object.entries(coat).forEach(([k, ok]) => { if (k !== 'mem' && !ok) problems.push('покрытия: «' + k + '» не сошлось (materials-lighting M1a): ' + coat.mem); });
+  // materials-lighting M2: room 4 reference — every listed surface wears its coating, neighbours in other rooms sharing the concept material do not; three fixed views on/off
+  const m2 = await page.evaluate(async () => {
+    setView('door'); VIZ.set(true); LIGHTING.set('neutral'); const wait = async f => { for (let i = 0; i < 100 && !f(); i++) await new Promise(r => setTimeout(r, 100)); return !!f(); };
+    const on = (id, test) => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh && test(o)) set.add(o.material.userData.coating || 'class'); }); return [...set].sort().join(); };
+    const key = k => o => (VIZ.basic.get(o.material) || o.material) === ITEM_MATS[k], glb = n => o => o.userData.glbMat === n;
+    const out = { fronts: on('kitchen', key('base')) === 'cabinetPaint' && on('kitchen', key('upper')) === 'cabinetPaint' && on('console', key('base')) === 'cabinetPaint',
+      stone: on('kitchen', key('top')) === 'stoneCounter' && on('kitchen', key('wpanel')) === 'stoneSplash', carcass: on('kitchen', key('hdark')) === 'class' && on('kitchen', key('handle')) === 'class',
+      oak: on('table', key('table')) === 'oakFurniture' && ['chair1', 'chair6'].every(id => on(id, glb('paint')) === 'oakFurniture'), pads: on('chair1', glb('cushion')) === 'sofaWeave',
+      sofa: ['upholstery', 'piping', 'cushion'].every(n => on('sofa', glb(n)) === 'sofaWeave'), lamp: on('lamp', key('plastic')) === 'plastic',
+      other: on('wardrobe', key('door')) === 'class' && on('kidsofa', glb('upholstery')) === 'class' }; // room 5 doors and the kids sofa share concept materials with room 4 but stay unassigned
+    let bm, tm, pm; boardGroup.traverse(o => { if (!bm && o.isMesh) bm = o.material; }); tileGroup.traverse(o => { if (!tm && o.isMesh && (VIZ.basic.get(o.material) || o.material) === finishMats.tile) tm = o.material; }); [finishGroup, wallGroup, wallGroupR].forEach(g => g.traverse(o => { if (!pm && o.isMesh && (VIZ.basic.get(o.material) || o.material) === finishMats.wallPaint) pm = o.material; }));
+    out.finishBoard = bm.userData.coating === 'oakFloor'; out.finishTile = !!tm && tm.userData.coating === 'tile60120' && tm.roughness === 0.35 && !tm.roughnessMap; out.finishWall = !!pm && pm.userData.coating === 'wallPaint' && !pm.roughnessMap && !!pm.normalMap;
+    out.loaded = await wait(() => [bm, tm].every(m => m.map && m.map.image && m.map.image.width > 0));
+    let sp; ITEM_GROUPS.kitchen.traverse(o => { if (!sp && o.isMesh && (VIZ.basic.get(o.material) || o.material) === ITEM_MATS.wpanel) sp = o; }); const sb = new THREE.Box3().setFromObject(sp); out.splash = sb.max.x - ITEM_GROUPS.kitchen.userData.pos[0] > 0.019; // proud of the 15 mm wall finish
+    return out; });
+  Object.entries(m2).forEach(([k, ok]) => { if (!ok) problems.push('кухня 4: «' + k + '» не сошлось (materials-lighting M2, kitchen.md)'); });
+  await page.evaluate(() => { document.getElementById('avatarOn').checked = false; document.getElementById('avatarOn').dispatchEvent(new Event('change')); document.getElementById('ceil').checked = true; document.getElementById('ceil').dispatchEvent(new Event('change')); });
+  for (const [k, v] of Object.entries({ A: [12.6, 1.6, 5.6, 8.6, 1.2, 2.6], B: [9.8, 1.5, 3.0, 12.6, 0.8, 6.0], C: [11.0, 1.4, 3.0, 8.6, 0.95, 3.4] })) for (const on of [true, false]) {
+    await page.evaluate(([v, on]) => { VIZ.set(on); controls.setPose(...v); }, [v, on]); await page.waitForTimeout(on ? 1500 : 400); await page.screenshot({ path: path.join(outDir, 'm2-' + k + (on ? '-on' : '-off') + '.png') }); }
+  await page.evaluate(() => { document.getElementById('avatarOn').checked = true; document.getElementById('avatarOn').dispatchEvent(new Event('change')); document.getElementById('ceil').checked = false; document.getElementById('ceil').dispatchEvent(new Event('change')); VIZ.set(true); LIGHTING.set('lamps'); setView('top'); });
   await page.reload(); await page.waitForTimeout(2500);
   const vizKept = await page.evaluate(() => { const ok = VIZ.on && document.getElementById('mats').checked && LIGHTING.scheme === 'lamps' && document.getElementById('light').value === 'lamps'; VIZ.set(false); LIGHTING.set('neutral'); return ok; });
   if (!viz.std) problems.push('визуализация: материалы не PBR');

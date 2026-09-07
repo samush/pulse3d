@@ -62,9 +62,10 @@ const PHYS={}; // id → boxes
   };
   const lathe=(g,pts,cx,cz,m,seg=32)=>{ const mesh=new THREE.Mesh(new THREE.LatheGeometry(pts.map(([r,y])=>new THREE.Vector2(r,y)),seg).translate(cx,0,cz),m); g.add(mesh); return mesh; }; // profile [[r,y]…], y rising → faces outward; a profile that comes back down inside makes a closed shell
   const KN=1.915; // north wall of kitchen-living room 4
+  const CHAIR4={paint:'oakFurniture',cushion:'sofaWeave'}; // M2: dining chairs — oak frame (GLB material `paint`), seat pad in the sofa fabric
   const ITEMS=[
     // ---- kitchen-living room 4 (sketch .local/R1.jpg) ----
-    {id:'kitchen',type:'кухонный блок',room:4,layer:'kitchen',pos:[8.23,KN],rot:0,size:[0.68,2.69,3.59],fixed:'wall',
+    {id:'kitchen',type:'кухонный блок',room:4,layer:'kitchen',pos:[8.23,KN],rot:0,size:[0.68,2.69,3.59],fixed:'wall',coat:{base:'cabinetPaint',upper:'cabinetPaint',top:'stoneCounter',wpanel:'stoneSplash'}, // M2: painted fronts, stone worktop and splashback; carcass, plinth, hob and metal stay class twins
      build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.66,0,2.69,0,0.66); b.phys(0.66,0.68,0.3,2,0.02,0.64); b.phys(0,0.6,0.1,0.87,0.66,2.99); b.phys(0,0.62,0.87,0.91,0.66,2.99); b.phys(0.06,0.56,0.91,0.925,1.1,1.7); b.phys(0.1,0.5,0.905,0.93,2.2,2.65); b.phys(0.065,0.095,0.91,1.21,2.405,2.435); b.phys(0,0.36,1.45,2.69,0.66,2.99); b.phys(0,0.6,0,2.69,2.99,3.59); b.phys(0.6,0.62,0.8,1.4,3.04,3.54); b.phys(0.6,0.615,0.79,0.8,0.9,1.05); b.phys(0.6,0.615,0.79,0.8,1.5,1.65); b.phys(0.6,0.615,0.79,0.8,2.1,2.25); b.phys(0.6,0.615,0.79,0.8,2.7,2.85); b.phys(0.6,0.615,1.5,1.52,3.1,3.48); b.phys(0.13,0.27,0.925,0.929,1.18,1.32); b.phys(0.35,0.49,0.925,0.929,1.18,1.32); b.phys(0.13,0.27,0.925,0.929,1.48,1.62); b.phys(0.35,0.49,0.925,0.929,1.48,1.62);
        // fronts face +x; carcasses are 20 mm behind the fronts so the 3 mm gaps read as dark lines; plinths recessed 50 mm
        const gap=0.003, front=(y0,y1,z0,z1,m)=>b.round(0.58,0.60,y0+gap/2,y1-gap/2,z0+gap/2,z1-gap/2,0.001,m);
@@ -80,7 +81,7 @@ const PHYS={}; // id → boxes
        b(0.10,0.50,0.72,0.73,2.20,2.65,mat.frame); [[0.10,0.11],[0.49,0.50]].forEach(([x0,x1])=>b(x0,x1,0.72,0.905,2.20,2.65,mat.frame)); [[2.20,2.21],[2.64,2.65]].forEach(([z0,z1])=>b(0.10,0.50,0.72,0.905,z0,z1,mat.frame)); // undermount bowl
        const path=new THREE.CatmullRomCurve3([new THREE.Vector3(0.08,0.91,2.42),new THREE.Vector3(0.08,1.18,2.42),new THREE.Vector3(0.12,1.23,2.42),new THREE.Vector3(0.22,1.20,2.42),new THREE.Vector3(0.25,1.12,2.42)]);
        g.add(new THREE.Mesh(new THREE.TubeGeometry(path,16,0.012,10),mat.handle)); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.02,16).translate(0.08,0.92,2.42),mat.handle)); // mixer and its base
-       b(0,0.012,0.91,1.45,0.66,2.99,mat.wpanel);                                                                   // splashback
+       b(0,0.02,0.91,1.45,0.66,2.99,mat.wpanel);                                                                    // splashback, 20 mm: proud of the wall finish panel (15 mm off the wall face, app.js)
        b.round(0.06,0.56,0.908,0.918,1.1,1.7,0.001,mat.screen); [[0.2,1.25],[0.42,1.25],[0.2,1.55],[0.42,1.55]].forEach(([x,z])=>{ const r=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.002,24),mat.ring); r.position.set(x,0.919,z); g.add(r); }); // glass hob and burner marks
        b(0,0.34,1.45,2.69,0.66,2.99,mat.hdark); for(let i=0;i<4;i++){ const z0=0.66+i*2.33/4, z1=z0+2.33/4; b.round(0.34,0.36,1.45+gap/2,2.69-gap/2,z0+gap/2,z1-gap/2,0.001,mat.upper); b.handle(0.36,1.50,(z0+z1)/2,0.16,'z','x'); } // wall units, 4 doors
        b(0.34,0.50,1.45,1.50,1.10,1.70,mat.frame); b.round(0.50,0.51,1.45,1.50,1.10,1.70,0.001,mat.dark);              // hood under the wall units over the hob
@@ -90,19 +91,19 @@ const PHYS={}; // id → boxes
        front(1.4,2.69,2.99,3.59,mat.base); b.handle(0.60,1.55,3.29,0.3,'y','x');
        function rrectXZ(x0,x1,z0,z1,r){ const w=x1-x0,d=z1-z0; const sh=new THREE.Shape(); sh.moveTo(x0+r,z0); sh.lineTo(x1-r,z0); sh.absarc(x1-r,z0+r,r,-Math.PI/2,0,false); sh.lineTo(x1,z1-r); sh.absarc(x1-r,z1-r,r,0,Math.PI/2,false); sh.lineTo(x0+r,z1); sh.absarc(x0+r,z1-r,r,Math.PI/2,Math.PI,false); sh.lineTo(x0,z0+r); sh.absarc(x0+r,z0+r,r,Math.PI,Math.PI*1.5,false); return sh; }
      }},
-    {id:'table',type:'стол на 6 мест',room:4,layer:'kitchen',pos:[9.85,KN+0.04],rot:0,size:[0.8,0.76,1.8],
+    {id:'table',type:'стол на 6 мест',room:4,layer:'kitchen',pos:[9.85,KN+0.04],rot:0,size:[0.8,0.76,1.8],coat:{table:'oakFurniture'},
      build(b,g){ b.phys(0,0.8,0.72,0.76,0,1.8); b.phys(0.05,0.75,0.64,0.72,0.05,1.75); [[0.05,0.05],[0.7,0.05],[0.05,1.7],[0.7,1.7]].forEach(([x,z])=>b.phys(x,x+0.05,0,0.72,z,z+0.05)); // proxy = the old block AABBs (top, apron, legs)
        const r=0.004, sh=new THREE.Shape([[r,r],[0.8-r,r],[0.8-r,1.8-r],[r,1.8-r]].map(([x,y])=>new THREE.Vector2(x,y))); // tabletop 0.04 with a 4 mm bevel all round (UVs in metres from the shape)
        const top=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.04-2*r,bevelThickness:r,bevelSize:r,bevelSegments:2}).rotateX(Math.PI/2).translate(0,0.76-r,0),mat.table); g.add(top);
        [[0.08,0.10,0.10,1.70],[0.70,0.72,0.10,1.70],[0.10,0.70,0.08,0.10],[0.10,0.70,1.70,1.72]].forEach(([x0,x1,z0,z1])=>b(x0,x1,0.65,0.72,z0,z1,mat.table)); // apron rails 20×70, 30 mm in from the leg faces
        [[0.075,0.075],[0.725,0.075],[0.075,1.725],[0.725,1.725]].forEach(([x,z])=>{ const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.05/Math.SQRT2,0.035/Math.SQRT2,0.72,4).rotateY(Math.PI/4).translate(x,0.36,z),mat.table); g.add(leg); }); }}, // square legs tapering 50→35 mm
-    {id:'chair1',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:90,build:chair(false)},
-    {id:'chair2',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:90,build:chair(false)},
-    {id:'chair3',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:90,build:chair(false)},
-    {id:'chair4',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:-90,build:chair(true)},
-    {id:'chair5',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:-90,build:chair(true)},
-    {id:'chair6',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',glb:'models/chair.glb',glbRot:-90,build:chair(true)},
-    {id:'lamp',type:'настенный светильник над столом',room:4,layer:'kitchen',pos:[10.12,KN],rot:0,size:[0.26,1.94,0.63],fixed:'wall', // size by the shade
+    {id:'chair1',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:90,build:chair(false)},
+    {id:'chair2',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:90,build:chair(false)},
+    {id:'chair3',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:90,build:chair(false)},
+    {id:'chair4',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:-90,build:chair(true)},
+    {id:'chair5',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:-90,build:chair(true)},
+    {id:'chair6',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:-90,build:chair(true)},
+    {id:'lamp',type:'настенный светильник над столом',room:4,layer:'kitchen',pos:[10.12,KN],rot:0,size:[0.26,1.94,0.63],fixed:'wall',coat:{plastic:'plastic'}, // size by the shade
      build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0.11,0.15,1.9,1.94,0,0.5); b.phys(0,0.26,1.74,1.9,0.37,0.63);
        b.round(0.08,0.18,1.86,1.94,0,0.012,0.002,mat.frame); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.49,10).rotateX(Math.PI/2).translate(0.13,1.92,0.012+0.245),mat.frame)); // wall plate and Ø12 arm
        g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.004,0.004,0.03,8).translate(0.13,1.905,0.5),mat.frame)); // drop to the shade
@@ -133,11 +134,11 @@ const PHYS={}; // id → boxes
        b.round(0,1.3,1.0,1.75,0.008,0.028,0.002,mat.dark); b(0.008,1.292,1.008,1.742,0.028,0.031,mat.screen); // slim panel with an 8 mm bezel, screen 3 mm proud
        b(0.35,0.95,1.0,1.012,0.02,0.034,mat.frame); b(0.45,0.85,1.2,1.5,0,0.008,mat.frame); // bottom strip and wall bracket
      }},
-    {id:'console',type:'подвесная консоль под ТВ',room:4,layer:'kitchen',pos:[11.9,KN],rot:0,size:[1.2,0.75,0.38],fixed:'wall',build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,1.2,0.45,0.75,0,0.38);
+    {id:'console',type:'подвесная консоль под ТВ',room:4,layer:'kitchen',pos:[11.9,KN],rot:0,size:[1.2,0.75,0.38],fixed:'wall',coat:{base:'cabinetPaint'},build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,1.2,0.45,0.75,0,0.38);
        b(0,1.2,0.45,0.75,0,0.36,mat.hdark); b.round(0,1.2,0.73,0.75,0,0.38,0.002,mat.base); // carcass and 20 mm top with a chamfer
        [[0.0015,0.5985],[0.6015,1.1985]].forEach(([x0,x1])=>b.round(x0,x1,0.4515,0.7285,0.36,0.38,0.001,mat.base)); // two push-to-open fronts, 3 mm gaps
      }},
-    {id:'sofa',type:'диван 2 м',room:4,layer:'kitchen',pos:[11.35,6.287-0.9],rot:0,size:[2.0,0.85,0.88],glb:'models/sofa.glb',
+    {id:'sofa',type:'диван 2 м',room:4,layer:'kitchen',pos:[11.35,6.287-0.9],rot:0,size:[2.0,0.85,0.88],glb:'models/sofa.glb',coat:{upholstery:'sofaWeave',piping:'sofaWeave',cushion:'sofaWeave'},
      build(b){ b.phys(0,2,0.1,0.85,0,0.88); b(0,2,0.1,0.42,0,0.88,mat.sofa); b(0,2,0.42,0.85,0.63,0.88,mat.sofa); b(0,0.15,0.42,0.6,0,0.88,mat.sofa); b(1.85,2,0.42,0.6,0,0.88,mat.sofa);
        [[0.17,0.98],[1.02,1.83]].forEach(([x0,x1])=>{ b(x0,x1,0.42,0.52,0.05,0.62,mat.cushion); b(x0,x1,0.52,0.82,0.55,0.66,mat.cushion); }); }}, // seat and back cushions with a seam in the middle
     // ---- hallway 5 (sketches .local/R2_*) ----
