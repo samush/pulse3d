@@ -643,7 +643,7 @@ const { chromium } = require('playwright');
   const l1 = await page.evaluate(() => {
     setView('door'); VIZ.set(true); LIGHTING.set('lamps'); const out = {}, L = LIGHTING.lights, by = n => L.find(l => l.name === n);
     out.catalogue = L.length === LIGHTS.length && LIGHTS.every(s => by(s.id) && by(s.id).parent === ITEM_GROUPS[s.item]) && L.every(l => !l.isSpotLight || l.target.parent === l.parent);
-    out.on = L.every(l => l.intensity > 0) && sun.intensity === 0 && !sun.castShadow && L.filter(l => l.castShadow).length === 3;
+    out.on = L.every(l => l.intensity > 0) && sun.intensity === 0 && !sun.castShadow && L.filter(l => l.castShadow).length === LIGHTS.filter(s => s.shadow).length;
     out.env = scene.environment === LIGHTING.environment('lamps') && LIGHTING.environment('neutral') !== LIGHTING.environment('lamps');
     const w = o => { scene.updateMatrixWorld(true); return o.getWorldPosition(new THREE.Vector3()); };
     const s3 = by('spot3'), p0 = w(s3), t0 = w(s3.target), pose = ITEM_GROUPS.spot3.userData.pos.slice();
@@ -655,6 +655,9 @@ const { chromium } = require('playwright');
     out.ledSplit = !LIGHTING.emitters('g4.main').includes(ITEM_MATS.led) && LIGHTING.emitters('g9.mirror').includes(ITEM_MATS.mirrorLed);
     LIGHTING.group('g4.sofa', true); out.back = by('ceil4_8').intensity > 0 && by('ceil4_8').castShadow && led('g4.sofa').every(m => m.emissiveIntensity === 1);
     LIGHTING.set('neutral'); out.neutral = L.every(l => l.intensity === 0 && !l.castShadow) && sun.castShadow && led('g4.sofa').every(m => m.emissiveIntensity === 1); LIGHTING.set('lamps');
+    // L2: every group is its own switch — off dims exactly its sources and diffusers, nothing shared with another group
+    out.groups = Object.keys(LIGHTING.groups).every(g => { LIGHTING.group(g, false); const mine = L.filter(l => l.userData.group === g), rest = L.filter(l => l.userData.group !== g), others = Object.keys(LIGHTING.groups).filter(o => o !== g).flatMap(led);
+      const ok = mine.length > 0 && mine.every(l => l.intensity === 0 && !l.castShadow) && rest.every(l => l.intensity > 0) && led(g).length > 0 && led(g).every(m => m.emissiveIntensity === 0) && others.every(m => m.emissiveIntensity === 1) && !led(g).some(m => others.includes(m)); LIGHTING.group(g, true); return ok; });
     // control spot in bath 9 pointing east at the door: the probe behind the wall (z 8.2) stays dark, the probe in the doorway (z 8.9) is lit
     Object.keys(LIGHTING.groups).forEach(g => LIGHTING.group(g, false));
     const ctl = new THREE.SpotLight(0xffffff, 3, 4, 0.9, 0.2); ctl.position.set(9.5, 1.5, 8.9); ctl.target.position.set(10.5, 1.2, 8.9); ctl.castShadow = true; ctl.shadow.mapSize.set(1024, 1024); ctl.shadow.camera.near = 0.15; ctl.shadow.camera.far = 4; scene.add(ctl); scene.add(ctl.target);
@@ -667,10 +670,11 @@ const { chromium } = require('playwright');
     out.wall = { lit: +lit.toFixed(3), dark: +dark.toFixed(3), ok: lit > 0.25 && lit > 3 * dark };
     LIGHTING.set('neutral'); VIZ.set(false); setView('top'); return out;
   });
-  ['catalogue', 'on', 'env', 'pose', 'group', 'ledSplit', 'back', 'neutral'].forEach(k => { if (!l1[k]) problems.push('свет: ' + k + ' — не по materials-lighting L1 (§6, lighting.js)'); });
+  ['catalogue', 'on', 'env', 'pose', 'group', 'ledSplit', 'back', 'neutral', 'groups'].forEach(k => { if (!l1[k]) problems.push('свет: ' + k + ' — не по materials-lighting L1 (§6, lighting.js)'); });
   if (!l1.wall.ok) problems.push('свет: стена не перекрывает источник (за стеной ' + l1.wall.dark + ', в проёме ' + l1.wall.lit + ')');
   // L1 frames: kitchen from the door, from the work zone to the sofa, the work zone itself, the evening scene (only table + sofa), bath 9 in front of the mirror
-  for (const [name, x, z, tx, tz, off] of [['l1-kitchen-door', 12.6, 5.6, 8.6, 2.6], ['l1-kitchen-sofa', 9.0, 3.0, 12.5, 5.8], ['l1-kitchen-work', 10.8, 4.9, 8.6, 3.3], ['l1-kitchen-evening', 12.6, 5.6, 8.6, 2.6, 'g4.work,g4.splash,g4.main'], ['l1-bath9-front', 9.3, 9.45, 9.27, 8.2]]) {
+  for (const [name, x, z, tx, tz, off] of [['l1-kitchen-door', 12.6, 5.6, 8.6, 2.6], ['l1-kitchen-sofa', 9.0, 3.0, 12.5, 5.8], ['l1-kitchen-work', 10.8, 4.9, 8.6, 3.3], ['l1-kitchen-evening', 12.6, 5.6, 8.6, 2.6, 'g4.work,g4.splash,g4.main'], ['l1-bath9-front', 9.3, 9.45, 9.27, 8.2],
+    ['l2-kid1-door', 4.9, 4.5, 2.4, 2.6], ['l2-kid1-desk', 3.0, 2.6, 2.0, 4.8], ['l2-kid1-evening', 1.5, 4.5, 4.9, 2.9, 'g1.main,g1.desk,g1.track']]) { // L2 frames: room from the door, desk/gallery wall, evening (bed zone only)
     await page.evaluate(([x, z, tx, tz, off]) => { VIZ.set(true); LIGHTING.set('lamps'); document.getElementById('avatarOn').checked = false; const cb = document.getElementById('ceil'); cb.checked = true; cb.dispatchEvent(new Event('change'));
       Object.keys(LIGHTING.groups).forEach(g => LIGHTING.group(g, !(off || '').split(',').includes(g))); controls.setFPV(x, z, Math.atan2(tx - x, tz - z)); }, [x, z, tx, tz, off]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });

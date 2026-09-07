@@ -9,7 +9,7 @@ const LIGHTING={scheme:'neutral',lit:false,exposure:0.75,schemes:['neutral','lam
 window.LIGHTING=LIGHTING;
 const hemi=new THREE.HemisphereLight(0xffffff,0xa8a49c,1.0); scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffffff,0.55); sun.position.set(-6,14,-8); scene.add(sun);
-// Source catalogue (L1: rooms 4 and 9; L2 adds the rest). World coordinates as in lighting-plan.md §3; `to` omitted = straight down.
+// Source catalogue (L1: rooms 4 and 9; L2: the rest). World coordinates as in lighting-plan.md §3; `to` omitted = straight down.
 // `w` is the relative weight of the plan, `k` colour temperature; `shadow` marks the 1024 shadow-map sources of the first reference.
 const LIGHTS=[
   {id:'ceil4_1',item:'ceil4_1',group:'g4.work',type:'spot',at:[9.25,2.68,2.45],to:[8.6,0.9,2.45],k:3000,w:1.0},
@@ -28,6 +28,14 @@ const LIGHTS=[
   {id:'spot2',item:'spot2',group:'g9.main',type:'spot',at:[9.52,2.68,9.44],k:3000,w:0.8},
   {id:'spot3',item:'spot3',group:'g9.main',type:'spot',at:[9.32,2.68,8.69],to:[9.32,1.0,8.35],k:3000,w:1.0,shadow:true},
   {id:'bathmirror',item:'bathmirror',group:'g9.mirror',type:'point',at:[9.275,1.70,8.19],k:3000,w:0.4,distance:1.5},
+  // room 1 (L2-1): kidlight stays the general light; no source above the loft platform (a lying child's eye is at y 2.1-2.3)
+  {id:'kidlight',item:'kidlight',group:'g1.main',type:'spot',at:[2.70,2.66,3.50],k:3000,w:1.0,angle:0.8,shadow:true},
+  {id:'ceil1_1',item:'ceil1_1',group:'g1.desk',type:'spot',at:[1.50,2.68,4.45],k:3000,w:0.8},
+  {id:'tracka',item:'track',group:'g1.track',type:'spot',at:[2.53,2.55,4.25],to:[2.53,1.6,4.86],k:3000,w:0.6,angle:0.35,penumbra:0.6,distance:4},
+  {id:'trackb',item:'track',group:'g1.track',type:'spot',at:[3.53,2.55,4.25],to:[3.53,1.6,4.86],k:3000,w:0.6,angle:0.35,penumbra:0.6,distance:4},
+  {id:'bra1',item:'bra1',group:'g1.sofa',type:'spot',at:[5.28,1.20,2.87],to:[4.9,0.5,2.9],k:2700,w:0.5,angle:0.6,distance:4},
+  {id:'bra2',item:'bra2',group:'g1.read',type:'spot',at:[5.36,2.27,2.47],to:[4.9,1.9,2.5],k:2700,w:0.4,angle:0.6,distance:4},
+  {id:'kidbed',item:'kidbed',group:'g1.bed',type:'point',at:[4.255,1.69,2.88],k:3000,w:0.3,distance:2},
 ];
 window.LIGHTS=LIGHTS;
 (function(){
