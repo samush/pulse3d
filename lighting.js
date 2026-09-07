@@ -71,6 +71,16 @@ const LIGHTS=[
   {id:'led6a',item:'led6',group:'g6.rail',type:'point',at:[6.14,1.98,2.30],k:4000,w:0.3,distance:1.5},
   {id:'led6b',item:'led6',group:'g6.rail',type:'point',at:[6.14,1.98,3.05],k:4000,w:0.3,distance:1.5},
   {id:'ceil7_1',item:'ceil7_1',group:'g7.main',type:'spot',at:[7.50,2.68,3.45],k:4000,w:1.0,angle:0.8},
+  // rooms 8 and 10 (L2-2): existing schemes as they are — bath 8 spots + cove/niche LED, balcony linear light + desk LED (4000 K)
+  {id:'spot4',item:'spot4',group:'g8.main',type:'spot',at:[8.66,2.68,12.79],k:3000,w:1.0},
+  {id:'spot5',item:'spot5',group:'g8.main',type:'spot',at:[9.45,2.68,12.60],k:3000,w:1.0,shadow:true},
+  {id:'spot6',item:'spot6',group:'g8.main',type:'spot',at:[9.52,2.68,11.95],k:3000,w:0.8},
+  {id:'cove8a',item:'cove8',group:'g8.cove',type:'point',at:[9.04,2.62,11.60],k:3000,w:0.3,distance:1.5},
+  {id:'cove8b',item:'cove8',group:'g8.cove',type:'point',at:[9.86,2.62,11.90],k:3000,w:0.3,distance:1.5},
+  {id:'niche8',item:'niche8',group:'g8.cove',type:'point',at:[8.60,1.32,13.02],k:3000,w:0.2,distance:1},
+  {id:'blighta',item:'blight',group:'g10.main',type:'spot',at:[14.50,2.68,3.45],k:4000,w:0.8,angle:0.8},
+  {id:'blightb',item:'blight',group:'g10.main',type:'spot',at:[14.50,2.68,4.55],k:4000,w:0.8,angle:0.8},
+  {id:'led7',item:'led7',group:'g10.desk',type:'point',at:[14.50,1.98,5.45],k:4000,w:0.3,distance:1.5},
 ];
 window.LIGHTS=LIGHTS;
 (function(){
