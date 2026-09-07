@@ -571,9 +571,9 @@ const { chromium } = require('playwright');
     await wait(() => ['kidchair', 'kidchair2', 'sock1'].every(id => ITEM_GROUPS[id].userData.glbLoaded)); // chairs without a default coating (room 4 chairs carry one since M2)
     setView('door'); VIZ.set(true); LIGHTING.set('neutral');
     const mesh = id => { let m; ITEM_GROUPS[id].traverse(o => { if (!m && o.isMesh && (VIZ.basic.get(o.material) || o.material) === ITEM_MATS.plastic) m = o; }); return m; };
-    const a = mesh('kidchair'), b = mesh('kidchair2'), std = VIZ.std.get(ITEM_MATS.plastic), out = {}, ready = m => !!(m.map && m.map.image && m.map.image.width > 0);
+    const a = mesh('kidchair'), b = mesh('kidchair2'), b0 = b.material, std = VIZ.std.get(ITEM_MATS.plastic), out = {}, ready = m => !!(m.map && m.map.image && m.map.image.width > 0);
     VIZ.coat('kidchair', 'plastic', 'oakFurniture'); out.loaded = await wait(() => ready(a.material));
-    out.own = a.material !== std && a.material.userData.coating === 'oakFurniture' && VIZ.basic.get(a.material) === ITEM_MATS.plastic; out.neighbour = b.material === std;
+    out.own = a.material !== std && a.material.userData.coating === 'oakFurniture' && VIZ.basic.get(a.material) === ITEM_MATS.plastic; out.neighbour = b.material === b0; // b0: the twin the item wears by its own coat (M4-1 gives the chairs `plastic`)
     out.maps = out.loaded && !!(a.material.normalMap && a.material.roughnessMap) && a.material.roughness === 1 && a.material.map.encoding === THREE.sRGBEncoding && a.material.normalMap.encoding === THREE.LinearEncoding && Math.abs(a.material.color.r - (COATINGS.oakFurniture.tint || [1])[0]) < 1e-6; // albedo map: colour is the tint scale, never the concept grey
     out.repeat = out.loaded && Math.abs(a.material.map.repeat.x - 1 / 1.83) < 1e-9 && Math.abs(a.material.map.rotation - (COATINGS.oakFurniture.rotation || 0) * Math.PI / 180) < 1e-9;
     VIZ.coat('kidchair2', 'plastic', 'oakFurniture'); out.shared = b.material === a.material; VIZ.coat('kidchair2', 'plastic', null); out.back = b.material === std;
@@ -597,7 +597,7 @@ const { chromium } = require('playwright');
       stone: on('kitchen', key('top')) === 'stoneCounter' && on('kitchen', key('wpanel')) === 'stoneSplash', carcass: on('kitchen', key('hdark')) === 'class' && on('kitchen', key('handle')) === 'class',
       oak: on('table', key('table')) === 'oakFurniture' && ['chair1', 'chair6'].every(id => on(id, glb('paint')) === 'oakFurniture'), pads: on('chair1', glb('cushion')) === 'sofaWeave',
       sofa: ['upholstery', 'piping', 'cushion'].every(n => on('sofa', glb(n)) === 'sofaWeave'), lamp: on('lamp', key('plastic')) === 'plastic',
-      other: on('wardrobe', key('door')) === 'class' && on('kidsofa', glb('upholstery')) === 'class' }; // room 5 doors and the kids sofa share concept materials with room 4 but stay unassigned
+      other: ITEMS.filter(it => !it.coat && ITEM_GROUPS[it.id]).every(it => on(it.id, () => true) === 'class') }; // items without a coat of their own share concept materials with room 4 but stay class twins
     let bm, tm, pm; boardGroup.traverse(o => { if (!bm && o.isMesh) bm = o.material; }); tileGroup.traverse(o => { if (!tm && o.isMesh && (VIZ.basic.get(o.material) || o.material) === finishMats.tile) tm = o.material; }); [finishGroup, wallGroup, wallGroupR].forEach(g => g.traverse(o => { if (!pm && o.isMesh && (VIZ.basic.get(o.material) || o.material) === finishMats.wallPaint) pm = o.material; }));
     out.finishBoard = bm.userData.coating === 'oakFloor'; out.finishTile = !!tm && tm.userData.coating === 'tile60120' && tm.roughness === 0.35 && !tm.roughnessMap; out.finishWall = !!pm && pm.userData.coating === 'wallPaint' && !pm.roughnessMap && !!pm.normalMap;
     out.loaded = await wait(() => [bm, tm].every(m => m.map && m.map.image && m.map.image.width > 0));
@@ -607,6 +607,24 @@ const { chromium } = require('playwright');
   await page.evaluate(() => { document.getElementById('avatarOn').checked = false; document.getElementById('avatarOn').dispatchEvent(new Event('change')); document.getElementById('ceil').checked = true; document.getElementById('ceil').dispatchEvent(new Event('change')); });
   for (const [k, v] of Object.entries({ A: [12.6, 1.6, 5.6, 8.6, 1.2, 2.6], B: [9.8, 1.5, 3.0, 12.6, 0.8, 6.0], C: [11.0, 1.4, 3.0, 8.6, 0.95, 3.4] })) for (const on of [true, false]) {
     await page.evaluate(([v, on]) => { VIZ.set(on); controls.setPose(...v); }, [v, on]); await page.waitForTimeout(on ? 1500 : 400); await page.screenshot({ path: path.join(outDir, 'm2-' + k + (on ? '-on' : '-off') + '.png') }); }
+  // materials-lighting M4-1: rooms 1 and 2 — casework painted, bedding linen, chair pads and the kids sofa in the sofa weave, rug pile, tulle linen, gym wall oak, plastic on lamps/sockets; metal, LED and chrome stay class
+  const m41 = await page.evaluate(async () => {
+    ['kidchair', 'kidchair2', 'sock1'].forEach(id => { ITEM_GROUPS[id].userData.coat = null; }); VIZ.set(false); VIZ.set(true); LIGHTING.set('neutral'); const wait = async f => { for (let i = 0; i < 100 && !f(); i++) await new Promise(r => setTimeout(r, 100)); return !!f(); }; // drop the M1a overrides, back to the ITEMS coats
+    const loaded = await wait(() => ['kidchair', 'kidchair2', 'windowseat1', 'windowseat2', 'kidsofa'].every(id => ITEM_GROUPS[id].userData.glbLoaded));
+    const on = (id, test) => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh && test(o)) set.add(o.material.userData.coating || 'class'); }); return [...set].sort().join(); };
+    const key = k => o => (VIZ.basic.get(o.material) || o.material) === ITEM_MATS[k], glb = n => o => o.userData.glbMat === n, cab = o => ['kbody', 'body', 'wdoor', 'wpanel'].some(k => key(k)(o));
+    let tulle; ITEM_GROUPS.curtain.traverse(o => { if (!tulle && o.isMesh && (VIZ.basic.get(o.material) || o.material) === ITEM_MATS.tulle) tulle = o.material; });
+    return { loaded,
+      casework: ['kidbed', 'kiddesk', 'kidped', 'kidshelf', 'kidbed2', 'tower2n', 'deskshelf2'].every(id => on(id, cab) === 'cabinetPaint') && on('windowseat1', glb('wdoor')) === 'cabinetPaint' && on('windowseat2', glb('paint')) === 'cabinetPaint',
+      bedding: ['kmat', 'pillow', 'cushion'].every(k => on('kidbed', key(k)) === 'curtainLinen') && on('kidbed2', key('kmat')) === 'curtainLinen' && on('windowseat2', glb('kmat')) === 'curtainLinen' && on('windowseat1', glb('pillow')) === 'curtainLinen',
+      chairs: ['kidchair', 'kidchair2'].every(id => on(id, glb('cushion')) === 'sofaWeave' && on(id, glb('plastic')) === 'plastic' && on(id, glb('chrome')) === 'class'),
+      sofa: ['upholstery', 'piping', 'cushion'].every(n => on('kidsofa', glb(n)) === 'sofaWeave'), rug: on('kidrug', key('wpanel')) === 'rugPile',
+      tulle: on('curtain', key('tulle')) === 'curtainLinen' && !!tulle && tulle.transparent && tulle.opacity < 0.5, gym: on('gymwall', key('table')) === 'oakFurniture' && on('gymwall', key('frame')) === 'class',
+      plastic: ['bra1', 'kidlight2', 'sock1', 'sock9'].every(id => on(id, key('plastic')) === 'plastic') && on('bra1', key('led')) === 'class' && on('kidbed', key('kleg')) === 'class' };
+  });
+  Object.entries(m41).forEach(([k, ok]) => { if (!ok) problems.push('комнаты 1–2: «' + k + '» не сошлось (materials-lighting M4-1)'); });
+  for (const [name, x, z, th] of [['room1-door', 4.5, 4.55, -Math.PI / 2 + 0.45], ['room1-gallery', 1.9, 3.0, Math.PI * 0.3], ['room1-bed', 4.95, 3.3, -Math.PI / 2 - 0.15], ['room2-door', 11.9, 7.35, Math.PI / 2 + 0.15], ['room2-desk', 12.0, 8.8, Math.PI * 0.75], ['room2-gym', 14.0, 8.1, -Math.PI * 0.75]]) for (const on of [true, false]) {
+    await page.evaluate(([x, z, th, on]) => { VIZ.set(on); controls.setFPV(x, z, th); }, [x, z, th, on]); await page.waitForTimeout(on ? 1500 : 400); await page.screenshot({ path: path.join(outDir, 'm4-1-' + name + (on ? '-on' : '-off') + '.png') }); }
   await page.evaluate(() => { document.getElementById('avatarOn').checked = true; document.getElementById('avatarOn').dispatchEvent(new Event('change')); document.getElementById('ceil').checked = false; document.getElementById('ceil').dispatchEvent(new Event('change')); VIZ.set(true); LIGHTING.set('lamps'); setView('top'); });
   await page.reload(); await page.waitForTimeout(2500);
   const vizKept = await page.evaluate(() => { const ok = VIZ.on && document.getElementById('mats').checked && LIGHTING.scheme === 'lamps' && document.getElementById('light').value === 'lamps'; VIZ.set(false); LIGHTING.set('neutral'); return ok; });
