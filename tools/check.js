@@ -674,7 +674,8 @@ const { chromium } = require('playwright');
   if (!l1.wall.ok) problems.push('свет: стена не перекрывает источник (за стеной ' + l1.wall.dark + ', в проёме ' + l1.wall.lit + ')');
   // L1 frames: kitchen from the door, from the work zone to the sofa, the work zone itself, the evening scene (only table + sofa), bath 9 in front of the mirror
   for (const [name, x, z, tx, tz, off] of [['l1-kitchen-door', 12.6, 5.6, 8.6, 2.6], ['l1-kitchen-sofa', 9.0, 3.0, 12.5, 5.8], ['l1-kitchen-work', 10.8, 4.9, 8.6, 3.3], ['l1-kitchen-evening', 12.6, 5.6, 8.6, 2.6, 'g4.work,g4.splash,g4.main'], ['l1-bath9-front', 9.3, 9.45, 9.27, 8.2],
-    ['l2-kid1-door', 4.9, 4.5, 2.4, 2.6], ['l2-kid1-desk', 3.0, 2.6, 2.0, 4.8], ['l2-kid1-evening', 1.5, 4.5, 4.9, 2.9, 'g1.main,g1.desk,g1.track']]) { // L2 frames: room from the door, desk/gallery wall, evening (bed zone only)
+    ['l2-kid1-door', 4.9, 4.5, 2.4, 2.6], ['l2-kid1-desk', 3.0, 2.6, 2.0, 4.8], ['l2-kid1-evening', 1.5, 4.5, 4.9, 2.9, 'g1.main,g1.desk,g1.track'],
+    ['l2-kid2-bed', 11.9, 7.2, 13.2, 9.0], ['l2-kid2-desk', 13.3, 9.1, 11.5, 8.9], ['l2-kid2-wall', 13.4, 8.2, 12.9, 6.6], ['l2-kid2-evening', 11.9, 7.2, 13.2, 9.0, 'g2.main,g2.desk']]) { // L2 frames: room from the door, desk/gallery wall, evening (bed zone only)
     await page.evaluate(([x, z, tx, tz, off]) => { VIZ.set(true); LIGHTING.set('lamps'); document.getElementById('avatarOn').checked = false; const cb = document.getElementById('ceil'); cb.checked = true; cb.dispatchEvent(new Event('change'));
       Object.keys(LIGHTING.groups).forEach(g => LIGHTING.group(g, !(off || '').split(',').includes(g))); controls.setFPV(x, z, Math.atan2(tx - x, tz - z)); }, [x, z, tx, tz, off]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });

@@ -36,6 +36,15 @@ const LIGHTS=[
   {id:'bra1',item:'bra1',group:'g1.sofa',type:'spot',at:[5.28,1.20,2.87],to:[4.9,0.5,2.9],k:2700,w:0.5,angle:0.6,distance:4},
   {id:'bra2',item:'bra2',group:'g1.read',type:'spot',at:[5.36,2.27,2.47],to:[4.9,1.9,2.5],k:2700,w:0.4,angle:0.6,distance:4},
   {id:'kidbed',item:'kidbed',group:'g1.bed',type:'point',at:[4.255,1.69,2.88],k:3000,w:0.3,distance:2},
+  // room 2 (L2-1): kidlight2 stays; the desk under the platform is lit only from ceil2_3 (in the platform slab) and the desk lamp
+  {id:'kidlight2',item:'kidlight2',group:'g2.main',type:'spot',at:[12.905,2.66,8.195],k:3000,w:1.0,angle:0.8,shadow:true},
+  {id:'ceil2_1',item:'ceil2_1',group:'g2.main',type:'spot',at:[13.85,2.68,8.00],k:3000,w:0.7},
+  {id:'ceil2_2',item:'ceil2_2',group:'g2.main',type:'spot',at:[11.70,2.68,7.10],k:3000,w:0.8},
+  {id:'ceil2_3',item:'ceil2_3',group:'g2.desk',type:'spot',at:[11.70,1.69,8.60],k:3500,w:0.7,angle:0.7,distance:4},
+  {id:'desklamp2',item:'desklamp2',group:'g2.desk',type:'spot',at:[11.55,1.11,9.30],to:[11.4,0.72,8.7],k:3500,w:0.4,angle:0.6,distance:4},
+  {id:'bra3',item:'bra3',group:'g2.seat',type:'spot',at:[14.47,1.25,7.37],to:[14.5,0.65,7.9],k:2700,w:0.5,angle:0.6,distance:4},
+  {id:'bra4',item:'bra4',group:'g2.read',type:'spot',at:[11.67,2.27,9.50],to:[12.0,1.9,9.3],k:2700,w:0.4,angle:0.6,distance:4},
+  {id:'kidbed2',item:'kidbed2',group:'g2.bed',type:'point',at:[12.247,1.69,8.69],k:3000,w:0.3,distance:2},
 ];
 window.LIGHTS=LIGHTS;
 (function(){
