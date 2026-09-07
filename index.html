@@ -110,6 +110,10 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 <div class="panel">
   <h1 onclick="this.parentElement.classList.toggle('collapsed')" title="Свернуть/развернуть">Квартира в кубах</h1>
   <p class="sub">потолок 2,7 м · куб = 1 × 1 × 1 м</p>
+  <div class="views" style="margin:8px 0 12px">
+    <button id="vTop">Сверху</button>
+    <button id="vFP">Экскурсия</button>
+  </div>
   <div class="row"><input type="checkbox" id="cubes"><label for="cubes">Кубы 1 м³</label></div>
   <div class="row"><input type="checkbox" id="labels"><label for="labels">Точки с размерами</label></div>
   <div class="row"><input type="checkbox" id="kwall"><label for="kwall">Стена коридор–кухня</label></div>
@@ -135,8 +139,6 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <div class="slider-lab"><span>Масштаб</span><span id="zov">100%</span></div>
   <input type="range" id="zoom" min="30" max="300" value="100" aria-label="Масштаб">
   <div class="views">
-    <button id="vFP">Экскурсия</button>
-    <button id="vTop">Сверху</button>
     <button id="mkBtn" title="Точка, отрезок, прямоугольник на плане">Разметка</button>
     <button id="layBtn" title="Перенос и поворот предметов, варианты расстановки">Расстановка</button>
   </div>
