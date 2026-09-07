@@ -25,7 +25,7 @@ const PHYS={}; // id → boxes
     drape:new THREE.MeshLambertMaterial({color:0xb4b4b4,side:THREE.DoubleSide}), // opaque curtain fabric, both faces of a folded plane
   };
   // material slot = physical class for the visualization twin (B04); concept colours stay grey, MATERIALS[slot] gives roughness/metalness/emissive
-  const SLOTS={chrome:['handle','knob','ring'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle','drape'],emitter:['led'],screen:['screen'],wood:['table'],paint:['chair','base','upper','door','body','wbody','wdoor','wpanel','kbody'],plastic:['plastic'],ceramic:['ceramic'],acrylic:['acrylic'],leather:['leather'],mirror:['mirror']};
+  const SLOTS={chrome:['handle','knob','ring'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle','drape'],emitter:['led'],screen:['screen'],wood:['table'],cabinetPaint:['chair','base','upper','door','body','wbody','wdoor','wpanel','kbody'],plastic:['plastic'],ceramic:['ceramic'],acrylic:['acrylic'],leather:['leather'],mirror:['mirror']};
   Object.entries(SLOTS).forEach(([slot,keys])=>keys.forEach(k=>{ mat[k].userData.slot=slot; }));
   window.ITEM_MATS=mat;
   const chair=(backEast)=>(b,g)=>{ // chair 0.42×0.42, back on the west or east side
@@ -705,7 +705,7 @@ const PHYS={}; // id → boxes
     return g;
   }
   // GLB model of an item: the procedural build stays as fallback and proxy; on success its meshes are replaced by the model.
-  // Material names inside the GLB are ITEM_MATS keys or slot names (fabric/wood/paint/metal) → same grey concept materials, VIZ twins keep working.
+  // Material names inside the GLB are ITEM_MATS keys or slot names (fabric/wood/paint/metal; `paint` in a GLB is the cabinetPaint slot) → same grey concept materials, VIZ twins keep working.
   const GLB_MATS={fabric:mat.sofa,metal:mat.frame,wood:mat.table,paint:mat.chair,chrome:mat.handle,glass:mat.glass,plastic:mat.plastic,ceramic:mat.ceramic,acrylic:mat.acrylic,leather:mat.leather,mirror:mat.mirror,led:mat.led}; // slot name in the GLB → grey concept material carrying that slot
   const slotMat=n=>{ if(mat[n]&&!GLB_MATS[n]) return mat[n]; if(!GLB_MATS[n]){ console.warn('glb: unknown material "'+n+'", grey used'); GLB_MATS[n]=M(0x8c8c8c); GLB_MATS[n].userData.slot=n; } return GLB_MATS[n]; };
   // Model checks on load (console warnings, never exceptions): metres, Box3 inside size ±1 cm, bottom at y=0, pivot at the NW corner,
