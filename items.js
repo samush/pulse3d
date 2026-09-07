@@ -492,11 +492,11 @@ const PHYS={}; // id → boxes
        cyl(0.01,0.90,0.04,1.60,0.05,mat.handle); [1.165,2.035].forEach(y=>cyl(0.012,0.04,0.02,y,0.05,mat.handle,'x')); // rod and holders
        cyl(0.012,0.18,0.07,1.92,0.05,mat.handle); cyl(0.03,0.015,0.07,2.03,0.05,mat.handle);                          // hand shower on the top holder
      }}, // rod, two holders, hand shower on the top holder
-    {id:'wcbox',type:'короб инсталляции 0.71×0.12 за унитазом, от торца ванны до восточной стены, верх 1.15 — полка; кнопка смыва на фасаде',room:9,layer:'bath',pos:[9.162,9.747],rot:0,size:[0.71,1.15,0.125],fixed:'wall',
+    {id:'wcbox',type:'короб инсталляции 0.71×0.12 за унитазом, от торца ванны до восточной стены, верх 1.15 — полка; кнопка смыва на фасаде',room:9,layer:'bath',pos:[9.162,9.747],rot:0,size:[0.71,1.15,0.125],coat:{body:'tile6060',plastic:'plastic'}, /* M4-4: box tiled like the walls, flush plate plastic */ fixed:'wall',
      build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.71,0,1.15,0.005,0.125); b.phys(0.28,0.44,0.96,1.04,0,0.005);
        b.round(0,0.71,0,1.15,0.005,0.125,0.001,mat.body); b.round(0.28,0.44,0.96,1.04,0.001,0.005,0.001,mat.plastic); [[0.30,0.355],[0.365,0.42]].forEach(([x0,x1])=>b(x0,x1,0.98,1.02,0,0.0015,mat.dark)); // box, flush plate, two buttons proud of it
      }},                 // box, flush plate on the toilet axis (x 9.52)
-    {id:'wc',type:'унитаз подвесной компактный 0.36×0.48, сиденье 0.42, фасад на север',room:9,layer:'bath',pos:[9.34,9.272],rot:0,size:[0.36,0.42,0.48],fixed:'wall',glb:'models/wc.glb',glbFacade:false,
+    {id:'wc',type:'унитаз подвесной компактный 0.36×0.48, сиденье 0.42, фасад на север',room:9,layer:'bath',pos:[9.34,9.272],rot:0,size:[0.36,0.42,0.48],coat:{plastic:'plastic'},fixed:'wall',glb:'models/wc.glb',glbFacade:false,
      build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0.02,0.34,0.2,0.4,0.16,0.48); b.phys(0.02,0.34,0.2,0.4,0,0.32); b.phys(0.03,0.33,0.4,0.42,0.16,0.46); b.phys(0.03,0.33,0.4,0.42,0.01,0.31);
        const cyl=(r,h,y,m)=>{ const c=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,24),m); c.position.set(0.18,y,0.16); g.add(c); };
        b(0.02,0.34,0.20,0.40,0.16,0.48,mat.kmat); cyl(0.16,0.20,0.30,mat.kmat);                     // bowl: box at the back, round front to z 0
@@ -509,7 +509,7 @@ const PHYS={}; // id → boxes
        g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.13,bevelThickness:0.01,bevelSize:0.01,bevelOffset:-0.01,bevelSegments:2,curveSegments:4}).rotateX(Math.PI/2).translate(0,0.84,0),mat.ceramic)); // ceramic body 0.70–0.85, rounded edges
        b(0.125,0.725,0.75,0.76,0.03,0.33,mat.ceramic); cyl(0.025,0.004,0.425,0.762,0.18,mat.handle);              // bowl floor at 0.75 and the drain
      }},
-    {id:'basindrawer',type:'ящик под раковиной 0.85×0.31×0.18, подвесной, push-to-open',room:9,layer:'bath',pos:[8.90,8.181],rot:0,size:[0.85,0.68,0.31],fixed:'wall',
+    {id:'basindrawer',type:'ящик под раковиной 0.85×0.31×0.18, подвесной, push-to-open',room:9,layer:'bath',pos:[8.90,8.181],rot:0,size:[0.85,0.68,0.31],coat:{body:'cabinetPaint',wdoor:'cabinetPaint'},fixed:'wall',
      build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.85,0.5,0.68,0,0.29); b.phys(0.005,0.845,0.505,0.675,0.29,0.31);
        b(0,0.85,0.5,0.68,0,0.29,mat.body); b.round(0.0015,0.8485,0.5015,0.6785,0.29,0.31,0.001,mat.wdoor); // carcass, push-to-open front with 3 mm gaps
      }},            // body, front to the south
@@ -539,11 +539,11 @@ const PHYS={}; // id → boxes
      build(b){ b.spot(0.04,0.04,0.04); }},
     {id:'spot3',type:'точечный светильник перед зеркалом',room:9,layer:'bath',pos:[9.28,8.65],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
      build(b){ b.spot(0.04,0.04,0.04); }},
-    {id:'fan',type:'вентилятор вытяжки Ø0.12 в потолке над коробом',room:9,layer:'bath',pos:[9.31,9.58],rot:0,size:[0.12,2.70,0.12],fixed:'wall',
+    {id:'fan',type:'вентилятор вытяжки Ø0.12 в потолке над коробом',room:9,layer:'bath',pos:[9.31,9.58],rot:0,size:[0.12,2.70,0.12],coat:PLASTIC,fixed:'wall',
      build(b,g){ b.phys(0,0.12,2.68,2.7,0,0.12); g.add(new THREE.Mesh(new THREE.TorusGeometry(0.055,0.005,8,24).rotateX(Math.PI/2).translate(0.06,2.695,0.06),mat.plastic)); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.004,24).translate(0.06,2.694,0.06),mat.dark)); [-0.03,-0.01,0.01,0.03].forEach(dx=>b(0.06+dx-0.003,0.06+dx+0.003,2.686,2.692,0.02,0.10,mat.plastic)); }}, // rim, dark intake, four grille bars
     // electrics: flat boxes 0.08 × 0.08 × 0.01
-    {id:'sock21',type:'розетка IP44 + USB на фасаде короба инсталляции, h 1.00',room:9,layer:'bath',pos:[9.68,9.737],rot:0,size:[0.08,1.04,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.96,1.04,0,0.01,mat.plastic); }},
-    {id:'sock22',type:'скрытый вывод для полотенцесушителя, h 0.45',room:9,layer:'bath',pos:[9.842,8.294],rot:0,size:[0.01,0.49,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.41,0.49,0,0.08,mat.plastic); }},
+    {id:'sock21',type:'розетка IP44 + USB на фасаде короба инсталляции, h 1.00',room:9,layer:'bath',pos:[9.68,9.737],rot:0,size:[0.08,1.04,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.96,1.04,0,0.01,mat.plastic); }},
+    {id:'sock22',type:'скрытый вывод для полотенцесушителя, h 0.45',room:9,layer:'bath',pos:[9.842,8.294],rot:0,size:[0.01,0.49,0.08],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.01,0.41,0.49,0,0.08,mat.plastic); }},
     {id:'sw5',type:'выключатель 2 клавиши в коридоре у двери санузла: свет + вытяжка; рядом терморегулятор тёплого пола',room:5,layer:'bath',pos:[10.038,8.414],rot:0,size:[0.01,0.99,0.08],fixed:'wall',coat:PLASTIC,build(b){ b.plate(0,0.01,0.91,0.99,0,0.08,mat.plastic,{keys:2}); }},
     // ---- bathroom 8 (tasks/bath8/README.md, marks M1–M21; grey materials only) ----
     // Room box: x 8.192–9.872, z 11.588–13.144 plus the bump x 9.098–9.872, z 11.384–11.588 (closed by wcbox8). Door on the east
