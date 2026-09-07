@@ -3,7 +3,7 @@
 // depict the apartment's light. The interior scheme (lamps of the apartment) is added in L1. Plan view stays
 // unlit and linear so its flat colours read as authored; the sRGB + ACES + constant-exposure pipeline applies to
 // every lit 3D combination and never changes per material, room or texture.
-const LIGHTING={scheme:'neutral',lit:false,exposure:0.75};
+const LIGHTING={scheme:'neutral',lit:false,exposure:0.75,schemes:['neutral','lamps']};
 window.LIGHTING=LIGHTING;
 const hemi=new THREE.HemisphereLight(0xffffff,0xa8a49c,1.0); scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffffff,0.55); sun.position.set(-6,14,-8); scene.add(sun);
@@ -13,8 +13,10 @@ const sun=new THREE.DirectionalLight(0xffffff,0.55); sun.position.set(-6,14,-8);
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); const sc=sun.shadow.camera; sc.left=-9; sc.right=9; sc.top=8; sc.bottom=-8; sc.near=1; sc.far=40; sun.shadow.bias=-0.0006; sun.shadow.normalBias=0.02;
   sun.target.position.set(cx,0,cz); scene.add(sun.target);
-  // neutral scheme: the lit pipeline (ACES + sRGB) needs less light than the linear concept, otherwise white walls burn out
-  const NEUTRAL={lit:{sun:0.9,hemi:0.45},flat:{sun:0.55,hemi:1.0}};
+  // neutral scheme: the lit pipeline (ACES + sRGB) needs less light than the linear concept, otherwise white walls burn out.
+  // lamps scheme: no sun, only an explicit weak fill standing in for bounced light — the lamps themselves come in L1
+  const NEUTRAL={lit:{sun:0.9,hemi:0.45},flat:{sun:0.55,hemi:1.0}}, LAMPS={sun:0,hemi:0.15};
+  const KEY='pulse3d.light';
   let env=null;
   function environment(){ // procedural room for reflections (mirror, chrome, glass) and ambient IBL: grey box, light ceiling, bright window; prefiltered once
     if(env) return env;
@@ -25,11 +27,19 @@ const sun=new THREE.DirectionalLight(0xffffff,0.55); sun.position.set(-6,14,-8);
   }
   LIGHTING.environment=environment;
   LIGHTING.apply=function(lit){ // lit = 3D view with the fixed pipeline; false = plan view (flat, linear, no shadows)
-    LIGHTING.lit=lit=!!lit; const n=lit?NEUTRAL.lit:NEUTRAL.flat;
+    LIGHTING.lit=lit=!!lit; const n=!lit?NEUTRAL.flat:LIGHTING.scheme==='lamps'?LAMPS:NEUTRAL.lit;
     sun.intensity=n.sun; hemi.intensity=n.hemi;
     renderer.outputEncoding=lit?THREE.sRGBEncoding:THREE.LinearEncoding;
     renderer.toneMapping=lit?THREE.ACESFilmicToneMapping:THREE.NoToneMapping; renderer.toneMappingExposure=LIGHTING.exposure;
     renderer.shadowMap.enabled=lit;
     scene.environment=lit?environment():null;
   };
+  LIGHTING.set=function(scheme){ // user choice, remembered; re-applies the current view state
+    if(!LIGHTING.schemes.includes(scheme)) scheme='neutral';
+    LIGHTING.scheme=scheme; try{ localStorage.setItem(KEY,scheme); }catch(e){}
+    const sel=document.getElementById('light'); if(sel) sel.value=scheme; LIGHTING.apply(LIGHTING.lit);
+  };
+  document.getElementById('light').addEventListener('change',e=>LIGHTING.set(e.target.value));
+  let saved=null; try{ saved=localStorage.getItem(KEY); }catch(e){}
+  LIGHTING.set(saved||'neutral');
 })();

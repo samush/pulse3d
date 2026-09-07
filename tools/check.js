@@ -53,7 +53,7 @@ const { chromium } = require('playwright');
 
   await page.goto(url);
   await page.waitForTimeout(3500);
-  await page.evaluate(() => { try { localStorage.removeItem('pulse3d.marks'); localStorage.removeItem('pulse3d.layout'); localStorage.removeItem('pulse3d.viz'); } catch (e) {} }); // чистый старт разметки, вариантов и режима
+  await page.evaluate(() => { try { localStorage.removeItem('pulse3d.marks'); localStorage.removeItem('pulse3d.layout'); localStorage.removeItem('pulse3d.viz'); localStorage.removeItem('pulse3d.light'); } catch (e) {} }); // чистый старт разметки, вариантов и режима
   await page.screenshot({ path: path.join(outDir, 'default.png') });
 
   const report = await page.evaluate(() => {
@@ -516,7 +516,7 @@ const { chromium } = require('playwright');
   // the figure can be hidden in the walk without leaving it
   const av = await page.evaluate(() => { const on = () => avatar.visible; const a = on(); document.getElementById('avatarOn').click(); const b = on(); document.getElementById('avatarOn').click(); return [a, b, on(), controls.fpv]; });
   if (av.join() !== 'true,false,true,true') problems.push('галочка «Человечек» не прячет фигуру в экскурсии: ' + av.join());
-  await page.click('#viz'); await page.waitForTimeout(800);
+  await page.click('#mats'); await page.waitForTimeout(800);
   const viz = await page.evaluate((pj) => {
     const floor = finishGroup.children.find(o => o.geometry && o.geometry.type === 'ShapeGeometry');
     let sofa; ITEM_GROUPS.sofa.traverse(o => { if (!sofa && o.isMesh) sofa = o; }); // first mesh, whether procedural or the GLB model
@@ -541,8 +541,17 @@ const { chromium } = require('playwright');
   if (!wop.floorKept) problems.push('стены 0%: порог балкона исчез');
   if (!wop.ceil) problems.push('потолок не восстановился после режима плана');
   await page.screenshot({ path: path.join(outDir, 'viz-on.png') });
+  // materials-lighting M0: materials × light are independent; every 3D combination is lit, plan stays flat, glass keeps its transparency
+  const combos = await page.evaluate(() => {
+    const wall = () => wallGroup.children[0].material, floor = () => finishGroup.children.find(o => o.geometry && o.geometry.type === 'ShapeGeometry').material, glass = () => { let g; glassGroup.traverse(o => { if (!g && o.isMesh && o.material.transparent) g = o; }); return g; }, gm0 = glass().material, out = {};
+    setView('door'); const ceilM = () => ceilGroup.children[0].material;
+    for (const mats of [true, false]) for (const scheme of ['neutral', 'lamps']) { VIZ.set(mats); LIGHTING.set(scheme); const w = wall();
+      out[(mats ? 'real' : 'neutral') + '-' + scheme] = w.isMeshStandardMaterial && floor().isMeshStandardMaterial && (mats ? !!floor().map : !floor().map) && ceilM().isMeshStandardMaterial && renderer.shadowMap.enabled && renderer.outputEncoding === THREE.sRGBEncoding && (scheme === 'lamps' ? sun.intensity === 0 : sun.intensity > 0) && glass().material.transparent && glass().material.opacity === gm0.opacity && VIZ.active === mats && LIGHTING.scheme === scheme; }
+    setView('top'); out.plan = wall().isMeshBasicMaterial && !renderer.shadowMap.enabled && VIZ.on === false && LIGHTING.scheme === 'lamps'; // prefs survive the plan
+    setView('door'); out.back = VIZ.mode === 'neutral' && sun.intensity === 0; VIZ.set(true); return out; });
+  Object.entries(combos).forEach(([k, ok]) => { if (!ok) problems.push('материалы × свет: комбинация «' + k + '» не сошлась (materials-lighting M0 §3)'); });
   await page.reload(); await page.waitForTimeout(2500);
-  const vizKept = await page.evaluate(() => { const ok = VIZ.on && document.getElementById('viz').checked; VIZ.set(false); return ok; });
+  const vizKept = await page.evaluate(() => { const ok = VIZ.on && document.getElementById('mats').checked && LIGHTING.scheme === 'lamps' && document.getElementById('light').value === 'lamps'; VIZ.set(false); LIGHTING.set('neutral'); return ok; });
   if (!viz.std) problems.push('визуализация: материалы не PBR');
   if (!viz.shadows) problems.push('визуализация: тени не включены');
   if (!viz.maps || !viz.scale) problems.push('визуализация: карты шероховатости/рельефа отсутствуют или масштаб не совпадает');
@@ -583,7 +592,7 @@ const { chromium } = require('playwright');
     const warn = kids.map(it => [it.id, LAY.warnings(it.id)]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
     const tops = ITEM_GROUPS.kidbed.children.map(o => bb(o)).filter(b => b.min.y < 0.001 && b.max.y <= 1.51 && b.max.z - b.min.z > 0.4).map(b => Math.round(b.max.y * 100) / 100).sort();
     const sofaTop = bb(ITEM_GROUPS.kidsofa).max.y;
-    const colored = []; kids.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
+    const colored = []; kids.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh) return; const bm = VIZ.basic.get(o.material) || o.material; if (bm.isMeshBasicMaterial || bm.transparent) return; const c = bm.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     const desk = bb(ITEM_GROUPS.kiddesk), seat = bb(ITEM_GROUPS.windowseat1), shelfN = bb(ITEM_GROUPS.kidshelf), shelfS = bb(ITEM_GROUPS.kidshelf2), win = PLAN.windows[0];
     const deskStraight = desk.max.z - desk.min.z <= 0.61 && desk.max.z > 4.86 && desk.max.x - desk.min.x > 2.1;
     const chair = bb(ITEM_GROUPS.kidchair), ped = bb(ITEM_GROUPS.kidped), chairIn = chair.max.z - desk.min.z >= 0.25, pedEnd = desk.max.x - ped.max.x < 0.025;
@@ -626,7 +635,7 @@ const { chromium } = require('playwright');
     const leafHit = parts.some(b => b.min.y < 1.7 && b.intersectsBox(leaf));
     const bar = bb(ITEM_GROUPS.pullup).max.y;
     const overlap = its.map(it => [it.id, LAY.warnings(it.id).filter(w => /пересекается|границы/.test(w))]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
-    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
+    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh) return; const bm = VIZ.basic.get(o.material) || o.material; if (bm.isMeshBasicMaterial || bm.transparent) return; const c = bm.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     return { n: its.length, inside, deskUnder, postClear, leafHit, bar, overlap, colored, platLen: plat ? plat.max.z - plat.min.z : null };
   });
   if (r2.n < 21) problems.push('комната 2: предметов слоя kid ' + r2.n + ' (< 21)');
@@ -655,7 +664,7 @@ const { chromium } = require('playwright');
     const door = ['vanity', 'vpouf'].filter(id => { const b = bb(ITEM_GROUPS[id]); return b.min.x < 10.82 && b.max.z > 12.2 && b.min.z < 13.0; });
     const console_ = bb(ITEM_GROUPS.mconsole).min.y, rugTop = bb(ITEM_GROUPS.mrug).max.y;
     const overlap = its.map(it => [it.id, LAY.warnings(it.id).filter(w => /пересекается|границы/.test(w))]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
-    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
+    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh) return; const bm = VIZ.basic.get(o.material) || o.material; if (bm.isMeshBasicMaterial) return; const c = bm.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     return { n: its.length, inside, bedEast: bed.max.x, cab, door, consoleLow: console_, rugTop, overlap, colored, tv: (bb(ITEM_GROUPS.mtv).min.x + bb(ITEM_GROUPS.mtv).max.x) / 2 };
   });
   if (m3.n < 26) problems.push('комната 3: предметов слоя master ' + m3.n + ' (< 26)');
@@ -687,7 +696,7 @@ const { chromium } = require('playwright');
     const wc = bb(ITEM_GROUPS.wc), tub = bb(ITEM_GROUPS.tub), axis = (wc.min.x + wc.max.x) / 2;
     const tubDepth = 9.872 - Math.max(...PHYS.tub.map(m => bb(m)).filter(b => b.min.z < strip.max.z && b.max.z > strip.min.z).map(b => b.max.x));
     const warn = its.map(it => [it.id, LAY.warnings(it.id)]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
-    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
+    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh) return; const bm = VIZ.basic.get(o.material) || o.material; if (bm.isMeshBasicMaterial || bm.transparent) return; const c = bm.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     return { n: its.length, doorOk, inside, inStrip, axisTub: axis - tub.max.x, axisWall: 9.872 - axis, wcFront: wc.max.z, tubDepth, warn, colored };
   });
   if (b9.n < 17) problems.push('санузел 9: предметов слоя bath ' + b9.n + ' (< 17)');
@@ -712,7 +721,7 @@ const { chromium } = require('playwright');
     const inStrip = its.filter(it => PHYS[it.id].some(m => { const b = bb(m); return b.min.x < strip.max.x - e && b.max.x > strip.min.x + e && b.min.z < strip.max.z - e && b.max.z > strip.min.z + e && b.min.y < strip.max.y; })).map(it => it.id);
     const wc = bb(ITEM_GROUPS.wc8), axis = (wc.min.x + wc.max.x) / 2;
     const warn = its.concat(ITEMS.filter(it => it.id === 'sw6')).map(it => [it.id, LAY.warnings(it.id)]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
-    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
+    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh) return; const bm = VIZ.basic.get(o.material) || o.material; if (bm.isMeshBasicMaterial || bm.transparent) return; const c = bm.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     const tray = bb(ITEM_GROUPS.shower8), curbTop = bb(ITEM_GROUPS.curb8e).max.y, glass = bb(ITEM_GROUPS.glass8), glassTop = glass.max.y, glassEast = Math.max(glass.max.x, bb(ITEM_GROUPS.curb8e).max.x);
     const wcSide = glass.min.z <= 11.589 && glass.max.z >= 12.4 && wc.max.z <= glass.max.z, showerLen = tray.max.z - tray.min.z;
     return { n: its.length, inStrip, axisWall: 9.872 - axis, wcFront: wc.max.z, warn, colored, trayLow: tray.min.y, trayHigh: tray.max.y, curbTop, glassTop, glassEast, wcSide, showerLen, basin: !!ITEM_GROUPS.basin8 };
@@ -747,7 +756,7 @@ const { chromium } = require('playwright');
     const secC = bb(ITEM_GROUPS.wsecC).max.x;
     const rods = []; ['wsecA', 'wsecB'].forEach(id => ITEM_GROUPS[id].traverse(o => { if (o.isMesh && o.geometry.type === 'CylinderGeometry') rods.push(bb(o).max.y); }));
     const warn = its.map(it => [it.id, LAY.warnings(it.id)]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
-    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
+    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh) return; const bm = VIZ.basic.get(o.material) || o.material; if (bm.isMeshBasicMaterial || bm.transparent) return; const c = bm.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     return { n: its.length, inside, inStrip, secC, rods, warn, colored };
   });
   if (w6.n < 13) problems.push('гардеробная 6: предметов слоя wardrobe ' + w6.n + ' (< 13)');
@@ -778,7 +787,7 @@ const { chromium } = require('playwright');
     const op = PLAN.openings.find(o => o.tag === 'balcony'); const zone = new THREE.Box3(new THREE.Vector3(13.91, 0, op.z0), new THREE.Vector3(14.4, 0.05, op.z1));
     const inZone = its.filter(it => PHYS[it.id].some(m => hit(zone, m))).map(it => it.id);
     const warn = its.map(it => [it.id, LAY.warnings(it.id)]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
-    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh || o.material.isMeshBasicMaterial || o.material.transparent) return; const c = o.material.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
+    const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh) return; const bm = VIZ.basic.get(o.material) || o.material; if (bm.isMeshBasicMaterial || bm.transparent) return; const c = bm.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     const swZ = bb(ITEM_GROUPS.sw8).min.z;
     return { n: its.length, inside, underDesk, plate, shelfTop, lip, ductMin: duct.min.y, ductZ: [duct.min.z, duct.max.z], op: [op.z0, op.z1], swZ, inZone, warn, colored };
   });
@@ -827,7 +836,7 @@ const { chromium } = require('playwright');
   const lg = await page.evaluate(() => {
     const frames = []; glassGroup.traverse(o => { if (o.isMesh && o.material === loggiaFrameMat) frames.push(o); });
     const bars = frames.filter(m => m.geometry.parameters.height > 0.9 && m.geometry.parameters.depth < 0.02).length;
-    const floor = [], walls = []; finishGroup.traverse(o => { if (!o.isMesh) return; const b = new THREE.Box3().setFromObject(o); if (b.min.x > 13.9 && b.max.x < 15.11 && b.min.z > 2.26 && b.max.z < 6.05) { if (b.max.y < 0.02) floor.push(o.material); else if (o.material === finishMats.wallPaint) walls.push(o); } });
+    const floor = [], walls = []; finishGroup.traverse(o => { if (!o.isMesh) return; const b = new THREE.Box3().setFromObject(o); if (b.min.x > 13.9 && b.max.x < 15.11 && b.min.z > 2.26 && b.max.z < 6.05) { const bm = VIZ.basic.get(o.material) || o.material; if (b.max.y < 0.02) floor.push(bm); else if (bm === finishMats.wallPaint) walls.push(o); } });
     return { frames: frames.length, bars, floorTile: floor.length === 1 && floor[0] === finishMats.tile, walls: walls.length };
   });
   if (lg.frames < 30 || lg.bars < 25) problems.push('лоджия 10: рам ' + lg.frames + ', прутьев ' + lg.bars + ' (ожидалось ≥30 и ≥25)');
