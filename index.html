@@ -114,6 +114,10 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <button id="vTop">Сверху</button>
     <button id="vFP">Экскурсия</button>
   </div>
+  <div class="slider-lab"><span>Стены</span><span id="wov">100%</span></div>
+  <input type="range" id="wop" min="0" max="100" value="100" aria-label="Прозрачность стен">
+  <div class="slider-lab"><span>Масштаб</span><span id="zov">100%</span></div>
+  <input type="range" id="zoom" min="30" max="300" value="100" aria-label="Масштаб">
   <div class="row"><input type="checkbox" id="cubes"><label for="cubes">Кубы 1 м³</label></div>
   <div class="row"><input type="checkbox" id="labels"><label for="labels">Точки с размерами</label></div>
   <div class="row"><input type="checkbox" id="kwall"><label for="kwall">Стена коридор–кухня</label></div>
@@ -134,10 +138,6 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <div class="row"><input type="checkbox" id="furnWardrobe" checked><label for="furnWardrobe">Гардеробная (слой 1)</label></div>
   <div class="row"><input type="checkbox" id="furnBalcony" checked><label for="furnBalcony">Лоджия (слой 1)</label></div>
   <div class="row"><input type="checkbox" id="viz"><label for="viz">Визуализация (свет и материалы)</label></div>
-  <div class="slider-lab"><span>Стены</span><span id="wov">100%</span></div>
-  <input type="range" id="wop" min="0" max="100" value="100" aria-label="Прозрачность стен">
-  <div class="slider-lab"><span>Масштаб</span><span id="zov">100%</span></div>
-  <input type="range" id="zoom" min="30" max="300" value="100" aria-label="Масштаб">
   <div class="views">
     <button id="mkBtn" title="Точка, отрезок, прямоугольник на плане">Разметка</button>
     <button id="layBtn" title="Перенос и поворот предметов, варианты расстановки">Расстановка</button>
