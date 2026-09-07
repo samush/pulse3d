@@ -56,6 +56,15 @@ const LIGHTS=[
   {id:'bra7',item:'bra7',group:'g3.vanity',type:'spot',at:[11.40,1.45,9.94],to:[12.1,1.3,10.4],k:3000,w:0.5,angle:0.6,distance:4},
   {id:'bra8',item:'bra8',group:'g3.vanity',type:'spot',at:[12.80,1.45,9.94],to:[12.1,1.3,10.4],k:3000,w:0.5,angle:0.6,distance:4},
   {id:'led5',item:'led5',group:'g3.tv',type:'point',at:[13.91,1.06,9.83],k:3000,w:0.2,distance:1.5},
+  // room 5 (L2-2): a new line of recessed points along the route; the mirror is lit from the side by entry's profiles and ceil5_1, never head-on
+  {id:'ceil5_1',item:'ceil5_1',group:'g5.entry',type:'spot',at:[7.20,2.68,7.05],k:3000,w:1.0,shadow:true},
+  {id:'entrya',item:'entry',group:'g5.entry',type:'point',at:[6.36,1.50,7.15],k:3000,w:0.3,distance:1.5},
+  {id:'entryb',item:'entry',group:'g5.entry',type:'point',at:[6.36,1.50,7.32],k:3000,w:0.3,distance:1.5},
+  {id:'ceil5_2',item:'ceil5_2',group:'g5.north',type:'spot',at:[7.20,2.68,5.60],k:3000,w:1.0},
+  {id:'ceil5_3',item:'ceil5_3',group:'g5.north',type:'spot',at:[7.20,2.68,4.40],k:3000,w:1.0},
+  {id:'ceil5_4',item:'ceil5_4',group:'g5.corr',type:'spot',at:[9.30,2.68,7.00],k:3000,w:1.0},
+  {id:'ceil5_5',item:'ceil5_5',group:'g5.corr',type:'spot',at:[10.45,2.68,8.10],k:3000,w:0.8},
+  {id:'ceil5_6',item:'ceil5_6',group:'g5.corr',type:'spot',at:[10.45,2.68,9.30],k:3000,w:0.8},
 ];
 window.LIGHTS=LIGHTS;
 (function(){
