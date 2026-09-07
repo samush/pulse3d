@@ -146,7 +146,7 @@ const PHYS={}; // id → boxes
      build(b){ b.phys(0,2,0.1,0.85,0,0.88); b(0,2,0.1,0.42,0,0.88,mat.sofa); b(0,2,0.42,0.85,0.63,0.88,mat.sofa); b(0,0.15,0.42,0.6,0,0.88,mat.sofa); b(1.85,2,0.42,0.6,0,0.88,mat.sofa);
        [[0.17,0.98],[1.02,1.83]].forEach(([x0,x1])=>{ b(x0,x1,0.42,0.52,0.05,0.62,mat.cushion); b(x0,x1,0.52,0.82,0.55,0.66,mat.cushion); }); }}, // seat and back cushions with a seam in the middle
     // ---- hallway 5 (sketches .local/R2_*) ----
-    {id:'wardrobe',type:'шкаф в нише',room:5,layer:'hall',pos:[8.20,7.974-0.45],rot:0,size:[1.77,2.65,0.45],fixed:'wall',
+    {id:'wardrobe',type:'шкаф в нише',room:5,layer:'hall',pos:[8.20,7.974-0.45],rot:0,size:[1.77,2.65,0.45],fixed:'wall',coat:{door:'cabinetPaint',body:'cabinetPaint'}, // M4-3: painted doors and visible carcass; shoe niche stays dark class
      build(b){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.02,0,2.65,0,0.45); b.phys(1.75,1.77,0,2.65,0,0.45); b.phys(0,1.77,0,2.65,0.43,0.45); b.phys(0,1.77,2.63,2.65,0,0.45); b.phys(0.02,1.75,0.02,0.04,0.05,0.43); b.phys(0.02,1.75,0.43,0.45,0,0.43); b.phys(0.02,1.75,0.04,0.43,0.35,0.43); b.phys(0.02,0.881,0.45,1.95,0,0.02); b.phys(0.889,1.75,0.45,1.95,0,0.02); b.phys(0.825,0.84,1,1.3,-0.02,0); b.phys(0.93,0.945,1,1.3,-0.02,0); b.phys(0.02,1.75,1.95,1.97,0,0.43); b.phys(0.02,0.881,1.97,2.63,0,0.02); b.phys(0.889,1.75,1.97,2.63,0,0.02); b.phys(0.825,0.84,2.07,2.23,-0.02,0); b.phys(0.93,0.945,2.07,2.23,-0.02,0);
        const W=1.77, D=0.45, t=0.02, mid=W/2, gap=0.004, H0=0.45, H1=1.95, H2=2.65;
        b(0,t,0,H2,0,D,mat.body); b(W-t,W,0,H2,0,D,mat.body); b(0,W,0,H2,D-t,D,mat.body); b(0,W,H2-t,H2,0,D,mat.body); // body
@@ -157,7 +157,7 @@ const PHYS={}; // id → boxes
        b(t,W-t,H1,H1+t,0,D-t,mat.body); door(t,mid-gap,H1+t,H2-t); door(mid+gap,W-t,H1+t,H2-t);                       // top cabinets
        b(mid-0.02,mid-gap-0.001,H1+0.04,H2-0.04,0,0.003,mat.frame); b(mid+gap+0.001,mid+0.02,H1+0.04,H2-0.04,0,0.003,mat.frame);
      }},
-    {id:'entry',type:'полочка с ящиками и светильниками у входа',room:5,layer:'hall',pos:[6.346,7.03],rot:0,size:[0.325,1.85,0.4],fixed:'wall',
+    {id:'entry',type:'полочка с ящиками и светильниками у входа',room:5,layer:'hall',pos:[6.346,7.03],rot:0,size:[0.325,1.85,0.4],fixed:'wall',coat:{door:'cabinetPaint',body:'cabinetPaint'},
      build(b){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.3,0.8,0.92,0,0.4); b.phys(0.3,0.315,0.81,0.91,0.01,0.195); b.phys(0.3,0.315,0.81,0.91,0.205,0.39); b.phys(0.315,0.325,0.855,0.865,0.07,0.14); b.phys(0.315,0.325,0.855,0.865,0.26,0.33);
        b.round(0,0.30,0.80,0.92,0,0.4,0.003,mat.body);                                                                  // shelf box with a 3 mm chamfer
        b.round(0.30,0.315,0.81,0.91,0.01,0.195,0.001,mat.door); b.round(0.30,0.315,0.81,0.91,0.205,0.39,0.001,mat.door);   // two drawer fronts, 10 mm gap between
@@ -544,7 +544,7 @@ const PHYS={}; // id → boxes
     // electrics: flat boxes 0.08 × 0.08 × 0.01
     {id:'sock21',type:'розетка IP44 + USB на фасаде короба инсталляции, h 1.00',room:9,layer:'bath',pos:[9.68,9.737],rot:0,size:[0.08,1.04,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.96,1.04,0,0.01,mat.plastic); }},
     {id:'sock22',type:'скрытый вывод для полотенцесушителя, h 0.45',room:9,layer:'bath',pos:[9.842,8.294],rot:0,size:[0.01,0.49,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.41,0.49,0,0.08,mat.plastic); }},
-    {id:'sw5',type:'выключатель 2 клавиши в коридоре у двери санузла: свет + вытяжка; рядом терморегулятор тёплого пола',room:5,layer:'bath',pos:[10.038,8.414],rot:0,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.91,0.99,0,0.08,mat.plastic,{keys:2}); }},
+    {id:'sw5',type:'выключатель 2 клавиши в коридоре у двери санузла: свет + вытяжка; рядом терморегулятор тёплого пола',room:5,layer:'bath',pos:[10.038,8.414],rot:0,size:[0.01,0.99,0.08],fixed:'wall',coat:PLASTIC,build(b){ b.plate(0,0.01,0.91,0.99,0,0.08,mat.plastic,{keys:2}); }},
     // ---- bathroom 8 (tasks/bath8/README.md, marks M1–M21; grey materials only) ----
     // Room box: x 8.192–9.872, z 11.588–13.144 plus the bump x 9.098–9.872, z 11.384–11.588 (closed by wcbox8). Door on the east
     // wall z 12.20–13.00. The shower runs along the whole west wall (opposite the door); no basin in this room (iteration 2). Tiles follow PLAN.baths[1]: west at x 8.235, south at z 13.124, east at x 9.852; the north wall west
@@ -669,7 +669,7 @@ const PHYS={}; // id → boxes
      build(b){ b.phys(0,0.04,2.68,2.7,0,1.85); b(0,0.04,2.68,2.70,0,1.85,mat.frame); b(0.005,0.035,2.6795,2.68,0.01,1.84,mat.led); }}, // profile with the diffuser strip
     {id:'led6',type:'LED-лента под передней кромкой антресоли, свет вниз на штанги; включается вместе с M9',room:6,layer:'wardrobe',pos:[6.135,1.90],rot:0,size:[0.02,2.00,1.55],fixed:'wall',
      build(b){ b.phys(0,0.02,1.98,2,0,1.55); b(0,0.02,1.98,2.00,0,1.55,mat.frame); b(0.003,0.017,1.9795,1.98,0.005,1.545,mat.led); }}, // profile with the diffuser strip
-    {id:'sw7',type:'датчик движения + выключатель в коридоре у двери гардеробной: свет M9+M10 от датчика, клавиша — принудительно',room:5,layer:'wardrobe',pos:[5.76,4.033],rot:0,size:[0.08,0.99,0.01],fixed:'wall',build(b){ b.plate(0,0.08,0.91,0.99,0,0.01,mat.plastic); }},
+    {id:'sw7',type:'датчик движения + выключатель в коридоре у двери гардеробной: свет M9+M10 от датчика, клавиша — принудительно',room:5,layer:'wardrobe',pos:[5.76,4.033],rot:0,size:[0.08,0.99,0.01],fixed:'wall',coat:PLASTIC,build(b){ b.plate(0,0.08,0.91,0.99,0,0.01,mat.plastic); }},
     {id:'sock25',type:'розетка у двери для пылесоса и утюга, h 0.30',room:6,layer:'wardrobe',pos:[6.875,3.55],rot:0,size:[0.01,0.34,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.26,0.34,0,0.08); }},
     // ---- loggia 10 (tasks/balcony10/README.md, marks M1–M13; grey materials only) ----
     // Room box: x 13.91–15.1, z 2.268–6.043; glazing on the east wall z 2.40–5.90, opening from the kitchen on the west wall z 3.353–4.971 (top 2.10).

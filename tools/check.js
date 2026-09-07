@@ -625,6 +625,20 @@ const { chromium } = require('playwright');
   Object.entries(m41).forEach(([k, ok]) => { if (!ok) problems.push('комнаты 1–2: «' + k + '» не сошлось (materials-lighting M4-1)'); });
   for (const [name, x, z, th] of [['room1-door', 4.5, 4.55, -Math.PI / 2 + 0.45], ['room1-gallery', 1.9, 3.0, Math.PI * 0.3], ['room1-bed', 4.95, 3.3, -Math.PI / 2 - 0.15], ['room2-door', 11.9, 7.35, Math.PI / 2 + 0.15], ['room2-desk', 12.0, 8.8, Math.PI * 0.75], ['room2-gym', 14.0, 8.1, -Math.PI * 0.75]]) for (const on of [true, false]) {
     await page.evaluate(([x, z, th, on]) => { VIZ.set(on); controls.setFPV(x, z, th); }, [x, z, th, on]); await page.waitForTimeout(on ? 1500 : 400); await page.screenshot({ path: path.join(outDir, 'm4-1-' + name + (on ? '-on' : '-off') + '.png') }); }
+  // materials-lighting M4-3/M4-4: rooms 5, 7, 10, 8, 9 — main surfaces wear the coatings from kitchen.md rules; one on/off frame per room
+  const M4 = { hall5: { items: [['wardrobe', 'door', 'cabinetPaint'], ['wardrobe', 'body', 'cabinetPaint'], ['wardrobe', 'hdark', 'class'], ['entry', 'door', 'cabinetPaint'], ['sw5', 'plastic', 'plastic'], ['pouf', 'glb:leather', 'class']], pose: [9.1, 6.6, 9.1, 7.7] },
+  };
+  const m4 = await page.evaluate(async (M4) => {
+    VIZ.set(true); const wait = async f => { for (let i = 0; i < 100 && !f(); i++) await new Promise(r => setTimeout(r, 100)); return !!f(); };
+    await wait(() => Object.values(M4).every(r => r.items.every(([id, k]) => !k.startsWith('glb:') || ITEM_GROUPS[id].userData.glbLoaded)));
+    const on = (id, test) => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh && test(o)) set.add(o.material.userData.coating || 'class'); }); return [...set].sort().join(); };
+    const sel = k => k.startsWith('glb:') ? (o => o.userData.glbMat === k.slice(4)) : (o => (VIZ.basic.get(o.material) || o.material) === ITEM_MATS[k]);
+    const bad = []; Object.entries(M4).forEach(([room, r]) => r.items.forEach(([id, k, want]) => { const got = on(id, sel(k)); if (got !== want) bad.push(room + ': ' + id + '.' + k + ' = ' + (got || 'нет меша') + ', ожидалось ' + want); }));
+    return bad; }, M4);
+  m4.forEach(msg => problems.push('материалы комнат: ' + msg + ' (materials-lighting M4)'));
+  for (const [room, r] of Object.entries(M4)) for (const on of [true, false]) {
+    await page.evaluate(([[x, z, tx, tz], on]) => { VIZ.set(on); document.getElementById('avatarOn').checked = false; controls.setFPV(x, z, Math.atan2(tx - x, tz - z)); }, [r.pose, on]); await page.waitForTimeout(on ? 1500 : 400);
+    await page.screenshot({ path: path.join(outDir, 'm4-' + room + (on ? '-on' : '-off') + '.png') }); }
   await page.evaluate(() => { document.getElementById('avatarOn').checked = true; document.getElementById('avatarOn').dispatchEvent(new Event('change')); document.getElementById('ceil').checked = false; document.getElementById('ceil').dispatchEvent(new Event('change')); VIZ.set(true); LIGHTING.set('lamps'); setView('top'); });
   await page.reload(); await page.waitForTimeout(2500);
   const vizKept = await page.evaluate(() => { const ok = VIZ.on && document.getElementById('mats').checked && LIGHTING.scheme === 'lamps' && document.getElementById('light').value === 'lamps'; VIZ.set(false); LIGHTING.set('neutral'); return ok; });
