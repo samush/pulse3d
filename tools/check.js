@@ -36,7 +36,7 @@ const { chromium } = require('playwright');
       process.exit(2);
     }
   }
-  const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
+  const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } }); page.setDefaultTimeout(120000); // software GL: a first 'lamps' frame takes >30 s when parallel agents load the machine
   const problems = [];
   // materials-lighting M0: MATERIALS is an object literal, so a duplicate key silently overwrites the first one — check the source text
   for (const name of ['MATERIALS', 'COATINGS']) { const src = fs.readFileSync(path.join(root, 'materials.js'), 'utf8').match(new RegExp('const ' + name + '=\\{([\\s\\S]*?)\\n\\};'))[1];
@@ -612,7 +612,7 @@ const { chromium } = require('playwright');
     ['kidchair', 'kidchair2', 'sock1'].forEach(id => { ITEM_GROUPS[id].userData.coat = null; }); VIZ.set(false); VIZ.set(true); LIGHTING.set('neutral'); const wait = async f => { for (let i = 0; i < 100 && !f(); i++) await new Promise(r => setTimeout(r, 100)); return !!f(); }; // drop the M1a overrides, back to the ITEMS coats
     const loaded = await wait(() => ['kidchair', 'kidchair2', 'windowseat1', 'windowseat2', 'kidsofa'].every(id => ITEM_GROUPS[id].userData.glbLoaded));
     const on = (id, test) => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh && test(o)) set.add(o.material.userData.coating || 'class'); }); return [...set].sort().join(); };
-    const key = k => o => { const b = VIZ.basic.get(o.material) || o.material; return b === ITEM_MATS[k] || (k === 'led' && b.name.startsWith('led:')); }, glb = n => o => o.userData.glbMat === n, cab = o => ['kbody', 'body', 'wdoor', 'wpanel'].some(k => key(k)(o));
+    const key = k => o => { const b = VIZ.basic.get(o.material) || o.material; return b === ITEM_MATS[k] || (k === 'led' && b.name.startsWith('led:')); }, glb = n => o => o.userData.glbMat === n, cab = o => ['kbody', 'body', 'wdoor', 'wpanel'].some(k => key(k)(o)), led = o => (VIZ.basic.get(o.material) || o.material).userData.slot === 'emitter'; // led is cloned per lighting group since L1
     let tulle; ITEM_GROUPS.curtain.traverse(o => { if (!tulle && o.isMesh && (VIZ.basic.get(o.material) || o.material) === ITEM_MATS.tulle) tulle = o.material; });
     return { loaded,
       casework: ['kidbed', 'kiddesk', 'kidped', 'kidshelf', 'kidbed2', 'tower2n', 'deskshelf2'].every(id => on(id, cab) === 'cabinetPaint') && on('windowseat1', glb('wdoor')) === 'cabinetPaint' && on('windowseat2', glb('paint')) === 'cabinetPaint',
@@ -620,7 +620,7 @@ const { chromium } = require('playwright');
       chairs: ['kidchair', 'kidchair2'].every(id => on(id, glb('cushion')) === 'sofaWeave' && on(id, glb('plastic')) === 'plastic' && on(id, glb('chrome')) === 'class'),
       sofa: ['upholstery', 'piping', 'cushion'].every(n => on('kidsofa', glb(n)) === 'sofaWeave'), rug: on('kidrug', key('wpanel')) === 'rugPile',
       tulle: on('curtain', key('tulle')) === 'curtainLinen' && !!tulle && tulle.transparent && tulle.opacity < 0.5, gym: on('gymwall', key('table')) === 'oakFurniture' && on('gymwall', key('frame')) === 'class',
-      plastic: ['bra1', 'kidlight2', 'sock1', 'sock9'].every(id => on(id, key('plastic')) === 'plastic') && on('bra1', key('led')) === 'class' && on('kidbed', key('kleg')) === 'class' };
+      plastic: ['bra1', 'kidlight2', 'sock1', 'sock9'].every(id => on(id, key('plastic')) === 'plastic') && on('bra1', led) === 'class' && on('kidbed', key('kleg')) === 'class' };
   });
   Object.entries(m41).forEach(([k, ok]) => { if (!ok) problems.push('комнаты 1–2: «' + k + '» не сошлось (materials-lighting M4-1)'); });
   for (const [name, x, z, th] of [['room1-door', 4.5, 4.55, -Math.PI / 2 + 0.45], ['room1-gallery', 1.9, 3.0, Math.PI * 0.3], ['room1-bed', 4.95, 3.3, -Math.PI / 2 - 0.15], ['room2-door', 11.9, 7.35, Math.PI / 2 + 0.15], ['room2-desk', 12.0, 8.8, Math.PI * 0.75], ['room2-gym', 14.0, 8.1, -Math.PI * 0.75]]) for (const on of [true, false]) {
@@ -645,6 +645,22 @@ const { chromium } = require('playwright');
   for (const [room, r] of Object.entries(M4)) for (const on of [true, false]) {
     await page.evaluate(([[x, z, tx, tz], on]) => { VIZ.set(on); document.getElementById('avatarOn').checked = false; controls.setFPV(x, z, Math.atan2(tx - x, tz - z)); }, [r.pose, on]); await page.waitForTimeout(on ? 1500 : 400);
     await page.screenshot({ path: path.join(outDir, 'm4-' + room + (on ? '-on' : '-off') + '.png') }); }
+  // materials-lighting M4-2: rooms 3 and 6 — casework painted, bed linen with the leather headboard as class, rug pile, drapes linen, plastic on lamps/sockets; pouf, mirrors and metal stay class
+  const m42 = await page.evaluate(async () => {
+    VIZ.set(true); LIGHTING.set('neutral'); const wait = async f => { for (let i = 0; i < 100 && !f(); i++) await new Promise(r => setTimeout(r, 100)); return !!f(); };
+    const loaded = await wait(() => ['mbed', 'vpouf'].every(id => ITEM_GROUPS[id].userData.glbLoaded));
+    const on = (id, test) => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh && test(o)) set.add(o.material.userData.coating || 'class'); }); return [...set].sort().join(); };
+    const key = k => o => (VIZ.basic.get(o.material) || o.material) === ITEM_MATS[k], glb = n => o => o.userData.glbMat === n, cab = o => ['body', 'door', 'wdoor', 'wpanel'].some(k => key(k)(o)), led = o => (VIZ.basic.get(o.material) || o.material).userData.slot === 'emitter';
+    return { loaded,
+      casework: ['mcab', 'mward', 'mconsole', 'vanity', 'wsecA', 'wsecC', 'wend', 'wpeg'].every(id => on(id, cab) === 'cabinetPaint') && on('mbed', glb('body')) === 'cabinetPaint',
+      bed: ['kmat', 'pillow', 'cover'].every(n => on('mbed', glb(n)) === 'curtainLinen') && on('mbed', glb('leather')) === 'class',
+      pouf: on('vpouf', glb('leather')) === 'class' && on('vpouf', glb('metal')) === 'class', rug: on('mrug', key('cushion')) === 'rugPile', drape: on('mcurtain', key('drape')) === 'curtainLinen',
+      plastic: ['bra5', 'bra7', 'sock14', 'sw6'].every(id => on(id, key('plastic')) === 'plastic') && on('bra5', led) === 'class' && on('mward', key('frame')) === 'class',
+      mirrors: on('vmirror', key('mirror')) === 'class' && on('wmirror', key('mirror')) === 'class' && on('wstep', () => true) === 'class' };
+  });
+  Object.entries(m42).forEach(([k, ok]) => { if (!ok) problems.push('комнаты 3, 6: «' + k + '» не сошлось (materials-lighting M4-2)'); });
+  for (const [name, x, z, th] of [['room3-door', 10.9, 11.9, Math.PI / 2 + 0.25], ['room3-tv', 13.6, 12.3, Math.PI - 0.15], ['room3-south', 14.2, 10.5, -0.55], ['wardrobe6-door', 6.6, 4.5, Math.PI - 0.15], ['wardrobe6-end', 6.55, 3.2, 0.2]]) for (const on of [true, false]) {
+    await page.evaluate(([x, z, th, on]) => { VIZ.set(on); controls.setFPV(x, z, th); }, [x, z, th, on]); await page.waitForTimeout(on ? 1500 : 400); await page.screenshot({ path: path.join(outDir, 'm4-2-' + name + (on ? '-on' : '-off') + '.png') }); }
   await page.evaluate(() => { document.getElementById('avatarOn').checked = true; document.getElementById('avatarOn').dispatchEvent(new Event('change')); document.getElementById('ceil').checked = false; document.getElementById('ceil').dispatchEvent(new Event('change')); VIZ.set(true); LIGHTING.set('lamps'); setView('top'); });
   await page.reload(); await page.waitForTimeout(2500);
   const vizKept = await page.evaluate(() => { const ok = VIZ.on && document.getElementById('mats').checked && LIGHTING.scheme === 'lamps' && document.getElementById('light').value === 'lamps'; VIZ.set(false); LIGHTING.set('neutral'); return ok; });
