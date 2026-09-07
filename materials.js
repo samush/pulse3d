@@ -44,6 +44,7 @@ const MATERIALS={
 const COATINGS={
   oakFloor:    {name:'дуб, доска пола',      class:'wood',   dir:'textures/oakFloor',     size:[1.2,1.2], tint:[0.9,0.86,0.82]},
   oakFurniture:{name:'дуб, шпон мебели',     class:'wood',   dir:'textures/oakFurniture', size:[1.83,1.83], tint:[0.74,0.7,0.66]}, // grain along V = along legs/posts and the table length (z); muted against the reference
+  oakFurnitureX:{name:'дуб, шпон мебели, волокна по x', class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], rotation:90, tint:[0.74,0.7,0.66]}, // M4: horizontal parts elongated along x (loggia desk); own texture object, oakFurniture keeps rotation 0
   cabinetPaint:{name:'крашеный МДФ, бежевый', class:'cabinetPaint', dir:'textures/cabinetPaint', size:[1,1], maps:['normal','rough'], color:0xd9c9ad, normalScale:0.25},
   whiteEnamel: {name:'белая эмаль, техника',    class:'cabinetPaint', dir:'textures/cabinetPaint', size:[1,1], maps:['normal','rough'], color:0xeeece8, normalScale:0.15}, // M4-3: washer/dryer body — the cabinetPaint set is beige, appliances are white
   wallPaint:   {name:'краска стен, тёплая светлая', class:'wallPaint', dir:'textures/wallPaint', size:[1,1], maps:['normal'], rough:0.9, color:0xe6ddd0, normalScale:0.08}, // Paint004 rough map gives glossy blotches under the environment; flat 0.9 instead,
