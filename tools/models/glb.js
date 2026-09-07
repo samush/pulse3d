@@ -9,8 +9,13 @@ function rbox(w,h,d,r,x0,y0,z0,{m=2,step=0.06,crown=0,fold=0}={}){
   const H=[w/2,h/2,d/2], S=[seg(w),seg(h),seg(d)];
   // grid parameter → pre-rounding coordinate: m segments sweep each rounded quarter, the rest is spread over the flat part
   const remap=(c,i)=>{ const u=(c/H[i]+1)/2, s=S[i], k=s-2*m; if(u*s<m-1e-9) return -H[i]+r*Math.sin(u*s/m*Math.PI/2); if(u*s>s-m+1e-9) return H[i]-r*Math.sin((1-u)*s/m*Math.PI/2); return -(H[i]-r)+(u*s-m)/k*2*(H[i]-r); };
+  // same parameter unrolled by arc length: a face owns 45° of the rounded edge (the neighbour face the other 45°), the arc from the flat edge is r·atan(t/r)
+  const unroll=(c,i)=>{ const u=(c/H[i]+1)/2, s=S[i], k=s-2*m; if(u*s<m-1e-9) return -(H[i]-r)-r*Math.atan(1-Math.sin(u*s/m*Math.PI/2)); if(u*s>s-m+1e-9) return (H[i]-r)+r*Math.atan(1-Math.sin((1-u)*s/m*Math.PI/2)); return -(H[i]-r)+(u*s-m)/k*2*(H[i]-r); };
+  const uv=new Float32Array(p.count*2); // UV from the unfolded box coordinate per original face: continuous across the rounded edge, metres
   for(let i=0;i<p.count;i++){
-    v.fromBufferAttribute(p,i); v.set(remap(v.x,0),remap(v.y,1),remap(v.z,2));
+    v.fromBufferAttribute(p,i); const ux=unroll(v.x,0)+x0+w/2, uy=unroll(v.y,1)+y0+h/2, uz=unroll(v.z,2)+z0+d/2; v.set(remap(v.x,0),remap(v.y,1),remap(v.z,2));
+    const nx=Math.abs(n.getX(i)), ny=Math.abs(n.getY(i)), nz=Math.abs(n.getZ(i));
+    if(ny>=nx&&ny>=nz){ uv[i*2]=ux; uv[i*2+1]=uz; } else if(nz>=nx){ uv[i*2]=ux; uv[i*2+1]=uy; } else { uv[i*2]=uz; uv[i*2+1]=uy; }
     q.set(clamp(v.x,-H[0]+r,H[0]-r),clamp(v.y,-H[1]+r,H[1]-r),clamp(v.z,-H[2]+r,H[2]-r));
     dir.subVectors(v,q); if(dir.lengthSq()<1e-12) dir.fromBufferAttribute(n,i); dir.normalize();
     v.copy(q).addScaledVector(dir,r);
@@ -19,6 +24,7 @@ function rbox(w,h,d,r,x0,y0,z0,{m=2,step=0.06,crown=0,fold=0}={}){
       v.y+=dy; }
     p.setXYZ(i,v.x+x0+w/2,v.y+y0+h/2,v.z+z0+d/2); n.setXYZ(i,dir.x,dir.y,dir.z);
   }
+  g.setAttribute('uv',new THREE.BufferAttribute(uv,2)); g.userData.metricUV=true;
   return g; // analytic normals kept: the dome is too shallow to change them visibly, recomputing would flat-shade
 }
 // closed rounded-rectangle curve in the XZ plane at height y — piping path along a cushion seam
@@ -33,11 +39,19 @@ class RRect extends THREE.Curve{ constructor(x0,z0,w,d,r,y){ super(); Object.ass
     return o.set(x0+r,y,z0); } }
 const piping=(x0,z0,w,d,r,y,radius=0.003)=>new THREE.TubeGeometry(new RRect(x0,z0,w,d,r,y),Math.round(2*(w+d)/0.03),radius,5,true);
 const cylinder=(cx,y0,cz,radius,h,seg=12)=>new THREE.CylinderGeometry(radius,radius,h,seg).translate(cx,y0+h/2,cz);
-// UVs in metres from the dominant normal axis, so VIZ pattern scale holds on any part
-function metricUV(g){ const p=g.attributes.position, n=g.attributes.normal, uv=new Float32Array(p.count*2);
+// UVs in metres. Parametric surfaces (cylinder, tube, torus, lathe) unroll their native 0..1 UV by circumference/length, so the pattern
+// runs around them without seams; rbox brings its own; anything else is projected along the dominant normal axis.
+function metricUV(g){ if(g.userData.metricUV) return g; const uv=g.attributes.uv, P=g.parameters||{}, T=g.type;
+  if(T==='CylinderGeometry'){ const sideVerts=(P.radialSegments+1)*((P.heightSegments||1)+1), r=Math.max(P.radiusTop,P.radiusBottom);
+    for(let i=0;i<uv.count;i++){ if(i<sideVerts) uv.setXY(i,uv.getX(i)*2*Math.PI*r,uv.getY(i)*P.height); else uv.setXY(i,(uv.getX(i)-0.5)*2*r,(uv.getY(i)-0.5)*2*r); } return g; }
+  if(T==='TubeGeometry'){ const L=P.path.getLength(); for(let i=0;i<uv.count;i++) uv.setXY(i,uv.getX(i)*L,uv.getY(i)*2*Math.PI*P.radius); return g; }
+  if(T==='TorusGeometry'){ for(let i=0;i<uv.count;i++) uv.setXY(i,uv.getX(i)*2*Math.PI*P.radius,uv.getY(i)*2*Math.PI*P.tube); return g; }
+  if(T==='LatheGeometry'){ const pts=P.points, arc=[0]; for(let j=1;j<pts.length;j++) arc[j]=arc[j-1]+pts[j].distanceTo(pts[j-1]); // u by the ring at this vertex's own radius, v by profile length
+    for(let i=0;i<uv.count;i++){ const j=i%pts.length; uv.setXY(i,(uv.getX(i)-0.5)*2*Math.PI*pts[j].x,arc[j]); } return g; }
+  const p=g.attributes.position, n=g.attributes.normal, out=new Float32Array(p.count*2);
   for(let i=0;i<p.count;i++){ const nx=Math.abs(n.getX(i)), ny=Math.abs(n.getY(i)), nz=Math.abs(n.getZ(i)), x=p.getX(i), y=p.getY(i), z=p.getZ(i);
-    if(ny>=nx&&ny>=nz){ uv[i*2]=x; uv[i*2+1]=z; } else if(nz>=nx){ uv[i*2]=x; uv[i*2+1]=y; } else { uv[i*2]=z; uv[i*2+1]=y; } }
-  g.setAttribute('uv',new THREE.BufferAttribute(uv,2)); return g; }
+    if(ny>=nx&&ny>=nz){ out[i*2]=x; out[i*2+1]=z; } else if(nz>=nx){ out[i*2]=x; out[i*2+1]=y; } else { out[i*2]=z; out[i*2+1]=y; } }
+  g.setAttribute('uv',new THREE.BufferAttribute(out,2)); return g; }
 function merge(geos){ const out=new THREE.BufferGeometry(); ['position','normal','uv'].forEach(k=>{ const arrs=geos.map(g=>g.attributes[k].array); const a=new Float32Array(arrs.reduce((s,x)=>s+x.length,0)); let o=0; arrs.forEach(x=>{ a.set(x,o); o+=x.length; }); out.setAttribute(k,new THREE.BufferAttribute(a,geos[0].attributes[k].itemSize)); });
   const idx=new Uint32Array(geos.reduce((s,g)=>s+g.index.count,0)); let o=0, base=0; geos.forEach(g=>{ for(let i=0;i<g.index.count;i++) idx[o++]=g.index.getX(i)+base; base+=g.attributes.position.count; }); out.setIndex(new THREE.BufferAttribute(idx,1)); return out; }
 // parts [{geo,mat}] → GLB Buffer; one indexed mesh per material name
