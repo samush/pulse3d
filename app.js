@@ -74,7 +74,7 @@ const controls={
     this.apply(); syncMode();
   },
   setCam(c){ // fixed camera from CAMS: lens turns with the mouse, position stays
-    this.fpv=true; this.cam=true; this.plan=false;
+    this.fpv=true; this.cam=true; this.plan=false; this.camId=c.id;
     persp.fov=c.fov||70; persp.near=0.05; persp.updateProjectionMatrix(); // small rooms: the wall next to the lens must not be clipped
     const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
     this.pos.set(c.pos[0],c.pos[1],c.pos[2]); this.theta=c.theta; this.phi=c.phi;
@@ -212,26 +212,28 @@ function fitDist(mult){
   return Math.max(dv,dh)*(mult||1.12);
 }
 const CAMS=[ // fixed room cameras (selector «Камера»): pos [x,y,z] m, theta/phi as in controls, fov deg
-  {id:'r1-n',label:'1 · детская, северо-западный угол',pos:[1.5,2.55,2.1],theta:0.92,phi:Math.PI/2+0.33,fov:80},
-  {id:'r1-s',label:'1 · детская, юго-западный угол',pos:[1.5,2.55,4.6],theta:2.21,phi:Math.PI/2+0.33,fov:80},
-  {id:'r1-bed',label:'1 · детская, с кровати-чердака',pos:[4.3,2.62,3.2],theta:-1.6,phi:Math.PI/2+0.45,fov:90},
-  {id:'r2-n',label:'2 · детская, северо-восточный угол',pos:[14.0,2.55,7.4],theta:-0.85,phi:Math.PI/2+0.33,fov:80},
-  {id:'r2-s',label:'2 · детская, юго-восточный угол',pos:[13.8,2.55,9.45],theta:-2.49,phi:Math.PI/2+0.33,fov:80},
-  {id:'r2-bed',label:'2 · детская, с кровати-чердака',pos:[12.2,2.62,8.4],theta:1.5,phi:Math.PI/2+0.45,fov:90},
-  {id:'r3-door',label:'3 · спальня, от двери',pos:[10.2,2.5,10.3],theta:1.15,phi:Math.PI/2+0.33,fov:80},
-  {id:'r4-door',label:'4 · кухня-гостиная, от двери',pos:[13.3,2.5,6.1],theta:-2.25,phi:Math.PI/2+0.33,fov:80},
-  {id:'r4-kitchen',label:'4 · кухня-гостиная, из кухонного угла',pos:[9.1,2.5,2.1],theta:0.88,phi:Math.PI/2+0.33,fov:80},
-  {id:'r4-window',label:'4 · кухня-гостиная, от окна',pos:[13.3,2.5,2.1],theta:-0.89,phi:Math.PI/2+0.33,fov:80},
-  {id:'r4-sw',label:'4 · кухня-гостиная, юго-западный угол',pos:[9.1,2.5,6.1],theta:2.26,phi:Math.PI/2+0.33,fov:80},
-  {id:'r5-entry',label:'5 · коридор, от входа',pos:[7.3,2.5,7.3],theta:-3.11,phi:Math.PI/2+0.3,fov:80},
-  {id:'r6',label:'6 · гардеробная, над дверью',pos:[6.55,2.4,3.65],theta:-2.74,phi:Math.PI/2+0.5,fov:80},
-  {id:'r7',label:'7 · постирочная',pos:[7.5,2.3,3.85],theta:Math.PI,phi:Math.PI/2+0.63,fov:70},
-  {id:'r8',label:'8 · санузел, над дверью',pos:[9.65,2.45,12.95],theta:-2.36,phi:Math.PI/2+0.48,fov:90},
-  {id:'r8-nw',label:'8 · санузел, над душем',pos:[8.55,2.45,11.8],theta:0.76,phi:Math.PI/2+0.48,fov:90},
-  {id:'r9',label:'9 · санузел, северо-восточный угол',pos:[9.7,2.5,8.3],theta:-0.79,phi:Math.PI/2+0.45,fov:85},
-  {id:'r9-sw',label:'9 · санузел, юго-западный угол',pos:[8.5,2.45,9.55],theta:2.46,phi:Math.PI/2+0.45,fov:85},
-  {id:'r10',label:'10 · лоджия, от стола (под полкой)',pos:[14.5,1.6,5.95],theta:Math.PI,phi:Math.PI/2+0.08,fov:80},
-  {id:'r10-shelf',label:'10 · лоджия, над стеллажом',pos:[14.5,2.4,2.55],theta:0,phi:Math.PI/2+0.3,fov:80}];
+  {id:'r1-n',label:'детская 1 (вид 1)',pos:[1.5,2.55,2.1],theta:0.92,phi:Math.PI/2+0.33,fov:80},
+  {id:'r1-s',label:'детская 1 (вид 2)',pos:[1.5,2.55,4.6],theta:2.21,phi:Math.PI/2+0.33,fov:80},
+  {id:'r1-bed',label:'детская 1 (вид 3)',pos:[4.3,2.62,3.2],theta:-1.6,phi:Math.PI/2+0.45,fov:90},
+  {id:'r1-stairs',label:'детская 1 (вид 4)',pos:[4.2,2.65,2.35],theta:-0.79,phi:Math.PI/2+0.4,fov:90},
+  {id:'r2-n',label:'детская 2 (вид 1)',pos:[14.0,2.55,7.4],theta:-0.85,phi:Math.PI/2+0.33,fov:80},
+  {id:'r2-s',label:'детская 2 (вид 2)',pos:[13.8,2.55,9.45],theta:-2.49,phi:Math.PI/2+0.33,fov:80},
+  {id:'r2-bed',label:'детская 2 (вид 3)',pos:[12.2,2.62,8.4],theta:1.5,phi:Math.PI/2+0.45,fov:90},
+  {id:'r2-stairs',label:'детская 2 (вид 4)',pos:[12.3,2.65,9.5],theta:2.47,phi:Math.PI/2+0.4,fov:90},
+  {id:'r3-door',label:'спальня (вид 1)',pos:[10.2,2.5,10.3],theta:1.15,phi:Math.PI/2+0.33,fov:80},
+  {id:'r4-door',label:'кухня-гостиная (вид 1)',pos:[13.3,2.5,6.1],theta:-2.25,phi:Math.PI/2+0.33,fov:80},
+  {id:'r4-kitchen',label:'кухня-гостиная (вид 2)',pos:[9.1,2.5,2.1],theta:0.88,phi:Math.PI/2+0.33,fov:80},
+  {id:'r4-window',label:'кухня-гостиная (вид 3)',pos:[13.3,2.5,2.1],theta:-0.89,phi:Math.PI/2+0.33,fov:80},
+  {id:'r4-sw',label:'кухня-гостиная (вид 4)',pos:[9.1,2.5,6.1],theta:2.26,phi:Math.PI/2+0.33,fov:80},
+  {id:'r5-entry',label:'коридор (вид 1)',pos:[7.3,2.5,7.3],theta:-3.11,phi:Math.PI/2+0.3,fov:80},
+  {id:'r6',label:'гардеробная (вид 1)',pos:[6.55,2.4,3.65],theta:-2.74,phi:Math.PI/2+0.5,fov:80},
+  {id:'r7',label:'постирочная (вид 1)',pos:[7.5,2.3,3.85],theta:Math.PI,phi:Math.PI/2+0.63,fov:70},
+  {id:'r8',label:'санузел 8 (вид 1)',pos:[9.65,2.45,12.95],theta:-2.36,phi:Math.PI/2+0.48,fov:90},
+  {id:'r8-nw',label:'санузел 8 (вид 2)',pos:[8.55,2.45,11.8],theta:0.76,phi:Math.PI/2+0.48,fov:90},
+  {id:'r9',label:'санузел 9 (вид 1)',pos:[9.7,2.5,8.3],theta:-0.79,phi:Math.PI/2+0.45,fov:85},
+  {id:'r9-sw',label:'санузел 9 (вид 2)',pos:[8.5,2.45,9.55],theta:2.46,phi:Math.PI/2+0.45,fov:85},
+  {id:'r10',label:'лоджия (вид 1)',pos:[14.5,1.6,5.95],theta:Math.PI,phi:Math.PI/2+0.08,fov:80},
+  {id:'r10-shelf',label:'лоджия (вид 2)',pos:[14.5,2.4,2.55],theta:0,phi:Math.PI/2+0.3,fov:80}];
 function setView(kind){
   if(typeof resizeReady!=='undefined')resize();
   controls.fpv=false; controls.cam=false;
@@ -244,7 +246,7 @@ function setView(kind){
 }
 function syncMode(){ // called by every camera-mode switch (setPlan/setFPV/setPose): UI, plan tools and render mode follow the camera (A03)
   fpvhint.hidden=!controls.fpv||controls.cam; walkpad.hidden=!controls.fpv||controls.cam;
-  const ch=document.getElementById('camhint'), cs=document.getElementById('cam'); ch.hidden=!controls.cam; if(!controls.cam) cs.value='';
+  const ch=document.getElementById('camhint'), cs=document.getElementById('cam'); ch.hidden=!controls.cam; cs.value=controls.cam?controls.camId:'';
   panbtn.hidden=controls.fpv; panbtn.classList.remove('on');
   document.querySelector('.hint').textContent=controls.plan?'ЛКМ — вращать · колесо — масштаб · ПКМ или пробел — сдвиг':'ЛКМ — вращать · колесо — зум · ПКМ или пробел — сдвиг';
   if(window.MK&&MK.on&&!controls.plan) MK.toggle(false);
