@@ -77,7 +77,7 @@ const controls={
     camera=this.plan?ortho:persp;
     if(typeof avatar!=='undefined'){ avatar.visible=this.fpv&&document.getElementById('avatarOn').checked; }
     if(typeof backdropGroup!=='undefined'){ backdropGroup.visible=this.fpv; }
-    if(typeof ceilGroup!=='undefined') ceilGroup.visible=!this.plan&&document.getElementById('ceil').checked; // hidden in plan; set before the fpv return so walk mode restores it
+    if(typeof ceilGroup!=='undefined') ceilGroup.visible=!this.plan; // hidden in plan only; set before the fpv return so walk mode restores it
     if(this.fpv){
       this.phi=Math.min(Math.PI-0.25,Math.max(0.25,this.phi));
       const d=this.dir();
@@ -423,7 +423,6 @@ document.getElementById('cubes').addEventListener('change',e=>cubeGroup.visible=
 document.getElementById('labels').addEventListener('change',e=>labelGroup.visible=e.target.checked);
 wallGroupR.visible=false; // стена коридор-кухня по умолчанию выключена, как и галочка #kwall
 document.getElementById('kwall').addEventListener('change',e=>{wallGroupR.visible=e.target.checked&&wop.value/100>0.01; if(window.kitchenFrame)window.kitchenFrame.visible=e.target.checked;}); // стена появляется только если ползунок «Стены» не на нуле
-document.getElementById('ceil').addEventListener('change',e=>ceilGroup.visible=e.target.checked&&!controls.plan);
 document.getElementById('wgrid').addEventListener('change',e=>{wallGridGroup.visible=e.target.checked;addrGroup.visible=e.target.checked;});
 document.getElementById('finish').addEventListener('change',e=>finishGroup.visible=e.target.checked);
 document.getElementById('tileFloor').addEventListener('change',e=>tileGroup.visible=e.target.checked);
@@ -727,10 +726,10 @@ avatar.visible=false;
 scene.add(avatar);
 document.getElementById('avatarOn').addEventListener('change',()=>controls.apply()); // the walk keeps running, only the figure hides
 
-// потолок (по умолчанию выключен)
+// потолок: всегда включён вне плана; съёмная стена коридор-кухня (slabsR) не входит ни в одну комнату — без заплатки по её следу при скрытой стене видна полоса фона
 var ceilGroup=new THREE.Group(); var ceilMat=new THREE.MeshBasicMaterial({color:0xfaf8f5,side:THREE.DoubleSide});
-PLAN.rooms.forEach(r=>{
-  const g=new THREE.ShapeGeometry(toShape(r.poly));
+PLAN.rooms.map(r=>r.poly).concat(PLAN.slabsR[PLAN.slabsR.length-1].polys.map(p=>p.s)).forEach(poly=>{
+  const g=new THREE.ShapeGeometry(toShape(poly));
   g.rotateX(-Math.PI/2); g.translate(0,H-0.005,0);
   ceilGroup.add(new THREE.Mesh(g,ceilMat));
 });

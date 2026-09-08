@@ -539,8 +539,7 @@ const { chromium } = require('playwright');
     const set = v => { const s = document.getElementById('wop'); s.value = v; s.dispatchEvent(new Event('input')); };
     set(50); const half = Math.abs(VIZ.std.get(wallMat).opacity - 0.5) < 1e-9 && Math.abs(VIZ.std.get(finishMats.wp).opacity - 0.5) < 1e-9;
     set(0); const floorKept = finishMats.woodFloor.opacity === 1 && VIZ.std.get(finishMats.woodFloor).opacity === 1 && finishMats.wood.opacity === 0; set(100);
-    const cb = document.getElementById('ceil'); cb.checked = true; cb.dispatchEvent(new Event('change'));
-    const c0 = ceilGroup.visible; setView('top'); const c1 = ceilGroup.visible; controls.setFPV(10.6, 3.9, Math.PI / 2 + 0.25); const c2 = ceilGroup.visible; cb.checked = false; cb.dispatchEvent(new Event('change'));
+    const c0 = ceilGroup.visible; setView('top'); const c1 = ceilGroup.visible; controls.setFPV(10.6, 3.9, Math.PI / 2 + 0.25); const c2 = ceilGroup.visible;
     return { half, floorKept, ceil: c0 && !c1 && c2 };
   });
   if (!wop.half) problems.push('визуализация: PBR-стены не следуют ползунку прозрачности');
@@ -604,7 +603,7 @@ const { chromium } = require('playwright');
     let sp; ITEM_GROUPS.kitchen.traverse(o => { if (!sp && o.isMesh && (VIZ.basic.get(o.material) || o.material) === ITEM_MATS.wpanel) sp = o; }); const sb = new THREE.Box3().setFromObject(sp); out.splash = sb.max.x - ITEM_GROUPS.kitchen.userData.pos[0] > 0.019; // proud of the 15 mm wall finish
     return out; });
   Object.entries(m2).forEach(([k, ok]) => { if (!ok) problems.push('кухня 4: «' + k + '» не сошлось (materials-lighting M2, kitchen.md)'); });
-  await page.evaluate(() => { document.getElementById('avatarOn').checked = false; document.getElementById('avatarOn').dispatchEvent(new Event('change')); document.getElementById('ceil').checked = true; document.getElementById('ceil').dispatchEvent(new Event('change')); });
+  await page.evaluate(() => { document.getElementById('avatarOn').checked = false; document.getElementById('avatarOn').dispatchEvent(new Event('change')); });
   for (const [k, v] of Object.entries({ A: [12.6, 1.6, 5.6, 8.6, 1.2, 2.6], B: [9.8, 1.5, 3.0, 12.6, 0.8, 6.0], C: [11.0, 1.4, 3.0, 8.6, 0.95, 3.4] })) for (const on of [true, false]) {
     await page.evaluate(([v, on]) => { VIZ.set(on); controls.setPose(...v); }, [v, on]); await page.waitForTimeout(on ? 1500 : 400); await page.screenshot({ path: path.join(outDir, 'm2-' + k + (on ? '-on' : '-off') + '.png') }); }
   // materials-lighting M4-1: rooms 1 and 2 — casework painted, bedding linen, chair pads and the kids sofa in the sofa weave, rug pile, tulle linen, gym wall oak, plastic on lamps/sockets; metal, LED and chrome stay class
@@ -661,7 +660,7 @@ const { chromium } = require('playwright');
   Object.entries(m42).forEach(([k, ok]) => { if (!ok) problems.push('комнаты 3, 6: «' + k + '» не сошлось (materials-lighting M4-2)'); });
   for (const [name, x, z, th] of [['room3-door', 10.9, 11.9, Math.PI / 2 + 0.25], ['room3-tv', 13.6, 12.3, Math.PI - 0.15], ['room3-south', 14.2, 10.5, -0.55], ['wardrobe6-door', 6.6, 4.5, Math.PI - 0.15], ['wardrobe6-end', 6.55, 3.2, 0.2]]) for (const on of [true, false]) {
     await page.evaluate(([x, z, th, on]) => { VIZ.set(on); controls.setFPV(x, z, th); }, [x, z, th, on]); await page.waitForTimeout(on ? 1500 : 400); await page.screenshot({ path: path.join(outDir, 'm4-2-' + name + (on ? '-on' : '-off') + '.png') }); }
-  await page.evaluate(() => { document.getElementById('avatarOn').checked = true; document.getElementById('avatarOn').dispatchEvent(new Event('change')); document.getElementById('ceil').checked = false; document.getElementById('ceil').dispatchEvent(new Event('change')); VIZ.set(true); LIGHTING.set('lamps'); setView('top'); });
+  await page.evaluate(() => { document.getElementById('avatarOn').checked = true; document.getElementById('avatarOn').dispatchEvent(new Event('change')); VIZ.set(true); LIGHTING.set('lamps'); setView('top'); });
   await page.reload(); await page.waitForTimeout(2500);
   const vizKept = await page.evaluate(() => { const ok = VIZ.on && document.getElementById('mats').checked && LIGHTING.scheme === 'lamps' && document.getElementById('light').value === 'lamps'; VIZ.set(false); LIGHTING.set('neutral'); return ok; });
   if (!viz.std) problems.push('визуализация: материалы не PBR');
@@ -747,11 +746,11 @@ const { chromium } = require('playwright');
     ['l2-hall5-entry', 9.0, 7.0, 6.4, 7.2], ['l2-hall5-north', 7.2, 6.3, 7.2, 4.2], ['l2-hall5-east', 10.45, 7.0, 10.45, 9.5],
     ['l2-wardrobe6', 6.6, 3.85, 6.2, 2.0], ['l2-laundry7', 7.5, 4.3, 7.35, 2.6],
     ['l2-bath8', 9.6, 12.3, 8.5, 12.8], ['l2-bath8-cove', 9.6, 12.5, 8.6, 11.5, 'g8.main'], ['l2-balcony10', 14.5, 5.8, 14.5, 3.0]]) { // L2 frames: room from the door, desk/gallery wall, evening (bed zone only)
-    await page.evaluate(([x, z, tx, tz, off]) => { VIZ.set(true); LIGHTING.set('lamps'); document.getElementById('avatarOn').checked = false; const cb = document.getElementById('ceil'); cb.checked = true; cb.dispatchEvent(new Event('change'));
+    await page.evaluate(([x, z, tx, tz, off]) => { VIZ.set(true); LIGHTING.set('lamps'); document.getElementById('avatarOn').checked = false;
       Object.keys(LIGHTING.groups).forEach(g => LIGHTING.group(g, !(off || '').split(',').includes(g))); controls.setFPV(x, z, Math.atan2(tx - x, tz - z)); }, [x, z, tx, tz, off]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png'), timeout: 120000 }); // shadowed lamp frames exceed the 30 s default on software GL
   }
-  await page.evaluate(() => { document.getElementById('avatarOn').checked = true; const cb = document.getElementById('ceil'); cb.checked = false; cb.dispatchEvent(new Event('change')); LIGHTING.set('neutral'); VIZ.set(false); setView('top'); });
+  await page.evaluate(() => { document.getElementById('avatarOn').checked = true; LIGHTING.set('neutral'); VIZ.set(false); setView('top'); });
   if (!viz.shadows) problems.push('визуализация: тени не включены');
   if (!viz.maps || !viz.scale) problems.push('визуализация: карты шероховатости/рельефа отсутствуют или масштаб не совпадает');
   if (!viz.tone) problems.push('визуализация: tone mapping / sRGB не включены');
@@ -1013,8 +1012,7 @@ const { chromium } = require('playwright');
     const area = p => Math.abs(p.reduce((s, q, i) => { const r = p[(i + 1) % p.length]; return s + q[0] * r[1] - r[0] * q[1]; }, 0)) / 2;
     const y = meshes.length ? new THREE.Box3().setFromObject(meshes[0]).min.y : -1;
     const d5 = PLAN.doors[5], s5 = TILE_SILLS[5], sillOk = Math.abs(Math.min(...s5.map(q => q[1])) - (d5[1] - d5[3] / 2)) < 1e-9 && Math.abs(Math.min(...s5.map(q => q[0])) - d5[0]) < 1e-9;
-    const cb = document.getElementById('tileFloor'), fin0 = finishGroup.visible;
-    cb.checked = false; cb.dispatchEvent(new Event('change')); const hid = !tileGroup.visible && finishGroup.visible === fin0;
+    const cb = document.getElementById('tileFloor'), fin0 = finishGroup.visible; const hid = !tileGroup.visible && finishGroup.visible === fin0;
     cb.checked = true; cb.dispatchEvent(new Event('change')); const shown = tileGroup.visible;
     const fin = document.getElementById('finish'); fin.checked = false; fin.dispatchEvent(new Event('change')); const tileKept = tileGroup.visible && !finishGroup.visible; fin.checked = true; fin.dispatchEvent(new Event('change'));
     VIZ.set(true); setView('fpv'); VIZ.apply && VIZ.apply(); const std = meshes[0].material.type; VIZ.set(false);
@@ -1048,7 +1046,7 @@ const { chromium } = require('playwright');
   const bd = await page.evaluate(() => {
     const meshes = []; boardGroup.traverse(o => { if (o.isMesh) meshes.push(o); });
     const b = new THREE.Box3().setFromObject(boardGroup);
-    const cb = document.getElementById('boardFloor'); cb.checked = false; cb.dispatchEvent(new Event('change')); const hid = !boardGroup.visible && tileGroup.visible; cb.checked = true; cb.dispatchEvent(new Event('change'));
+    const cb = document.getElementById('boardFloor'); const hid = !boardGroup.visible && tileGroup.visible; cb.checked = true; cb.dispatchEvent(new Event('change'));
     VIZ.set(true); setView('fpv'); VIZ.apply && VIZ.apply(); const std = meshes[0].material.type; VIZ.set(false);
     const frost = []; glassGroup.traverse(o => { if (o.isMesh && o.material === loggiaFrostMat) frost.push(o); });
     return { n: meshes.length, box: [b.min.x, b.max.x, b.min.z, b.max.z, b.min.y], hid, shown: boardGroup.visible, std, frost: frost.length };
