@@ -1,4 +1,4 @@
-// Modular sofa 2.0×0.85×0.88 in room 4 (revision 2026-09-08 after .local/sofa_00.png): low seat block with r 60 mm edges on hidden feet,
+// Modular sofa 2.0×0.87×0.88 in room 4 (revision 2026-09-08 after .local/sofa_00.png): low seat block with r 60 mm edges on hidden feet,
 // no back blocks and no arms, piping along the seat top, three big plump pillows leaning on the wall behind (back edge at z=0.88).
 // Local coords as in items.js: NW corner, back at z=0.88. Material names are coatings: upholstery (block), cushion (pillows), piping, metal (feet).
 // Usage: node tools/models/sofa.js  → models/sofa.glb
