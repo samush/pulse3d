@@ -409,10 +409,10 @@ const PHYS={}; // id → boxes
        b.phys(0.30,1.30,0.58,0.73,0.05,0.45); b.phys(0.29,1.30,0.73,0.75,0.04,0.45); b.phys(0,0.60,0.38,0.55,0.05,0.45); b.phys(0,0.61,0.55,0.57,0.04,0.45); // proxy = mesh AABBs (realism-all D1); the fronts add theirs in flute()
        b(0.30,1.30,0.58,0.73,0.05,0.45,mat.body); b.round(0.29,1.30,0.73,0.75,0.04,0.45,0.003,mat.body); flute(0.31,1.29,0.585,0.725,0.03);   // console 1.00 on the wall, top 0.02 with 3 mm chamfer, fluted drawer front
        b(0,0.60,0.38,0.55,0.05,0.45,mat.body); b.round(0,0.61,0.55,0.57,0.04,0.45,0.003,mat.body); flute(0.01,0.59,0.385,0.545,0.03); }},     // second drawer 0.60 lower, offset 0.30 towards the bed
-    {id:'vmirror',type:'зеркало 1.00×0.60 со скруглёнными углами и LED-подсветкой сзади, над столиком; низ 0.95',room:3,layer:'master',pos:[12.62,9.827],rot:180,size:[1.04,1.57,0.03],fixed:'wall',
-     build(b,g){ b.phys(0,1.04,0.93,1.57,0.02,0.03); b.phys(0.02,1.02,0.95,1.55,0.009,0.03); b.phys(0.03,1.01,0.96,1.54,0.004,0.009); // proxy = mesh AABBs (realism-all D1); size includes the 2 cm halo
+    {id:'vmirror',type:'зеркало 1.00×0.90 со скруглёнными углами и LED-подсветкой сзади, над столиком; низ 0.95',room:3,layer:'master',pos:[12.62,9.827],rot:180,size:[1.04,1.87,0.03],fixed:'wall',
+     build(b,g){ b.phys(0,1.04,0.93,1.87,0.02,0.03); b.phys(0.02,1.02,0.95,1.85,0.009,0.03); b.phys(0.03,1.01,0.96,1.84,0.004,0.009); // proxy = mesh AABBs (realism-all D1); size includes the 2 cm halo
        const plate=(w,h,r,x,y,z,d,m)=>{ const mesh=new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(w,h,r),{depth:d,bevelEnabled:false,curveSegments:24}),m); mesh.position.set(x,y,z); g.add(mesh); };
-       plate(1.04,0.64,0.10,0,0.93,0.02,0.01,mat.led); plate(1.00,0.60,0.08,0.02,0.95,0.009,0.021,mat.frame); plate(0.98,0.58,0.07,0.03,0.96,0.004,0.005,mat.mirror); }}, // LED halo on the wall (emitter of g3.vanity via led9), metal backing, 5 mm glass facing the room
+       plate(1.04,0.94,0.10,0,0.93,0.02,0.01,mat.led); plate(1.00,0.90,0.08,0.02,0.95,0.009,0.021,mat.frame); plate(0.98,0.88,0.07,0.03,0.96,0.004,0.005,mat.mirror); }}, // LED halo on the wall (emitter of g3.vanity via led9), metal backing, 5 mm glass facing the room
     {id:'vpouf',type:'пуфик у туалетного столика',room:3,layer:'master',pos:[12.3,10.681],rot:180,size:[0.40,0.45,0.40],glb:'models/vpouf.glb', // model by tools/models/vpouf.js
      build(b){ b.phys(0,0.4,0.35,0.45,0,0.4); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b.phys(x,x+0.03,0,0.35,z,z+0.03)); // proxy = pre-detail mesh AABBs (realism-all D1)
        b(0,0.4,0.35,0.45,0,0.4,mat.cushion); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b(x,x+0.03,0,0.35,z,z+0.03,mat.frame)); }},
