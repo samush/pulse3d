@@ -837,3 +837,18 @@ document.getElementById('furnBath').addEventListener('change',e=>bathGroup.visib
 document.getElementById('furnBath2').addEventListener('change',e=>bath2Group.visible=e.target.checked);
 document.getElementById('furnWardrobe').addEventListener('change',e=>wardrobeGroup.visible=e.target.checked);
 document.getElementById('furnBalcony').addEventListener('change',e=>balconyGroup.visible=e.target.checked);
+// room 3 bed podium length (select #bed3): the GLB holds the 2.82 podium; the podium meshes scale from the headboard, the drawer fronts from the
+// wardrobe edge (z 0.60) so the short variant keeps both drawers clear of it. Size and proxy follow, so physics and layout warnings stay honest.
+(function(){
+  const L0=2.82, WARD=0.60, KEY='pulse3d.bed3', sel=document.getElementById('bed3'); if(!sel) return;
+  const LEN={normal:2.20,rug:L0,wall:+(13.144-(PLAN.rooms.find(r=>r.id===3).poly.reduce((m,p)=>Math.min(m,p[1]),1e9)+0.03)).toFixed(3)}; // to the finished north wall (30 mm of finish)
+  function apply(){ const g=ITEM_GROUPS.mbed, L=LEN[sel.value]||L0;
+    g.traverse(o=>{ if(!o.isMesh) return; const bb=o.geometry.boundingBox||o.geometry.computeBoundingBox()||o.geometry.boundingBox; if(o.userData.z0==null) o.userData.z0=o.position.z;
+      if(bb.max.y+(o.position.y||0)>0.31) return; // podium and drawer parts live below 0.30 (unscaled y)
+      const pivot=bb.max.z-bb.min.z>2?0:WARD, f=pivot?(L-WARD)/(L0-WARD):L/L0; o.scale.z=f; o.position.z=pivot+(o.userData.z0-pivot)*f; });
+    g.userData.size[2]=L; g.userData.proxy[0][5]=L; setItemPose('mbed'); } // same pose: rebuilds physics and runs the pose hooks
+  try{ const v=localStorage.getItem(KEY); if(v&&LEN[v]) sel.value=v; }catch(e){}
+  sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} apply(); });
+  const t=setInterval(()=>{ const g=ITEM_GROUPS.mbed; if(g.userData.glbLoaded||(window.VIZ&&(VIZ.loadErrors||[]).some(s=>s.startsWith('mbed:')))){ clearInterval(t); apply(); } },200); // GLB replaces the fallback meshes, so scale after it lands
+  window.BED3={apply,LEN};
+})();
