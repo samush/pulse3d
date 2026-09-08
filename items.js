@@ -60,6 +60,51 @@ const PHYS={}; // id → boxes
          for(let j=0;j<=i;j++){ const y0=0.3*j; b(x0+0.004,x1-0.004,y0+0.015,y0+0.285,0.5,0.518,front); b(cx-0.06,cx+0.06,y0+0.235,y0+0.25,0.518,0.535,mat.knob); } // 3 mm gaps, bar handle
          b.round(x0,x1,top+0.885,top+0.915,0.02,0.05,0.01,front); }                                // handrail segments on the north wall, tread + 0.90
   };
+  // Kids' loft bed variants A/B (tasks/kids-loft-beds/VARIANTS.md), one function for both rooms: same pos/size and the original nine PHYS boxes;
+  // stairs S1 (7 equal rises to 1.80, the seventh is a 0.24 landing inside the old stair length), 3 storage sections instead of 15 drawers,
+  // one continuous wall handrail, bed-side posts and the far post raised to carry a framed over-door tray whose 140 mm beams are its borders.
+  // kind 'timber' (A): 80 mm wood posts and 200 mm rails, wood balusters, solid stair side panel. 'steel' (B): 50 mm steel posts and 150 mm beams inside
+  // the same 80 mm corner zones, Ø12 rods, wood only on treads, caps and the handrail. Load path and wall ties are a sketch for the maker, not a calculation.
+  const kidLoftBuild=(kind,L,R)=>(b,g)=>{
+    const PL=1.8, TOP=2.3, HF=2.2, W=R+1.2, steel=kind==='steel', ST=steel?mat.frame:mat.table, wood=mat.table, pnl=mat.kbody, front=mat.wdoor;
+    const P=steel?0.05:0.08, po=(0.08-P)/2, RB=steel?1.65:1.60, TB=HF+0.14;                          // post/beam width inside the 80 mm zones, rail bottom, tray beam top
+    b.phys(0,R,0,2.4,0,0.54); [[R,0],[W-0.08,0],[R,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b.phys(x,x+0.08,0,PL,z,z+0.08)); // PHYS as the original (check.js: 9 boxes)
+    b.phys(R+0.08,W-0.08,0.10,0.14,L-0.08,L); b.phys(R,W,PL-0.2,TOP+0.3,0,L+0.02); b.phys(R,W,HF,TOP+0.3,L,2.97); b.phys(R,R+0.08,0,HF,2.89,2.97);
+    const tube=(x0,y0,z0,x1,y1,z1,r,m)=>{ const d=new THREE.Vector3(x1-x0,y1-y0,z1-z0), len=d.length(), geo=new THREE.CylinderGeometry(r,r,len,12).translate(0,len/2,0), mesh=new THREE.Mesh(geo,m);
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize()); mesh.position.set(x0,y0,z0); g.add(mesh); return mesh; }; // round bar between two local points
+    // platform frame: four corner posts, the two bed-side posts and the far post rise to the tray beams; long rails west/east, end rails north/south
+    [[R,0,PL],[W-0.08,0,PL],[R,L-0.08,TB],[W-0.08,L-0.08,TB],[R,2.89,TB]].forEach(([x,z,h])=>b(x+po,x+po+P,0,h,z+po,z+po+P,ST));
+    b(R+po,R+po+P,RB,PL,0,L,ST); b(W-0.08+po,W-0.08+po+P,RB,PL,0,L,ST); b(R,W,RB,PL,po,po+P,ST); b(R,W,RB,PL,L-0.08+po,L-0.08+po+P,ST);
+    b(R+0.08,W-0.08,0.10,0.14,L-0.08,L,ST);                                                           // lower rail between the south posts
+    b(R+0.08,W-0.08,1.70,1.72,0.08,L-0.08,pnl);                                                       // soffit panel: closes the frame from below, carries the recessed spot ceil2_3 in room 2
+    for(let z=0.10;z<L-0.10;z+=0.12) b(R+0.08,W-0.08,1.78,PL,z,Math.min(z+0.09,L-0.10),wood);         // ventilated slats 90 mm with 30 mm gaps
+    b(R+0.01,R+0.03,RB-0.01,RB,0,L,mat.led);                                                          // LED strip under the west rail
+    b.round(R+0.05,W-0.03,PL,PL+0.18,0.03,L-0.05,0.04,mat.kmat); b.round(R+0.15,W-0.13,PL+0.18,PL+0.28,0.1,0.5,0.045,mat.pillow); // mattress 0.18 and pillow as the original
+    b.round(R+0.1,W-0.15,PL+0.18,PL+0.24,0.8,L-0.1,0.025,mat.cushion); b.round(R+0.1,W-0.15,PL+0.24,PL+0.27,0.8,1.05,0.014,mat.cushion); // blanket
+    // guards to 2.30: wood cap, balusters 30x30 wood (A) or Ø12 rods (B) every 0.10; low boards along the walls so nothing falls behind the mattress
+    const cap=(x0,x1,z0,z1)=>b(x0,x1,TOP-0.04,TOP,z0,z1,wood), bal=(x,z)=>steel?b(x-0.006,x+0.006,PL,TOP-0.04,z-0.006,z+0.006,ST):b(x-0.015,x+0.015,PL,TOP-0.04,z-0.015,z+0.015,wood);
+    cap(R,R+0.04,0.5,L); for(let z=0.55;z<L-0.03;z+=0.1) bal(R+0.02,z); cap(R,W,L-0.04,L); for(let x=R+0.1;x<W-0.03;x+=0.1) bal(x,L-0.02);
+    b(R+0.08,W-0.08,PL,PL+0.30,0,0.02,pnl); b(W-0.02,W,PL,PL+0.30,0.02,L-0.08,pnl);
+    // stairs S1: rise h=1.80/7, six treads on step s, the seventh level is the 0.24 landing at 1.80 — the sit-down onto the mattress (+0.18) starts there
+    const h=PL/7, s=(R-0.24)/6, tread=(x0,x1,y)=>b.round(x0,x1,y-0.03,y,0,0.50,0.004,wood);            // 30 mm wood treads, 4 mm nose radius (check.js reads their tops)
+    for(let i=1;i<=6;i++){ const x0=(i-1)*s, y=i*h; b(x0,x0+s,0,y-0.03,0,0.50,pnl); tread(x0,x0+s,y); } b(R-0.24,R,0,PL-0.03,0,0.50,pnl); tread(R-0.24,R,PL);
+    // storage, fronts south with a recessed grip at the top edge: low drawer under treads 1–2, two deep drawers under 3–4, two doors under 5–6 and the landing
+    const fr=(x0,x1,y0,y1)=>{ b.round(x0+0.0015,x1-0.0015,y0+0.0015,y1-0.0015,0.50,0.518,0.001,front); b(x0+0.03,x1-0.03,y1-0.03,y1-0.018,0.505,0.518,mat.dark); };
+    fr(0.02,2*s-0.02,0.03,h-0.04); fr(2*s+0.02,4*s-0.02,0.03,0.38); fr(2*s+0.02,4*s-0.02,0.41,3*h-0.04);
+    const dm=(4*s+R)/2; fr(4*s+0.02,dm-0.0015,0.03,5*h-0.04); fr(dm+0.0015,R-0.02,0.03,5*h-0.04);       // two leaves ≤0.32: the swing stays clear of the first tread and the sofa/chair
+    // open (south) side of the stairs: solid stepped panel 0.74 over each tread (A) or Ø12 rods with a wood cap (B); the landing part rises to the guard top
+    for(let i=1;i<=6;i++){ const x0=(i-1)*s, y=i*h; if(steel){ [0.25,0.75].forEach(f=>b(x0+f*s-0.006,x0+f*s+0.006,y-0.03,y+0.70,0.524,0.536,ST)); b(x0,x0+s,y+0.70,y+0.74,0.52,0.54,wood); } else b(x0,x0+s,y-0.03,y+0.74,0.52,0.54,pnl); }
+    if(steel){ [R-0.18,R-0.06].forEach(x=>b(x-0.006,x+0.006,PL-0.03,TOP-0.04,0.524,0.536,ST)); b(R-0.24,R,TOP-0.04,TOP,0.52,0.54,wood); } else b(R-0.24,R,PL-0.03,TOP,0.52,0.54,pnl);
+    // handrail: one Ø32 wood rail 60 mm off the north wall, 0.85 over the tread line, levelled past the landing to the guard; three wall brackets, no free ends
+    const rz=0.06, yA=h+0.85, yB=6*h+0.85, xB=R-0.24, xE=R+0.25; tube(0.05,yA,rz,xB,yB,rz,0.016,wood); tube(xB,yB,rz,xE,yB,rz,0.016,wood);
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(0.016,12,8).translate(xB,yB,rz),wood)); [[0.05,yA],[xB,yB],[xE,yB]].forEach(([x,y])=>tube(x,y,0,x,y,rz,0.008,mat.frame));
+    // over-door tray: beams HF..TB on all four edges are the borders; west beam post to post, east beam along the door wall is not fixed into it,
+    // the rear beam sits on the far post and is tied into the far wall (cover plate); floor panel, back panel, a divider at 0.45 and two cells for the far part
+    b(R+po,R+po+P,HF,TB,L-0.08,2.97,ST); b(W-0.08+po,W-0.08+po+P,HF,TB,L-0.08,2.97,ST); b(R,W,HF,TB,L+po,L+po+P,ST); b(R,W,HF,TB,2.89+po,2.89+po+P,ST);
+    b(R+0.08,W-0.08,HF,HF+0.018,L,2.89,pnl); b(R+0.08,W-0.08,TB,2.50,2.95,2.97,pnl); b(R+0.08,W-0.08,HF+0.018,2.42,L+0.45,L+0.468,pnl);
+    const cw=(W-R-0.16)/3; [1,2].forEach(i=>b(R+0.08+i*cw-0.009,R+0.08+i*cw+0.009,HF+0.018,HF+0.30,L+0.468,2.95,pnl));
+    b(W-0.45,W-0.15,HF-0.02,TB,2.95,2.97,steel?ST:pnl);                                                // wall tie of the rear beam: removable cover (A) / steel plate (B)
+  };
   const lathe=(g,pts,cx,cz,m,seg=32)=>{ const mesh=new THREE.Mesh(new THREE.LatheGeometry(pts.map(([r,y])=>new THREE.Vector2(r,y)),seg).translate(cx,0,cz),m); g.add(mesh); return mesh; }; // profile [[r,y]…], y rising → faces outward; a profile that comes back down inside makes a closed shell
   const KN=1.915; // north wall of kitchen-living room 4
   const CHAIR4={paint:'oakFurniture',cushion:'sofaWeave'}; // M2: dining chairs — oak frame (GLB material `paint`), seat pad in the sofa fabric
@@ -715,9 +760,7 @@ const PHYS={}; // id → boxes
     {id:'blinds10',type:'рулонные солнцезащитные шторы: кассеты по верху остекления z 2.40–5.90 (собраны)',room:10,layer:'balcony',pos:[15.02,2.40],rot:0,size:[0.08,2.30,3.50],coat:PLASTIC,fixed:'wall',
      build(b,g){ b.phys(0,0.08,2.22,2.3,0,3.5); [[0.005,1.74],[1.76,3.495]].forEach(([z0,z1])=>{ g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,z1-z0,20).rotateX(Math.PI/2).translate(0.04,2.26,(z0+z1)/2),mat.plastic)); [z0,z1-0.01].forEach(z=>b(0.01,0.07,2.22,2.30,z,z+0.01,mat.frame)); }); }}, // two roller cassettes Ø80 with end brackets
   ];
-  function buildItem(it){
-    const g=new THREE.Group();
-    g.userData={id:it.id,type:it.type,room:it.room,layer:it.layer,pos:it.pos.slice(),rot:it.rot||0,size:it.size.slice(),fixed:it.fixed||null,attach:it.attach||null,proxy:[]};
+  function makeB(g){ // detail helpers bound to a group; buildItem and the in-place variant rebuild (KIDBED) share them
     const b=(x0,x1,y0,y1,z0,z1,m)=>{ const w=x1-x0,h=y1-y0,d=z1-z0, geo=new THREE.BoxGeometry(w,h,d), uv=geo.attributes.uv, F=[[d,h],[d,h],[w,d],[w,d],[w,h],[w,h]]; // UV in metres per face (±x,±y,±z), so VIZ pattern scale holds on items too
       for(let i=0;i<uv.count;i++){ const [a,c]=F[i>>2]; uv.setXY(i,uv.getX(i)*a,uv.getY(i)*c); }
       const mesh=new THREE.Mesh(geo,m); mesh.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); g.add(mesh); return mesh; };
@@ -747,7 +790,11 @@ const PHYS={}; // id → boxes
       [-1,1].forEach(sg=>{ const e=len/2-0.012, st=new THREE.CylinderGeometry(0.003,0.003,0.02,8); if(out==='x'||out==='-x') st.rotateZ(Math.PI/2); else if(out!=='y') st.rotateX(Math.PI/2);
         st.translate(x+a[0]*sg*e+o[0]*0.01,y+a[1]*sg*e+o[1]*0.01,z+a[2]*sg*e+o[2]*0.01); g.add(new THREE.Mesh(st,mat.handle)); });
       return bar; };
-    it.build(b,g);
+    return b; }
+  function buildItem(it){
+    const g=new THREE.Group();
+    g.userData={id:it.id,type:it.type,room:it.room,layer:it.layer,pos:it.pos.slice(),rot:it.rot||0,size:it.size.slice(),fixed:it.fixed||null,attach:it.attach||null,proxy:[]};
+    it.build(makeB(g),g);
     LAYERS[it.layer].add(g); ITEM_GROUPS[it.id]=g;
     poseGroup(g);
     if(it.glb){ g.userData.glb=it.glb; g.userData.glbRot=it.glbRot||0; g.userData.glbFacade=it.glbFacade; } // glbFacade:false — no back to compare (toilet seat, symmetric tops)
@@ -818,6 +865,18 @@ const PHYS={}; // id → boxes
   // the one pose operation: group, physics, then dependants (markup binds, layout selection) via POSE_HOOKS (B02/B03)
   window.POSE_HOOKS=[];
   window.setItemPose=function(id,pos,rot){ const g=ITEM_GROUPS[id]; if(!g) return null; if(pos) g.userData.pos=pos.slice(); if(rot!=null) g.userData.rot=rot; poseGroup(g); physGroup.updateMatrixWorld(true); POSE_HOOKS.forEach(f=>f(id)); return g; };
+  // ---- kids' loft bed variants (select #kidbed): original | timber (A) | steel (B). Rebuilds both beds in place: same pose and PHYS, lights and the
+  // group's LED clone stay, materials are shared so only geometry is disposed. Wood details of A/B wear the oak coating; the rest follows BED.
+  const KID_LOFT={kidbed:{L:2.0,R:1.4,tread:0.28},kidbed2:{L:1.85,R:1.2,tread:0.24}};
+  const KIDBED_VARIANTS={original:p=>kidBedBuild(p.L,mat.wdoor,mat.cushion,p.tread),timber:p=>kidLoftBuild('timber',p.L,p.R),steel:p=>kidLoftBuild('steel',p.L,p.R)};
+  function rebuildItem(id,build,coat){ const g=ITEM_GROUPS[id]; let led=null;
+    g.children.slice().forEach(o=>{ if(!o.isMesh) return; if(o.material.name&&o.material.name.startsWith('led:')) led=o.material; g.remove(o); o.geometry.dispose(); });
+    g.userData.proxy=[]; g.userData.coat=coat; build(makeB(g),g); if(led) g.traverse(o=>{ if(o.isMesh&&o.material===mat.led) o.material=led; });
+    if(window.VIZ) VIZ.adopt(g); setItemPose(id); }
+  window.KIDBED={variant:'original',variants:Object.keys(KIDBED_VARIANTS),set(v){ if(!KIDBED_VARIANTS[v]||v===KIDBED.variant) return; KIDBED.variant=v;
+    Object.entries(KID_LOFT).forEach(([id,p])=>rebuildItem(id,KIDBED_VARIANTS[v](p),v==='original'?undefined:Object.assign({table:'oakFurniture'},BED))); }};
+  (function(){ const KEY='pulse3d.kidbed', sel=document.getElementById('kidbed'); if(!sel) return; let v='original'; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
+    if(KIDBED_VARIANTS[v]){ sel.value=v; KIDBED.set(v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} KIDBED.set(sel.value); }); })();
 })();
 Object.values(LAYERS).forEach(g=>scene.add(g)); scene.add(physGroup);
 document.getElementById('furn').addEventListener('change',e=>furnGroup.visible=e.target.checked);

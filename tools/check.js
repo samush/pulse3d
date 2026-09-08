@@ -810,6 +810,22 @@ const { chromium } = require('playwright');
   if (!kid.deskStraight) problems.push('комната 1: стол не прямой вдоль южной стены');
   if (!kid.chairIn || !kid.pedEnd) problems.push('комната 1: кресло не задвинуто под стол или тумба не у края стола');
   if (!kid.seatOk) problems.push('комната 1: лежанка не между стеллажом и столом у окна');
+  // kids' loft bed variants A/B (tasks/kids-loft-beds): rebuilt in place with the same pose and nine PHYS boxes, stairs S1 = seven equal rises to 1.80 (30 mm treads,
+  // the seventh a 0.24 landing), nothing outside the item size; 20 switches leave no stray meshes; back to original before the later checks
+  const loft = await page.evaluate(() => {
+    const bb = o => new THREE.Box3().setFromObject(o), count = () => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; }, want = [1, 2, 3, 4, 5, 6, 7].map(i => Math.round(i * 1800 / 7)).join();
+    const out = { bad: [], n0: count() };
+    for (const v of ['timber', 'steel']) { KIDBED.set(v); for (const id of ['kidbed', 'kidbed2']) { const g = ITEM_GROUPS[id], u = g.userData, box = bb(g), p = u.pos;
+      const tops = g.children.map(o => bb(o)).filter(b => b.max.y - b.min.y < 0.04 && b.max.y <= 1.81 && [b.max.x - b.min.x, b.max.z - b.min.z].some(e => Math.abs(e - 0.5) < 0.01)).map(b => Math.round(b.max.y * 1000)).sort((a, b) => a - b).join();
+      if (tops !== want) out.bad.push(v + ' ' + id + ': ступени ' + tops + ' ≠ ' + want);
+      if (PHYS[id].length !== 9) out.bad.push(v + ' ' + id + ': PHYS ' + PHYS[id].length);
+      const [w, h, d] = u.size, r = u.rot % 360, ex = r === 90 || r === 270 ? d : w, ez = r === 90 || r === 270 ? w : d, x0 = r === 0 || r === 270 ? p[0] : p[0] - ex, z0 = r === 0 || r === 90 ? p[1] : p[1] - ez;
+      if (box.min.x < x0 - 0.011 || box.max.x > x0 + ex + 0.011 || box.min.z < z0 - 0.011 || box.max.z > z0 + ez + 0.011 || box.max.y > h + 0.011 || box.min.y < -0.001) out.bad.push(v + ' ' + id + ': детали вне size');
+      if (!g.children.some(o => o.isLight)) out.bad.push(v + ' ' + id + ': светильник кровати потерян'); } }
+    for (let i = 0; i < 9; i++) { KIDBED.set('timber'); KIDBED.set('steel'); } KIDBED.set('original'); out.n1 = count(); out.variant = KIDBED.variant;
+    return out; });
+  if (loft.bad.length) problems.push('кровати-чердаки A/B:\n    ' + loft.bad.join('\n    '));
+  if (loft.n1 !== loft.n0 || loft.variant !== 'original') problems.push('кровати-чердаки A/B: после 20 переключений мешей ' + loft.n1 + ' вместо ' + loft.n0 + ', вариант ' + loft.variant);
   if (!kid.windowFree) problems.push('комната 1: стеллажи не отступают от окна на 0.10');
   // screenshots of room 1: plan, from the door, from the desk to the gallery wall, from under the bed to the window
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 2.4; controls.r = hh / TAN22; controls.target.set(3.17 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 3.37); controls.apply(); });
