@@ -79,8 +79,8 @@ const PHYS={}; // id → boxes
     b(R+0.08,W-0.08,1.70,1.72,0.08,L-0.08,pnl);                                                       // soffit panel: closes the frame from below, carries the recessed spot ceil2_3 in room 2
     for(let z=0.10;z<L-0.10;z+=0.12) b(R+0.08,W-0.08,1.78,PL,z,Math.min(z+0.09,L-0.10),wood);         // ventilated slats 90 mm with 30 mm gaps
     b(R+0.01,R+0.03,RB-0.01,RB,0,L,mat.led);                                                          // LED strip under the west rail
-    b.round(R+0.05,W-0.03,PL,PL+0.18,0.03,L-0.05,0.04,mat.kmat); b.round(R+0.15,W-0.13,PL+0.18,PL+0.28,0.1,0.5,0.045,mat.pillow); // mattress 0.18 and pillow as the original
-    b.round(R+0.1,W-0.15,PL+0.18,PL+0.24,0.8,L-0.1,0.025,mat.cushion); b.round(R+0.1,W-0.15,PL+0.24,PL+0.27,0.8,1.05,0.014,mat.cushion); // blanket
+    b.round(R+0.05,W-0.03,PL,PL+0.18,0.03,L-0.05,0.04,mat.kmat); b.round(R+0.15,W-0.13,PL+0.18,PL+0.28,L-0.5,L-0.1,0.045,mat.pillow); // mattress 0.18; the head is away from the stairs, feet at the landing
+    b.round(R+0.1,W-0.15,PL+0.18,PL+0.24,0.1,L-0.8,0.025,mat.cushion); b.round(R+0.1,W-0.15,PL+0.24,PL+0.27,L-1.05,L-0.8,0.014,mat.cushion); // blanket, top edge folded back at the pillow
     // guards to 2.30: wood cap, balusters 30x30 wood (A) or Ø12 rods (B) every 0.10; low boards along the walls so nothing falls behind the mattress
     const cap=(x0,x1,z0,z1)=>b(x0,x1,TOP-0.04,TOP,z0,z1,wood), bal=(x,z)=>steel?b(x-0.006,x+0.006,PL,TOP-0.04,z-0.006,z+0.006,ST):b(x-0.015,x+0.015,PL,TOP-0.04,z-0.015,z+0.015,wood);
     cap(R,R+0.04,0.5,L); for(let z=0.55;z<L-0.03;z+=0.1) bal(R+0.02,z); cap(R,W,L-0.04,L); for(let x=R+0.1;x<W-0.03;x+=0.1) bal(x,L-0.02);
@@ -98,10 +98,9 @@ const PHYS={}; // id → boxes
     const rz=0.06, yA=h+0.85, yB=6*h+0.85, xB=R-0.24, xE=R+0.25; tube(0.05,yA,rz,xB,yB,rz,0.016,wood); tube(xB,yB,rz,xE,yB,rz,0.016,wood);
     g.add(new THREE.Mesh(new THREE.SphereGeometry(0.016,12,8).translate(xB,yB,rz),wood)); [[0.05,yA],[xB,yB],[xE,yB]].forEach(([x,y])=>tube(x,y,0,x,y,rz,0.008,mat.frame));
     // over-door tray: beams HF..TB on all four edges are the borders; west beam post to post, east beam along the door wall is not fixed into it,
-    // the rear beam sits on the far post and is tied into the far wall (cover plate); floor panel, back panel, a divider at 0.45 and two cells for the far part
+    // the rear beam sits on the far post and is tied into the far wall (cover plate); floor panel and back panel
     b(R+po,R+po+P,HF,TB,L-0.08,2.97,ST); b(W-0.08+po,W-0.08+po+P,HF,TB,L-0.08,2.97,ST); b(R,W,HF,TB,L+po,L+po+P,ST); b(R,W,HF,TB,2.89+po,2.89+po+P,ST);
-    b(R+0.08,W-0.08,HF,HF+0.018,L,2.89,pnl); b(R+0.08,W-0.08,TB,2.50,2.95,2.97,pnl); b(R+0.08,W-0.08,HF+0.018,2.42,L+0.45,L+0.468,pnl);
-    const cw=(W-R-0.16)/3; [1,2].forEach(i=>b(R+0.08+i*cw-0.009,R+0.08+i*cw+0.009,HF+0.018,HF+0.30,L+0.468,2.95,pnl));
+    b(R+0.08,W-0.08,HF,HF+0.018,L,2.89,pnl); b(R+0.08,W-0.08,TB,2.50,2.95,2.97,pnl);                 // floor and back panel; no divider inside (user: .local/stair_02.png)
     b(W-0.45,W-0.15,HF-0.02,TB,2.95,2.97,steel?ST:pnl);                                                // wall tie of the rear beam: removable cover (A) / steel plate (B)
   };
   const lathe=(g,pts,cx,cz,m,seg=32)=>{ const mesh=new THREE.Mesh(new THREE.LatheGeometry(pts.map(([r,y])=>new THREE.Vector2(r,y)),seg).translate(cx,0,cz),m); g.add(mesh); return mesh; }; // profile [[r,y]…], y rising → faces outward; a profile that comes back down inside makes a closed shell
