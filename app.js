@@ -39,7 +39,7 @@ const controls={
   r:20, theta:0.8, phi:1.0,
   minPhi:0.012, maxPhi:Math.PI/2-0.02, minR:2, maxR:120,
   setPose(px,py,pz,tx,ty,tz){
-    this.plan=false;
+    this.plan=false; this.fpv=false; this.cam=false;
     if(persp.fov!==45){persp.fov=45;persp.updateProjectionMatrix();}
     const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
     this.target.set(tx,ty,tz);
@@ -50,13 +50,13 @@ const controls={
     this.theta=Math.atan2(dx,dz);
     this.apply(); syncMode();
   },
-  fpv:false, plan:false, pos:new THREE.Vector3(),
+  fpv:false, plan:false, cam:false, pos:new THREE.Vector3(), // cam: fixed room camera — fpv pipeline (backdrops, lamps, materials) without the walk and the avatar
   dir(){
     const sp=Math.sin(this.phi);
     return new THREE.Vector3(sp*Math.sin(this.theta),Math.cos(this.phi),sp*Math.cos(this.theta));
   },
   setPlan(){ // вид сверху: план вписывается в область правее панели, север вверху
-    this.plan=true; this.fpv=false;
+    this.plan=true; this.fpv=false; this.cam=false;
     const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
     const aw=Math.max(200,innerWidth-PANEL_W-MAP_W), ah=innerHeight-32;
     const hh=Math.max((maxZ-minZ)/2*1.08, (maxX-minX)/2*1.08*innerHeight/aw); // половина видимой высоты, м
@@ -66,21 +66,29 @@ const controls={
   },
   lookDown(){ this.theta=0; this.phi=this.minPhi; this.apply(); }, // ровный план для разметки и расстановки
   setFPV(x,z,theta){
-    this.fpv=true; this.plan=false;
+    this.fpv=true; this.plan=false; this.cam=false;
     persp.fov=60; persp.updateProjectionMatrix();
     const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
     this.pos.set(x,1.57,z);
     this.theta=theta; this.phi=Math.PI/2+0.03;
     this.apply(); syncMode();
   },
+  setCam(c){ // fixed camera from CAMS: lens turns with the mouse, position stays
+    this.fpv=true; this.cam=true; this.plan=false;
+    persp.fov=c.fov||70; persp.updateProjectionMatrix();
+    const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
+    this.pos.set(c.pos[0],c.pos[1],c.pos[2]); this.theta=c.theta; this.phi=c.phi;
+    this.apply(); syncMode();
+  },
   apply(){
     camera=this.plan?ortho:persp;
-    if(typeof avatar!=='undefined'){ avatar.visible=this.fpv&&document.getElementById('avatarOn').checked; }
+    if(typeof avatar!=='undefined'){ avatar.visible=this.fpv&&!this.cam&&document.getElementById('avatarOn').checked; }
     if(typeof backdropGroup!=='undefined'){ backdropGroup.visible=this.fpv; }
     if(typeof ceilGroup!=='undefined') ceilGroup.visible=!this.plan; // hidden in plan only; set before the fpv return so walk mode restores it
     if(this.fpv){
       this.phi=Math.min(Math.PI-0.25,Math.max(0.25,this.phi));
       const d=this.dir();
+      if(this.cam){ camera.position.copy(this.pos); camera.lookAt(this.pos.clone().add(d)); return; }
       const head=this.pos.clone(); head.y=1.57;
       if(typeof avatar!=='undefined'){
         avatar.position.set(this.pos.x,0,this.pos.z);
@@ -203,9 +211,12 @@ function fitDist(mult){
   const dh=((maxX-minX)/2)/(Math.tan(fov/2)*Math.max(persp.aspect,0.5));
   return Math.max(dv,dh)*(mult||1.12);
 }
+const CAMS=[ // fixed room cameras (selector «Камера»): pos [x,y,z] m, theta/phi as in controls, fov deg
+  {id:'r3-door',label:'3 · спальня, от двери',pos:[10.2,2.5,10.3],theta:1.15,phi:Math.PI/2+0.33,fov:80}];
 function setView(kind){
   if(typeof resizeReady!=='undefined')resize();
-  controls.fpv=false;
+  controls.fpv=false; controls.cam=false;
+  const c=CAMS.find(c=>c.id===kind); if(c){ controls.setCam(c); return; }
   if(kind==='top'){controls.setPlan();}
   else if(kind==='eye'){controls.setPose(cx+span*0.62,1.7,cz+span*0.72,cx,1.3,cz);}
   else if(kind==='door'){controls.setFPV(7.35,8.6,Math.PI);}
@@ -213,7 +224,8 @@ function setView(kind){
   else{const d=fitDist(0.78);controls.setPose(cx+d*0.72,d*0.82,cz+d*0.77,cx,0,cz);}
 }
 function syncMode(){ // called by every camera-mode switch (setPlan/setFPV/setPose): UI, plan tools and render mode follow the camera (A03)
-  fpvhint.hidden=!controls.fpv; walkpad.hidden=!controls.fpv;
+  fpvhint.hidden=!controls.fpv||controls.cam; walkpad.hidden=!controls.fpv||controls.cam;
+  const ch=document.getElementById('camhint'), cs=document.getElementById('cam'); ch.hidden=!controls.cam; if(!controls.cam) cs.value='';
   panbtn.hidden=controls.fpv; panbtn.classList.remove('on');
   document.querySelector('.hint').textContent=controls.plan?'ЛКМ — вращать · колесо — масштаб · ПКМ или пробел — сдвиг':'ЛКМ — вращать · колесо — зум · ПКМ или пробел — сдвиг';
   if(window.MK&&MK.on&&!controls.plan) MK.toggle(false);
@@ -452,6 +464,9 @@ zoom.addEventListener('input',()=>{
 });
 document.getElementById('vTop').addEventListener('click',()=>setView('top'));
 document.getElementById('vFP').addEventListener('click',()=>setView('door'));
+const camsel=document.getElementById('cam'), camhint=document.getElementById('camhint');
+CAMS.forEach(c=>camsel.add(new Option(c.label,c.id)));
+camsel.addEventListener('change',()=>{ if(camsel.value) setView(camsel.value); });
 const fpvhint=document.getElementById('fpvhint');
 const walkpad=document.getElementById('walkpad');
 const panbtn=document.getElementById('panbtn');
@@ -694,7 +709,7 @@ function walkStep(t){
 var tpRay=new THREE.Raycaster();
 var colRay=new THREE.Raycaster();
 function moveFPV(delta){ // горизонтальное перемещение с проверкой стен
-  const len=delta.length(); if(len<1e-6) return;
+  const len=delta.length(); if(len<1e-6||controls.cam) return;
   if(typeof wallGroup!=='undefined'){
     const dirN=delta.clone().normalize();
     const objs=wallGroup.children.concat(wallGroupR.visible?wallGroupR.children:[]).concat(glassGroup.children).concat(typeof physGroup!=='undefined'?physGroup.children:[]).filter(o=>o.isMesh); // стены, окна и мебель (физика не зависит от видимости слоёв)

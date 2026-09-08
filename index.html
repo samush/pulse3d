@@ -118,6 +118,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <button id="vTop">Сверху</button>
     <button id="vFP">Экскурсия</button>
   </div>
+  <div class="row"><label for="cam">Камера</label><select id="cam" aria-label="Закреплённая камера" title="Камеры, закреплённые в комнатах под потолком: ЛКМ поворачивает объектив, перемещения нет; свет и материалы как в экскурсии"><option value="">—</option></select></div>
+  <p class="sub" id="camhint" hidden style="margin:0 0 8px">камера закреплена под потолком. ЛКМ или стрелки — повернуть объектив</p>
   <div class="row"><label for="light">Свет</label><select id="light" aria-label="Световая схема" title="Иллюзия — быстрый свет: один источник на комнату без теней; нейтральный — фиксированный свет для проверки материалов; светильники квартиры — источники из lighting.js (комнаты 4 и 9), группы через LIGHTING.group"><option value="illusion">иллюзия</option><option value="neutral">нейтральный</option><option value="lamps">светильники квартиры</option></select></div>
   <div class="row"><input type="checkbox" id="mats" hidden><label for="mats" class="tog" title="Реальные покрытия (PBR) вместо серого концепта">Материалы</label></div>
   <div class="row"><label for="bed3">Кровать 3</label><select id="bed3" aria-label="Длина подиума кровати в комнате 3" title="Длина деревянного подиума кровати в спальне 3"><option value="normal">обычная, 2.2 м</option><option value="rug" selected>до края ковра, 2.82 м</option><option value="wall">до стены с ТВ</option></select></div>
