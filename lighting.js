@@ -56,10 +56,8 @@ const LIGHTS=[
   {id:'bra5',item:'bra5',group:'g3.read',type:'spot',at:[13.41,1.35,12.96],to:[13.41,0.7,12.3],k:2700,w:0.4,angle:0.6,distance:4},
   {id:'bra6',item:'bra6',group:'g3.read',type:'spot',at:[14.41,1.35,12.96],to:[14.41,0.7,12.3],k:2700,w:0.4,angle:0.6,distance:4},
   {id:'led4',item:'led4',group:'g3.head',type:'point',at:[13.91,1.84,12.82],k:2700,w:0.3,distance:1.5},
-  {id:'bra7',item:'bra7',group:'g3.vanity',type:'spot',at:[11.40,1.45,9.94],to:[12.1,1.3,10.4],k:3000,w:0.5,angle:0.6,distance:4},
-  {id:'bra8',item:'bra8',group:'g3.vanity',type:'spot',at:[12.80,1.45,9.94],to:[12.1,1.3,10.4],k:3000,w:0.5,angle:0.6,distance:4},
   {id:'led5',item:'led5',group:'g3.tv',type:'point',at:[13.91,1.06,9.83],k:3000,w:0.2,distance:1.5},
-  {id:'led9',item:'vmirror',group:'g3.vanity',type:'point',at:[12.10,1.40,9.90],k:3000,w:0.3,distance:1.5}, // backlight of the wide vanity mirror (2026-09-08), switched with the vanity sconces
+  {id:'led9',item:'vmirror',group:'g3.vanity',type:'point',at:[11.92,1.40,9.90],k:3000,w:0.3,distance:1.5}, // backlight of the wide vanity mirror (2026-09-08), switched with the vanity sconces
   // room 5 (L2-2): a new line of recessed points along the route; the mirror is lit from the side by entry's profiles and ceil5_1, never head-on
   {id:'ceil5_1',item:'ceil5_1',group:'g5.entry',type:'spot',at:[7.20,2.68,7.05],k:3000,w:1.0,shadow:true},
   {id:'entrya',item:'entry',group:'g5.entry',type:'point',at:[6.36,1.50,7.15],k:3000,w:0.3,distance:1.5},
