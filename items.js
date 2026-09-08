@@ -71,7 +71,7 @@ const PHYS={}; // id → boxes
     const stairs=o.stairs||'S1', E=stairs==='gentle'?o.E||0:0, N=stairs==='gentle'?o.n||8:7, JOG=o.jog||0;
     const PL=1.8, TOP=2.3, HF=2.2, W=R+1.2, steel=kind==='steel', ST=steel?mat.frame:mat.table, wood=mat.table, pnl=mat.kbody, front=mat.wdoor;
     const P=steel?0.05:0.08, po=(0.08-P)/2, RB=steel?1.65:1.60, TB=HF+0.14;                          // post/beam width inside the 80 mm zones, rail bottom, tray beam top
-    if(stairs==='ladder') b.phys(R-0.95,R,0,PL,0,0.54); else b.phys(-E,R,0,2.4,0,0.54); [[R,0],[W-0.08,0],[R,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b.phys(x,x+0.08,0,PL,z,z+0.08)); // PHYS as the original (check.js: 9 boxes); the gentle extension is inside the stairs box
+    if(stairs==='ladder') b.phys(R-1.15,R,0,PL,0,0.54); else b.phys(-E,R,0,2.4,0,0.54); [[R,0],[W-0.08,0],[R,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b.phys(x,x+0.08,0,PL,z,z+0.08)); // PHYS as the original (check.js: 9 boxes); the gentle extension is inside the stairs box
     b.phys(R+0.08,W-0.08,0.10,0.14,L-0.08,L); b.phys(R,W,PL-0.2,TOP+0.3,0,L+0.02); b.phys(R,W,HF,TOP+0.3,L,2.97); b.phys(R,R+0.08,0,HF,2.89,2.97);
     const tube=(x0,y0,z0,x1,y1,z1,r,m)=>{ const d=new THREE.Vector3(x1-x0,y1-y0,z1-z0), len=d.length(), geo=new THREE.CylinderGeometry(r,r,len,12).translate(0,len/2,0), mesh=new THREE.Mesh(geo,m);
       mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize()); mesh.position.set(x0,y0,z0); g.add(mesh); return mesh; }; // round bar between two local points
@@ -88,9 +88,9 @@ const PHYS={}; // id → boxes
     const cap=(x0,x1,z0,z1)=>b(x0,x1,TOP-0.04,TOP,z0,z1,wood), bal=(x,z)=>steel?b(x-0.006,x+0.006,PL,TOP-0.04,z-0.006,z+0.006,ST):b(x-0.015,x+0.015,PL,TOP-0.04,z-0.015,z+0.015,wood);
     cap(R,R+0.04,0.5,L); for(let z=0.55;z<L-0.03;z+=0.1) bal(R+0.02,z); cap(R,W,L-0.04,L); for(let x=R+0.1;x<W-0.03;x+=0.1) bal(x,L-0.02);
     b(R+0.08,W-0.08,PL,PL+0.30,0,0.02,pnl); b(W-0.02,W,PL,PL+0.30,0.02,L-0.08,pnl);
-    if(stairs==='ladder'){ // C: straight painted ladder to the platform level only, leaning 25°; wide flat stringers 40×240 with six treads 200×30 every 0.257 recessed between them,
+    if(stairs==='ladder'){ // C: straight painted ladder to the platform level only, leaning 30°; wide flat stringers 40×240 with six treads 200×30 every 0.257 recessed between them,
       // so the stringer edges stand proud of each tread as a low kerb for a crawling child; neutral panel colour, not oak; floor under the platform edge stays free
-      const th=25*Math.PI/180, xb=R-0.06-PL*Math.tan(th), len=PL/Math.cos(th), sx=y=>xb+Math.tan(th)*y;
+      const th=30*Math.PI/180, xb=R-0.06-PL*Math.tan(th), len=PL/Math.cos(th), sx=y=>xb+Math.tan(th)*y;
       [0.02,0.48].forEach(z=>g.add(new THREE.Mesh(new THREE.BoxGeometry(0.24,len,0.04).rotateZ(-th).translate(sx(PL/2)+0.11,PL/2,z+0.02),pnl)));
       for(let y=PL/7;y<PL-0.05;y+=PL/7) b(sx(y)+0.01,sx(y)+0.21,y-0.03,y,0.06,0.48,pnl);
     } else {
@@ -334,7 +334,7 @@ const PHYS={}; // id → boxes
     {id:'sock6',type:'розетка в потолке для проектора',room:1,layer:'kid',pos:[2.26,3.51],rot:0,size:[0.08,2.70,0.08],coat:PLASTIC,fixed:'wall',build(b){ b.phys(0,0.08,2.69,2.70,0,0.08); b.round(0,0.08,2.69,2.70,0,0.08,0.001,mat.plastic); b(0.012,0.068,2.6885,2.6905,0.012,0.068,mat.dark); }},
     {id:'sock7',type:'розетка в потолке для мотора экрана',room:1,layer:'kid',pos:[1.06,2.11],rot:0,size:[0.08,2.70,0.08],coat:PLASTIC,fixed:'wall',build(b){ b.phys(0,0.08,2.69,2.70,0,0.08); b.round(0,0.08,2.69,2.70,0,0.08,0.001,mat.plastic); b(0.012,0.068,2.6885,2.6905,0.012,0.068,mat.dark); }},
     // ---- kids room 2 (tasks/room2-kid/README.md, marks M1–M22; grey materials only) ----
-    // Room box: x 11.067–14.774, z 6.518–9.614, niche: south wall at z 9.519 east of x 13.477. Door on the west wall z 6.75–7.65.
+    // Room box: x 11.067–14.774, z 6.518–9.614 (the 95 mm jog of the south wall east of x 13.477 was removed 2026-09-08 by the user). Door on the west wall z 6.75–7.65.
     {id:'kidbed2',type:'кровать-чердак с лестницей-комодом, платформа 1.85, полка над дверью',room:2,layer:'kid2',pos:[13.467,9.614],rot:180,size:[2.4,2.6,2.97],coat:BED,fixed:'wall',build:kidBedBuild(1.85,mat.wdoor,mat.cushion,0.24)}, // M12 LED is part of the bed; tread 0.24 keeps the stairs west of the niche (x 13.477)
     {id:'kiddesk2',type:'письменный стол под платформой, 1.65 × 0.75',room:2,layer:'kid2',pos:[11.067,7.85],rot:0,size:[0.75,0.72,1.65],coat:CAB,fixed:'wall',
      build(b){ b.phys(0,0.75,0.69,0.72,0,1.65); b.phys(0.02,0.73,0,0.69,0,0.02); b.phys(0.02,0.73,0,0.69,1.63,1.65); b.phys(0,0.05,0.62,0.69,0.02,1.63); // proxy = pre-detail mesh AABBs (realism-all C1)
@@ -417,7 +417,7 @@ const PHYS={}; // id → boxes
     {id:'sock9',type:'розетки 2+2 USB над столом',room:2,layer:'kid2',pos:[11.087,8.57],rot:0,size:[0.01,0.94,0.08],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.01,0.86,0.94,0,0.08,mat.plastic,{keys:2}); }},
     {id:'sock10',type:'блок ПК под столом: 3 розетки + RJ-45',room:2,layer:'kid2',pos:[11.087,9.22],rot:0,size:[0.01,0.34,0.08],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.01,0.26,0.34,0,0.08,mat.plastic); }},
     {id:'sock11',type:'розетка у изголовья (ночник)',room:2,layer:'kid2',pos:[11.38,9.584],rot:0,size:[0.08,2.09,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,2.01,2.09,0,0.01,mat.plastic); }},
-    {id:'sock12',type:'розетка у лежанки (зарядка), в нише',room:2,layer:'kid2',pos:[13.83,9.489],rot:0,size:[0.08,0.34,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.26,0.34,0,0.01,mat.plastic); }},
+    {id:'sock12',type:'розетка у лежанки (зарядка)',room:2,layer:'kid2',pos:[13.83,9.584],rot:0,size:[0.08,0.34,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.26,0.34,0,0.01,mat.plastic); }},
     {id:'sock13',type:'розетка у шведской стенки (увлажнитель)',room:2,layer:'kid2',pos:[12.23,6.538],rot:0,size:[0.08,0.34,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.26,0.34,0,0.01,mat.plastic); }},
     // ---- master bedroom 3 (tasks/room3-master/README.md, marks M1–M28; grey materials only) ----
     // Room box: x 10.021–14.76, z 9.777–13.144. Items are built as if against the north wall and turned 180° (rot 180, pos = SE corner): the composition faces north. Wall-mounted boxes sit 0.02–0.03 in front of the wall (wallpaper at 0.015).
@@ -876,7 +876,7 @@ const PHYS={}; // id → boxes
   window.setItemPose=function(id,pos,rot){ const g=ITEM_GROUPS[id]; if(!g) return null; if(pos) g.userData.pos=pos.slice(); if(rot!=null) g.userData.rot=rot; poseGroup(g); physGroup.updateMatrixWorld(true); POSE_HOOKS.forEach(f=>f(id)); return g; };
   // ---- kids' loft bed variants (select #kidbed): original | timber (A) | steel (B). Rebuilds both beds in place: same pose and PHYS, lights and the
   // group's LED clone stay, materials are shared so only geometry is disposed. Wood details of A/B wear the oak coating; the rest follows BED.
-  const KID_LOFT={kidbed:{L:2.0,R:1.4,tread:0.28,E:0.8,n:8},kidbed2:{L:1.85,R:1.2,tread:0.24,E:0.35,n:7,jog:0.10}}; // gentle (D): room 1 run +0.80 with 8 rises; room 2 only +0.35 (socket sock12 at x 13.83) with 7 rises, treads set back 0.10 from the wall jog
+  const KID_LOFT={kidbed:{L:2.0,R:1.4,tread:0.28,E:0.8,n:8},kidbed2:{L:1.85,R:1.2,tread:0.24,E:0.35,n:7}}; // gentle (D): room 1 run +0.80 with 8 rises; room 2 only +0.35 (socket sock12 at x 13.83) with 7 rises
   const KIDBED_VARIANTS={original:p=>kidBedBuild(p.L,mat.wdoor,mat.cushion,p.tread),timber:p=>kidLoftBuild('timber',p.L,p.R),steel:p=>kidLoftBuild('steel',p.L,p.R),
     ladder:p=>kidLoftBuild('steel',p.L,p.R,{stairs:'ladder'}),gentle:p=>kidLoftBuild('timber',p.L,p.R,{stairs:'gentle',E:p.E,n:p.n,jog:p.jog})};
   function rebuildItem(id,build,coat){ const g=ITEM_GROUPS[id]; let led=null;
