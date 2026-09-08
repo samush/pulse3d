@@ -303,12 +303,12 @@ const { chromium } = require('playwright');
   if (glbA.length) problems.push('glb: этап A — пуф/стиралка не загрузились чисто: ' + glbA.join(' '));
   // realism-all stage D: proxies for the room 3 items repeat the old mesh AABBs (count + union extent)
   const proxD = await page.evaluate(() => { const ext = id => { const bb = new THREE.Box3(); PHYS[id].forEach(m => bb.union(new THREE.Box3().setFromObject(m))); const s = new THREE.Vector3(); bb.getSize(s); return [s.x, s.y, s.z].map(v => Math.round(v * 1000) / 1000).join(); };
-    const want = { mbed: [6, '1.8,1.1,2.82'], mcab: [19, '1.7,0.85,0.365'], mward: [21, '1.4,2.7,0.59'], mtv: [2, '0.97,0.56,0.04'], vanity: [6, '1.3,0.37,0.42'], vmirror: [3, '1.04,0.94,0.026'], vpouf: [5, '0.4,0.45,0.4'], mrug: [1, '2,0.01,2'], mcurtain: [3, '0.06,2.66,3.017'], bra5: [3, '0.12,0.12,0.225'], bra6: [3, '0.12,0.12,0.225'], bra7: [3, '0.12,0.12,0.225'], bra8: [3, '0.12,0.12,0.225'] };
+    const want = { mbed: [6, '1.8,1.1,2.82'], mcab: [19, '1.7,0.85,0.365'], mward: [21, '1.4,2.7,0.59'], mtv: [2, '0.97,0.56,0.04'], vanity: [6, '1.3,0.37,0.42'], vmirror: [3, '1.04,0.94,0.026'], vpouf: [5, '0.4,0.45,0.4'], mrug: [1, '2,0.01,2'], mcurtain: [3, '0.06,2.66,3.017'], bra5: [3, '0.12,0.12,0.225'], bra6: [3, '0.12,0.12,0.225'] };
     return Object.entries(want).filter(([id, [n, e]]) => PHYS[id].length !== n || ext(id) !== e || !ITEM_GROUPS[id].userData.proxy.length).map(([id]) => id + ':' + PHYS[id].length + ':' + ext(id)); });
   if (proxD.length) problems.push('proxy: этап D — число боксов/габарит не сошлись: ' + proxD.join(' '));
   // realism-all stage D: detailed room 3 items stay inside size (+1 mm); plates and LED strips carry one proxy box equal to the item
   const fitD = await page.evaluate(() => { const fit = id => { const g = ITEM_GROUPS[id], bb = new THREE.Box3().setFromObject(g), inv = new THREE.Matrix4().copy(g.matrixWorld).invert(); bb.applyMatrix4(inv); const s = g.userData.size; return bb.min.x >= -0.001 && bb.min.y >= -0.001 && bb.min.z >= -0.001 && bb.max.x <= s[0] + 0.001 && bb.max.y <= s[1] + 0.001 && bb.max.z <= s[2] + 0.001; };
-    const one = ['sw3', 'sw4', 'sw6', 'sock14', 'sock15', 'sock16', 'sock17', 'sock18', 'sock19', 'sock20', 'led4', 'led5'], ids = ['mcab', 'mward', 'vanity', 'vmirror', 'mtv', 'mrug', 'mcurtain', 'bra5', 'bra6', 'bra7', 'bra8'].concat(one);
+    const one = ['sw3', 'sw4', 'sw6', 'sock14', 'sock15', 'sock16', 'sock17', 'sock18', 'sock19', 'sock20', 'led4', 'led5'], ids = ['mcab', 'mward', 'vanity', 'vmirror', 'mtv', 'mrug', 'mcurtain', 'bra5', 'bra6'].concat(one);
     const bad = ids.filter(id => !fit(id)); one.forEach(id => { if (PHYS[id].length !== 1) bad.push(id + ':phys'); }); return bad; });
   if (fitD.length) problems.push('этап D: детали вне size или proxy розеток/LED не один бокс: ' + fitD.join(' '));
   // realism-all stage E: procedural bath items stay inside size
@@ -654,7 +654,7 @@ const { chromium } = require('playwright');
       casework: ['mcab', 'mward', 'vanity', 'wsecA', 'wsecC', 'wend', 'wpeg'].every(id => on(id, cab) === 'cabinetPaint') && on('mbed', glb('dark')) === 'oakFurniture',
       bed: ['kmat', 'pillow', 'cover'].every(n => on('mbed', glb(n)) === 'curtainLinen') && on('mbed', glb('leather')) === 'class',
       pouf: on('vpouf', glb('leather')) === 'class' && on('vpouf', glb('metal')) === 'class', rug: on('mrug', key('cushion')) === 'rugPile', drape: on('mcurtain', key('drape')) === 'curtainLinen',
-      plastic: ['bra5', 'bra7', 'sock14', 'sw6'].every(id => on(id, key('plastic')) === 'plastic') && on('bra5', led) === 'class' && on('mward', key('frame')) === 'class',
+      plastic: ['bra5', 'sock14', 'sw6'].every(id => on(id, key('plastic')) === 'plastic') && on('bra5', led) === 'class' && on('mward', key('frame')) === 'class',
       mirrors: on('vmirror', key('mirror')) === 'class' && on('wmirror', key('mirror')) === 'class' && on('wstep', () => true) === 'class' };
   });
   Object.entries(m42).forEach(([k, ok]) => { if (!ok) problems.push('комнаты 3, 6: «' + k + '» не сошлось (materials-lighting M4-2)'); });

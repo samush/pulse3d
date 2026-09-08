@@ -404,17 +404,17 @@ const PHYS={}; // id → boxes
      build(b){ b.phys(0,0.97,1.22,1.78,0,0.04); b.phys(0.02,0.95,1.24,1.76,0,0.005); // proxy = pre-detail mesh AABBs (realism-all D1)
        b.round(0,0.97,1.22,1.78,0.012,0.032,0.002,mat.dark); b(0.008,0.962,1.228,1.772,0.009,0.012,mat.screen); // slim panel with an 8 mm bezel, screen 3 mm proud towards the room (−z)
        b(0.25,0.72,1.22,1.232,0.006,0.02,mat.frame); b(0.3,0.67,1.35,1.65,0.032,0.04,mat.frame); }},
-    {id:'vanity',type:'туалетный столик подвесной с рифлёным фасадом 1.00 и вторым ящиком ниже со стороны кровати',room:3,layer:'master',pos:[12.9,10.227],rot:180,size:[1.30,0.75,0.45],coat:CAB,fixed:'wall',
+    {id:'vanity',type:'туалетный столик подвесной с рифлёным фасадом 1.00 и вторым ящиком ниже со стороны кровати',room:3,layer:'master',pos:[12.72,10.227],rot:180,size:[1.30,0.75,0.45],coat:CAB,fixed:'wall',
      build(b,g){ const flute=(x0,x1,y0,y1,z0)=>{ const sh=new THREE.Shape(), P=0.03, W=0.02, d=0.015, t=0.005; sh.moveTo(x0,0); for(let x=x0;x+W<=x1+1e-6;x+=P){ sh.lineTo(x,t); sh.lineTo(x,t+d); sh.lineTo(x+W,t+d); sh.lineTo(x+W,t); } sh.lineTo(x1,t); sh.lineTo(x1,0); sh.lineTo(x0,0); // comb profile in x–z: slats 0.02 on a 0.03 pitch, 15 mm proud of a 5 mm plate
          b.phys(x0,x1,y0,y1,z0,z0+t+d); g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:y1-y0,bevelEnabled:false}).rotateX(Math.PI/2).translate(0,y1,z0),mat.wdoor)); }; // one mesh per fluted front
        b.phys(0.30,1.30,0.58,0.73,0.05,0.45); b.phys(0.29,1.30,0.73,0.75,0.04,0.45); b.phys(0,0.60,0.38,0.55,0.05,0.45); b.phys(0,0.61,0.55,0.57,0.04,0.45); // proxy = mesh AABBs (realism-all D1); the fronts add theirs in flute()
        b(0.30,1.30,0.58,0.73,0.05,0.45,mat.body); b.round(0.29,1.30,0.73,0.75,0.04,0.45,0.003,mat.body); flute(0.31,1.29,0.585,0.725,0.03);   // console 1.00 on the wall, top 0.02 with 3 mm chamfer, fluted drawer front
        b(0,0.60,0.38,0.55,0.05,0.45,mat.body); b.round(0,0.61,0.55,0.57,0.04,0.45,0.003,mat.body); flute(0.01,0.59,0.385,0.545,0.03); }},     // second drawer 0.60 lower, offset 0.30 towards the bed
-    {id:'vmirror',type:'зеркало 1.00×0.90 со скруглёнными углами и LED-подсветкой сзади, над столиком; низ 0.95',room:3,layer:'master',pos:[12.62,9.827],rot:180,size:[1.04,1.87,0.03],fixed:'wall',
+    {id:'vmirror',type:'зеркало 1.00×0.90 со скруглёнными углами и LED-подсветкой сзади, над столиком; низ 0.95',room:3,layer:'master',pos:[12.44,9.827],rot:180,size:[1.04,1.87,0.03],fixed:'wall',
      build(b,g){ b.phys(0,1.04,0.93,1.87,0.02,0.03); b.phys(0.02,1.02,0.95,1.85,0.009,0.03); b.phys(0.03,1.01,0.96,1.84,0.004,0.009); // proxy = mesh AABBs (realism-all D1); size includes the 2 cm halo
        const plate=(w,h,r,x,y,z,d,m)=>{ const mesh=new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(w,h,r),{depth:d,bevelEnabled:false,curveSegments:24}),m); mesh.position.set(x,y,z); g.add(mesh); };
        plate(1.04,0.94,0.10,0,0.93,0.02,0.01,mat.led); plate(1.00,0.90,0.08,0.02,0.95,0.009,0.021,mat.frame); plate(0.98,0.88,0.07,0.03,0.96,0.004,0.005,mat.mirror); }}, // LED halo on the wall (emitter of g3.vanity via led9), metal backing, 5 mm glass facing the room
-    {id:'vpouf',type:'пуфик у туалетного столика',room:3,layer:'master',pos:[12.3,10.681],rot:180,size:[0.40,0.45,0.40],glb:'models/vpouf.glb', // model by tools/models/vpouf.js
+    {id:'vpouf',type:'пуфик у туалетного столика',room:3,layer:'master',pos:[12.12,10.681],rot:180,size:[0.40,0.45,0.40],glb:'models/vpouf.glb', // model by tools/models/vpouf.js
      build(b){ b.phys(0,0.4,0.35,0.45,0,0.4); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b.phys(x,x+0.03,0,0.35,z,z+0.03)); // proxy = pre-detail mesh AABBs (realism-all D1)
        b(0,0.4,0.35,0.45,0,0.4,mat.cushion); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b(x,x+0.03,0,0.35,z,z+0.03,mat.frame)); }},
     {id:'mrug',type:'ковёр, короткий ворс',room:3,layer:'master',pos:[14.0,12.321],rot:180,size:[2.00,0.01,2.00],coat:{cushion:'rugPile'},
@@ -443,14 +443,6 @@ const PHYS={}; // id → boxes
        lathe(g,[[0.04,1.3399999999999999],[0.06,1.3499999999999999],[0.06,1.45],[0.04,1.46],[0.012,1.46],[0.012,1.45],[0.05,1.442],[0.05,1.3599999999999999],[0.04,1.3499999999999999]],0.08,0.165,mat.plastic); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.045,24).rotateX(Math.PI/2).translate(0.08,1.3479999999999999,0.165),mat.led)); }},
     {id:'led4',type:'LED-лента под блоком ящиков, свет на изголовье',room:3,layer:'master',pos:[14.72,12.814],rot:180,size:[1.62,1.85,0.02],fixed:'wall',
      build(b){ b.led(0,1.62,1.84,1.85,0,0.02); }},
-    {id:'bra7',type:'бра у зеркала, левое',room:3,layer:'master',pos:[11.48,10.022],rot:180,size:[0.16,1.60,0.245],coat:PLASTIC,fixed:'wall',
-     build(b,g){ b.phys(0.03,0.13,1.45,1.55,0.225,0.245); b.phys(0.075,0.085,1.495,1.505,0.115,0.225); b.phys(0.02,0.14,1.44,1.56,0.02,0.14); // proxy = pre-detail mesh AABBs (realism-all D1)
-       b.round(0.03,0.13,1.45,1.55,0.225,0.245,0.005,mat.plastic); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.085,10).rotateX(Math.PI/2).translate(0.08,1.5,0.1825),mat.frame)); g.add(new THREE.Mesh(new THREE.SphereGeometry(0.012,12,8).translate(0.08,1.5,0.14),mat.frame)); // plate on the wall z=0.245, arm to the shade
-       lathe(g,[[0.04,1.44],[0.06,1.45],[0.06,1.55],[0.04,1.56],[0.012,1.56],[0.012,1.55],[0.05,1.542],[0.05,1.46],[0.04,1.45]],0.08,0.08,mat.plastic); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.045,24).rotateX(Math.PI/2).translate(0.08,1.448,0.08),mat.led)); }},
-    {id:'bra8',type:'бра у зеркала, правое',room:3,layer:'master',pos:[12.88,10.022],rot:180,size:[0.16,1.60,0.245],coat:PLASTIC,fixed:'wall',
-     build(b,g){ b.phys(0.03,0.13,1.45,1.55,0.225,0.245); b.phys(0.075,0.085,1.495,1.505,0.115,0.225); b.phys(0.02,0.14,1.44,1.56,0.02,0.14); // proxy = pre-detail mesh AABBs (realism-all D1)
-       b.round(0.03,0.13,1.45,1.55,0.225,0.245,0.005,mat.plastic); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.085,10).rotateX(Math.PI/2).translate(0.08,1.5,0.1825),mat.frame)); g.add(new THREE.Mesh(new THREE.SphereGeometry(0.012,12,8).translate(0.08,1.5,0.14),mat.frame)); // plate on the wall z=0.245, arm to the shade
-       lathe(g,[[0.04,1.44],[0.06,1.45],[0.06,1.55],[0.04,1.56],[0.012,1.56],[0.012,1.55],[0.05,1.542],[0.05,1.46],[0.04,1.45]],0.08,0.08,mat.plastic); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.045,24).rotateX(Math.PI/2).translate(0.08,1.448,0.08),mat.led)); }},
     {id:'led5',type:'LED-подсветка по нижней кромке ТВ',room:3,layer:'master',pos:[14.37,9.837],rot:180,size:[0.92,1.07,0.01],fixed:'wall',
      build(b){ b.led(0,0.92,1.06,1.07,0,0.01); }},
     {id:'sw3',type:'выключатель у двери, 2 клавиши: общий свет M13 + бра/LED',room:3,layer:'master',pos:[10.051,10.921],rot:180,size:[0.01,0.99,0.08],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.01,0.91,0.99,0,0.08,mat.plastic,{keys:2}); }},
@@ -461,7 +453,7 @@ const PHYS={}; // id → boxes
     {id:'sock16',type:'розетка для кондиционера внутри секции (центр блока над кроватью)',room:3,layer:'master',pos:[13.91,13.124],rot:180,size:[0.08,2.18,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,2.10,2.18,0,0.01,mat.plastic); }},
     {id:'sock17',type:'медиаблок за телевизором (2 розетки + ТВ/RJ-45 + HDMI)',room:3,layer:'master',pos:[13.95,9.807],rot:180,size:[0.08,1.34,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,1.26,1.34,0,0.01,mat.plastic,{keys:2}); }},
     {id:'sock18',type:'розетки у консоли',room:3,layer:'master',pos:[13.95,9.807],rot:180,size:[0.08,0.39,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.31,0.39,0,0.01,mat.plastic); }},
-    {id:'sock19',type:'розетки + USB у туалетного столика (фен, плойка)',room:3,layer:'master',pos:[12.8,9.807],rot:180,size:[0.08,0.94,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.86,0.94,0,0.01,mat.plastic,{keys:2}); }},
+    {id:'sock19',type:'розетки + USB у туалетного столика (фен, плойка)',room:3,layer:'master',pos:[12.62,9.807],rot:180,size:[0.08,0.94,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.86,0.94,0,0.01,mat.plastic,{keys:2}); }},
     {id:'sock20',type:'розетка общего назначения (увлажнитель, пылесос)',room:3,layer:'master',pos:[10.66,13.124],rot:180,size:[0.08,0.34,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.26,0.34,0,0.01,mat.plastic); }},
     // ---- bathroom 9 (tasks/bath9/README.md, marks M1–M18 mirrored across the door axis z 8.997; grey materials only) ----
     // Room box: x 8.172–9.872, z 8.122–9.872, door on the east wall z 8.55–9.25. Basin, mirror and towel rail on the north side,
