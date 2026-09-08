@@ -734,14 +734,13 @@ const PHYS={}; // id → boxes
        b.round(0,1.19,2.05,2.08,0,0.03,0.003,mat.body);                                               // front lip
        b(0,1.19,1.95,2.00,0.55,0.60,mat.frame); b(0,1.19,1.99,2.00,0.50,0.55,mat.frame); b(0,0.05,1.95,2.00,0,0.55,mat.frame); b(0,0.05,1.99,2.00,0.05,0.55,mat.frame); // steel angle consoles to the south and west walls
      }},
-    {id:'bshelf',type:'стеллаж 1.19×0.40 у северного торца, верх 2.05: 3 закрытых ящика по 0.25, выше 4 ряда открытых секций с перегородкой по центру; площадка 2.05–2.70 под ИТ-устройства',room:10,layer:'balcony',pos:[13.91,2.268],rot:0,size:[1.19,2.05,0.40],coat:{body:'cabinetPaint',wpanel:'cabinetPaint',door:'cabinetPaint'},fixed:'wall',
-     build(b){[[0,0.02,0,2.05,0,0.4],[0.02,1.17,0.005,0.245,0.38,0.4],[0.02,1.17,0.03,0.05,0,0.4],[0.02,1.17,0.255,0.495,0.38,0.4],[0.02,1.17,0.505,0.745,0.38,0.4],[0.02,1.17,0.75,0.77,0,0.4],[0.02,1.17,1.075,1.095,0,0.4],[0.02,1.17,1.4,1.42,0,0.4],[0.02,1.17,1.725,1.745,0,0.4],[0.02,1.17,2.03,2.05,0,0.4],[0.585,0.605,0.77,2.03,0,0.4],[1.17,1.19,0,2.05,0,0.4]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
-       
-       const p=0.018;
-       b(0,p,0,2.05,0,0.40,mat.body); b(1.19-p,1.19,0,2.05,0,0.40,mat.body); b(p,1.19-p,2.05-p,2.05,0,0.40,mat.body); b(p,1.19-p,0.03,0.03+p,0,0.40,mat.body); b(p,1.19-p,0.05,2.05-p,0,0.006,mat.wpanel); // 18 mm sides, top, bottom, 6 mm back
-       for(let i=0;i<3;i++){ const y0=0.25*i; b(p,1.19-p,y0+0.0315,y0+0.2485,0.382,0.40,mat.door); b(0.5,0.69,y0+0.20,y0+0.215,0.396,0.4005,mat.dark); b(p,1.19-p,y0+0.03,y0+0.03+p,0.006,0.382,mat.body); } // drawer fronts 0.03–0.75 with 3 mm gaps and finger grooves (push-to-open), bottoms
-       [0.75,1.075,1.40,1.725].forEach(y=>b(p,1.19-p,y,y+p,0.006,0.40,mat.body));                     // open shelves, pitch 0.325
-       b(0.586,0.604,0.75+p,2.05-p,0.006,0.40,mat.body);                                              // centre divider x 14.505
+    {id:'bshelf',type:'стеллаж 1.08×0.40 у северного торца с зазорами 0.05 от стен (плинтус, поручень остекления), верх 2.05: 3 закрытых ящика по 0.25, выше 4 ряда открытых секций с перегородкой по центру; площадка 2.05–2.70 под ИТ-устройства',room:10,layer:'balcony',pos:[13.96,2.318],rot:0,size:[1.08,2.05,0.40],coat:{body:'cabinetPaint',wpanel:'cabinetPaint',door:'cabinetPaint'},fixed:'wall',
+     build(b){ const W=1.08, p=0.018, c=W/2; // 1.08 wide: 0.05 off the west skirting and the glazing railing at x 15.06 (was 1.19 flush, clipped both)
+       [[0,0.02,0,2.05,0,0.4],[0.02,W-0.02,0.005,0.245,0.38,0.4],[0.02,W-0.02,0.03,0.05,0,0.4],[0.02,W-0.02,0.255,0.495,0.38,0.4],[0.02,W-0.02,0.505,0.745,0.38,0.4],[0.02,W-0.02,0.75,0.77,0,0.4],[0.02,W-0.02,1.075,1.095,0,0.4],[0.02,W-0.02,1.4,1.42,0,0.4],[0.02,W-0.02,1.725,1.745,0,0.4],[0.02,W-0.02,2.03,2.05,0,0.4],[c-0.01,c+0.01,0.77,2.03,0,0.4],[W-0.02,W,0,2.05,0,0.4]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
+       b(0,p,0,2.05,0,0.40,mat.body); b(W-p,W,0,2.05,0,0.40,mat.body); b(p,W-p,2.05-p,2.05,0,0.40,mat.body); b(p,W-p,0.03,0.03+p,0,0.40,mat.body); b(p,W-p,0.05,2.05-p,0,0.006,mat.wpanel); // 18 mm sides, top, bottom, 6 mm back
+       for(let i=0;i<3;i++){ const y0=0.25*i; b(p,W-p,y0+0.0315,y0+0.2485,0.382,0.40,mat.door); b(c-0.095,c+0.095,y0+0.20,y0+0.215,0.396,0.4005,mat.dark); b(p,W-p,y0+0.03,y0+0.03+p,0.006,0.382,mat.body); } // drawer fronts 0.03–0.75 with 3 mm gaps and finger grooves (push-to-open), bottoms
+       [0.75,1.075,1.40,1.725].forEach(y=>b(p,W-p,y,y+p,0.006,0.40,mat.body));                     // open shelves, pitch 0.325
+       b(c-0.009,c+0.009,0.75+p,2.05-p,0.006,0.40,mat.body);                                              // centre divider
      }},
     {id:'cable10',type:'кабель-канал 0.06×0.04 по западной стене на 2.23–2.27, выше проёма в кухню (2.10): питание и сеть между полкой и стеллажом',room:10,layer:'balcony',pos:[13.91,2.40],rot:0,size:[0.06,2.27,3.00],coat:PLASTIC,fixed:'wall',
      build(b){ b.phys(0,0.06,2.23,2.27,0,3); b.round(0,0.06,2.23,2.27,0,3.00,0.002,mat.plastic); b(0.0595,0.0602,2.2475,2.2525,0,3.00,mat.dark); }}, // trunking with a snap-on cover, seam line on the face
