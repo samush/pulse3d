@@ -228,7 +228,7 @@ const CAMS=[ // fixed room cameras (selector «Камера»): pos [x,y,z] m, t
   {id:'r8-nw',label:'8 · санузел, над душем',pos:[8.55,2.45,11.8],theta:0.76,phi:Math.PI/2+0.48,fov:90},
   {id:'r9',label:'9 · санузел, северо-восточный угол',pos:[9.7,2.5,8.3],theta:-0.79,phi:Math.PI/2+0.45,fov:85},
   {id:'r9-sw',label:'9 · санузел, юго-западный угол',pos:[8.5,2.45,9.55],theta:2.46,phi:Math.PI/2+0.45,fov:85},
-  {id:'r10',label:'10 · лоджия, от стола',pos:[14.5,2.15,5.9],theta:Math.PI,phi:Math.PI/2+0.3,fov:80},
+  {id:'r10',label:'10 · лоджия, от стола (под полкой)',pos:[14.5,1.6,5.95],theta:Math.PI,phi:Math.PI/2+0.08,fov:80},
   {id:'r10-shelf',label:'10 · лоджия, над стеллажом',pos:[14.5,2.4,2.55],theta:0,phi:Math.PI/2+0.3,fov:80}];
 function setView(kind){
   if(typeof resizeReady!=='undefined')resize();
