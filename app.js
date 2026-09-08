@@ -246,7 +246,7 @@ function setView(kind){
 }
 function syncMode(){ // called by every camera-mode switch (setPlan/setFPV/setPose): UI, plan tools and render mode follow the camera (A03)
   fpvhint.hidden=!controls.fpv||controls.cam; walkpad.hidden=!controls.fpv||controls.cam;
-  const ch=document.getElementById('camhint'), cs=document.getElementById('cam'); ch.hidden=!controls.cam; cs.value=controls.cam?controls.camId:'';
+  document.getElementById('camhint').hidden=!controls.cam; document.querySelectorAll('#camgrid button').forEach(b=>b.classList.toggle('on',controls.cam&&b.dataset.id===controls.camId));
   panbtn.hidden=controls.fpv; panbtn.classList.remove('on');
   document.querySelector('.hint').textContent=controls.plan?'ЛКМ — вращать · колесо — масштаб · ПКМ или пробел — сдвиг':'ЛКМ — вращать · колесо — зум · ПКМ или пробел — сдвиг';
   if(window.MK&&MK.on&&!controls.plan) MK.toggle(false);
@@ -485,9 +485,9 @@ zoom.addEventListener('input',()=>{
 });
 document.getElementById('vTop').addEventListener('click',()=>setView('top'));
 document.getElementById('vFP').addEventListener('click',()=>setView('door'));
-const camsel=document.getElementById('cam'), camhint=document.getElementById('camhint');
-CAMS.forEach(c=>camsel.add(new Option(c.label,c.id)));
-camsel.addEventListener('change',()=>{ if(camsel.value) setView(camsel.value); });
+(function(){ const grid=document.getElementById('camgrid'), rows={}; // one row of square buttons per room: «room.view», rooms and order as in CAMS
+  CAMS.forEach(c=>{ const room=c.id.match(/^r(\d+)/)[1]; if(!rows[room]){ rows[room]=document.createElement('div'); rows[room].className='room views'; grid.appendChild(rows[room]); }
+    const b=document.createElement('button'); b.dataset.id=c.id; b.textContent=room+'.'+(rows[room].children.length+1); b.title=c.label; b.addEventListener('click',()=>setView(c.id)); rows[room].appendChild(b); }); })();
 const fpvhint=document.getElementById('fpvhint');
 const walkpad=document.getElementById('walkpad');
 const panbtn=document.getElementById('panbtn');
