@@ -1,12 +1,14 @@
-// Bed 1.70×1.10×2.20 in room 3 (tasks/room3-master, revision 2026-09-08 after the reference render): upholstered base in two halves on
-// short feet, split mattress 2×0.80 with a dome, flat padded headboard with a top rail, two large and two small pillows, blanket at the feet
-// with a folded-back edge. Material names are ITEM_MATS keys. Pivot NW corner, headboard at z=0, metres.
+// Bed 1.70×1.10×2.20 in room 3 (tasks/room3-master, revision 2026-09-08 after the podium reference): solid dark-wood podium 0–0.35 on the
+// full footprint with two drawer fronts on the room side (local x=1.70, west after rot 180), split mattress 2×0.80 with a dome, flat padded
+// headboard with a top rail, two large and two small pillows, blanket at the feet with a folded-back edge. Material names are ITEM_MATS keys.
+// Pivot NW corner, headboard at z=0, metres.
 // Usage: node tools/models/mbed.js  → models/mbed.glb
 const fs=require('fs'), path=require('path'), {THREE,rbox,piping,cylinder,toGlb}=require('./glb.js');
 const parts=[], add=(geo,mat)=>parts.push({geo,mat});
-[[0.15,0.25],[1.55,0.25],[0.15,2.05],[1.55,2.05]].forEach(([x,z])=>add(cylinder(x,0,z,0.03,0.08,10),'dark'));           // feet
-[0.02,0.86].forEach(x=>add(rbox(0.82,0.27,2.10,0.04,x,0.08,0.10,{m:2,step:0.2}),'kmat'));                                   // base in two halves 0.08–0.35
-[0.02,0.86].forEach(x=>add(piping(x+0.003,0.103,0.814,2.094,0.04,0.34),'kmat'));                                                    // seam piping along the top edge of each half
+add(rbox(1.676,0.35,2.20,0.006,0,0,0,{m:1,step:0.3}),'dark');                                                            // podium 0–0.35; drawer fronts fill the last 24 mm so the whole stays inside size
+[0.15,1.15].forEach(z=>{ add(rbox(0.012,0.22,0.90,0.003,1.676,0.06,z,{m:1,step:0.3}),'dark');                              // drawer front, 12 mm proud
+  [[z,0.05],[z+0.85,0.05]].forEach(([zz,d])=>add(rbox(0.012,0.22,d,0.002,1.688,0.06,zz,{m:1,step:0.3}),'dark'));           // raised frame: two uprights…
+  [0.06,0.23].forEach(y=>add(rbox(0.012,0.05,0.80,0.002,1.688,y,z+0.05,{m:1,step:0.3}),'dark')); });                       // …and two rails around a recessed field
 add(rbox(1.70,0.75,0.08,0.02,0,0.35,0,{m:2,step:0.2}),'leather');                                                          // headboard 0.35–1.10, flat padded panel
 add(rbox(1.70,0.05,0.10,0.015,0,1.05,0,{m:1,step:0.2}),'leather');                                                          // top rail, 2 cm proud of the panel
 [0.05,0.86].forEach(x=>add(rbox(0.79,0.20,2.00,0.05,x,0.35,0.15,{m:2,step:0.15,crown:0.015}),'kmat'));                   // mattresses 0.35–0.55 (+ dome)
