@@ -917,6 +917,9 @@ var finishGroup=new THREE.Group();
   // белые дверные коробки
   const DOORS=PLAN.doors; // [cx,cz,'h'|'v',ширина,(tag 'K' — дверь в съёмной стене кухни)]
   const frameMat2=new THREE.MeshBasicMaterial({color:0xffffff});
+  { // порог балконного проёма 0.15: верх и торцы в арке — дерево, лицевые грани (кухня/лоджия) — белый пластик; ниже лучей прогулки (0.25), физика не нужна
+    const d=BALC.x1-BALC.x0, w=BALC.z1-BALC.z0, g=new THREE.BoxGeometry(d,0.15,w); scaleUV(g,d,w);
+    const m=new THREE.Mesh(g,[frameMat2,frameMat2,woodFloor,woodFloor,woodFloor,woodFloor]); m.position.set((BALC.x0+BALC.x1)/2,FLOOR+0.075,(BALC.z0+BALC.z1)/2); finishGroup.add(m); }
   window.kitchenFrame=new THREE.Group(); wallFin.add(window.kitchenFrame);
   window.kitchenFrame.visible=document.getElementById('kwall').checked;
   DOORS.forEach(d=>{

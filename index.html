@@ -39,6 +39,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .slider-lab{display:flex;justify-content:space-between;color:var(--muted);
   font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;margin-top:10px}
 .views{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+#layers{margin-top:10px} #layers summary{cursor:pointer;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
 .views button{flex:1 1 45%;background:transparent;border:1px solid var(--line);color:var(--ink);
   font:600 12px "Manrope",system-ui,sans-serif;padding:6px 0;border-radius:7px;cursor:pointer}
 .views button:hover{background:var(--accent-soft);border-color:var(--accent)}
@@ -114,10 +115,12 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <button id="vTop">Сверху</button>
     <button id="vFP">Экскурсия</button>
   </div>
+  <div class="row"><label for="light">Свет</label><select id="light" aria-label="Световая схема" title="Иллюзия — быстрый свет: один источник на комнату без теней; нейтральный — фиксированный свет для проверки материалов; светильники квартиры — источники из lighting.js (комнаты 4 и 9), группы через LIGHTING.group"><option value="illusion">иллюзия</option><option value="neutral">нейтральный</option><option value="lamps">светильники квартиры</option></select></div>
   <div class="slider-lab"><span>Стены</span><span id="wov">100%</span></div>
   <input type="range" id="wop" min="0" max="100" value="100" aria-label="Прозрачность стен">
   <div class="slider-lab"><span>Масштаб</span><span id="zov">100%</span></div>
   <input type="range" id="zoom" min="30" max="300" value="100" aria-label="Масштаб">
+  <details id="layers"><summary>Слои и режимы</summary>
   <div class="row"><input type="checkbox" id="cubes"><label for="cubes">Кубы 1 м³</label></div>
   <div class="row"><input type="checkbox" id="labels"><label for="labels">Точки с размерами</label></div>
   <div class="row"><input type="checkbox" id="kwall"><label for="kwall">Стена коридор–кухня</label></div>
@@ -138,7 +141,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <div class="row"><input type="checkbox" id="furnWardrobe" checked><label for="furnWardrobe">Гардеробная (слой 1)</label></div>
   <div class="row"><input type="checkbox" id="furnBalcony" checked><label for="furnBalcony">Лоджия (слой 1)</label></div>
   <div class="row"><input type="checkbox" id="mats"><label for="mats">Материалы (реальные покрытия)</label></div>
-  <div class="row"><label for="light">Свет</label><select id="light" aria-label="Световая схема" title="Иллюзия — быстрый свет: один источник на комнату без теней; нейтральный — фиксированный свет для проверки материалов; светильники квартиры — источники из lighting.js (комнаты 4 и 9), группы через LIGHTING.group"><option value="illusion">иллюзия</option><option value="neutral">нейтральный</option><option value="lamps">светильники квартиры</option></select></div>
+  </details>
   <div class="views">
     <button id="mkBtn" title="Точка, отрезок, прямоугольник на плане">Разметка</button>
     <button id="layBtn" title="Перенос и поворот предметов, варианты расстановки">Расстановка</button>

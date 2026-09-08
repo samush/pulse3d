@@ -483,9 +483,9 @@ const PHYS={}; // id → boxes
        const edges=[0,0.403,1.103,1.30,1.45,L];
        for(let i=0;i<edges.length-1;i++){ const [z0,z1]=[edges[i],edges[i+1]]; b.phys(0,wo(z1),0,0.58,z0,z1);
          slice(z0,z1,wi,wo,0.12,0.58,mat.kmat);                                                       // curved shell wall
-         slice(z0,z1,()=>W,wi,0.12,0.15,mat.kmat);                                                    // bottom at 0.12
+         slice(z0,z1,()=>W+0.01,wi,0.12,0.15,mat.kmat);                                               // bottom at 0.12
          slice(z0,z1,()=>0,wo,0,0.12,mat.body); }                                                    // blind apron under the rim
-       b(0,W,0.12,0.58,0,L,mat.kmat); b(W,wi(0),0.12,0.58,0,W,mat.kmat); b(W,wi(L),0.12,0.58,L-W,L,mat.kmat); // wall side and the two straight ends
+       b(0,W+0.01,0.12,0.58,0,L,mat.kmat); // wall side 1 cm thicker: its inner face must not share the tile plane at x0+0.05 b(W,wi(0),0.12,0.58,0,W,mat.kmat); b(W,wi(L),0.12,0.58,L-W,L,mat.kmat); // wall side and the two straight ends
        const d=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.005,16),mat.handle); d.position.set(0.25,0.152,1.45); g.add(d); // drain at the south end, by the mixer
      }},
     {id:'tubmixer',type:'смеситель ванны настенный, излив 0.20',room:9,layer:'bath',pos:[8.192,9.124],rot:0,size:[0.20,0.86,0.20],fixed:'wall',
