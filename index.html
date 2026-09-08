@@ -44,6 +44,9 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   font:600 12px "Manrope",system-ui,sans-serif;padding:6px 0;border-radius:7px;cursor:pointer}
 .views button:hover{background:var(--accent-soft);border-color:var(--accent)}
 .views button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+/* переключатель «Материалы»: скрытый чекбокс #mats остаётся для VIZ.set и тестов, label рисуется кнопкой */
+.tog{flex:1;text-align:center;border:1px solid var(--line);border-radius:7px;padding:6px 0;font-weight:600;font-size:12px;cursor:pointer}
+.tog::after{content:': выкл';color:var(--muted)} #mats:checked+.tog{background:var(--accent);color:#fff;border-color:var(--accent)} #mats:checked+.tog::after{content:': вкл';color:#fff}
 .legend{display:flex;align-items:center;gap:9px;margin-top:14px;padding-top:12px;
   border-top:1px solid var(--line)}
 .legend .cube{width:20px;height:20px;border:1.5px solid var(--accent);
@@ -116,6 +119,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <button id="vFP">Экскурсия</button>
   </div>
   <div class="row"><label for="light">Свет</label><select id="light" aria-label="Световая схема" title="Иллюзия — быстрый свет: один источник на комнату без теней; нейтральный — фиксированный свет для проверки материалов; светильники квартиры — источники из lighting.js (комнаты 4 и 9), группы через LIGHTING.group"><option value="illusion">иллюзия</option><option value="neutral">нейтральный</option><option value="lamps">светильники квартиры</option></select></div>
+  <div class="row"><input type="checkbox" id="mats" hidden><label for="mats" class="tog" title="Реальные покрытия (PBR) вместо серого концепта">Материалы</label></div>
   <div class="slider-lab"><span>Стены</span><span id="wov">100%</span></div>
   <input type="range" id="wop" min="0" max="100" value="100" aria-label="Прозрачность стен">
   <div class="slider-lab"><span>Масштаб</span><span id="zov">100%</span></div>
@@ -139,7 +143,6 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <div class="row"><input type="checkbox" id="furnBath2" checked><label for="furnBath2">Санузел 2 (слой 1)</label></div>
   <div class="row"><input type="checkbox" id="furnWardrobe" checked><label for="furnWardrobe">Гардеробная (слой 1)</label></div>
   <div class="row"><input type="checkbox" id="furnBalcony" checked><label for="furnBalcony">Лоджия (слой 1)</label></div>
-  <div class="row"><input type="checkbox" id="mats"><label for="mats">Материалы (реальные покрытия)</label></div>
   </details>
   <div class="views">
     <button id="mkBtn" title="Точка, отрезок, прямоугольник на плане">Разметка</button>
