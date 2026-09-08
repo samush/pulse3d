@@ -489,6 +489,7 @@ var backdropGroup=new THREE.Group();
 (function(){
   const glassMat=new THREE.MeshBasicMaterial({color:0xa8c9e0,transparent:true,opacity:0.32,side:THREE.DoubleSide,depthWrite:false});
   const frameMat=new THREE.LineBasicMaterial({color:0x8b8f94});
+  const pvcMat=new THREE.MeshBasicMaterial({color:0xf4f4f2}), pvcEdge=new THREE.LineBasicMaterial({color:0xb5b3ad}); // unlit like the sills: glassGroup gets no lit twins, a Lambert here goes dark under lamps
   var loggiaFrameMat=new THREE.MeshBasicMaterial({color:0x26282b}); window.loggiaFrameMat=loggiaFrameMat;
   var loggiaFrostMat=new THREE.MeshBasicMaterial({color:0xe6e6e2,transparent:true,opacity:0.9}); window.loggiaFrostMat=loggiaFrostMat;
   const loader=new THREE.TextureLoader();
@@ -499,7 +500,7 @@ var backdropGroup=new THREE.Group();
     pane.position.set(w.x,(w.y0+w.y1)/2,(w.z0+w.z1)/2);
     pane.renderOrder=3;
     glassGroup.add(pane);
-    glassGroup.add(new THREE.LineSegments(new THREE.EdgesGeometry(wgeo),frameMat)).children.slice(-1)[0].position.copy(pane.position);
+    if(w.y0<0.2) glassGroup.add(new THREE.LineSegments(new THREE.EdgesGeometry(wgeo),frameMat)).children.slice(-1)[0].position.copy(pane.position);
     if(w.y0<0.2){ // loggia: black aluminium frame to the floor, three bays, transom at 2.05 and a railing of vertical bars — as on the real building
       const box=(x,y0,y1,z0,z1,t)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(t,y1-y0,z1-z0),loggiaFrameMat); m.position.set(x,(y0+y1)/2,(z0+z1)/2); glassGroup.add(m); };
       const T=0.06, W=w.z1-w.z0;
@@ -511,10 +512,14 @@ var backdropGroup=new THREE.Group();
       const frost=(y0,y1,z0,z1)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(0.02,y1-y0,z1-z0),loggiaFrostMat); m.position.set(w.x,(y0+y1)/2,(z0+z1)/2); glassGroup.add(m); };
       frost(2.05+T/2,w.y1-T,w.z0+T,w.z1-T);
       frost(1.06,2.05-T/2,w.z0+T,w.z0+W*0.3-T/2); frost(1.06,2.05-T/2,w.z0+W*0.7+T/2,w.z1-T);
-    } else { // mullion in the middle
-      const mull=new THREE.Mesh(new THREE.BoxGeometry(0.05,w.y1-w.y0,0.05),new THREE.MeshLambertMaterial({color:0xf2f2f0}));
-      mull.position.set(w.x,(w.y0+w.y1)/2,(w.z0+w.z1)/2);
-      glassGroup.add(mull);
+    } else { // white PVC window as on the photos: outer frame, mullion, two sashes with their own frames; the z1-side sash opens — proud into the room, with a handle
+      const box=(x,y0,y1,z0,z1,t)=>{ const g=new THREE.BoxGeometry(t,y1-y0,z1-z0), m=new THREE.Mesh(g,pvcMat), e=new THREE.LineSegments(new THREE.EdgesGeometry(g),pvcEdge); m.position.set(x,(y0+y1)/2,(z0+z1)/2); e.position.copy(m.position); glassGroup.add(m,e); }; // unlit white needs edge lines to read as profiles, as the sills do
+      const F=0.06, M=0.08, S=0.05, zm=(w.z0+w.z1)/2;
+      [[w.z0,w.z0+F],[w.z1-F,w.z1],[zm-M/2,zm+M/2]].forEach(([a,b])=>box(w.x,w.y0,w.y1,a,b,0.07));
+      [[w.y0,w.y0+F],[w.y1-F,w.y1]].forEach(([a,b])=>box(w.x,a,b,w.z0,w.z1,0.07));
+      [[w.z0+F,zm-M/2,0],[zm+M/2,w.z1-F,0.015]].forEach(([a,b,proud])=>{ const x=w.x-w.nx*proud, y0=w.y0+F, y1=w.y1-F; // sash frame ring inside its opening
+        box(x,y0,y1,a,a+S,0.06); box(x,y0,y1,b-S,b,0.06); box(x,y0,y0+S,a+S,b-S,0.06); box(x,y1-S,y1,a+S,b-S,0.06); });
+      box(w.x-w.nx*0.06,(w.y0+w.y1)/2-0.07,(w.y0+w.y1)/2+0.07,zm+M/2+0.01,zm+M/2+0.035,0.03); // handle on the opening sash
     }
     // вид за окном
     const tex=loader.load(VIEWS[w.img]);
