@@ -212,7 +212,21 @@ function fitDist(mult){
   return Math.max(dv,dh)*(mult||1.12);
 }
 const CAMS=[ // fixed room cameras (selector «Камера»): pos [x,y,z] m, theta/phi as in controls, fov deg
-  {id:'r3-door',label:'3 · спальня, от двери',pos:[10.2,2.5,10.3],theta:1.15,phi:Math.PI/2+0.33,fov:80}];
+  {id:'r1-n',label:'1 · детская, северо-западный угол',pos:[1.5,2.55,2.1],theta:0.92,phi:Math.PI/2+0.33,fov:80},
+  {id:'r1-s',label:'1 · детская, юго-западный угол',pos:[1.5,2.55,4.6],theta:2.21,phi:Math.PI/2+0.33,fov:80},
+  {id:'r2-n',label:'2 · детская, северо-восточный угол',pos:[14.0,2.55,7.4],theta:-0.85,phi:Math.PI/2+0.33,fov:80},
+  {id:'r2-s',label:'2 · детская, юго-восточный угол',pos:[13.8,2.55,9.45],theta:-2.49,phi:Math.PI/2+0.33,fov:80},
+  {id:'r3-door',label:'3 · спальня, от двери',pos:[10.2,2.5,10.3],theta:1.15,phi:Math.PI/2+0.33,fov:80},
+  {id:'r4-door',label:'4 · кухня-гостиная, от двери',pos:[13.3,2.5,6.1],theta:-2.25,phi:Math.PI/2+0.33,fov:80},
+  {id:'r4-kitchen',label:'4 · кухня-гостиная, из кухонного угла',pos:[9.1,2.5,2.1],theta:0.88,phi:Math.PI/2+0.33,fov:80},
+  {id:'r4-window',label:'4 · кухня-гостиная, от окна',pos:[13.3,2.5,2.1],theta:-0.89,phi:Math.PI/2+0.33,fov:80},
+  {id:'r4-sw',label:'4 · кухня-гостиная, юго-западный угол',pos:[9.1,2.5,6.1],theta:2.26,phi:Math.PI/2+0.33,fov:80},
+  {id:'r5-entry',label:'5 · коридор, от входа',pos:[7.3,2.5,7.3],theta:-3.11,phi:Math.PI/2+0.3,fov:80},
+  {id:'r6',label:'6 · гардеробная',pos:[6.2,2.35,3.75],theta:-3.0,phi:Math.PI/2+0.45,fov:80},
+  {id:'r7',label:'7 · постирочная',pos:[7.5,2.3,3.85],theta:Math.PI,phi:Math.PI/2+0.63,fov:70},
+  {id:'r8',label:'8 · санузел',pos:[9.65,2.45,12.95],theta:-2.36,phi:Math.PI/2+0.48,fov:90},
+  {id:'r9',label:'9 · санузел',pos:[9.7,2.5,8.3],theta:-0.79,phi:Math.PI/2+0.45,fov:85},
+  {id:'r10',label:'10 · лоджия',pos:[14.5,2.15,5.9],theta:Math.PI,phi:Math.PI/2+0.3,fov:80}];
 function setView(kind){
   if(typeof resizeReady!=='undefined')resize();
   controls.fpv=false; controls.cam=false;
