@@ -403,16 +403,16 @@ const PHYS={}; // id → boxes
      build(b){ b.phys(0,0.97,1.22,1.78,0,0.04); b.phys(0.02,0.95,1.24,1.76,0,0.005); // proxy = pre-detail mesh AABBs (realism-all D1)
        b.round(0,0.97,1.22,1.78,0.012,0.032,0.002,mat.dark); b(0.008,0.962,1.228,1.772,0.009,0.012,mat.screen); // slim panel with an 8 mm bezel, screen 3 mm proud towards the room (−z)
        b(0.25,0.72,1.22,1.232,0.006,0.02,mat.frame); b(0.3,0.67,1.35,1.65,0.032,0.04,mat.frame); }},
-    {id:'vanity',type:'туалетный столик с плоским ящиком',room:3,layer:'master',pos:[12.6,10.227],rot:180,size:[1.00,0.75,0.45],coat:CAB,fixed:'wall',
-     build(b,g){ b.phys(0,1,0.72,0.75,0,0.45); b.phys(0.03,0.97,0.62,0.72,0.05,0.43); b.phys(0.04,0.96,0.63,0.71,0.03,0.05); b.phys(0,0.03,0,0.72,0.05,0.43); b.phys(0.97,1,0,0.72,0.05,0.43); // proxy = pre-detail mesh AABBs (realism-all D1)
-       b.round(0,1.0,0.72,0.75,0,0.45,0.003,mat.body); b(0.03,0.97,0.62,0.72,0.05,0.43,mat.body);                       // top with 3 mm chamfer, drawer box
-       b.round(0.04,0.96,0.63,0.71,0.03,0.05,0.001,mat.wdoor); b(0.40,0.60,0.635,0.655,0.0295,0.033,mat.frame);          // flat drawer front, flush pull profile
-       [[0.03,0.06],[0.97,0.06],[0.03,0.42],[0.97,0.42]].forEach(([x,z])=>g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.0125,0.0125,0.62,14).translate(x,0.31,z),mat.frame))); }},                // side panels
-    {id:'vmirror',type:'зеркало полукруглое Ø1.10, отдельно на стене над столиком',room:3,layer:'master',pos:[12.65,9.827],rot:180,size:[1.10,1.52,0.03],fixed:'wall',
-     build(b,g){ b.phys(-0.02,1.12,0.95,1.52,0.025,0.025); b.phys(0,1.1,0.95,1.5,0.01,0.01); b.phys(-0.02,1.12,0.93,0.95,0.005,0.03); // proxy = pre-detail mesh AABBs (realism-all D1)
-       const half=r=>{ const sh=new THREE.Shape(); sh.absarc(0.55,0.95,r,0,Math.PI,false); sh.lineTo(0.55-r,0.95); return sh; };
-       g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(half(0.55),{depth:0.021,bevelEnabled:false,curveSegments:48}).translate(0,0,0.009),mat.frame)); // metal backing up to the wallpaper plane (local z 0.03), flat bottom at 0.95
-       g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(half(0.535),{depth:0.001,bevelThickness:0.002,bevelSize:0.002,bevelSegments:1,curveSegments:48}).translate(0,0,0.006),mat.mirror)); b(0,1.1,0.93,0.95,0.005,0.03,mat.frame); }}, // 5 mm glass (z 0.004–0.009) with a 2 mm chamfer facing the room (M3); flat bottom edge 0.20 above the worktop
+    {id:'vanity',type:'туалетный столик подвесной с рифлёным фасадом 1.00 и вторым ящиком ниже со стороны кровати',room:3,layer:'master',pos:[12.9,10.227],rot:180,size:[1.30,0.75,0.45],coat:CAB,fixed:'wall',
+     build(b,g){ const flute=(x0,x1,y0,y1,z0)=>{ const sh=new THREE.Shape(), P=0.03, W=0.02, d=0.015, t=0.005; sh.moveTo(x0,0); for(let x=x0;x+W<=x1+1e-6;x+=P){ sh.lineTo(x,t); sh.lineTo(x,t+d); sh.lineTo(x+W,t+d); sh.lineTo(x+W,t); } sh.lineTo(x1,t); sh.lineTo(x1,0); sh.lineTo(x0,0); // comb profile in x–z: slats 0.02 on a 0.03 pitch, 15 mm proud of a 5 mm plate
+         b.phys(x0,x1,y0,y1,z0,z0+t+d); g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:y1-y0,bevelEnabled:false}).rotateX(Math.PI/2).translate(0,y1,z0),mat.wdoor)); }; // one mesh per fluted front
+       b.phys(0.30,1.30,0.58,0.73,0.05,0.45); b.phys(0.29,1.30,0.73,0.75,0.04,0.45); b.phys(0,0.60,0.38,0.55,0.05,0.45); b.phys(0,0.61,0.55,0.57,0.04,0.45); // proxy = mesh AABBs (realism-all D1); the fronts add theirs in flute()
+       b(0.30,1.30,0.58,0.73,0.05,0.45,mat.body); b.round(0.29,1.30,0.73,0.75,0.04,0.45,0.003,mat.body); flute(0.31,1.29,0.585,0.725,0.03);   // console 1.00 on the wall, top 0.02 with 3 mm chamfer, fluted drawer front
+       b(0,0.60,0.38,0.55,0.05,0.45,mat.body); b.round(0,0.61,0.55,0.57,0.04,0.45,0.003,mat.body); flute(0.01,0.59,0.385,0.545,0.03); }},     // second drawer 0.60 lower, offset 0.30 towards the bed
+    {id:'vmirror',type:'зеркало 1.00×0.60 со скруглёнными углами и LED-подсветкой сзади, над столиком; низ 0.95',room:3,layer:'master',pos:[12.62,9.827],rot:180,size:[1.04,1.57,0.03],fixed:'wall',
+     build(b,g){ b.phys(0,1.04,0.93,1.57,0.02,0.03); b.phys(0.02,1.02,0.95,1.55,0.009,0.03); b.phys(0.03,1.01,0.96,1.54,0.004,0.009); // proxy = mesh AABBs (realism-all D1); size includes the 2 cm halo
+       const plate=(w,h,r,x,y,z,d,m)=>{ const mesh=new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(w,h,r),{depth:d,bevelEnabled:false,curveSegments:24}),m); mesh.position.set(x,y,z); g.add(mesh); };
+       plate(1.04,0.64,0.10,0,0.93,0.02,0.01,mat.led); plate(1.00,0.60,0.08,0.02,0.95,0.009,0.021,mat.frame); plate(0.98,0.58,0.07,0.03,0.96,0.004,0.005,mat.mirror); }}, // LED halo on the wall (emitter of g3.vanity via led9), metal backing, 5 mm glass facing the room
     {id:'vpouf',type:'пуфик у туалетного столика',room:3,layer:'master',pos:[12.3,10.681],rot:180,size:[0.40,0.45,0.40],glb:'models/vpouf.glb', // model by tools/models/vpouf.js
      build(b){ b.phys(0,0.4,0.35,0.45,0,0.4); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b.phys(x,x+0.03,0,0.35,z,z+0.03)); // proxy = pre-detail mesh AABBs (realism-all D1)
        b(0,0.4,0.35,0.45,0,0.4,mat.cushion); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b(x,x+0.03,0,0.35,z,z+0.03,mat.frame)); }},
