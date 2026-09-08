@@ -367,13 +367,13 @@ const PHYS={}; // id → boxes
     {id:'sock13',type:'розетка у шведской стенки (увлажнитель)',room:2,layer:'kid2',pos:[12.23,6.538],rot:0,size:[0.08,0.34,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.26,0.34,0,0.01,mat.plastic); }},
     // ---- master bedroom 3 (tasks/room3-master/README.md, marks M1–M28; grey materials only) ----
     // Room box: x 10.021–14.76, z 9.777–13.144. Items are built as if against the north wall and turned 180° (rot 180, pos = SE corner): the composition faces north. Wall-mounted boxes sit 0.02–0.03 in front of the wall (wallpaper at 0.015).
-    {id:'mbed',type:'кровать 160×200 на деревянном подиуме до края ковра, два выдвижных ящика со стороны комнаты, мягкое изголовье; верх матраса вровень с подоконником',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[1.70,1.10,2.82],coat:Object.assign({dark:'oakFurniture'},BED), /* podium in the balcony-jamb oak */ fixed:'wall',glb:'models/mbed.glb', // model by tools/models/mbed.js; the build below is proxy and fallback
+    {id:'mbed',type:'кровать 160×200 на деревянном подиуме 1.80 до края ковра (матрас отступает от подоконника), два выдвижных ящика со стороны комнаты, мягкое изголовье; верх матраса вровень с подоконником',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[1.80,1.10,2.82],coat:Object.assign({dark:'oakFurniture'},BED), /* podium in the balcony-jamb oak */ fixed:'wall',glb:'models/mbed.glb', // model by tools/models/mbed.js; the build below is proxy and fallback
      build(b){
-       b.phys(0,1.7,0,0.30,0,2.82); b.phys(0.05,1.65,0.30,0.55,0.1,2.1); b.phys(0,1.7,0.30,1.1,0,0.08); [[0.12,0.82],[0.88,1.58]].forEach(([x0,x1])=>b.phys(x0,x1,0.55,0.67,0.15,0.6)); b.phys(0.1,1.6,0.55,0.61,0.85,2.15); // proxy = pre-detail mesh AABBs; drawer fronts (12 mm) sit inside the podium box tolerance
-       b(0,1.676,0,0.30,0,2.82,mat.dark); [0.70,1.75].forEach(z=>b(1.676,1.70,0.05,0.25,z,z+0.90,mat.dark)); // podium to the rug end (z 2.82), drawers north of the wardrobe; east side touches the wall under the window
-       b(0.05,1.65,0.30,0.55,0.10,2.10,mat.kmat); b(0,1.7,0.30,1.10,0,0.08,mat.cushion);           // mattress (top 0.55 + dome = window sill 0.56), headboard
-       [[0.12,0.82],[0.88,1.58]].forEach(([x0,x1])=>b(x0,x1,0.55,0.67,0.15,0.60,mat.pillow));       // two pillows
-       b(0.10,1.60,0.55,0.61,0.85,2.15,mat.cushion);                                               // blanket at the feet
+       b.phys(0,1.8,0,0.30,0,2.82); b.phys(0.15,1.75,0.30,0.55,0.1,2.1); b.phys(0,1.8,0.30,1.1,0,0.08); [[0.20,0.90],[1.0,1.70]].forEach(([x0,x1])=>b.phys(x0,x1,0.55,0.67,0.15,0.6)); b.phys(0.1,1.8,0.35,0.6,0.85,2.2); // proxy = pre-detail mesh AABBs; drawer fronts (12 mm) sit inside the podium box tolerance
+       b(0,1.776,0,0.30,0,2.82,mat.dark); [0.70,1.75].forEach(z=>b(1.776,1.80,0.05,0.25,z,z+0.90,mat.dark)); // podium to the rug end (z 2.82), drawers north of the wardrobe; east side touches the wall under the window
+       b(0.15,1.75,0.30,0.55,0.10,2.10,mat.kmat); b(0,1.8,0.30,1.10,0,0.08,mat.cushion);           // mattress 0.15 off the sill wall (top 0.55 + dome = window sill 0.56), headboard
+       [[0.20,0.90],[1.0,1.70]].forEach(([x0,x1])=>b(x0,x1,0.55,0.67,0.15,0.60,mat.pillow));       // two pillows
+       b(0.10,1.80,0.55,0.575,0.85,2.20,mat.cushion); [0.10,1.775].forEach(x=>b(x,x+0.025,0.35,0.55,0.85,2.20,mat.cushion)); // blanket: thin sheet with drops down the sides
      }},
     {id:'mcab',type:'блок подвесных ящиков над изголовьем: два ряда, секция под кондиционер по центру с решёткой',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[1.70,2.70,0.35],coat:CAB,fixed:'wall',
      build(b,g){ const t=0.02, Y0=1.85, Y1=2.28, Y2=2.30, T=2.7, A0=0.40, A1=1.30, W=1.7;                                    // rows 1.85–2.28 and 2.30–2.70; AC section x 0.40–1.30, open below
@@ -384,19 +384,21 @@ const PHYS={}; // id → boxes
        [0,A0,A1,W-t].forEach(x=>b(x,x+t,Y0,T,t,0.35,mat.body)); b(0.84,0.86,Y2,T,t,0.35,mat.body);                                                     // section walls, divider of the upper row
        doors.forEach(([x0,x1,y0,y1])=>{ b.round(x0,x1,y0,y1,0.33,0.35,0.001,mat.wdoor); const c=(x0+x1)/2; b(c-0.05,c+0.05,y0,y0+0.02,0.347,0.3505,mat.frame); }); // doors with 3 mm gaps, flush pull profiles along the bottom edge
        for(let y=Y0+0.04;y<Y1-0.03;y+=0.04) g.add(new THREE.Mesh(new THREE.BoxGeometry(A1-A0-2*t,0.012,0.024).rotateX(-35*Math.PI/180).translate((A0+A1)/2,y+0.01,0.336),mat.wdoor)); }}, // louvre grille of the AC section
-    {id:'mward',type:'шкаф 1.30 на два отделения для одежды, антресоль в линию с блоком над кроватью; ниша-полка со стороны кровати 0.45–0.80',room:3,layer:'master',pos:[13.06,13.144],rot:180,size:[1.30,2.70,0.60],coat:CAB,fixed:'wall',
-     build(b){ const W=1.30, t=0.02, N0=0.45, N1=0.80, NW=0.30, D=0.65, Y1=2.28, Y2=2.30, T=2.7;                              // niche: height 0.45–0.80, 0.30 deep; divider at 0.65; shelf 2.28–2.30 under the top row
-       b.phys(0,t,0,N0,0.03,0.58); b.phys(0,t,N1,T,0.03,0.58); b.phys(W-t,W,0,T,0.03,0.58); b.phys(0,W,T-t,T,0.03,0.58); b.phys(0,W,0,t,0.03,0.58); b.phys(t,W-t,t,T-t,0.03,0.05); b.phys(D-0.01,D+0.01,t,T-t,0.03,0.58); b.phys(t,W-t,Y1,Y2,0.03,0.58);
+    {id:'mward',type:'шкаф 1.30 на два отделения для одежды, антресоль 1.40 в линию с блоком над кроватью (на 0.10 нависает над подиумом); ниша-полка со стороны кровати 0.45–0.80',room:3,layer:'master',pos:[13.06,13.144],rot:180,size:[1.40,2.70,0.60],coat:CAB,fixed:'wall',
+     build(b0){ const o=0.10, b=(x0,x1,y0,y1,z0,z1,m)=>b0(x0+o,x1+o,y0,y1,z0,z1,m); b.phys=(x0,x1,y0,y1,z0,z1)=>b0.phys(x0+o,x1+o,y0,y1,z0,z1); b.round=(x0,x1,y0,y1,z0,z1,r,m)=>b0.round(x0+o,x1+o,y0,y1,z0,z1,r,m); // body sits 0.10 from the bed side; the top row runs to x=0 over the wider podium
+       const W=1.30, t=0.02, N0=0.45, N1=0.80, NW=0.30, D=0.65, Y1=2.28, Y2=2.30, T=2.7;                                      // niche: height 0.45–0.80, 0.30 deep; divider at 0.65; shelf 2.28–2.30 under the top row
+       b.phys(-o,-o+t,Y2,T,0.03,0.58); b.phys(-o,0,Y2,T,0.03,0.05); b(-o,-o+t,Y2,T,0.03,0.58,mat.body); b(-o,0,Y2,T,0.03,0.05,mat.body); // top-row extension: side panel and back
+       b.phys(0,t,0,N0,0.03,0.58); b.phys(0,t,N1,T,0.03,0.58); b.phys(W-t,W,0,T,0.03,0.58); b.phys(-o,W,T-t,T,0.03,0.58); b.phys(0,W,0,t,0.03,0.58); b.phys(t,W-t,t,T-t,0.03,0.05); b.phys(D-0.01,D+0.01,t,T-t,0.03,0.58); b.phys(-o+t,W-t,Y1,Y2,0.03,0.58);
        b.phys(0,NW,N0,N0+t,0.03,0.58); b.phys(0,NW,N1-t,N1,0.03,0.58); b.phys(NW-t,NW,N0,N1,0.03,0.58);
-       const doors=[[0.02,D-0.0015,0.02,Y1-0.003],[D+0.0015,W-0.02,0.02,Y1-0.003],[0.02,D-0.0015,Y2+0.003,T-0.02],[D+0.0015,W-0.02,Y2+0.003,T-0.02]]; // two wardrobe doors 0.63, two top-row doors
-       doors.forEach(([x0,x1,y0,y1])=>b.phys(x0,x1,y0,y1,0.58,0.60)); b.phys(D-0.0225,D-0.0025,1.0,1.3,0.6,0.62); b.phys(D+0.0025,D+0.0225,1.0,1.3,0.6,0.62); [0.02,D+0.0015].forEach(x0=>b.phys(x0+0.265,x0+0.365,Y2+0.003,Y2+0.023,0.6,0.62)); // proxy = mesh AABBs (realism-all D1)
+       const doors=[[0.02,D-0.0015,0.02,Y1-0.003],[D+0.0015,W-0.02,0.02,Y1-0.003],[0.02-o,D-0.0015,Y2+0.003,T-0.02],[D+0.0015,W-0.02,Y2+0.003,T-0.02]]; // two wardrobe doors 0.63, two top-row doors (the bed-side one 0.10 wider)
+       doors.forEach(([x0,x1,y0,y1])=>b.phys(x0,x1,y0,y1,0.58,0.60)); b.phys(D-0.0225,D-0.0025,1.0,1.3,0.6,0.62); b.phys(D+0.0025,D+0.0225,1.0,1.3,0.6,0.62); [0.02-o,D+0.0015].forEach(x0=>b.phys(x0+0.265,x0+0.365,Y2+0.003,Y2+0.023,0.6,0.62)); // proxy = mesh AABBs (realism-all D1)
        b(0,t,0,N0,0.03,0.58,mat.body); b(0,t,N1,T,0.03,0.58,mat.body);                                                         // bed-side panel above and below the niche
-       b(W-t,W,0,T,0.03,0.58,mat.body); b(0,W,T-t,T,0.03,0.58,mat.body); b(0,W,0,t,0.03,0.58,mat.body); b(t,W-t,t,T-t,0.03,0.05,mat.body); // body
-       b(D-0.01,D+0.01,t,T-t,0.03,0.58,mat.body); b(t,W-t,Y1,Y2,0.03,0.58,mat.body);                                           // divider between the two hanging compartments, shelf under the top row
+       b(W-t,W,0,T,0.03,0.58,mat.body); b(-o,W,T-t,T,0.03,0.58,mat.body); b(0,W,0,t,0.03,0.58,mat.body); b(t,W-t,t,T-t,0.03,0.05,mat.body); // body
+       b(D-0.01,D+0.01,t,T-t,0.03,0.58,mat.body); b(-o+t,W-t,Y1,Y2,0.03,0.58,mat.body);                                           // divider between the two hanging compartments, shelf under the top row
        b(0,NW,N0,N0+t,0.03,0.58,mat.body); b(0,NW,N1-t,N1,0.03,0.58,mat.body); b(NW-t,NW,N0,N1,0.03,0.58,mat.body);           // niche shelf, ceiling and back
        doors.forEach(([x0,x1,y0,y1])=>b.round(x0,x1,y0,y1,0.58,0.60,0.001,mat.wdoor));                                          // doors, 3 mm gaps
        b(D-0.0225,D-0.0025,1.0,1.3,0.5975,0.6005,mat.frame); b(D+0.0025,D+0.0225,1.0,1.3,0.5975,0.6005,mat.frame);            // vertical pull profiles at the meeting edge
-       [0.02,D+0.0015].forEach(x0=>b(x0+0.265,x0+0.365,Y2+0.003,Y2+0.023,0.5975,0.6005,mat.frame)); }},                       // top-row pulls along the bottom edge
+       [0.02-o,D+0.0015].forEach(x0=>b(x0+0.265,x0+0.365,Y2+0.003,Y2+0.023,0.5975,0.6005,mat.frame)); }},                       // top-row pulls along the bottom edge
     {id:'mtv',type:'телевизор 43" напротив изножья, центр на оси кровати, низ 1.22 (без консоли)',room:3,layer:'master',pos:[14.395,9.847],rot:180,size:[0.97,1.78,0.04],fixed:'wall',
      build(b){ b.phys(0,0.97,1.22,1.78,0,0.04); b.phys(0.02,0.95,1.24,1.76,0,0.005); // proxy = pre-detail mesh AABBs (realism-all D1)
        b.round(0,0.97,1.22,1.78,0.012,0.032,0.002,mat.dark); b(0.008,0.962,1.228,1.772,0.009,0.012,mat.screen); // slim panel with an 8 mm bezel, screen 3 mm proud towards the room (−z)
