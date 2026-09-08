@@ -1,19 +1,18 @@
-// Bed 1.70×1.10×2.20 in room 3 (tasks/realism-all/PLAN.md §10): plinth inset 0.05, frame r 10, tufted leather headboard (dimple grid 0.25 with buttons),
-// mattress r 50 with a dome and piping, two pillows r 60, blanket at the feet with a folded-back edge. Material names are ITEM_MATS keys. Pivot NW corner, headboard at z=0, metres.
+// Bed 1.70×1.10×2.20 in room 3 (tasks/room3-master, revision 2026-09-08 after the reference render): upholstered base in two halves on
+// short feet, split mattress 2×0.80 with a dome, flat padded headboard with a top rail, two large and two small pillows, blanket at the feet
+// with a folded-back edge. Material names are ITEM_MATS keys. Pivot NW corner, headboard at z=0, metres.
 // Usage: node tools/models/mbed.js  → models/mbed.glb
-const fs=require('fs'), path=require('path'), {THREE,rbox,piping,toGlb}=require('./glb.js');
+const fs=require('fs'), path=require('path'), {THREE,rbox,piping,cylinder,toGlb}=require('./glb.js');
 const parts=[], add=(geo,mat)=>parts.push({geo,mat});
-add(new THREE.BoxGeometry(1.60,0.10,2.10).translate(0.85,0.05,1.10),'dark');                   // plinth
-add(rbox(1.70,0.25,2.20,0.01,0,0.10,0,{m:1,step:0.3}),'body');                                  // frame 0.10–0.35
-const hb=rbox(1.70,0.75,0.08,0.03,0,0.35,0,{m:2,step:0.055}), hp=hb.attributes.position, hn=hb.attributes.normal; // headboard 0.35–1.10
-const BX=[0.35,0.60,0.85,1.10,1.35], BY=[0.60,0.85];                                            // tufting grid 0.25
-for(let i=0;i<hp.count;i++){ if(hn.getZ(i)<0.5) continue; const x=hp.getX(i), y=hp.getY(i); let d=0; BX.forEach(bx=>BY.forEach(by=>{ d+=Math.exp(-((x-bx)**2+(y-by)**2)/0.0016); })); hp.setZ(i,hp.getZ(i)-0.012*Math.min(d,1)); } // dimples on the front face
-hb.computeVertexNormals(); add(hb,'leather');
-BX.forEach(bx=>BY.forEach(by=>add(new THREE.SphereGeometry(0.011,10,6).translate(bx,by,0.070),'leather'))); // buttons in the dimples
-add(rbox(1.60,0.20,2.00,0.05,0.05,0.35,0.10,{m:2,step:0.15,crown:0.015}),'kmat');             // mattress 0.35–0.55 (+ dome)
-add(piping(0.05,0.10,1.60,2.00,0.05,0.45),'kmat');
-[0.12,0.88].forEach(x=>add(rbox(0.70,0.12,0.45,0.06,x,0.55,0.15,{m:2,step:0.12,crown:0.02}),'pillow')); // pillows
-add(rbox(1.50,0.06,1.30,0.03,0.10,0.55,0.85,{m:2,step:0.15,crown:0.01}),'cover');             // blanket at the feet
-add(rbox(1.50,0.03,0.25,0.015,0.10,0.61,0.85,{m:1,step:0.15}),'cover');                         // folded-back edge
+[[0.15,0.25],[1.55,0.25],[0.15,2.05],[1.55,2.05]].forEach(([x,z])=>add(cylinder(x,0,z,0.03,0.08,10),'dark'));           // feet
+[0.02,0.86].forEach(x=>add(rbox(0.82,0.27,2.10,0.04,x,0.08,0.10,{m:2,step:0.2}),'kmat'));                                   // base in two halves 0.08–0.35
+[0.02,0.86].forEach(x=>add(piping(x+0.003,0.103,0.814,2.094,0.04,0.34),'kmat'));                                                    // seam piping along the top edge of each half
+add(rbox(1.70,0.75,0.08,0.02,0,0.35,0,{m:2,step:0.2}),'leather');                                                          // headboard 0.35–1.10, flat padded panel
+add(rbox(1.70,0.05,0.10,0.015,0,1.05,0,{m:1,step:0.2}),'leather');                                                          // top rail, 2 cm proud of the panel
+[0.05,0.86].forEach(x=>add(rbox(0.79,0.20,2.00,0.05,x,0.35,0.15,{m:2,step:0.15,crown:0.015}),'kmat'));                   // mattresses 0.35–0.55 (+ dome)
+[0.10,0.90].forEach(x=>add(rbox(0.70,0.12,0.45,0.06,x,0.55,0.15,{m:2,step:0.12,crown:0.02}),'pillow'));                   // sleeping pillows
+[0.30,0.95].forEach(x=>add(rbox(0.45,0.10,0.30,0.05,x,0.56,0.40,{m:2,step:0.1,crown:0.015}),'cover'));                    // small decorative pillows in front
+add(rbox(1.60,0.06,1.30,0.03,0.05,0.55,0.85,{m:2,step:0.15,crown:0.01}),'cover');                                          // blanket at the feet
+add(rbox(1.60,0.03,0.25,0.015,0.05,0.61,0.85,{m:1,step:0.15}),'cover');                                                     // folded-back edge
 const {buf,triangles}=toGlb(parts); const out=path.join(__dirname,'../../models/mbed.glb'); fs.writeFileSync(out,buf);
 console.log(out,(buf.length/1024).toFixed(0)+' KB',triangles+' triangles');
