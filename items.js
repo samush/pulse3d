@@ -71,7 +71,7 @@ const PHYS={}; // id → boxes
     const stairs=o.stairs||'S1', E=stairs==='gentle'?o.E||0:0, N=stairs==='gentle'?o.n||8:7, JOG=o.jog||0;
     const PL=1.8, TOP=2.3, HF=2.2, W=R+1.2, steel=kind==='steel', ST=steel?mat.frame:mat.table, wood=mat.table, pnl=mat.kbody, front=mat.wdoor;
     const P=steel?0.05:0.08, po=(0.08-P)/2, RB=steel?1.65:1.60, TB=HF+0.14;                          // post/beam width inside the 80 mm zones, rail bottom, tray beam top
-    if(stairs==='ladder') b.phys(R-0.45,R,0,TOP,0,0.54); else b.phys(-E,R,0,2.4,0,0.54); [[R,0],[W-0.08,0],[R,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b.phys(x,x+0.08,0,PL,z,z+0.08)); // PHYS as the original (check.js: 9 boxes); the gentle extension is inside the stairs box
+    if(stairs==='ladder') b.phys(R-0.60,R,0,PL,0,0.54); else b.phys(-E,R,0,2.4,0,0.54); [[R,0],[W-0.08,0],[R,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b.phys(x,x+0.08,0,PL,z,z+0.08)); // PHYS as the original (check.js: 9 boxes); the gentle extension is inside the stairs box
     b.phys(R+0.08,W-0.08,0.10,0.14,L-0.08,L); b.phys(R,W,PL-0.2,TOP+0.3,0,L+0.02); b.phys(R,W,HF,TOP+0.3,L,2.97); b.phys(R,R+0.08,0,HF,2.89,2.97);
     const tube=(x0,y0,z0,x1,y1,z1,r,m)=>{ const d=new THREE.Vector3(x1-x0,y1-y0,z1-z0), len=d.length(), geo=new THREE.CylinderGeometry(r,r,len,12).translate(0,len/2,0), mesh=new THREE.Mesh(geo,m);
       mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize()); mesh.position.set(x0,y0,z0); g.add(mesh); return mesh; }; // round bar between two local points
@@ -88,9 +88,10 @@ const PHYS={}; // id → boxes
     const cap=(x0,x1,z0,z1)=>b(x0,x1,TOP-0.04,TOP,z0,z1,wood), bal=(x,z)=>steel?b(x-0.006,x+0.006,PL,TOP-0.04,z-0.006,z+0.006,ST):b(x-0.015,x+0.015,PL,TOP-0.04,z-0.015,z+0.015,wood);
     cap(R,R+0.04,0.5,L); for(let z=0.55;z<L-0.03;z+=0.1) bal(R+0.02,z); cap(R,W,L-0.04,L); for(let x=R+0.1;x<W-0.03;x+=0.1) bal(x,L-0.02);
     b(R+0.08,W-0.08,PL,PL+0.30,0,0.02,pnl); b(W-0.02,W,PL,PL+0.30,0.02,L-0.08,pnl);
-    if(stairs==='ladder'){ // C: vertical ladder hooked over the guard cap at the landing end, leaning 8°; Ø40 wood stringers, Ø28 rungs every 0.257, floor under the platform edge stays free
-      const xb=R-0.42, xt=R-0.10, yt=TOP+0.02, k=(xt-xb)/yt; [0.04,0.50].forEach(z=>tube(xb,0,z,xt,yt,z,0.02,wood));
-      for(let y=PL/7;y<TOP-0.05;y+=PL/7){ const x=xb+k*y; tube(x,y,0.04,x,y,0.50,0.014,wood); } [0.04,0.50].forEach(z=>b(xt-0.02,R,yt-0.04,yt,z-0.02,z+0.02,wood)); // top hooks resting on the cap
+    if(stairs==='ladder'){ // C (user's reference): straight wood ladder to the platform level only, leaning 15°; flat stringers 40×100 and six flat treads 100×30 every 0.257, floor under the platform edge stays free
+      const th=15*Math.PI/180, xb=R-0.06-PL*Math.tan(th), len=PL/Math.cos(th), sx=x=>xb+Math.tan(th)*x;
+      [0.02,0.48].forEach(z=>g.add(new THREE.Mesh(new THREE.BoxGeometry(0.10,len,0.04).rotateZ(-th).translate(sx(PL/2)+0.05,PL/2,z+0.02),wood))); // stringers, centred on the slope line
+      for(let y=PL/7;y<PL-0.05;y+=PL/7) b(sx(y),sx(y)+0.10,y-0.03,y,0.06,0.48,wood);
     } else {
     // stairs S1: rise h=1.80/7, six treads on step s, the seventh level is the 0.24 landing at 1.80 — the sit-down onto the mattress (+0.18) starts there;
     // D (gentle): N rises, treads on the run R+E from local x=-E, the treads on the extension step back JOG from the wall (room 2 wall jog)
@@ -102,7 +103,7 @@ const PHYS={}; // id → boxes
     const xd=N>7?X(6):X(4); if(N>7){ fr(X(4)+0.02,X(6)-0.02,0.03,0.38); fr(X(4)+0.02,X(6)-0.02,0.41,5*h-0.04); }
     const dm=(xd+R)/2, yd=(N>7?7:5)*h-0.04; fr(xd+0.02,dm-0.0015,0.03,yd); fr(dm+0.0015,R-0.02,0.03,yd); // two leaves: the swing stays clear of the first tread and the sofa/chair
     // open (south) side of the stairs: A — solid stepped panel 0.74 over each tread, the landing part rises to the guard top; B — open (user's choice, .local/stairs_01.png)
-    if(!steel){ for(let i=1;i<N;i++){ const x0=X(i-1); b(x0,x0+s,i*h-0.03,i*h+0.74,0.52,0.54,pnl); } b(R-0.24,R,PL-0.03,TOP,0.52,0.54,pnl); }
+    if(!steel&&stairs!=='gentle'){ for(let i=1;i<N;i++){ const x0=X(i-1); b(x0,x0+s,i*h-0.03,i*h+0.74,0.52,0.54,pnl); } b(R-0.24,R,PL-0.03,TOP,0.52,0.54,pnl); } // D: open side, no stepped panel (user)
     // handrail: one Ø32 wood rail 60 mm off the north wall, 0.85 over the tread line, levelled past the landing to the guard; three wall brackets, no free ends
     const rz=0.06+JOG*(E?1:0), yA=h+0.85, yB=(N-1)*h+0.85, xB=R-0.24, xE=R+0.25; tube(X(0)+0.05,yA,rz,xB,yB,rz,0.016,wood); tube(xB,yB,rz,xE,yB,rz,0.016,wood);
     g.add(new THREE.Mesh(new THREE.SphereGeometry(0.016,12,8).translate(xB,yB,rz),wood)); [[X(0)+0.05,yA],[xB,yB],[xE,yB]].forEach(([x,y])=>tube(x,y,0,x,y,rz,0.008,mat.frame));
