@@ -367,11 +367,11 @@ const PHYS={}; // id → boxes
     {id:'sock13',type:'розетка у шведской стенки (увлажнитель)',room:2,layer:'kid2',pos:[12.23,6.538],rot:0,size:[0.08,0.34,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.26,0.34,0,0.01,mat.plastic); }},
     // ---- master bedroom 3 (tasks/room3-master/README.md, marks M1–M28; grey materials only) ----
     // Room box: x 10.021–14.76, z 9.777–13.144. Items are built as if against the north wall and turned 180° (rot 180, pos = SE corner): the composition faces north. Wall-mounted boxes sit 0.02–0.03 in front of the wall (wallpaper at 0.015).
-    {id:'mbed',type:'кровать 160×200 на деревянном подиуме с двумя выдвижными ящиками, мягкое изголовье',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[1.70,1.10,2.20],coat:Object.assign({dark:'oakFurniture'},BED), /* podium in the balcony-jamb oak */ fixed:'wall',glb:'models/mbed.glb', // model by tools/models/mbed.js; the build below is proxy and fallback
+    {id:'mbed',type:'кровать 160×200 на деревянном подиуме до края ковра, два выдвижных ящика со стороны комнаты, мягкое изголовье; верх матраса вровень с подоконником',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[1.70,1.10,2.82],coat:Object.assign({dark:'oakFurniture'},BED), /* podium in the balcony-jamb oak */ fixed:'wall',glb:'models/mbed.glb', // model by tools/models/mbed.js; the build below is proxy and fallback
      build(b){
-       b.phys(0,1.7,0,0.35,0,2.2); b.phys(0.05,1.65,0.35,0.55,0.1,2.1); b.phys(0,1.7,0.35,1.1,0,0.08); [[0.12,0.82],[0.88,1.58]].forEach(([x0,x1])=>b.phys(x0,x1,0.55,0.67,0.15,0.6)); b.phys(0.1,1.6,0.55,0.61,0.85,2.15); // proxy = pre-detail mesh AABBs; drawer fronts (12 mm) sit inside the podium box tolerance
-       b(0,1.676,0,0.35,0,2.2,mat.dark); [0.15,1.15].forEach(z=>b(1.676,1.70,0.06,0.28,z,z+0.90,mat.dark)); // podium on the full footprint, two drawer fronts on the room side; east side touches the wall under the window
-       b(0.05,1.65,0.35,0.55,0.10,2.10,mat.kmat); b(0,1.7,0.35,1.10,0,0.08,mat.cushion);           // mattress (top 0.55 = window sill), headboard
+       b.phys(0,1.7,0,0.30,0,2.82); b.phys(0.05,1.65,0.30,0.55,0.1,2.1); b.phys(0,1.7,0.30,1.1,0,0.08); [[0.12,0.82],[0.88,1.58]].forEach(([x0,x1])=>b.phys(x0,x1,0.55,0.67,0.15,0.6)); b.phys(0.1,1.6,0.55,0.61,0.85,2.15); // proxy = pre-detail mesh AABBs; drawer fronts (12 mm) sit inside the podium box tolerance
+       b(0,1.676,0,0.30,0,2.82,mat.dark); [0.70,1.75].forEach(z=>b(1.676,1.70,0.05,0.25,z,z+0.90,mat.dark)); // podium to the rug end (z 2.82), drawers north of the wardrobe; east side touches the wall under the window
+       b(0.05,1.65,0.30,0.55,0.10,2.10,mat.kmat); b(0,1.7,0.30,1.10,0,0.08,mat.cushion);           // mattress (top 0.55 + dome = window sill 0.56), headboard
        [[0.12,0.82],[0.88,1.58]].forEach(([x0,x1])=>b(x0,x1,0.55,0.67,0.15,0.60,mat.pillow));       // two pillows
        b(0.10,1.60,0.55,0.61,0.85,2.15,mat.cushion);                                               // blanket at the feet
      }},
@@ -397,14 +397,10 @@ const PHYS={}; // id → boxes
        doors.forEach(([x0,x1,y0,y1])=>b.round(x0,x1,y0,y1,0.58,0.60,0.001,mat.wdoor));                                          // doors, 3 mm gaps
        b(D-0.0225,D-0.0025,1.0,1.3,0.5975,0.6005,mat.frame); b(D+0.0025,D+0.0225,1.0,1.3,0.5975,0.6005,mat.frame);            // vertical pull profiles at the meeting edge
        [0.02,D+0.0015].forEach(x0=>b(x0+0.265,x0+0.365,Y2+0.003,Y2+0.023,0.5975,0.6005,mat.frame)); }},                       // top-row pulls along the bottom edge
-    {id:'mtv',type:'телевизор 43" напротив изножья, центр на оси кровати',room:3,layer:'master',pos:[14.395,9.847],rot:180,size:[0.97,1.63,0.04],fixed:'wall',
-     build(b){ b.phys(0,0.97,1.07,1.63,0,0.04); b.phys(0.02,0.95,1.09,1.61,0,0.005); // proxy = pre-detail mesh AABBs (realism-all D1)
-       b.round(0,0.97,1.07,1.63,0.012,0.032,0.002,mat.dark); b(0.008,0.962,1.078,1.622,0.009,0.012,mat.screen); // slim panel with an 8 mm bezel, screen 3 mm proud towards the room (−z)
-       b(0.25,0.72,1.07,1.082,0.006,0.02,mat.frame); b(0.3,0.67,1.2,1.5,0.032,0.04,mat.frame); }},
-    {id:'mconsole',type:'подвесная консоль под ТВ, два ящика',room:3,layer:'master',pos:[14.51,10.127],rot:180,size:[1.20,0.60,0.35],coat:CAB,fixed:'wall',
-     build(b){ b.phys(0,1.2,0.42,0.6,0.02,0.33); [0.01,0.605].forEach(x=>{ b.phys(x,x+0.585,0.43,0.59,0,0.02); b.phys(x+0.22,x+0.37,0.5,0.52,-0.015,0); }); // proxy = pre-detail mesh AABBs (realism-all D1)
-       b(0,1.2,0.42,0.58,0.02,0.33,mat.body); b.round(0,1.2,0.58,0.60,0,0.33,0.002,mat.body); b(0.2,1.0,0.45,0.55,0.33,0.35,mat.frame); // carcass, 20 mm top with a chamfer, wall bracket
-       [0.01,0.605].forEach(x=>b.round(x,x+0.585,0.4315,0.5785,0,0.02,0.001,mat.wdoor)); }},
+    {id:'mtv',type:'телевизор 43" напротив изножья, центр на оси кровати, низ 1.22 (без консоли)',room:3,layer:'master',pos:[14.395,9.847],rot:180,size:[0.97,1.78,0.04],fixed:'wall',
+     build(b){ b.phys(0,0.97,1.22,1.78,0,0.04); b.phys(0.02,0.95,1.24,1.76,0,0.005); // proxy = pre-detail mesh AABBs (realism-all D1)
+       b.round(0,0.97,1.22,1.78,0.012,0.032,0.002,mat.dark); b(0.008,0.962,1.228,1.772,0.009,0.012,mat.screen); // slim panel with an 8 mm bezel, screen 3 mm proud towards the room (−z)
+       b(0.25,0.72,1.22,1.232,0.006,0.02,mat.frame); b(0.3,0.67,1.35,1.65,0.032,0.04,mat.frame); }},
     {id:'vanity',type:'туалетный столик с плоским ящиком',room:3,layer:'master',pos:[12.6,10.227],rot:180,size:[1.00,0.75,0.45],coat:CAB,fixed:'wall',
      build(b,g){ b.phys(0,1,0.72,0.75,0,0.45); b.phys(0.03,0.97,0.62,0.72,0.05,0.43); b.phys(0.04,0.96,0.63,0.71,0.03,0.05); b.phys(0,0.03,0,0.72,0.05,0.43); b.phys(0.97,1,0,0.72,0.05,0.43); // proxy = pre-detail mesh AABBs (realism-all D1)
        b.round(0,1.0,0.72,0.75,0,0.45,0.003,mat.body); b(0.03,0.97,0.62,0.72,0.05,0.43,mat.body);                       // top with 3 mm chamfer, drawer box
