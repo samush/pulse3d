@@ -64,7 +64,7 @@ const PHYS={}; // id → boxes
   // stairs S1 (7 equal rises to 1.80, the seventh is a 0.24 landing inside the old stair length), 3 storage sections instead of 15 drawers,
   // one continuous wall handrail, bed-side posts and the far post raised to carry a framed over-door tray whose 140 mm beams are its borders.
   // kind 'timber' (A): 80 mm wood posts and 200 mm rails, wood balusters, solid stair side panel. 'steel' (B): 50 mm steel posts and 150 mm beams inside
-  // the same 80 mm corner zones, Ø12 rods, wood only on treads, caps and the handrail. Load path and wall ties are a sketch for the maker, not a calculation.
+  // the same 80 mm corner zones, Ø12 rods on the platform guard, open stair side, wood only on treads, caps and the handrail. Load path and wall ties are a sketch for the maker, not a calculation.
   const kidLoftBuild=(kind,L,R)=>(b,g)=>{
     const PL=1.8, TOP=2.3, HF=2.2, W=R+1.2, steel=kind==='steel', ST=steel?mat.frame:mat.table, wood=mat.table, pnl=mat.kbody, front=mat.wdoor;
     const P=steel?0.05:0.08, po=(0.08-P)/2, RB=steel?1.65:1.60, TB=HF+0.14;                          // post/beam width inside the 80 mm zones, rail bottom, tray beam top
@@ -92,9 +92,8 @@ const PHYS={}; // id → boxes
     const fr=(x0,x1,y0,y1)=>{ b.round(x0+0.0015,x1-0.0015,y0+0.0015,y1-0.0015,0.50,0.518,0.001,front); b(x0+0.03,x1-0.03,y1-0.03,y1-0.018,0.505,0.518,mat.dark); };
     fr(0.02,2*s-0.02,0.03,h-0.04); fr(2*s+0.02,4*s-0.02,0.03,0.38); fr(2*s+0.02,4*s-0.02,0.41,3*h-0.04);
     const dm=(4*s+R)/2; fr(4*s+0.02,dm-0.0015,0.03,5*h-0.04); fr(dm+0.0015,R-0.02,0.03,5*h-0.04);       // two leaves ≤0.32: the swing stays clear of the first tread and the sofa/chair
-    // open (south) side of the stairs: solid stepped panel 0.74 over each tread (A) or Ø12 rods with a wood cap (B); the landing part rises to the guard top
-    for(let i=1;i<=6;i++){ const x0=(i-1)*s, y=i*h; if(steel){ [0.25,0.75].forEach(f=>b(x0+f*s-0.006,x0+f*s+0.006,y-0.03,y+0.70,0.524,0.536,ST)); b(x0,x0+s,y+0.70,y+0.74,0.52,0.54,wood); } else b(x0,x0+s,y-0.03,y+0.74,0.52,0.54,pnl); }
-    if(steel){ [R-0.18,R-0.06].forEach(x=>b(x-0.006,x+0.006,PL-0.03,TOP-0.04,0.524,0.536,ST)); b(R-0.24,R,TOP-0.04,TOP,0.52,0.54,wood); } else b(R-0.24,R,PL-0.03,TOP,0.52,0.54,pnl);
+    // open (south) side of the stairs: A — solid stepped panel 0.74 over each tread, the landing part rises to the guard top; B — open (user's choice, .local/stairs_01.png)
+    if(!steel){ for(let i=1;i<=6;i++){ const x0=(i-1)*s; b(x0,x0+s,i*h-0.03,i*h+0.74,0.52,0.54,pnl); } b(R-0.24,R,PL-0.03,TOP,0.52,0.54,pnl); }
     // handrail: one Ø32 wood rail 60 mm off the north wall, 0.85 over the tread line, levelled past the landing to the guard; three wall brackets, no free ends
     const rz=0.06, yA=h+0.85, yB=6*h+0.85, xB=R-0.24, xE=R+0.25; tube(0.05,yA,rz,xB,yB,rz,0.016,wood); tube(xB,yB,rz,xE,yB,rz,0.016,wood);
     g.add(new THREE.Mesh(new THREE.SphereGeometry(0.016,12,8).translate(xB,yB,rz),wood)); [[0.05,yA],[xB,yB],[xE,yB]].forEach(([x,y])=>tube(x,y,0,x,y,rz,0.008,mat.frame));
