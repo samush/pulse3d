@@ -227,7 +227,7 @@ const CAMS=[ // fixed room cameras (selector «Камера»): pos [x,y,z] m, t
   {id:'r4-sw',label:'кухня-гостиная (вид 4)',pos:[9.1,2.5,6.1],theta:2.26,phi:Math.PI/2+0.33,fov:80},
   {id:'r5-entry',label:'коридор (вид 1)',pos:[7.3,2.5,7.3],theta:-3.11,phi:Math.PI/2+0.3,fov:80},
   {id:'r6',label:'гардеробная (вид 1)',pos:[6.55,2.4,3.65],theta:-2.74,phi:Math.PI/2+0.5,fov:80},
-  {id:'r7',label:'постирочная (вид 1)',pos:[7.5,2.3,3.85],theta:Math.PI,phi:Math.PI/2+0.63,fov:70},
+  {id:'r7',label:'постирочная (вид 1)',pos:[7.5,2.55,3.5],theta:Math.PI,phi:Math.PI/2+0.7,fov:80},
   {id:'r8',label:'санузел 8 (вид 1)',pos:[9.65,2.45,12.95],theta:-2.36,phi:Math.PI/2+0.48,fov:90},
   {id:'r8-nw',label:'санузел 8 (вид 2)',pos:[8.55,2.45,11.8],theta:0.76,phi:Math.PI/2+0.48,fov:90},
   {id:'r9',label:'санузел 9 (вид 1)',pos:[9.7,2.5,8.3],theta:-0.79,phi:Math.PI/2+0.45,fov:85},
