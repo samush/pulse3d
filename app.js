@@ -214,8 +214,10 @@ function fitDist(mult){
 const CAMS=[ // fixed room cameras (selector «Камера»): pos [x,y,z] m, theta/phi as in controls, fov deg
   {id:'r1-n',label:'1 · детская, северо-западный угол',pos:[1.5,2.55,2.1],theta:0.92,phi:Math.PI/2+0.33,fov:80},
   {id:'r1-s',label:'1 · детская, юго-западный угол',pos:[1.5,2.55,4.6],theta:2.21,phi:Math.PI/2+0.33,fov:80},
+  {id:'r1-bed',label:'1 · детская, с кровати-чердака',pos:[4.85,2.4,3.6],theta:-1.7,phi:Math.PI/2+0.42,fov:90},
   {id:'r2-n',label:'2 · детская, северо-восточный угол',pos:[14.0,2.55,7.4],theta:-0.85,phi:Math.PI/2+0.33,fov:80},
   {id:'r2-s',label:'2 · детская, юго-восточный угол',pos:[13.8,2.55,9.45],theta:-2.49,phi:Math.PI/2+0.33,fov:80},
+  {id:'r2-bed',label:'2 · детская, с кровати-чердака',pos:[11.6,2.4,7.95],theta:1.45,phi:Math.PI/2+0.38,fov:90},
   {id:'r3-door',label:'3 · спальня, от двери',pos:[10.2,2.5,10.3],theta:1.15,phi:Math.PI/2+0.33,fov:80},
   {id:'r4-door',label:'4 · кухня-гостиная, от двери',pos:[13.3,2.5,6.1],theta:-2.25,phi:Math.PI/2+0.33,fov:80},
   {id:'r4-kitchen',label:'4 · кухня-гостиная, из кухонного угла',pos:[9.1,2.5,2.1],theta:0.88,phi:Math.PI/2+0.33,fov:80},
