@@ -39,7 +39,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .slider-lab{display:flex;justify-content:space-between;color:var(--muted);
   font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;margin-top:10px}
 .views{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-#cams{margin:4px 0 10px} #cams .room{display:flex;gap:6px;margin-top:6px} #cams .room button{width:44px;height:32px;flex:none;padding:0} #cams button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+#cams{margin:4px 0 10px} #cams .room{display:flex;gap:6px;margin-top:6px} #cams .room button{width:40px;height:30px;flex:none;padding:0} #cams button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 #layers{margin-top:10px} #layers summary,#cams summary{cursor:pointer;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
 .views button{flex:1 1 45%;background:transparent;border:1px solid var(--line);color:var(--ink);
   font:600 12px "Manrope",system-ui,sans-serif;padding:6px 0;border-radius:7px;cursor:pointer}
@@ -47,7 +47,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .views button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 /* переключатель «Материалы»: скрытый чекбокс #mats остаётся для VIZ.set и тестов, label рисуется кнопкой */
 .tog{flex:1;text-align:center;border:1px solid var(--line);border-radius:7px;padding:6px 0;font-weight:600;font-size:12px;cursor:pointer}
-.tog::after{content:': выкл';color:var(--muted)} #mats:checked+.tog{background:var(--accent);color:#fff;border-color:var(--accent)} #mats:checked+.tog::after{content:': вкл';color:#fff}
+.tog::after{content:': выкл';color:var(--muted)} input:checked+.tog{background:var(--accent);color:#fff;border-color:var(--accent)} input:checked+.tog::after{content:': вкл';color:#fff}
 .legend{display:flex;align-items:center;gap:9px;margin-top:14px;padding-top:12px;
   border-top:1px solid var(--line)}
 .legend .cube{width:20px;height:20px;border:1.5px solid var(--accent);
@@ -123,6 +123,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <div id="camgrid" title="Камеры, закреплённые в комнатах: номер комнаты.номер вида. ЛКМ поворачивает объектив, перемещения нет; свет и материалы как в экскурсии"></div>
   <p class="sub" id="camhint" hidden style="margin:6px 0 0">камера закреплена под потолком. ЛКМ или стрелки — повернуть объектив</p>
   </details>
+  <div class="row"><input type="checkbox" id="avatarOn" hidden checked><label for="avatarOn" class="tog" title="Фигура человека ростом 1,7 м в экскурсии">Человечек</label></div>
   <div class="row"><input type="checkbox" id="mats" hidden><label for="mats" class="tog" title="Реальные покрытия (PBR) вместо серого концепта">Материалы</label></div>
   <div class="row"><label for="light">Свет</label><select id="light" aria-label="Световая схема" title="Иллюзия — быстрый свет: один источник на комнату без теней; нейтральный — фиксированный свет для проверки материалов; светильники квартиры — источники из lighting.js (комнаты 4 и 9), группы через LIGHTING.group"><option value="illusion">иллюзия</option><option value="neutral">нейтральный</option><option value="lamps">светильники квартиры</option></select></div>
   <div class="row"><label for="bed3">Кровать 3</label><select id="bed3" aria-label="Длина подиума кровати в комнате 3" title="Длина деревянного подиума кровати в спальне 3"><option value="normal">обычная, 2.2 м</option><option value="rug" selected>до края ковра, 2.82 м</option><option value="wall">до стены с ТВ</option></select></div>
@@ -135,7 +136,6 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <div class="row"><input type="checkbox" id="cubes"><label for="cubes">Кубы 1 м³</label></div>
   <div class="row"><input type="checkbox" id="labels"><label for="labels">Точки с размерами</label></div>
   <div class="row"><input type="checkbox" id="kwall"><label for="kwall">Стена коридор–кухня</label></div>
-  <div class="row"><input type="checkbox" id="avatarOn" checked><label for="avatarOn">Человечек (в экскурсии)</label></div>
   <div class="row"><input type="checkbox" id="wgrid"><label for="wgrid">Сетка-адресация</label></div>
   <div class="row"><input type="checkbox" id="finish" checked><label for="finish">Отделка (слой 1)</label></div>
   <div class="row"><input type="checkbox" id="tileFloor" checked><label for="tileFloor">Плитка пол (слой 2)</label></div>
