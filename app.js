@@ -39,7 +39,7 @@ const controls={
   r:20, theta:0.8, phi:1.0,
   minPhi:0.012, maxPhi:Math.PI/2-0.02, minR:2, maxR:120,
   setPose(px,py,pz,tx,ty,tz){
-    this.plan=false; this.fpv=false; this.cam=false;
+    this.plan=false; this.fpv=false; this.cam=false; persp.near=0.5;
     if(persp.fov!==45){persp.fov=45;persp.updateProjectionMatrix();}
     const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
     this.target.set(tx,ty,tz);
@@ -67,7 +67,7 @@ const controls={
   lookDown(){ this.theta=0; this.phi=this.minPhi; this.apply(); }, // ровный план для разметки и расстановки
   setFPV(x,z,theta){
     this.fpv=true; this.plan=false; this.cam=false;
-    persp.fov=60; persp.updateProjectionMatrix();
+    persp.near=0.5; persp.fov=60; persp.updateProjectionMatrix();
     const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
     this.pos.set(x,1.57,z);
     this.theta=theta; this.phi=Math.PI/2+0.03;
@@ -75,7 +75,7 @@ const controls={
   },
   setCam(c){ // fixed camera from CAMS: lens turns with the mouse, position stays
     this.fpv=true; this.cam=true; this.plan=false;
-    persp.fov=c.fov||70; persp.updateProjectionMatrix();
+    persp.fov=c.fov||70; persp.near=0.05; persp.updateProjectionMatrix(); // small rooms: the wall next to the lens must not be clipped
     const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
     this.pos.set(c.pos[0],c.pos[1],c.pos[2]); this.theta=c.theta; this.phi=c.phi;
     this.apply(); syncMode();
@@ -222,11 +222,14 @@ const CAMS=[ // fixed room cameras (selector «Камера»): pos [x,y,z] m, t
   {id:'r4-window',label:'4 · кухня-гостиная, от окна',pos:[13.3,2.5,2.1],theta:-0.89,phi:Math.PI/2+0.33,fov:80},
   {id:'r4-sw',label:'4 · кухня-гостиная, юго-западный угол',pos:[9.1,2.5,6.1],theta:2.26,phi:Math.PI/2+0.33,fov:80},
   {id:'r5-entry',label:'5 · коридор, от входа',pos:[7.3,2.5,7.3],theta:-3.11,phi:Math.PI/2+0.3,fov:80},
-  {id:'r6',label:'6 · гардеробная',pos:[6.2,2.35,3.75],theta:-3.0,phi:Math.PI/2+0.45,fov:80},
+  {id:'r6',label:'6 · гардеробная, над дверью',pos:[6.55,2.4,3.65],theta:-2.74,phi:Math.PI/2+0.5,fov:80},
   {id:'r7',label:'7 · постирочная',pos:[7.5,2.3,3.85],theta:Math.PI,phi:Math.PI/2+0.63,fov:70},
-  {id:'r8',label:'8 · санузел',pos:[9.65,2.45,12.95],theta:-2.36,phi:Math.PI/2+0.48,fov:90},
-  {id:'r9',label:'9 · санузел',pos:[9.7,2.5,8.3],theta:-0.79,phi:Math.PI/2+0.45,fov:85},
-  {id:'r10',label:'10 · лоджия',pos:[14.5,2.15,5.9],theta:Math.PI,phi:Math.PI/2+0.3,fov:80}];
+  {id:'r8',label:'8 · санузел, над дверью',pos:[9.65,2.45,12.95],theta:-2.36,phi:Math.PI/2+0.48,fov:90},
+  {id:'r8-nw',label:'8 · санузел, над душем',pos:[8.55,2.45,11.8],theta:0.76,phi:Math.PI/2+0.48,fov:90},
+  {id:'r9',label:'9 · санузел, северо-восточный угол',pos:[9.7,2.5,8.3],theta:-0.79,phi:Math.PI/2+0.45,fov:85},
+  {id:'r9-sw',label:'9 · санузел, юго-западный угол',pos:[8.5,2.45,9.55],theta:2.46,phi:Math.PI/2+0.45,fov:85},
+  {id:'r10',label:'10 · лоджия, от стола',pos:[14.5,2.15,5.9],theta:Math.PI,phi:Math.PI/2+0.3,fov:80},
+  {id:'r10-shelf',label:'10 · лоджия, над стеллажом',pos:[14.5,2.4,2.55],theta:0,phi:Math.PI/2+0.3,fov:80}];
 function setView(kind){
   if(typeof resizeReady!=='undefined')resize();
   controls.fpv=false; controls.cam=false;
