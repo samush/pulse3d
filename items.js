@@ -188,6 +188,34 @@ const PHYS={}; // id → boxes
   const BED={cabinetPaint:'cabinetPaint',kmat:'curtainLinen',pillow:'curtainLinen',cushion:'curtainLinen',cover:'curtainLinen'}; // M4: beds and window seats — bedding in linen, not the sofa weave (kitchen.md rule 3)
   const KID_CHAIR={cushion:'sofaWeave',plastic:'plastic'}; // M4-1: desk chairs — seat pad as the dining chairs, plastic shell
   const PLASTIC={plastic:'plastic'}; // M4-1: lamp bodies, socket and switch frames (kitchen.md rule 6)
+  // ---- room 4 wall decor (.local/декор/, one picture = one variant): tv wall x 10.95–13.47 on the north wall, sofa wall x 10.96–13.47 on the south wall
+  // (rot 180: local x runs east→west, so local x=0 is the viewer's left, as in the pictures). Boards 20 mm proud of the wall, LED = emissive strips on the wall
+  // plane (ponytail: no light source, the glow is a visible line only); the proxy box lies inside the wall so the tv and a sofa back never clash with it
+  const DEC={wood:mat.table,paint:mat.wbody,stone:mat.top,coat:{table:'oakFurniture',cabinetPaint:'cabinetPaint',top:'stoneCounter'},
+    boards:(b,x0,x1,y0,y1,n,m)=>{ const w=(x1-x0-0.004*(n-1))/n; for(let i=0;i<n;i++){ const x=x0+i*(w+0.004); b.round(x,x+w,y0,y1,0,0.02,0.002,m); } }, // n boards with 4 mm joints
+    slats:(b,x0,x1,y0,y1,z1=0.02)=>{ b(x0,x1,y0,y1,0,z1*0.3,mat.dark); for(let x=x0+0.015;x+0.03<=x1+1e-6;x+=0.06) b(x,x+0.03,y0,y1,z1*0.3,z1,DEC.wood); }, // 30 mm slats on a 60 mm pitch over a dark backing
+    glow:(b,x0,x1,y0,y1,z0=0)=>b(x0,x1,y0,y1,z0,z0+0.004,mat.led),
+    shape:(b,sh,x,y,z0,z1,m)=>{ const o=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:z1-z0,bevelEnabled:false,curveSegments:24}).translate(x,y,z0),m); b.group.add(o); return o; },
+    ellipse:(cx,cy,rx,ry)=>{ const sh=new THREE.Shape(); sh.absellipse(cx,cy,rx,ry,0,Math.PI*2,false,0); return sh; },
+    art:(b,x0,x1,y0,y1)=>{ b(x0,x1,y0,y1,0.02,0.05,mat.frame); b(x0+0.02,x1-0.02,y0+0.02,y1-0.02,0.045,0.052,mat.pillow); }, // framed canvas 30 mm deep, face at z 0.052
+    wall:(W,f)=>b=>{ b.phys(0,W,0,2.7,-0.02,0); f(b); }};
+  const DECOR_TV={ // W 2.52, tv centre at local x 1.55 (tv A x 0.9–2.2, y 1.0–1.75; tv B x 0.77–2.33, y 0.925–1.825)
+    A:b=>{ DEC.slats(b,0,0.40,0,2.60); DEC.boards(b,0.40,2.52,0,2.60,4,DEC.paint); DEC.glow(b,0,2.52,2.60,2.62); },                       // slat strip + painted boards, LED cove under the ceiling
+    B:b=>{ for(let r=0;r<4;r++) DEC.boards(b,0,2.52,r*0.626,r*0.626+0.622,3,DEC.paint); DEC.glow(b,0,2.52,2.50,2.52); },              // 3×4 painted tiles, LED cove
+    C:b=>{ DEC.boards(b,0.65,2.45,0,2.60,3,DEC.wood); DEC.glow(b,0.63,0.65,0,2.60); },                                                  // three wide oak boards, LED on the left edge
+    D:b=>DEC.boards(b,0,2.52,0,2.70,6,DEC.wood),                                                                                        // oak boards over the whole wall, no light
+    E:b=>{ DEC.slats(b,0,0.50,0,2.70); DEC.shape(b,b.rrect(1.98,2.19,0.29),0.58,0.28,0,0.004,mat.led); DEC.shape(b,b.rrect(1.94,2.15,0.27),0.60,0.30,0.004,0.02,DEC.paint); }, // rounded painted panel with a halo, slats on the left (mirrored: the wall ends at the tv side)
+    F:b=>{ DEC.slats(b,0,2.52,0,2.70,0.012); const D=r=>{ const sh=new THREE.Shape(); sh.moveTo(2.52,1.4-r); sh.lineTo(1.5,1.4-r); sh.absarc(1.5,1.4,r,-Math.PI/2,Math.PI/2,true); sh.lineTo(2.52,1.4+r); sh.closePath(); return sh; };
+      DEC.shape(b,D(0.97),0,0,0.012,0.016,mat.led); DEC.shape(b,D(0.95),0,0,0.016,0.02,mat.dark); [1.3,1.65,2.0].forEach(y=>b(0.03,0.45,y,y+0.025,0.012,0.27,DEC.wood)); }, // dark half-disc with a halo on a slat wall, three shelves on the left
+    G:b=>{ DEC.slats(b,0,2.52,0,2.70,0.012); const ring=DEC.ellipse(1.55,1.45,0.95,0.97); ring.holes.push(DEC.ellipse(1.55,1.45,0.92,0.94)); DEC.shape(b,ring,0,0,0.012,0.016,mat.led);
+      DEC.shape(b,DEC.ellipse(1.15,2.0,0.22,0.15),0,0,0.012,0.02,DEC.paint); b(2.0,2.28,1.95,1.975,0.012,0.22,DEC.wood); },            // LED ring on a slat wall, oval panel top-left, one shelf on the right
+    H:b=>{ DEC.slats(b,0,2.52,0,2.70,0.012); b(0.58,2.48,0.30,2.45,0.012,0.02,DEC.stone); [[0.555,0.58],[2.48,2.505]].forEach(([x0,x1])=>DEC.glow(b,x0,x1,0.30,2.45,0.012)); DEC.glow(b,0.58,2.48,2.45,2.47,0.012); }}; // stone slab with LED on three edges over a slat wall
+  const DECOR_SOFA={ // W 2.51, sofa back on the wall, top 0.68–0.9
+    A:b=>DEC.boards(b,0,2.51,0,2.70,5,DEC.wood),                                                                                        // oak boards over the whole wall
+    B:b=>{ b.round(0,0.55,0,2.70,0,0.02,0.002,DEC.wood); b.round(0.61,1.25,0,2.70,0,0.02,0.002,DEC.wood); DEC.glow(b,0.55,0.61,0,2.70); DEC.art(b,1.5,2.35,1.2,2.4); // two oak boards with a LED slot, relief picture on the painted part
+      b.group.add(new THREE.Mesh(new THREE.RingGeometry(0.25,0.27,32,1,0,Math.PI).translate(1.925,1.7,0.053),mat.wpanel)); },
+    C:b=>{ DEC.slats(b,0,0.95,0,2.70); DEC.glow(b,0.95,0.99,0,2.70); DEC.art(b,1.55,2.15,1.25,2.10); DEC.shape(b,DEC.ellipse(1.93,1.68,0.17,0.32),0,0,0.052,0.055,mat.dark); }}; // slat panel, LED slot, black-and-white picture
+  Object.keys(DECOR_TV).forEach(k=>DECOR_TV[k]=DEC.wall(2.52,DECOR_TV[k])); Object.keys(DECOR_SOFA).forEach(k=>DECOR_SOFA[k]=DEC.wall(2.51,DECOR_SOFA[k]));
   const ITEMS=[
     // ---- kitchen-living room 4 (sketch .local/R1.jpg) ----
     {id:'kitchen',type:'кухонный блок',room:4,layer:'kitchen',pos:[8.23,KN],rot:0,size:[0.68,2.69,3.59],fixed:'wall',coat:{base:'cabinetPaint',upper:'cabinetPaint',top:'stoneCounter',wpanel:'stoneSplash'}, // M2: painted fronts, stone worktop and splashback; carcass, plinth, hob and metal stay class twins
@@ -241,6 +269,8 @@ const PHYS={}; // id → boxes
      }},
     {id:'sofa',type:'диван 2 м, низкий, без спинки и подлокотников, три большие подушки',room:4,layer:'kitchen',pos:[11.35,6.287-0.9],rot:0,size:[2.0,0.87,0.88],glb:'models/sofa.glb',coat:{upholstery:'sofaWeave',piping:'sofaWeave',cushion:'sofaWeave'}, // model by tools/models/sofa.js
      build(b){ b.phys(0,2,0.1,0.85,0,0.88); b(0,2,0.05,0.42,0,0.88,mat.sofa); [0.1,0.7,1.3].forEach(x=>b(x,x+0.6,0.42,0.87,0.60,0.78,mat.cushion)); }}, // fallback: seat block and three pillows
+    {id:'decortv',type:'декор стены за ТВ',room:4,layer:'kitchen',pos:[10.95,KN],rot:0,size:[2.52,2.7,0.02],fixed:'wall',coat:DEC.coat,build:DECOR_TV.A},
+    {id:'decorsofa',type:'декор стены за диваном',room:4,layer:'kitchen',pos:[13.47,6.287],rot:180,size:[2.51,2.7,0.06],fixed:'wall',coat:DEC.coat,build:DECOR_SOFA.A},
     // ---- hallway 5 (sketches .local/R2_*) ----
     {id:'wardrobe',type:'шкаф в нише',room:5,layer:'hall',pos:[8.20,7.974-0.45],rot:0,size:[1.77,2.65,0.45],fixed:'wall',coat:{door:'cabinetPaint',body:'cabinetPaint'}, // M4-3: painted doors and visible carcass; shoe niche stays dark class
      build(b){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.02,0,2.65,0,0.45); b.phys(1.75,1.77,0,2.65,0,0.45); b.phys(0,1.77,0,2.65,0.43,0.45); b.phys(0,1.77,2.63,2.65,0,0.45); b.phys(0.02,1.75,0.02,0.04,0.05,0.43); b.phys(0.02,1.75,0.43,0.45,0,0.43); b.phys(0.02,1.75,0.04,0.43,0.35,0.43); b.phys(0.02,0.881,0.45,1.95,0,0.02); b.phys(0.889,1.75,0.45,1.95,0,0.02); b.phys(0.825,0.84,1,1.3,-0.02,0); b.phys(0.93,0.945,1,1.3,-0.02,0); b.phys(0.02,1.75,1.95,1.97,0,0.43); b.phys(0.02,0.881,1.97,2.63,0,0.02); b.phys(0.889,1.75,1.97,2.63,0,0.02); b.phys(0.825,0.84,2.07,2.23,-0.02,0); b.phys(0.93,0.945,2.07,2.23,-0.02,0);
@@ -959,6 +989,8 @@ const PHYS={}; // id → boxes
   const R4={table:{ids:['table','chair1','chair2','chair3','chair4','chair5','chair6']},sofa:{ids:['sofa'],V:Object.fromEntries(Object.entries(SOFA4).map(([k,v])=>[k,sofaV(v,k)]))},
     kitchen:{ids:['kitchen','lamp'],V:{B:{items:{kitchen:kitchenV('B',2.13),lamp:null}},C:{items:{kitchen:kitchenV('C',2.70),lamp:null}}}}, // lamp over the table sits inside the fridge column: hidden in B/C
    
+    decortv:{ids:['decortv'],V:Object.fromEntries(Object.keys(DECOR_TV).map(k=>[k,{pos:[10.95,KN],size:[2.52,2.7,{F:0.27,G:0.22}[k]||0.02],coat:DEC.coat,build:DECOR_TV[k]}]))}, // F/G: shelves stand off the wall
+    decorsofa:{ids:['decorsofa'],V:Object.fromEntries(Object.keys(DECOR_SOFA).map(k=>[k,{pos:[13.47,6.287],size:[2.51,2.7,0.06],coat:DEC.coat,build:DECOR_SOFA[k]}]))},
     console:{ids:['console'],V:{B:{pos:[11.775,KN],size:[1.45,0.34,0.42],coat:{cabinetPaint:'cabinetPaint'},build:b=>{ b.phys(0,1.45,0,0.34,0,0.42); b.round(0,1.45,0,0.34,0,0.42,0.004,mat.wbody); }}}}, // B: floor plinth 0.34 high (user: +0.20), 250 mm longer than A, centred under the tv (.local/консоль.png)
     tv:{ids:['tv'],V:{B:{pos:[11.72,KN+0.02],size:[1.56,1.825,0.04],build:(b,g)=>{ ITEMS.find(i=>i.id==='tv').build(b,g); g.userData.proxy=[[0,1.56,0.925,1.825,0,0.04]]; // B: A scaled 1.2 (58" → 70") about the screen centre, still on the wall
       g.children.forEach(m=>{ if(!m.isMesh) return; m.geometry.translate(m.position.x-0.65,m.position.y-1.375,m.position.z).scale(1.2,1.2,1).translate(0.78,1.375,0); m.position.set(0,0,0); }); }}}}};

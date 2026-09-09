@@ -461,6 +461,12 @@ const { chromium } = require('playwright');
   const fit = await page.evaluate(() => ITEMS.filter(it => { const u = ITEM_GROUPS[it.id].userData; if (u.rot) return false; const bb = new THREE.Box3().setFromObject(ITEM_GROUPS[it.id]);
     const t = 0.03; return !(bb.min.x >= u.pos[0] - t && bb.max.x <= u.pos[0] + u.size[0] + t && bb.min.z >= u.pos[1] - t && bb.max.z <= u.pos[1] + u.size[2] + t && bb.min.y >= -t && bb.max.y <= u.size[1] + t); }).map(it => it.id));
   if (fit.length) problems.push('предметы вышли за свой габарит: ' + fit.join(', '));
+  // room 4 wall decor (#k4decortv A–H, #k4decorsofa A–C): every variant builds meshes inside its size box, «нет» hides the item again
+  const decor = await page.evaluate(() => { const out = [], inside = id => { const u = ITEM_GROUPS[id].userData, bb = new THREE.Box3().setFromObject(ITEM_GROUPS[id]), t = 0.005;
+      return ITEM_GROUPS[id].children.length > 0 && bb.min.y >= -t && bb.max.y <= u.size[1] + t && bb.max.x - bb.min.x <= u.size[0] + 2 * t && bb.max.z - bb.min.z <= u.size[2] + 2 * t; };
+    [['decortv', 'ABCDEFGH'], ['decorsofa', 'ABC']].forEach(([id, vs]) => { for (const v of vs) { ROOM4.set(id, v); if (!ITEM_GROUPS[id].visible || !inside(id)) out.push(id + ':' + v); } ROOM4.set(id, 'none'); if (ITEM_GROUPS[id].visible) out.push(id + ':none'); });
+    return out; });
+  if (decor.length) problems.push('декор комнаты 4: ' + decor.join(', '));
 
   // L0g: recessed ceiling spots exist with an emitter disc and a proxy each; mlight is gone; the fingerprint moved with the catalogue
   const l0g = await page.evaluate(() => { const ids = ITEMS.filter(it => /^ceil\d+_\d+$/.test(it.id)).map(it => it.id);
@@ -524,7 +530,7 @@ const { chromium } = require('playwright');
   // the figure can be hidden in the walk without leaving it
   const av = await page.evaluate(() => { const on = () => avatar.visible; const a = on(); document.getElementById('avatarOn').click(); const b = on(); document.getElementById('avatarOn').click(); return [a, b, on(), controls.fpv]; });
   if (av.join() !== 'true,false,true,true') problems.push('галочка «Человечек» не прячет фигуру в экскурсии: ' + av.join());
-  await page.click('#mats'); await page.waitForTimeout(800);
+  await page.click('label[for=mats]'); await page.waitForTimeout(800);
   const viz = await page.evaluate((pj) => {
     const floor = finishGroup.children.find(o => o.geometry && o.geometry.type === 'ShapeGeometry');
     let sofa; ITEM_GROUPS.sofa.traverse(o => { if (!sofa && o.isMesh) sofa = o; }); // first mesh, whether procedural or the GLB model
