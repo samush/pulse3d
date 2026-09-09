@@ -986,22 +986,24 @@ var finishGroup=new THREE.Group();
   window.kitchenFrame=new THREE.Group(); wallFin.add(window.kitchenFrame);
   window.kitchenFrame.visible=document.getElementById('kwall').checked;
   // door leaves (.local/двери0–3.png, 2026-09-09): white two-panel leaf on a hinge pivot, entrance flat with grooves. Per PLAN.doors index:
-  // label, hinge at the larger (+1) or smaller (−1) coordinate along the wall, leaf swings to the larger (+1) or smaller (−1) coordinate across it.
-  const DOOR_SPEC={0:['детская 1',1,-1],1:['гардеробная',-1,1],2:['постирочная',1,1],3:['детская 2',-1,1],4:['спальня',-1,1],5:['санузел 1',-1,1],6:['санузел 2',1,1],7:['входная',-1,1,'entry']};
+  // label, hinge at the larger (+1) or smaller (−1) coordinate along the wall, leaf swings to the larger (+1) or smaller (−1) coordinate across it,
+  // distance from the door axis to the plaster face on the swing side (room polys), kind. Hinges sit on the jamb away from a room corner, so an open leaf never lies inside a side wall.
+  const DOOR_SPEC={0:['детская 1',-1,-1,0.075],1:['гардеробная',-1,1,0.093],2:['постирочная',1,1,0.093],3:['детская 2',-1,1,0.077],4:['спальня',1,1,0.087],5:['санузел 1',-1,1,0.058],6:['санузел 2',1,1,0.071],7:['входная',-1,1,0.144,'entry']};
   const chromeFin=new THREE.MeshBasicMaterial({color:0xb4b4b4}), grooveMat=new THREE.LineBasicMaterial({color:0x9a9791});
   window.DOOR_LEAVES=[]; // {id,label,pivot,closed,open} — toggled by the «Двери» buttons
   DOORS.forEach((d,i)=>{
     const [cx,cz,o,w,tag]=d, jw=0.07, dep=0.32, hD=2.1;
     if(tag==='O') return; // open passage, no frame
     const parent = tag==='K' ? window.kitchenFrame : wallFin;
-    const spec=DOOR_SPEC[i]; if(spec){ const [label,hs,os,kind]=spec, W=w-0.01, H=2.04, T=kind==='entry'?0.07:0.04, pivot=new THREE.Group(); // leaf: local x from the hinge to the free edge, y up, z across the wall
-      const off=os*(kind==='entry'?0.17:0.13); pivot.position.set(o==='v'?cx+off:cx+hs*w/2, 0.01, o==='v'?cz+hs*w/2:cz+off); // hinge on the swing-side face of the wall: the open leaf clears the wallpaper (0.09 + 0.015), the closed one sits at that edge of the frame
+    const spec=DOOR_SPEC[i]; if(spec){ const [label,hs,os,face,kind]=spec, W=w-0.01, H=2.04, T=kind==='entry'?0.07:0.04, pivot=new THREE.Group(), leaf=new THREE.Group(); pivot.add(leaf); // leaf: local x from the hinge to the free edge, y up, z across the wall
+      const off=os*(face+0.015+T/2+0.01); pivot.position.set(o==='v'?cx+off:cx+hs*w/2, 0.01, o==='v'?cz+hs*w/2:cz+off); // hinge axis 1 cm in front of the wallpaper on the swing side: the open leaf stands clear of the wall
       const closed=o==='v'?(hs>0?Math.PI/2:-Math.PI/2):(hs>0?Math.PI:0), dir=a=>o==='v'?Math.cos(a):-Math.sin(a); // rotation.y → world direction of local x along the cross axis
       const open=[closed+Math.PI/2,closed-Math.PI/2].find(a=>Math.sign(dir(a))===os); pivot.rotation.y=closed;
-      const box=(sx,sy,sz,px,py,pz,m)=>{ const mesh=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),m); mesh.position.set(px,py,pz); pivot.add(mesh); };
+      leaf.position.z=-os*(o==='v'?Math.sin(closed):Math.cos(closed))*(T+0.015); // closed leaf sits inside the wall thickness, its outer face flush with the wallpaper; the shift turns along the wall when open
+      const box=(sx,sy,sz,px,py,pz,m)=>{ const mesh=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),m); mesh.position.set(px,py,pz); leaf.add(mesh); };
       box(W,H,T,0.005+W/2,H/2,0,kind==='entry'?plasterMat:frameMat2);
       if(kind==='entry'){ const pts=[], zf=T/2+0.001; [0.45,0.85,1.25,1.65].forEach(y=>[zf,-zf].forEach(z=>pts.push(new THREE.Vector3(0.10,y,z),new THREE.Vector3(0.7*W,y,z)))); [zf,-zf].forEach(z=>pts.push(new THREE.Vector3(0.7*W,0.10,z),new THREE.Vector3(0.7*W,H-0.06,z)));
-        pivot.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),grooveMat)); } // four horizontal grooves and one vertical, both faces
+        leaf.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),grooveMat)); } // four horizontal grooves and one vertical, both faces
       else [1,-1].forEach(s=>{ const z=s*(T/2+0.003), r=(sx,sy,px,py)=>box(sx,sy,0.006,px,py,z,frameMat2); // raised stiles and rails: tall upper panel, short lower one
         r(0.10,H,0.005+0.05,H/2); r(0.10,H,0.005+W-0.05,H/2); r(W,0.10,0.005+W/2,H-0.05); r(W,0.12,0.005+W/2,0.06); r(W,0.08,0.005+W/2,0.60); });
       [1,-1].forEach(s=>{ const z=s*(T/2+0.03); box(0.04,0.04,0.012,0.005+W-0.07,1.02,s*(T/2+0.006),chromeFin); box(0.12,0.02,0.02,0.005+W-0.12,1.02,z,chromeFin); }); // rose and lever on both faces
