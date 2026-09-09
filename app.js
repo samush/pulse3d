@@ -894,7 +894,7 @@ var finishGroup=new THREE.Group();
     if(cloud){ let sd=11; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; }; for(let i=0;i<14;i++){ const x=rnd()*256, y=rnd()*512, r=40+rnd()*90, k=new THREE.Color(cloud[i%2]); const gr=g.createRadialGradient(x,y,0,x,y,r); gr.addColorStop(0,'rgba('+(k.r*255|0)+','+(k.g*255|0)+','+(k.b*255|0)+',0.45)'); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=gr; g.fillRect(1,1,254,510); } }
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/0.6,1/1.2); return t; };
   const tileMat=new THREE.MeshBasicMaterial({map:tileTex('#3f3831','#5b524a')}); // loggia: dark cashmere brown
-  const tileLightMat=new THREE.MeshBasicMaterial({map:tileTex('#9c8266','#b7997a',['#c6ab8c','#a48868'])}); // corridor 5 + kitchen zone: warm caramel tan with soft clouds, matte (user photo, 2026-09-09)
+  const tileLightMat=new THREE.MeshBasicMaterial({map:tileTex('#9c8266','#b7997a')}); // corridor 5 + kitchen zone: warm caramel tan, plain — the soft clouds read as dirt (user, 2026-09-09)
   finishGroup.add(new THREE.Mesh(window.loggiaFloorGeo,tileMat)); // loggia 10 floor: dark grey porcelain tile as on the photos
   // layer 3 (BOARD_POLYS): engineered oak board to try floor coverings — the living zone of room 4 east of the tile (x 10.36–13.47) and the loggia 10
   const boardTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=512; const g=c.getContext('2d'); let sd=7; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; }; // canvas = 2.0 × 2.0 m
@@ -995,7 +995,7 @@ var finishGroup=new THREE.Group();
     if(tag==='O') return; // open passage, no frame
     const parent = tag==='K' ? window.kitchenFrame : wallFin;
     const spec=DOOR_SPEC[i]; if(spec){ const [label,hs,os,kind]=spec, W=w-0.01, H=2.04, T=kind==='entry'?0.07:0.04, pivot=new THREE.Group(); // leaf: local x from the hinge to the free edge, y up, z across the wall
-      pivot.position.set(o==='v'?cx:cx+hs*w/2, 0.01, o==='v'?cz+hs*w/2:cz);
+      const off=os*(kind==='entry'?0.17:0.13); pivot.position.set(o==='v'?cx+off:cx+hs*w/2, 0.01, o==='v'?cz+hs*w/2:cz+off); // hinge on the swing-side face of the wall: the open leaf clears the wallpaper (0.09 + 0.015), the closed one sits at that edge of the frame
       const closed=o==='v'?(hs>0?Math.PI/2:-Math.PI/2):(hs>0?Math.PI:0), dir=a=>o==='v'?Math.cos(a):-Math.sin(a); // rotation.y → world direction of local x along the cross axis
       const open=[closed+Math.PI/2,closed-Math.PI/2].find(a=>Math.sign(dir(a))===os); pivot.rotation.y=closed;
       const box=(sx,sy,sz,px,py,pz,m)=>{ const mesh=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),m); mesh.position.set(px,py,pz); pivot.add(mesh); };
