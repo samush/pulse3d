@@ -22,7 +22,7 @@ UV — в метрах (как у боксов `b()` в `items.js`): `rbox` ра
 | `kidchair.glb` | `kidchair`, `kidchair2` 0.55×0.85×0.55, один файл | ~2.1k | `tools/models/kidchair.js` |
 | `windowseat1.glb` | `windowseat1` 0.60×0.65×1.89; имена материалов — ключи `ITEM_MATS` (`kmat`, `pillow`, `body`…), чтобы оттенки концепта сохранились | ~3.1k | `tools/models/windowseat1.js` |
 | `bchair.glb` | `bchair` 0.45×0.90×0.45, спинка по −z | ~1.9k | `tools/models/bchair.js` |
-| `mbed.glb` | `mbed` 1.80×1.10×2.82, подиум `dark` с двумя ящиками; имена материалов — ключи `ITEM_MATS`, покрывало — `cover` | ~11.6k | `tools/models/mbed.js` |
+| `mbed.glb` | `mbed` 2.015×1.10×2.82, подиум `dark` до стены с вырезом под короб радиатора, два ящика; имена материалов — ключи `ITEM_MATS`, покрывало — `cover` | ~11.6k | `tools/models/mbed.js` |
 | `vpouf.glb` | `vpouf` 0.4×0.45×0.4 | ~2.3k | `tools/models/vpouf.js` |
 | `wc.glb` | `wc`, `wc8` 0.36×0.42×0.48, один файл, `glbRot` 180 для wc8 | ~1.5k | `tools/models/wc.js` |
 | `tub.glb` | `tub` 0.99×0.58×1.60 | ~1.4k | `tools/models/tub.js` |

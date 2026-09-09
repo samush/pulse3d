@@ -853,9 +853,10 @@ var finishGroup=new THREE.Group();
   const bathWall=new THREE.MeshBasicMaterial({map:bathM}); // санузлы 8 и 9 и постирочная 7: все стены
   const bathFloor=new THREE.MeshBasicMaterial({map:bathFloorM}); // и их пол — та же плитка 300×600 (user, 2026-09-09)
   const plasterMat=new THREE.MeshBasicMaterial({color:0xf3f3f0}); // постирочная 7: короб в углу у машин — крашеный гипсокартон, без плитки (фото, 2026-09-09)
-  // room 3: radiator cover — white plasterboard box flush with the sill edge (x 14.485) from the sill's north end to the south wall; horizontal slots let the air through
-  (function(){ const X0=14.485, X1=14.76, Z0=10.29, Z1=13.144, box=(x0,x1,y0,y1,z0,z1)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0),plasterMat); m.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); wallFin.add(m); };
-    box(X0,X1,0.48,0.50,Z0,Z1); box(X0,X1,0,0.50,Z0,Z0+0.02); box(X0,X0+0.02,0,0.04,Z0,Z1); for(let y=0.04;y<0.48;y+=0.065) box(X0,X0+0.02,y,y+0.05,Z0,Z1); })(); // top, north end, base rail, seven slats with 15 mm slots
+  // room 3: radiator cover — small white plasterboard box around the radiator only (10 cm past it each side, well inside the sill), 0.18 deep; horizontal slots let the air through
+  window.RADBOX3={x0:14.58,x1:14.76,z0:RAD3.z0-0.10,z1:RAD3.z1+0.10,y1:0.50};
+  (function(){ const {x0:X0,x1:X1,z0:Z0,z1:Z1}=RADBOX3, box=(x0,x1,y0,y1,z0,z1)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0),plasterMat); m.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); wallFin.add(m); };
+    box(X0,X1,0.48,0.50,Z0,Z1); box(X0,X1,0,0.50,Z0,Z0+0.02); box(X0,X1,0,0.50,Z1-0.02,Z1); box(X0,X0+0.02,0,0.04,Z0,Z1); for(let y=0.04;y<0.48;y+=0.065) box(X0,X0+0.02,y,y+0.05,Z0,Z1); })(); // top, both ends, base rail, seven slats with 15 mm slots
   const greyMat=new THREE.MeshBasicMaterial({map:greyM});
 
   // белые обои под покраску: почти белые, мелкое зерно
@@ -888,11 +889,11 @@ var finishGroup=new THREE.Group();
   window.TILE_SILLS=[{d:0,face:5.608},{d:1,face:4.033},{d:2,face:4.033},{d:3,face:10.904},{d:4,face:9.6},{d:5,face:10.008},{d:7,face:7.754,far:7.468}].map(({d,face,far})=>{
     const [cx,cz,o,w]=PLAN.doors[d], a=far!=null?far:(o==='v'?cx:cz), lo=Math.min(a,face), hi=Math.max(a,face);
     return o==='v'?[[lo,cz-w/2],[hi,cz-w/2],[hi,cz+w/2],[lo,cz+w/2]]:[[cx-w/2,lo],[cx+w/2,lo],[cx+w/2,hi],[cx-w/2,hi]]; });
-  const tileTex=(()=>{ // canvas = one 0.6 × 1.2 m porcelain tile in a straight grid like the bath marble, 3 mm grout; plain dark cashmere brown, no mottling, to sit with the oak of layer 3 (user, 2026-09-09)
-    const c=document.createElement('canvas'); c.width=256; c.height=512; const g=c.getContext('2d'); g.fillStyle='#3f3831'; g.fillRect(0,0,256,512); g.fillStyle='#5b524a'; g.fillRect(1,1,254,510);
-    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t; })();
-  tileTex.repeat.set(1/0.6,1/1.2);
-  const tileMat=new THREE.MeshBasicMaterial({map:tileTex});
+  const tileTex=(grout,face)=>{ // canvas = one 0.6 × 1.2 m porcelain tile in a straight grid like the bath marble, 3 mm grout; plain colour, no mottling
+    const c=document.createElement('canvas'); c.width=256; c.height=512; const g=c.getContext('2d'); g.fillStyle=grout; g.fillRect(0,0,256,512); g.fillStyle=face; g.fillRect(1,1,254,510);
+    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/0.6,1/1.2); return t; };
+  const tileMat=new THREE.MeshBasicMaterial({map:tileTex('#3f3831','#5b524a')}); // loggia: dark cashmere brown
+  const tileLightMat=new THREE.MeshBasicMaterial({map:tileTex('#bfb3a2','#d9cdbb')}); // corridor 5 + kitchen zone: light beige, much lighter than the loggia (user, 2026-09-09)
   finishGroup.add(new THREE.Mesh(window.loggiaFloorGeo,tileMat)); // loggia 10 floor: dark grey porcelain tile as on the photos
   // layer 3 (BOARD_POLYS): engineered oak board to try floor coverings — the living zone of room 4 east of the tile (x 10.36–13.47) and the loggia 10
   const boardTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=512; const g=c.getContext('2d'); let sd=7; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; }; // canvas = 2.0 × 2.0 m
@@ -913,7 +914,7 @@ var finishGroup=new THREE.Group();
     const g=new THREE.ShapeGeometry([toShape(TILE_POLY)].concat(TILE_SILLS.map(toShape)));
     const uv=g.attributes.uv; for(let i=0;i<uv.count;i++) uv.setXY(i,uv.getX(i)-8.23,uv.getY(i)+1.915); // whole tiles from the kitchen zone's north-west corner (8.23, 1.915); shape v = -z
     g.rotateX(-Math.PI/2); g.translate(0,TILE,0);
-    tileGroup.add(new THREE.Mesh(g,tileMat));
+    tileGroup.add(new THREE.Mesh(g,tileLightMat));
   }
 
   // пол общего коридора: белый мрамор
@@ -1008,7 +1009,7 @@ var finishGroup=new THREE.Group();
   const paintTex=canvasTex(g=>{ g.fillStyle='#c3b8a9'; g.fillRect(0,0,256,256); for(let i=0;i<2500;i++){ g.fillStyle='rgba('+(Math.random()<0.5?'255,250,240':'120,105,90')+','+(0.03+0.05*Math.random())+')'; g.fillRect(Math.random()*256,Math.random()*256,1+Math.random()*2,1+Math.random()*2); } });
   const paintMat=new THREE.MeshBasicMaterial({map:paintTex}); const PAINTED=new Set([3,4,5,10]);
   window.wallFinMats=[wpMat,whiteWall,bathWall,greyWall,plasterMat,greyMat,woodMat,frameMat2,plinthMat,paintMat]; // гасятся ползунком «Стены»
-  window.finishMats={lam:lamMat,vinyl:vinylMat,white:whiteMat,whiteWall,bathWall,bathFloor,greyWall,plaster:plasterMat,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,wallPaint:paintMat,board:boardMat}; // для PBR-двойников (materials.js)
+  window.finishMats={lam:lamMat,vinyl:vinylMat,white:whiteMat,whiteWall,bathWall,bathFloor,greyWall,plaster:plasterMat,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,tileLight:tileLightMat,wallPaint:paintMat,board:boardMat}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
   // room 2, M10: finish block on the north wall behind the gym wall, 0.1–2.40, x 12.15–13.75; grey until the palette stage
   const accent2Mat=new THREE.MeshBasicMaterial({color:0xd6d6d3}); wallFinMats.push(accent2Mat); finishMats.accent2=accent2Mat;
