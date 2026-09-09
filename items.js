@@ -873,7 +873,7 @@ const PHYS={}; // id → boxes
   const physMat=new THREE.MeshBasicMaterial({visible:false});
   function rebuildPhys(id){
     (PHYS[id]||[]).forEach(m=>{ physGroup.remove(m); m.geometry.dispose(); }); PHYS[id]=[];
-    const g=ITEM_GROUPS[id], boxes=[];
+    const g=ITEM_GROUPS[id], boxes=[]; if(g.userData.hidden) return; // variant «нет»: no collision, no layout warnings
     if(g.userData.proxy.length) g.userData.proxy.forEach(([x0,x1,y0,y1,z0,z1])=>boxes.push(new THREE.Box3(new THREE.Vector3(x0,y0,z0),new THREE.Vector3(x1,y1,z1)).applyMatrix4(g.matrixWorld)));
     else g.traverse(o=>{ if(o.isMesh) boxes.push(new THREE.Box3().setFromObject(o)); }); // fallback for simple block items
     boxes.forEach(bb=>{ const sz=new THREE.Vector3(); bb.getSize(sz);
@@ -925,6 +925,19 @@ const PHYS={}; // id → boxes
   window.DESK2={variant:'A',set(v){ if(v===DESK2.variant||!(v==='A'||v==='B')) return; DESK2.variant=v;
     ['kiddesk2','kidchair2'].forEach(id=>{ const it=ITEMS.find(i=>i.id===id), g=ITEM_GROUPS[id]; g.userData.noGlb=v==='B';
       rebuildItem(id,v==='B'?DESK2_B[id]:it.build,v==='B'?(id==='kiddesk2'?{table:'oakFurniture'}:{cushion:'sofaWeave'}):it.coat); if(v==='A'&&it.glb) loadItemGlb(id); }); }};
+  // ---- room 4 variant selects (#k4*): 'none' hides the items (group invisible, physics dropped), 'A' = items.js as is, 'B' = own build/pos/size below
+  const hideItem=(id,h)=>{ const g=ITEM_GROUPS[id]; g.visible=!h; g.userData.hidden=h; rebuildPhys(id); };
+  const R4={table:{ids:['table','chair1','chair2','chair3','chair4','chair5','chair6']},sofa:{ids:['sofa']},kitchen:{ids:['kitchen']},
+    console:{ids:['console'],B:{pos:[11.775,KN],size:[1.45,0.14,0.42],coat:{cabinetPaint:'cabinetPaint'},build:b=>{ b.phys(0,1.45,0,0.14,0,0.42); b.round(0,1.45,0,0.14,0,0.42,0.004,mat.wbody); }}}, // B: floor plinth, 250 mm longer than A, centred under the tv (.local/консоль.png)
+    tv:{ids:['tv'],B:{pos:[11.72,KN+0.02],size:[1.56,1.825,0.04],build:(b,g)=>{ ITEMS.find(i=>i.id==='tv').build(b,g); g.userData.proxy=[[0,1.56,0.925,1.825,0,0.04]]; // B: A scaled 1.2 (58" → 70") about the screen centre, still on the wall
+      g.children.forEach(m=>{ if(!m.isMesh) return; m.geometry.translate(m.position.x-0.65,m.position.y-1.375,m.position.z).scale(1.2,1.2,1).translate(0.78,1.375,0); m.position.set(0,0,0); }); }}}};
+  window.ROOM4={value:{},set(key,v){ const r=R4[key]; if(!r||!(v==='none'||v==='A'||(v==='B'&&r.B))||ROOM4.value[key]===v) return; const was=ROOM4.value[key]; ROOM4.value[key]=v;
+    r.ids.forEach(id=>{ const it=ITEMS.find(i=>i.id===id), g=ITEM_GROUPS[id];
+      if(v==='B'){ g.userData.pos=r.B.pos.slice(); g.userData.size=r.B.size.slice(); rebuildItem(id,r.B.build,r.B.coat); }
+      else if(was==='B'){ g.userData.pos=it.pos.slice(); g.userData.size=it.size.slice(); rebuildItem(id,it.build,it.coat); }
+      hideItem(id,v==='none'); }); }};
+  Object.keys(R4).forEach(key=>{ const KEY='pulse3d.k4.'+key, sel=document.getElementById('k4'+key); if(!sel) return; ROOM4.value[key]='A'; let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
+    if([...sel.options].some(o=>o.value===v)){ sel.value=v; ROOM4.set(key,v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} ROOM4.set(key,sel.value); }); });
   (function(){ const KEY='pulse3d.desk2', sel=document.getElementById('desk2'); if(!sel) return; let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
     if(v==='A'||v==='B'){ sel.value=v; DESK2.set(v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} DESK2.set(sel.value); }); })();
 })();

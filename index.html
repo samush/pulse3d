@@ -78,7 +78,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12.5px;z-index:6;max-width:calc(100vw - 32px)}
 #lay button,#itCard button{background:transparent;border:1px solid var(--line);color:var(--ink);font:600 12px "Manrope",system-ui,sans-serif;padding:5px 9px;border-radius:7px;cursor:pointer}
 #lay button:disabled{opacity:.4;cursor:default} #layBtn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-#light,#bed3,#bed1,#bed2,#desk2,#wp1,#wp2,#lay select,#itCard input{font:12.5px "Manrope",system-ui,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:3px 5px}
+#light,#bed3,#bed1,#bed2,#desk2,#wp1,#wp2,.roomblk select,#lay select,#itCard input{font:12.5px "Manrope",system-ui,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:3px 5px}
 #lay .mk-hint{color:var(--muted)} #lay .mk-file{border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-weight:600;font-size:12px;cursor:pointer}
 #lay .mk-text{width:100%;height:90px;font:12px ui-monospace,monospace;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px}
 #itCard{position:fixed;right:16px;top:180px;width:300px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;
@@ -142,6 +142,15 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   </details>
   <details id="master" class="roomblk"><summary>Мастер спальня</summary>
   <div class="row"><label for="bed3">Платформа</label><select id="bed3" aria-label="Длина подиума кровати в комнате 3" title="Длина деревянного подиума кровати в спальне 3"><option value="normal">обычная, 2.2 м</option><option value="rug">до края ковра, 2.82 м</option><option value="wall" selected>до стены с ТВ</option></select></div>
+  </details>
+  <details id="living4" class="roomblk"><summary>Кухня-гостиная</summary>
+  <div class="row"><label for="k4table">Стол</label><select id="k4table" aria-label="Стол в комнате 4"><option value="none">нет</option><option value="A" selected>A</option></select></div>
+  <div class="row"><label for="k4sofa">Диван</label><select id="k4sofa" aria-label="Диван в комнате 4"><option value="none">нет</option><option value="A" selected>A</option></select></div>
+  <div class="row"><label for="k4console">Консоль</label><select id="k4console" aria-label="Консоль под ТВ в комнате 4"><option value="none">нет</option><option value="A" selected>A</option><option value="B">B</option></select></div>
+  <div class="row"><label for="k4kitchen">Кухня</label><select id="k4kitchen" aria-label="Кухонный блок в комнате 4"><option value="none">нет</option><option value="A" selected>A</option></select></div>
+  <div class="row"><label for="k4tv">ТВ</label><select id="k4tv" aria-label="Телевизор в комнате 4"><option value="none">нет</option><option value="A" selected>A</option><option value="B">B</option></select></div>
+  <div class="row"><label for="k4decortv">Декор ТВ зона</label><select id="k4decortv" aria-label="Декор зоны ТВ в комнате 4"><option value="none">нет</option></select></div>
+  <div class="row"><label for="k4decorsofa">Декор диван зона</label><select id="k4decorsofa" aria-label="Декор зоны дивана в комнате 4"><option value="none">нет</option></select></div>
   </details>
   <div class="slider-lab"><span>Стены</span><span id="wov">100%</span></div>
   <input type="range" id="wop" min="0" max="100" value="100" aria-label="Прозрачность стен">
