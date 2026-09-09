@@ -6,6 +6,7 @@
 // falls back to it on load error.
 const MATERIALS={
   lam:      {name:'ламинат серый',        size:[1.9,1.9], rough:0.55, bump:0.35},
+  vinyl:    {name:'кварцвинил серый, доска 0.18×1.20', size:[1.2,1.2], rough:0.45, bump:0.12},
   white:    {name:'плитка белый мрамор, пол', size:[0.6,0.6], rough:0.25, bump:0.15},
   whiteWall:{name:'плитка белый мрамор, стены', size:[0.6,0.6], rough:0.25, bump:0.15},
   grey:     {name:'плитка серый мрамор',  size:[0.6,0.6], rough:0.3,  bump:0.15},

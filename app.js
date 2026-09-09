@@ -810,6 +810,15 @@ var finishGroup=new THREE.Group();
     }
   });
   lamTex.repeat.set(1/1.9,1/1.9);
+  // grey LVT (quartz-vinyl) planks 0.18 × 1.20 for the kids' rooms, the master bedroom and the wardrobe (reference render, 2026-09-09): canvas = 1.2 × 1.2 m
+  const vinylTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=512; const g=c.getContext('2d'); let sd=5; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
+    const tones=['#8b8884','#7e7b77','#959290','#757270','#8f8c88','#84817d','#9b9895'], rowH=512/(1.2/0.18); // 6.67 planks per 1.2 m
+    for(let r=0;r<7;r++){ const y=r*rowH; g.fillStyle=tones[(r*3)%tones.length]; g.fillRect(0,y,512,rowH+1);
+      for(let i=0;i<14;i++){ g.strokeStyle='rgba('+(rnd()<0.5?'60,58,56':'175,172,168')+','+(0.06+0.08*rnd())+')'; g.lineWidth=0.8+rnd()*1.2; const gy=y+2+rnd()*(rowH-4); g.beginPath(); g.moveTo(0,gy); g.bezierCurveTo(128,gy+3*(rnd()-0.5),384,gy-3*(rnd()-0.5),512,gy+2*(rnd()-0.5)); g.stroke(); } // grain
+      g.strokeStyle='rgba(50,48,46,0.55)'; g.lineWidth=1.2; g.beginPath(); g.moveTo(0,y+0.5); g.lineTo(512,y+0.5); g.stroke(); // plank edge
+      const ex=(r*197+40)%512; g.beginPath(); g.moveTo(ex,y); g.lineTo(ex,y+rowH); g.stroke(); } // one staggered plank end per row
+    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/1.2,1/1.2); return t; })();
+  const vinylMat=new THREE.MeshBasicMaterial({map:vinylTex}); const VINYL=new Set([1,2,3,6]);
   function marble(base, grout, vein){
     return canvasTex(g=>{
       g.fillStyle=grout; g.fillRect(0,0,256,256);
@@ -857,7 +866,7 @@ var finishGroup=new THREE.Group();
   PLAN.rooms.forEach(r=>{
     const g=new THREE.ShapeGeometry(toShape(r.poly));
     g.rotateX(-Math.PI/2); g.translate(0,FLOOR,0);
-    if(r.id!==10) finishGroup.add(new THREE.Mesh(g,(r.id===7||r.id===8||r.id===9)?bathFloor:lamMat));
+    if(r.id!==10) finishGroup.add(new THREE.Mesh(g,(r.id===7||r.id===8||r.id===9)?bathFloor:VINYL.has(r.id)?vinylMat:lamMat));
     else window.loggiaFloorGeo=g; // loggia: porcelain tile, material is built below
   });
 
@@ -998,7 +1007,7 @@ var finishGroup=new THREE.Group();
   const paintTex=canvasTex(g=>{ g.fillStyle='#c3b8a9'; g.fillRect(0,0,256,256); for(let i=0;i<2500;i++){ g.fillStyle='rgba('+(Math.random()<0.5?'255,250,240':'120,105,90')+','+(0.03+0.05*Math.random())+')'; g.fillRect(Math.random()*256,Math.random()*256,1+Math.random()*2,1+Math.random()*2); } });
   const paintMat=new THREE.MeshBasicMaterial({map:paintTex}); const PAINTED=new Set([3,4,5,10]);
   window.wallFinMats=[wpMat,whiteWall,bathWall,greyWall,plasterMat,greyMat,woodMat,frameMat2,plinthMat,paintMat]; // гасятся ползунком «Стены»
-  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,bathWall,bathFloor,greyWall,plaster:plasterMat,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,wallPaint:paintMat,board:boardMat}; // для PBR-двойников (materials.js)
+  window.finishMats={lam:lamMat,vinyl:vinylMat,white:whiteMat,whiteWall,bathWall,bathFloor,greyWall,plaster:plasterMat,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,wallPaint:paintMat,board:boardMat}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
   // room 2, M10: finish block on the north wall behind the gym wall, 0.1–2.40, x 12.15–13.75; grey until the palette stage
   const accent2Mat=new THREE.MeshBasicMaterial({color:0xd6d6d3}); wallFinMats.push(accent2Mat); finishMats.accent2=accent2Mat;
