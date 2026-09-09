@@ -11,6 +11,7 @@ const MATERIALS={
   grey:     {name:'плитка серый мрамор',  size:[0.6,0.6], rough:0.3,  bump:0.15},
   wp:       {name:'обои под покраску',    size:[1.2,1.2], rough:0.92, bump:0.45, albedo:0.82},
   tile:     {name:'керамогранит 60×120, тёплый серо-бежевый', size:[0.6,1.2], rough:0.25, bump:0.12},
+  bathWall: {name:'плитка санузлов 30×60 вертикально, белый мрамор со швами', size:[0.3,0.6], rough:0.3, bump:0.06}, // no photo coating: the concept canvas keeps the grout grid the tile6060 map lacks
   board:    {name:'инженерная доска дуб', size:[2.0,2.0], rough:0.5, bump:0.35},
   wood:     {name:'дерево светлое, откосы; слот столов', size:[1.0,1.0], rough:0.6,  bump:0.3},
   woodFloor:{name:'дерево светлое, порог балкона', size:[1.0,1.0], rough:0.6, bump:0.3},

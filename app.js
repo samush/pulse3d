@@ -826,11 +826,13 @@ var finishGroup=new THREE.Group();
   const whiteM=marble('#f1f0ec','#d5d4d0','rgba(140,142,148,0.28)');
   const greyM =marble('#9b9b9e','#7e7e81','rgba(230,230,235,0.30)');
   whiteM.repeat.set(1/0.6,1/0.6); greyM.repeat.set(1/0.6,1/0.6);
+  const bathM=marble('#f4f3f0','#d8d7d3','rgba(150,142,128,0.30)'); bathM.repeat.set(1/0.3,1/0.6); // bath walls: 300×600 white marble laid upright (photo of the real tiling, 2026-09-09)
   // настенная отделка — отдельная подгруппа и отдельные материалы: ползунок «Стены» гасит её вместе со стенами, пол остаётся
   const wallFin=new THREE.Group(); finishGroup.add(wallFin); window.wallFin=wallFin;
   const lamMat=new THREE.MeshBasicMaterial({map:lamTex});
   const whiteMat=new THREE.MeshBasicMaterial({map:whiteM});
-  const whiteWall=new THREE.MeshBasicMaterial({map:whiteM}); // та же плитка, но на стенах
+  const whiteWall=new THREE.MeshBasicMaterial({map:whiteM}); // та же плитка, но на стенах (постирочная 7)
+  const bathWall=new THREE.MeshBasicMaterial({map:bathM}); // санузлы 8 и 9: все стены
   const greyMat=new THREE.MeshBasicMaterial({map:greyM});
 
   // белые обои под покраску: почти белые, мелкое зерно
@@ -909,7 +911,7 @@ var finishGroup=new THREE.Group();
     m.position.set(7.31,FLOOR,10.66);
     finishGroup.add(m);
   }
-  // плитка на стенах санузлов; стена напротив входа (западная) — серый мрамор
+  // плитка на стенах санузлов: белый мрамор 300×600 вертикально на всех стенах (серая западная стена убрана по фото)
   const BATHS=PLAN.baths; // контуры санузлов и их дверей — в плане, двигаются вместе со стенами (remap)
   function panel(mat,w,h,cx,cy,cz,rotY){
     const g=new THREE.PlaneGeometry(w,h); scaleUV(g,w,h);
@@ -920,14 +922,14 @@ var finishGroup=new THREE.Group();
   }
   BATHS.forEach(b=>{
     const off=0.02, midY=H/2, dep=b.z1-b.z0, wid=b.x1-b.x0;
-    panel(greyM===undefined?whiteWall:greyMat, dep,H, b.x0+off, midY, (b.z0+b.z1)/2, Math.PI/2);   // запад: серый мрамор
-    panel(whiteWall, wid,H, (b.x0+b.x1)/2, midY, b.z0+off, 0);                                     // север
-    panel(whiteWall, wid,H, (b.x0+b.x1)/2, midY, b.z1-off, Math.PI);                               // юг
+    panel(bathWall, dep,H, b.x0+off, midY, (b.z0+b.z1)/2, Math.PI/2);   // запад
+    panel(bathWall, wid,H, (b.x0+b.x1)/2, midY, b.z0+off, 0);                                     // север
+    panel(bathWall, wid,H, (b.x0+b.x1)/2, midY, b.z1-off, Math.PI);                               // юг
     // восток (стена со входом): сегменты вокруг двери + перемычка
     const ex=b.x1-off;
-    if(b.dz0-b.z0>0.05) panel(whiteWall, b.dz0-b.z0, H, ex, midY, (b.z0+b.dz0)/2, -Math.PI/2);
-    if(b.z1-b.dz1>0.05) panel(whiteWall, b.z1-b.dz1, H, ex, midY, (b.dz1+b.z1)/2, -Math.PI/2);
-    panel(whiteWall, b.dz1-b.dz0, H-2.1, ex, 2.1+(H-2.1)/2, (b.dz0+b.dz1)/2, -Math.PI/2);
+    if(b.dz0-b.z0>0.05) panel(bathWall, b.dz0-b.z0, H, ex, midY, (b.z0+b.dz0)/2, -Math.PI/2);
+    if(b.z1-b.dz1>0.05) panel(bathWall, b.z1-b.dz1, H, ex, midY, (b.dz1+b.z1)/2, -Math.PI/2);
+    panel(bathWall, b.dz1-b.dz0, H-2.1, ex, 2.1+(H-2.1)/2, (b.dz0+b.dz1)/2, -Math.PI/2);
   });
 
   // проём на балкон (кухня 4 → лоджия 10, x 13.47–13.91, z 3.353–4.971 по плану Ситипроф 18.08.2026: 1438/1618/1314 от северной стены кухни, высота 2.1): откосы, верх и порог — светлое дерево
@@ -989,8 +991,8 @@ var finishGroup=new THREE.Group();
   // matte greige paint (kitchen-living 4, master 3, corridor 5, loggia 10): flat colour with faint roller texture, canvas = 1 × 1 m
   const paintTex=canvasTex(g=>{ g.fillStyle='#c3b8a9'; g.fillRect(0,0,256,256); for(let i=0;i<2500;i++){ g.fillStyle='rgba('+(Math.random()<0.5?'255,250,240':'120,105,90')+','+(0.03+0.05*Math.random())+')'; g.fillRect(Math.random()*256,Math.random()*256,1+Math.random()*2,1+Math.random()*2); } });
   const paintMat=new THREE.MeshBasicMaterial({map:paintTex}); const PAINTED=new Set([3,4,5,10]);
-  window.wallFinMats=[wpMat,whiteWall,greyMat,woodMat,frameMat2,plinthMat,paintMat]; // гасятся ползунком «Стены»
-  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,wallPaint:paintMat,board:boardMat}; // для PBR-двойников (materials.js)
+  window.wallFinMats=[wpMat,whiteWall,bathWall,greyMat,woodMat,frameMat2,plinthMat,paintMat]; // гасятся ползунком «Стены»
+  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,bathWall,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,wallPaint:paintMat,board:boardMat}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
   // room 2, M10: finish block on the north wall behind the gym wall, 0.1–2.40, x 12.15–13.75; grey until the palette stage
   const accent2Mat=new THREE.MeshBasicMaterial({color:0xd6d6d3}); wallFinMats.push(accent2Mat); finishMats.accent2=accent2Mat;
