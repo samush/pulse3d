@@ -14,6 +14,7 @@ UV — в метрах (как у боксов `b()` в `items.js`): `rbox` ра
 | Файл | Предмет | Треугольников | Источник |
 |---|---|---|---|
 | `sofa.glb` | `sofa` 2.0×0.87×0.88; материалы `upholstery` (корпус), `cushion` (три подушки), `piping`, `metal` | ~4.6k | `tools/models/sofa.js` |
+| `sofaB…G.glb` | варианты `sofa` для `#k4sofa` (B 2.4×0.78×1.6, C/D 2.6×0.87×1.85 зеркальные, E 2.5×0.9×1.55, F 2.2×0.68×0.95, G 2.3×0.87×1.5); `upholstery`, `cushion`, `piping`, `metal`, `wood` (поднос C/D) | 6–10k | `tools/models/sofa4.js` (один скрипт на все шесть) |
 | `chair.glb` | `chair1…6` 0.42×0.9×0.42, один файл, клоны с общей geometry, поворот `glbRot` | ~1.6k | `tools/models/chair.js` |
 | `windowseat2.glb` | `windowseat2` 0.60×0.65×1.702; `kmat` (матрас), `pillow` | ~3.0k | `tools/models/windowseat2.js` |
 | `pouf.glb` | `pouf` 0.4×0.45×0.6 | ~2.9k | `tools/models/pouf.js` |

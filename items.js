@@ -857,7 +857,7 @@ const PHYS={}; // id → boxes
   function loadItemGlb(id,url){
     const g=ITEM_GROUPS[id]; url=url||g.userData.glb;
     return fetchGlb(url).then(scene=>{
-      if(g.userData.noGlb) return; // a procedural variant is showing (DESK2 B): keep it
+      if(g.userData.noGlb||g.userData.glb!==url) return; // a procedural variant is showing (DESK2 B) or another model was chosen meanwhile (ROOM4): keep it
       const model=scene.clone(), sz=g.userData.size, ref=scan(g,sz[1]);
       if(g.userData.glbRot){ const a=-g.userData.glbRot*Math.PI/180, cx=sz[0]/2, cz=sz[2]/2; model.rotation.y=a; model.position.set(cx-(cx*Math.cos(a)+cz*Math.sin(a)),0,cz-(-cx*Math.sin(a)+cz*Math.cos(a))); } // turn about the footprint centre, same sense as rot
       const old=g.children.slice(); g.add(model);
@@ -927,14 +927,20 @@ const PHYS={}; // id → boxes
       rebuildItem(id,v==='B'?DESK2_B[id]:it.build,v==='B'?(id==='kiddesk2'?{table:'oakFurniture'}:{cushion:'sofaWeave'}):it.coat); if(v==='A'&&it.glb) loadItemGlb(id); }); }};
   // ---- room 4 variant selects (#k4*): 'none' hides the items (group invisible, physics dropped), 'A' = items.js as is, 'B' = own build/pos/size below
   const hideItem=(id,h)=>{ const g=ITEM_GROUPS[id]; g.visible=!h; g.userData.hidden=h; rebuildPhys(id); };
-  const R4={table:{ids:['table','chair1','chair2','chair3','chair4','chair5','chair6']},sofa:{ids:['sofa']},kitchen:{ids:['kitchen']},
-    console:{ids:['console'],B:{pos:[11.775,KN],size:[1.45,0.14,0.42],coat:{cabinetPaint:'cabinetPaint'},build:b=>{ b.phys(0,1.45,0,0.14,0,0.42); b.round(0,1.45,0,0.14,0,0.42,0.004,mat.wbody); }}}, // B: floor plinth, 250 mm longer than A, centred under the tv (.local/консоль.png)
-    tv:{ids:['tv'],B:{pos:[11.72,KN+0.02],size:[1.56,1.825,0.04],build:(b,g)=>{ ITEMS.find(i=>i.id==='tv').build(b,g); g.userData.proxy=[[0,1.56,0.925,1.825,0,0.04]]; // B: A scaled 1.2 (58" → 70") about the screen centre, still on the wall
-      g.children.forEach(m=>{ if(!m.isMesh) return; m.geometry.translate(m.position.x-0.65,m.position.y-1.375,m.position.z).scale(1.2,1.2,1).translate(0.78,1.375,0); m.position.set(0,0,0); }); }}}};
-  window.ROOM4={value:{},set(key,v){ const r=R4[key]; if(!r||!(v==='none'||v==='A'||(v==='B'&&r.B))||ROOM4.value[key]===v) return; const was=ROOM4.value[key]; ROOM4.value[key]=v;
-    r.ids.forEach(id=>{ const it=ITEMS.find(i=>i.id===id), g=ITEM_GROUPS[id];
-      if(v==='B'){ g.userData.pos=r.B.pos.slice(); g.userData.size=r.B.size.slice(); rebuildItem(id,r.B.build,r.B.coat); }
-      else if(was==='B'){ g.userData.pos=it.pos.slice(); g.userData.size=it.size.slice(); rebuildItem(id,it.build,it.coat); }
+  // sofa variants B–G (tools/models/sofa4.js): [w,h,d, chaise side E/W or null, chaise width, seat depth]; all keep A's SE corner (east edge x 13.35, back on the south wall)
+  const SOFA4={B:[2.40,0.78,1.60,'E',0.90,0.95,false],C:[2.60,0.87,1.85,'E',0.95,0.95],D:[2.60,0.87,1.85,'W',0.95,0.95],E:[2.50,0.90,1.55,'W',0.85,0.95,false],F:[2.20,0.68,0.95,null,0,0.95],G:[2.30,0.87,1.50,'E',0.80,0.95]}; // 7th = glbFacade:false (wrap-around back / leaning cushions confuse the validator)
+  const sofaV=([w,h,d,side,cw,sd,facade],k)=>({pos:[13.35-w,6.287-d],size:[w,h,d],glb:'models/sofa'+k+'.glb',glbFacade:facade,coat:ITEMS.find(i=>i.id==='sofa').coat,build:b=>{ // fallback + proxy: seat run, chaise, back strip
+    const x0=side==='W'?cw:0, x1=side==='E'?w-cw:w, c0=side==='W'?0:w-cw, c1=side==='W'?cw:w;
+    b.phys(x0,x1,0.05,0.42,d-sd,d); if(side) b.phys(c0,c1,0.05,0.42,0,d); b.phys(0,w,0.42,h,d-0.2,d);
+    b(x0,x1,0.05,0.42,d-sd,d,mat.sofa); if(side) b(c0,c1,0.05,0.42,0,d,mat.sofa); b(0,w,0.42,h,d-0.2,d,mat.cushion); }});
+  const R4={table:{ids:['table','chair1','chair2','chair3','chair4','chair5','chair6']},sofa:{ids:['sofa'],V:Object.fromEntries(Object.entries(SOFA4).map(([k,v])=>[k,sofaV(v,k)]))},kitchen:{ids:['kitchen']},
+    console:{ids:['console'],V:{B:{pos:[11.775,KN],size:[1.45,0.14,0.42],coat:{cabinetPaint:'cabinetPaint'},build:b=>{ b.phys(0,1.45,0,0.14,0,0.42); b.round(0,1.45,0,0.14,0,0.42,0.004,mat.wbody); }}}}, // B: floor plinth, 250 mm longer than A, centred under the tv (.local/консоль.png)
+    tv:{ids:['tv'],V:{B:{pos:[11.72,KN+0.02],size:[1.56,1.825,0.04],build:(b,g)=>{ ITEMS.find(i=>i.id==='tv').build(b,g); g.userData.proxy=[[0,1.56,0.925,1.825,0,0.04]]; // B: A scaled 1.2 (58" → 70") about the screen centre, still on the wall
+      g.children.forEach(m=>{ if(!m.isMesh) return; m.geometry.translate(m.position.x-0.65,m.position.y-1.375,m.position.z).scale(1.2,1.2,1).translate(0.78,1.375,0); m.position.set(0,0,0); }); }}}}};
+  // a variant with its own glb reloads it after the procedural rebuild; loadItemGlb drops a model whose url is no longer userData.glb (fast switching)
+  window.ROOM4={value:{},set(key,v){ const r=R4[key], V=r&&r.V&&r.V[v]; if(!r||!(v==='none'||v==='A'||V)||ROOM4.value[key]===v) return; const was=ROOM4.value[key]; ROOM4.value[key]=v;
+    r.ids.forEach(id=>{ const it=ITEMS.find(i=>i.id===id), g=ITEM_GROUPS[id], src=V||it;
+      if(V||(r.V&&r.V[was])){ g.userData.pos=src.pos.slice(); g.userData.size=src.size.slice(); g.userData.glb=src.glb; g.userData.glbFacade=src.glbFacade; rebuildItem(id,src.build,src.coat); if(src.glb) loadItemGlb(id); }
       hideItem(id,v==='none'); }); }};
   Object.keys(R4).forEach(key=>{ const KEY='pulse3d.k4.'+key, sel=document.getElementById('k4'+key); if(!sel) return; ROOM4.value[key]='A'; let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
     if([...sel.options].some(o=>o.value===v)){ sel.value=v; ROOM4.set(key,v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} ROOM4.set(key,sel.value); }); });
