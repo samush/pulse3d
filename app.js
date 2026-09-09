@@ -960,7 +960,7 @@ var finishGroup=new THREE.Group();
   }
 
   // белые дверные коробки
-  const DOORS=PLAN.doors; // [cx,cz,'h'|'v',ширина,(tag 'K' — дверь в съёмной стене кухни)]
+  const DOORS=PLAN.doors; // [cx,cz,'h'|'v',ширина,(tag 'K' — дверь в съёмной стене кухни; 'O' — открытый проём без коробки: гардеробная 6, 2026-09-09)]
   const frameMat2=new THREE.MeshBasicMaterial({color:0xffffff});
   { // порог балконного проёма 0.15: бокс в дереве откосов, лицевые грани (кухня/лоджия) — белые плоскости; один материал на меш, VIZ.swap не понимает массивы; ниже лучей прогулки (0.25), физика не нужна
     const d=BALC.x1-BALC.x0, w=BALC.z1-BALC.z0, cz=(BALC.z0+BALC.z1)/2, cy=FLOOR+0.075, g=new THREE.BoxGeometry(d,0.15,w); scaleUV(g,d,w);
@@ -970,6 +970,7 @@ var finishGroup=new THREE.Group();
   window.kitchenFrame.visible=document.getElementById('kwall').checked;
   DOORS.forEach(d=>{
     const [cx,cz,o,w,tag]=d, jw=0.07, dep=0.32, hD=2.1;
+    if(tag==='O') return; // open passage, no frame
     const parent = tag==='K' ? window.kitchenFrame : wallFin;
     function bx(sx,sy,sz,px,py,pz){
       const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),frameMat2);
