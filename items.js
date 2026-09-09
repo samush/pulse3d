@@ -67,17 +67,20 @@ const PHYS={}; // id → boxes
   // the same 80 mm corner zones, Ø12 rods on the platform guard, open stair side, wood only on treads, caps and the handrail. Load path and wall ties are a sketch for the maker, not a calculation.
   // stairs: 'S1' (seven equal rises inside R), 'ladder' (vertical ladder at the platform edge, floor under it free), 'gentle' (n rises, run extended by E
   // beyond the item at local x<0 — the pose and size stay, the extension carries its own proxy boxes; jog = tread setback from the wall on the extension)
+  // F (.local/детская_лев.png): kind 'steel' + {stairs:'wood',guard:'glass'} — wood box RB..PL+0.22 instead of the rails, wood panels, guard = wood posts and cap with frosted glass,
+  // steep timber ladder (22° off vertical) whose stringers continue as a handrail loop above the platform; bedding, over-door tray and PHYS as before
   const kidLoftBuild=(kind,L,R,o={})=>(b,g)=>{
-    const stairs=o.stairs||'S1', E=stairs==='gentle'?o.E||0:0, N=stairs==='gentle'?o.n||8:7, JOG=o.jog||0;
-    const PL=1.8, TOP=2.3, HF=2.2, W=R+1.2, steel=kind==='steel', ST=steel?mat.frame:mat.table, wood=mat.table, pnl=mat.kbody, front=mat.wdoor;
+    const stairs=o.stairs||'S1', E=stairs==='gentle'?o.E||0:0, N=stairs==='gentle'?o.n||8:7, JOG=o.jog||0, glass=o.guard==='glass';
+    const PL=1.8, TOP=2.3, HF=2.2, W=R+1.2, steel=kind==='steel', ST=steel?mat.frame:mat.table, wood=mat.table, pnl=glass?wood:mat.kbody, front=mat.wdoor;
     const P=steel?0.05:0.08, po=(0.08-P)/2, RB=steel?1.65:1.60, TB=HF+0.14;                          // post/beam width inside the 80 mm zones, rail bottom, tray beam top
-    if(stairs==='ladder') b.phys(R-1.15,R,0,PL,0,0.54); else b.phys(-E,R,0,2.4,0,0.54); [[R,0],[W-0.08,0],[R,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b.phys(x,x+0.08,0,PL,z,z+0.08)); // PHYS as the original (check.js: 9 boxes); the gentle extension is inside the stairs box
+    if(stairs==='ladder'||stairs==='wood') b.phys(R-1.15,R,0,PL,0,0.54); else b.phys(-E,R,0,2.4,0,0.54); [[R,0],[W-0.08,0],[R,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b.phys(x,x+0.08,0,PL,z,z+0.08)); // PHYS as the original (check.js: 9 boxes); the gentle extension is inside the stairs box
     b.phys(R+0.08,W-0.08,0.10,0.14,L-0.08,L); b.phys(R,W,PL-0.2,TOP+0.3,0,L+0.02); b.phys(R,W,HF,TOP+0.3,L,2.97); b.phys(R,R+0.08,0,HF,2.89,2.97);
     const tube=(x0,y0,z0,x1,y1,z1,r,m)=>{ const d=new THREE.Vector3(x1-x0,y1-y0,z1-z0), len=d.length(), geo=new THREE.CylinderGeometry(r,r,len,12).translate(0,len/2,0), mesh=new THREE.Mesh(geo,m);
       mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize()); mesh.position.set(x0,y0,z0); g.add(mesh); return mesh; }; // round bar between two local points
     // platform frame: four corner posts, the two bed-side posts and the far post rise to the tray beams; long rails west/east, end rails north/south
     [[R,0,PL],[W-0.08,0,PL],[R,L-0.08,TB],[W-0.08,L-0.08,TB],[R,2.89,TB]].forEach(([x,z,h])=>b(x+po,x+po+P,0,h,z+po,z+po+P,ST));
-    b(R+po,R+po+P,RB,PL,0,L,ST); b(W-0.08+po,W-0.08+po+P,RB,PL,0,L,ST); b(R,W,RB,PL,po,po+P,ST); b(R,W,RB,PL,L-0.08+po,L-0.08+po+P,ST);
+    const BX=glass?PL+0.22:PL, RM=glass?wood:ST, ro=glass?0:po, rw=glass?0.08:P;                       // F: the rails are an 80 mm wood box up to the mattress top
+    b(R+ro,R+ro+rw,RB,BX,0,L,RM); b(W-0.08+ro,W-0.08+ro+rw,RB,BX,0,L,RM); b(R,W,RB,BX,ro,ro+rw,RM); b(R,W,RB,BX,L-0.08+ro,L-0.08+ro+rw,RM);
     b(R+0.08,W-0.08,0.10,0.14,L-0.08,L,ST);                                                           // lower rail between the south posts
     b(R+0.08,W-0.08,1.70,1.72,0.08,L-0.08,pnl);                                                       // soffit panel: closes the frame from below, carries the recessed spot ceil2_3 in room 2
     for(let z=0.10;z<L-0.10;z+=0.12) b(R+0.08,W-0.08,1.78,PL,z,Math.min(z+0.09,L-0.10),wood);         // ventilated slats 90 mm with 30 mm gaps
@@ -86,9 +89,18 @@ const PHYS={}; // id → boxes
     b.round(R+0.1,W-0.15,PL+0.18,PL+0.24,0.1,L-0.8,0.025,mat.cushion); b.round(R+0.1,W-0.15,PL+0.24,PL+0.27,L-1.05,L-0.8,0.014,mat.cushion); // blanket, top edge folded back at the pillow
     // guards to 2.30: wood cap, balusters 30x30 wood (A) or Ø12 rods (B) every 0.10; low boards along the walls so nothing falls behind the mattress
     const cap=(x0,x1,z0,z1)=>b(x0,x1,TOP-0.04,TOP,z0,z1,wood), bal=(x,z)=>steel?b(x-0.006,x+0.006,PL,TOP-0.04,z-0.006,z+0.006,ST):b(x-0.015,x+0.015,PL,TOP-0.04,z-0.015,z+0.015,wood);
-    cap(R,R+0.04,0.5,L); for(let z=0.55;z<L-0.03;z+=0.1) bal(R+0.02,z); cap(R,W,L-0.04,L); for(let x=R+0.1;x<W-0.03;x+=0.1) bal(x,L-0.02);
+    if(glass){ // F: 40 mm wood posts at the ladder gap and the corners, 10 mm frosted glass (mat.rail) between the box top and the cap
+      cap(R,R+0.04,0.5,L); cap(R,W,L-0.04,L); [[R,0.5],[R,L-0.04],[W-0.04,L-0.04]].forEach(([x,z])=>b(x,x+0.04,BX,TOP-0.04,z,z+0.04,wood));
+      b(R+0.015,R+0.025,BX,TOP-0.04,0.54,L-0.04,mat.rail); b(R+0.04,W-0.04,BX,TOP-0.04,L-0.025,L-0.015,mat.rail);
+    } else { cap(R,R+0.04,0.5,L); for(let z=0.55;z<L-0.03;z+=0.1) bal(R+0.02,z); cap(R,W,L-0.04,L); for(let x=R+0.1;x<W-0.03;x+=0.1) bal(x,L-0.02); }
     b(R+0.08,W-0.08,PL,PL+0.30,0,0.02,pnl); b(W-0.02,W,PL,PL+0.30,0.02,L-0.08,pnl);
-    if(stairs==='ladder'){ // C: straight painted ladder to the platform level only, leaning 30°; wide flat stringers 40×240 with six treads 200×30 every 0.257 recessed between them,
+    if(stairs==='wood'){ // F: two 40×100 oak stringers 22° off vertical against the wall, six 30 mm treads 140 deep recessed between them,
+      // the stringers continue as Ø32 handrails to the guard top and are joined there by a cross bar (the loop on the reference); floor under the platform edge stays free
+      const th=22*Math.PI/180, xb=R-0.06-PL*Math.tan(th), len=PL/Math.cos(th), sx=y=>xb+Math.tan(th)*y;
+      [0.04,0.42].forEach(z=>g.add(new THREE.Mesh(new THREE.BoxGeometry(0.10,len,0.04).rotateZ(-th).translate(sx(PL/2)+0.05,PL/2+0.05*Math.sin(th),z+0.02),wood)));
+      for(let y=PL/7;y<PL-0.05;y+=PL/7) b(sx(y)+0.01,sx(y)+0.15,y-0.03,y,0.08,0.42,wood);
+      [0.06,0.44].forEach(z=>tube(sx(PL)+0.05,PL,z,sx(TOP)+0.05,TOP,z,0.016,wood)); tube(sx(TOP)+0.05,TOP,0.06,sx(TOP)+0.05,TOP,0.44,0.016,wood);
+    } else if(stairs==='ladder'){ // C: straight painted ladder to the platform level only, leaning 30°; wide flat stringers 40×240 with six treads 200×30 every 0.257 recessed between them,
       // so the stringer edges stand proud of each tread as a low kerb for a crawling child; neutral panel colour, not oak; floor under the platform edge stays free
       const th=30*Math.PI/180, xb=R-0.06-PL*Math.tan(th), len=PL/Math.cos(th), sx=y=>xb+Math.tan(th)*y;
       [0.02,0.48].forEach(z=>g.add(new THREE.Mesh(new THREE.BoxGeometry(0.24,len,0.04).rotateZ(-th).translate(sx(PL/2)+0.11,PL/2,z+0.02),pnl)));
@@ -837,6 +849,7 @@ const PHYS={}; // id → boxes
   function loadItemGlb(id,url){
     const g=ITEM_GROUPS[id]; url=url||g.userData.glb;
     return fetchGlb(url).then(scene=>{
+      if(g.userData.noGlb) return; // a procedural variant is showing (DESK2 B): keep it
       const model=scene.clone(), sz=g.userData.size, ref=scan(g,sz[1]);
       if(g.userData.glbRot){ const a=-g.userData.glbRot*Math.PI/180, cx=sz[0]/2, cz=sz[2]/2; model.rotation.y=a; model.position.set(cx-(cx*Math.cos(a)+cz*Math.sin(a)),0,cz-(-cx*Math.sin(a)+cz*Math.cos(a))); } // turn about the footprint centre, same sense as rot
       const old=g.children.slice(); g.add(model);
@@ -877,15 +890,35 @@ const PHYS={}; // id → boxes
   // group's LED clone stay, materials are shared so only geometry is disposed. Wood details of A/B wear the oak coating; the rest follows BED.
   const KID_LOFT={kidbed:{L:2.0,R:1.4,tread:0.28,E:0.8,n:8},kidbed2:{L:1.85,R:1.2,tread:0.24,E:0.35,n:7}}; // gentle (D): room 1 run +0.80 with 8 rises; room 2 only +0.35 (socket sock12 at x 13.83) with 7 rises
   const KIDBED_VARIANTS={original:p=>kidBedBuild(p.L,mat.wdoor,mat.cushion,p.tread),timber:p=>kidLoftBuild('timber',p.L,p.R),steel:p=>kidLoftBuild('steel',p.L,p.R),
-    ladder:p=>kidLoftBuild('steel',p.L,p.R,{stairs:'ladder'}),gentle:p=>kidLoftBuild('timber',p.L,p.R,{stairs:'gentle',E:p.E,n:p.n,jog:p.jog})};
+    ladder:p=>kidLoftBuild('steel',p.L,p.R,{stairs:'ladder'}),gentle:p=>kidLoftBuild('timber',p.L,p.R,{stairs:'gentle',E:p.E,n:p.n,jog:p.jog}),loft:p=>kidLoftBuild('steel',p.L,p.R,{stairs:'wood',guard:'glass'})};
   function rebuildItem(id,build,coat){ const g=ITEM_GROUPS[id]; let led=null;
-    g.children.slice().forEach(o=>{ if(!o.isMesh) return; if(o.material.name&&o.material.name.startsWith('led:')) led=o.material; g.remove(o); o.geometry.dispose(); });
+    g.children.slice().forEach(o=>{ if(o.isGroup){ g.remove(o); g.userData.glbLoaded=null; return; } if(!o.isMesh) return; if(o.material.name&&o.material.name.startsWith('led:')) led=o.material; g.remove(o); o.geometry.dispose(); }); // GLB clones share geometry with their siblings: removed, not disposed
     g.userData.proxy=[]; g.userData.coat=coat; build(makeB(g),g); if(led) g.traverse(o=>{ if(o.isMesh&&o.material===mat.led) o.material=led; });
     if(window.VIZ) VIZ.adopt(g); setItemPose(id); }
-  window.KIDBED={variant:'original',variants:Object.keys(KIDBED_VARIANTS),set(v){ if(!KIDBED_VARIANTS[v]||v===KIDBED.variant) return; KIDBED.variant=v;
-    Object.entries(KID_LOFT).forEach(([id,p])=>rebuildItem(id,KIDBED_VARIANTS[v](p),v==='original'?undefined:Object.assign({table:'oakFurniture'},BED))); }};
-  (function(){ const KEY='pulse3d.kidbed', sel=document.getElementById('kidbed'); if(!sel) return; let v='original'; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
-    if(KIDBED_VARIANTS[v]){ sel.value=v; KIDBED.set(v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} KIDBED.set(sel.value); }); })();
+  // one select per room (#bed1 → kidbed, #bed2 → kidbed2, default F); KIDBED.set(v) without id rebuilds both (check.js), KIDBED.variant is 'mixed' when the rooms differ
+  window.KIDBED={value:{kidbed:'original',kidbed2:'original'},variants:Object.keys(KIDBED_VARIANTS),get variant(){ const v=KIDBED.value; return v.kidbed===v.kidbed2?v.kidbed:'mixed'; },
+    set(v,id){ if(!KIDBED_VARIANTS[v]) return; (id?[id]:Object.keys(KID_LOFT)).forEach(id=>{ if(KIDBED.value[id]===v) return; KIDBED.value[id]=v;
+      rebuildItem(id,KIDBED_VARIANTS[v](KID_LOFT[id]),v==='original'?undefined:Object.assign({table:'oakFurniture'},BED)); }); }};
+  [['bed1','kidbed'],['bed2','kidbed2']].forEach(([sid,id])=>{ const KEY='pulse3d.'+sid, sel=document.getElementById(sid); if(!sel) return; let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
+    if(KIDBED_VARIANTS[v]){ sel.value=v; KIDBED.set(v,id); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} KIDBED.set(sel.value,id); }); });
+  // ---- room 2 desk + chair variants (select #desk2): A — the original items (desk-pedestal, GLB chair); B (default, .local/детская_лев.png) — oak top on a black steel frame
+  // with one drawer box, round upholstered tub chair on a cross base. Same pos/size, own proxy boxes; A reloads its GLB, B blocks the startup load (noGlb).
+  const DESK2_B={
+    kiddesk2:b=>{ const st=mat.frame, wood=mat.table; b.phys(0,0.75,0.64,0.72,0,1.65); b.phys(0.03,0.72,0,0.68,0.03,0.07); b.phys(0.03,0.72,0,0.68,1.58,1.62); b.phys(0.08,0.70,0.55,0.68,1.12,1.56);
+      b.round(0,0.75,0.68,0.72,0,1.65,0.004,wood);                                                                             // 40 mm oak top, front edge at x 0.75
+      [0.03,1.58].forEach(z=>{ [0.05,0.68].forEach(x=>b(x,x+0.04,0,0.68,z,z+0.04,st)); b(0.05,0.72,0.64,0.68,z,z+0.04,st); }); // two U-frames of 40×40 tube
+      b(0.68,0.72,0.10,0.14,0.07,1.58,st);                                                                                     // front stretcher
+      b.round(0.08,0.70,0.55,0.68,1.12,1.56,0.003,wood); b(0.70,0.705,0.63,0.65,1.18,1.50,mat.dark); },                        // drawer box under the top, recessed grip
+    kidchair2:(b,g)=>{ const cx=0.275, cz=0.275; b.phys(0.075,0.475,0.02,0.045,0.075,0.475); b.phys(0.25,0.30,0.045,0.40,0.25,0.30); b.phys(0.025,0.525,0.40,0.47,0.025,0.525); b.phys(0.35,0.55,0.45,0.82,0.02,0.53);
+      b(0.075,0.475,0.02,0.045,0.26,0.29,mat.frame); b(0.26,0.29,0.02,0.045,0.075,0.475,mat.frame); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.36,16).translate(cx,0.225,cz),mat.frame)); // cross base and column
+      lathe(g,[[0,0.40],[0.23,0.40],[0.25,0.42],[0.25,0.46],[0.23,0.47],[0,0.47]],cx,cz,mat.cushion);                          // round seat pad Ø0.50
+      const sh=new THREE.Shape(); sh.absarc(cx,-cz,0.27,-1.2,1.2,false); sh.absarc(cx,-cz,0.24,1.2,-1.2,true);                   // tub back: 30 mm shell over 137°, open towards the desk (-x)
+      g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.37,bevelEnabled:false,curveSegments:16}).rotateX(-Math.PI/2).translate(0,0.45,0),mat.cushion)); } };
+  window.DESK2={variant:'A',set(v){ if(v===DESK2.variant||!(v==='A'||v==='B')) return; DESK2.variant=v;
+    ['kiddesk2','kidchair2'].forEach(id=>{ const it=ITEMS.find(i=>i.id===id), g=ITEM_GROUPS[id]; g.userData.noGlb=v==='B';
+      rebuildItem(id,v==='B'?DESK2_B[id]:it.build,v==='B'?(id==='kiddesk2'?{table:'oakFurniture'}:{cushion:'sofaWeave'}):it.coat); if(v==='A'&&it.glb) loadItemGlb(id); }); }};
+  (function(){ const KEY='pulse3d.desk2', sel=document.getElementById('desk2'); if(!sel) return; let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
+    if(v==='A'||v==='B'){ sel.value=v; DESK2.set(v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} DESK2.set(sel.value); }); })();
 })();
 Object.values(LAYERS).forEach(g=>scene.add(g)); scene.add(physGroup);
 document.getElementById('furn').addEventListener('change',e=>furnGroup.visible=e.target.checked);
