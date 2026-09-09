@@ -989,7 +989,7 @@ var finishGroup=new THREE.Group();
   // label, hinge at the larger (+1) or smaller (−1) coordinate along the wall, leaf swings to the larger (+1) or smaller (−1) coordinate across it,
   // distance from the door axis to the plaster face on the swing side (room polys), kind. Leaves open to 80°, not 90°: kids' room 1 and the bedroom are hinged at a room corner,
   // at 90° the leaf would lie inside the side wall. Default state: open, except the wardrobe and laundry pair (user, 2026-09-09).
-  const DOOR_SPEC={0:['детская 1',1,-1,0.075],1:['гардеробная',-1,1,0.093,'closed'],2:['постирочная',1,1,0.093,'closed'],3:['детская 2',-1,1,0.077],4:['мастер спальня',-1,1,0.087],5:['санузел 1',-1,1,0.058],6:['санузел 2',1,1,0.071],7:['входная дверь',-1,1,0.144,'entry']};
+  const DOOR_SPEC={0:['детская 1',1,-1,0.075],1:['гардеробная',-1,1,0.093,'closed'],2:['постирочная',1,1,0.093,'closed'],3:['детская 2',-1,1,0.077],4:['мастер спальня',-1,1,0.087],5:['санузел 1',1,1,0.058,'closed'],6:['санузел 2',1,1,0.071],7:['входная дверь',-1,1,0.144,'entry']};
   const DOOR_ORDER=[2,1,0,3,5,6,4,7]; // button layout, two per row
   const chromeFin=new THREE.MeshBasicMaterial({color:0xb4b4b4}), grooveMat=new THREE.LineBasicMaterial({color:0x9a9791});
   window.DOOR_LEAVES=[]; // {id,label,pivot,closed,open} — toggled by the «Двери» buttons
