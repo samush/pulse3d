@@ -889,11 +889,12 @@ var finishGroup=new THREE.Group();
   window.TILE_SILLS=[{d:0,face:5.608},{d:1,face:4.033},{d:2,face:4.033},{d:3,face:10.904},{d:4,face:9.6},{d:5,face:10.008},{d:7,face:7.754,far:7.468}].map(({d,face,far})=>{
     const [cx,cz,o,w]=PLAN.doors[d], a=far!=null?far:(o==='v'?cx:cz), lo=Math.min(a,face), hi=Math.max(a,face);
     return o==='v'?[[lo,cz-w/2],[hi,cz-w/2],[hi,cz+w/2],[lo,cz+w/2]]:[[cx-w/2,lo],[cx+w/2,lo],[cx+w/2,hi],[cx-w/2,hi]]; });
-  const tileTex=(grout,face)=>{ // canvas = one 0.6 × 1.2 m porcelain tile in a straight grid like the bath marble, 3 mm grout; plain colour, no mottling
+  const tileTex=(grout,face,cloud)=>{ // canvas = one 0.6 × 1.2 m porcelain tile in a straight grid like the bath marble, 3 mm grout; plain colour, optional soft cloudy mottling
     const c=document.createElement('canvas'); c.width=256; c.height=512; const g=c.getContext('2d'); g.fillStyle=grout; g.fillRect(0,0,256,512); g.fillStyle=face; g.fillRect(1,1,254,510);
+    if(cloud){ let sd=11; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; }; for(let i=0;i<14;i++){ const x=rnd()*256, y=rnd()*512, r=40+rnd()*90, k=new THREE.Color(cloud[i%2]); const gr=g.createRadialGradient(x,y,0,x,y,r); gr.addColorStop(0,'rgba('+(k.r*255|0)+','+(k.g*255|0)+','+(k.b*255|0)+',0.45)'); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=gr; g.fillRect(1,1,254,510); } }
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/0.6,1/1.2); return t; };
   const tileMat=new THREE.MeshBasicMaterial({map:tileTex('#3f3831','#5b524a')}); // loggia: dark cashmere brown
-  const tileLightMat=new THREE.MeshBasicMaterial({map:tileTex('#bfb3a2','#d9cdbb')}); // corridor 5 + kitchen zone: light beige, much lighter than the loggia (user, 2026-09-09)
+  const tileLightMat=new THREE.MeshBasicMaterial({map:tileTex('#9c8266','#b7997a',['#c6ab8c','#a48868'])}); // corridor 5 + kitchen zone: warm caramel tan with soft clouds, matte (user photo, 2026-09-09)
   finishGroup.add(new THREE.Mesh(window.loggiaFloorGeo,tileMat)); // loggia 10 floor: dark grey porcelain tile as on the photos
   // layer 3 (BOARD_POLYS): engineered oak board to try floor coverings — the living zone of room 4 east of the tile (x 10.36–13.47) and the loggia 10
   const boardTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=512; const g=c.getContext('2d'); let sd=7; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; }; // canvas = 2.0 × 2.0 m
