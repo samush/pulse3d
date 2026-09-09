@@ -39,8 +39,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .slider-lab{display:flex;justify-content:space-between;color:var(--muted);
   font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;margin-top:10px}
 .views{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-#cams,#doors{margin:4px 0 10px} #cams .room{display:flex;gap:6px;margin-top:6px} #cams .room button{width:40px;height:30px;flex:none;padding:0} #cams button.on,#doors button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-#layers{margin-top:10px} #doors .room button{width:auto;padding:0 8px;font-size:12px} #layers summary,#cams summary,#doors summary{cursor:pointer;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
+#cams,#doors,.roomblk{margin:4px 0 10px} .roomblk{width:100%} .roomblk .row{margin:6px 0} #cams .room{display:flex;gap:6px;margin-top:6px} #cams .room button{width:40px;height:30px;flex:none;padding:0} #cams button.on,#doors button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+#layers{margin-top:10px} #doors .room button{width:auto;padding:0 8px;font-size:12px} #layers summary,#cams summary,#doors summary,.roomblk summary{cursor:pointer;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
 .views button{flex:1 1 45%;background:transparent;border:1px solid var(--line);color:var(--ink);
   font:600 12px "Manrope",system-ui,sans-serif;padding:6px 0;border-radius:7px;cursor:pointer}
 .views button:hover{background:var(--accent-soft);border-color:var(--accent)}
@@ -78,7 +78,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12.5px;z-index:6;max-width:calc(100vw - 32px)}
 #lay button,#itCard button{background:transparent;border:1px solid var(--line);color:var(--ink);font:600 12px "Manrope",system-ui,sans-serif;padding:5px 9px;border-radius:7px;cursor:pointer}
 #lay button:disabled{opacity:.4;cursor:default} #layBtn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-#light,#bed3,#kidbed,#lay select,#itCard input{font:12.5px "Manrope",system-ui,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:3px 5px}
+#light,#bed3,#bed1,#bed2,#desk2,#wp1,#wp2,#lay select,#itCard input{font:12.5px "Manrope",system-ui,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:3px 5px}
 #lay .mk-hint{color:var(--muted)} #lay .mk-file{border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-weight:600;font-size:12px;cursor:pointer}
 #lay .mk-text{width:100%;height:90px;font:12px ui-monospace,monospace;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px}
 #itCard{position:fixed;right:16px;top:180px;width:300px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;
@@ -131,10 +131,18 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <div class="row"><input type="checkbox" id="avatarOn" hidden checked><label for="avatarOn" class="tog" title="Фигура человека ростом 1,7 м в экскурсии">Человечек</label></div>
   <div class="row"><input type="checkbox" id="mats" hidden><label for="mats" class="tog" title="Реальные покрытия (PBR) вместо серого концепта">Материалы</label></div>
   <div class="row"><label for="light">Свет</label><select id="light" aria-label="Световая схема" title="Внутренний A — быстрый свет: один источник на комнату без теней; дневной — фиксированный свет для проверки материалов; внутренний B — светильники квартиры из lighting.js (комнаты 4 и 9), группы через LIGHTING.group"><option value="illusion">внутренний A</option><option value="neutral">дневной</option><option value="lamps">внутренний B</option></select></div>
-  <div class="row"><label for="bed3">Кровать 3</label><select id="bed3" aria-label="Длина подиума кровати в комнате 3" title="Длина деревянного подиума кровати в спальне 3"><option value="normal">обычная, 2.2 м</option><option value="rug">до края ковра, 2.82 м</option><option value="wall" selected>до стены с ТВ</option></select></div>
-  <div class="row"><label for="kidbed">Детские</label><select id="kidbed" aria-label="Конструкция кроватей-чердаков в детских" title="Варианты конструкции кроватей-чердаков (tasks/kids-loft-beds): A — исходная, сталь с пологой лестницей-комодом; B — деревянная рама; C — стальной каркас с мебельной облицовкой; D — стальной каркас C с приставной лестницей; E — рама B с пологой лестницей-комодом (длиннее)"><option value="original" selected>A</option><option value="timber">B</option><option value="steel">C</option><option value="ladder">D</option><option value="gentle">E</option></select></div>
-  <div class="row"><label for="wp1">Обои 1</label><select id="wp1" aria-label="Обои детской 1" title="Обои на северной и южной стенах детской 1"><option value="none">нет</option><option value="leaves">листья</option></select></div>
-  <div class="row"><label for="wp2">Обои 2</label><select id="wp2" aria-label="Обои детской 2" title="Панно на стене со стороны лестницы в детской 2"><option value="none">нет</option><option value="space">космонавт</option></select></div>
+  <details id="kid1" class="roomblk"><summary>Детская 1</summary>
+  <div class="row"><label for="wp1">Обои</label><select id="wp1" aria-label="Обои детской 1" title="Обои на северной и южной стенах детской 1"><option value="none">нет</option><option value="leaves">листья</option></select></div>
+  <div class="row"><label for="bed1">Кровать</label><select id="bed1" aria-label="Конструкция кровати-чердака в детской 1" title="Конструкция кровати-чердака (tasks/kids-loft-beds): A — исходная, сталь с пологой лестницей-комодом; B — деревянная рама; C — стальной каркас с мебельной облицовкой; D — стальной каркас C с приставной лестницей; E — рама B с пологой лестницей-комодом; F — дерево и сталь по референсу: крутая деревянная лестница с поручнем, деревянный короб, ограждение с матовым стеклом"><option value="original">A</option><option value="timber">B</option><option value="steel">C</option><option value="ladder">D</option><option value="gentle">E</option><option value="loft" selected>F</option></select></div>
+  </details>
+  <details id="kid2" class="roomblk"><summary>Детская 2</summary>
+  <div class="row"><label for="wp2">Обои</label><select id="wp2" aria-label="Обои детской 2" title="Панно на стене со стороны лестницы в детской 2"><option value="none">нет</option><option value="space">космонавт</option></select></div>
+  <div class="row"><label for="bed2">Кровать</label><select id="bed2" aria-label="Конструкция кровати-чердака в детской 2" title="Конструкция кровати-чердака (tasks/kids-loft-beds): A — исходная, сталь с пологой лестницей-комодом; B — деревянная рама; C — стальной каркас с мебельной облицовкой; D — стальной каркас C с приставной лестницей; E — рама B с пологой лестницей-комодом; F — дерево и сталь по референсу: крутая деревянная лестница с поручнем, деревянный короб, ограждение с матовым стеклом"><option value="original">A</option><option value="timber">B</option><option value="steel">C</option><option value="ladder">D</option><option value="gentle">E</option><option value="loft" selected>F</option></select></div>
+  <div class="row"><label for="desk2">Стол</label><select id="desk2" aria-label="Стол и кресло под кроватью в детской 2" title="A — стол-тумба с кабель-каналом и детское кресло на колёсах; B — столешница на чёрном стальном каркасе с ящиком и круглое мягкое кресло на крестовине (по референсу)"><option value="A">A</option><option value="B" selected>B</option></select></div>
+  </details>
+  <details id="master" class="roomblk"><summary>Мастер спальня</summary>
+  <div class="row"><label for="bed3">Платформа</label><select id="bed3" aria-label="Длина подиума кровати в комнате 3" title="Длина деревянного подиума кровати в спальне 3"><option value="normal">обычная, 2.2 м</option><option value="rug">до края ковра, 2.82 м</option><option value="wall" selected>до стены с ТВ</option></select></div>
+  </details>
   <div class="slider-lab"><span>Стены</span><span id="wov">100%</span></div>
   <input type="range" id="wop" min="0" max="100" value="100" aria-label="Прозрачность стен">
   <details id="layers"><summary>Слои и режимы</summary>
