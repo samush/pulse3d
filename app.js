@@ -987,8 +987,10 @@ var finishGroup=new THREE.Group();
   window.kitchenFrame.visible=document.getElementById('kwall').checked;
   // door leaves (.local/двери0–3.png, 2026-09-09): white two-panel leaf on a hinge pivot, entrance flat with grooves. Per PLAN.doors index:
   // label, hinge at the larger (+1) or smaller (−1) coordinate along the wall, leaf swings to the larger (+1) or smaller (−1) coordinate across it,
-  // distance from the door axis to the plaster face on the swing side (room polys), kind. Hinges sit on the jamb away from a room corner, so an open leaf never lies inside a side wall.
-  const DOOR_SPEC={0:['детская 1',-1,-1,0.075],1:['гардеробная',-1,1,0.093],2:['постирочная',1,1,0.093],3:['детская 2',-1,1,0.077],4:['спальня',1,1,0.087],5:['санузел 1',-1,1,0.058],6:['санузел 2',1,1,0.071],7:['входная',-1,1,0.144,'entry']};
+  // distance from the door axis to the plaster face on the swing side (room polys), kind. Leaves open to 80°, not 90°: kids' room 1 and the bedroom are hinged at a room corner,
+  // at 90° the leaf would lie inside the side wall. Default state: open, except the wardrobe and laundry pair (user, 2026-09-09).
+  const DOOR_SPEC={0:['детская 1',1,-1,0.075],1:['гардеробная',-1,1,0.093,'closed'],2:['постирочная',1,1,0.093,'closed'],3:['детская 2',-1,1,0.077],4:['мастер спальня',-1,1,0.087],5:['санузел 1',-1,1,0.058],6:['санузел 2',1,1,0.071],7:['входная дверь',-1,1,0.144,'entry']};
+  const DOOR_ORDER=[2,1,0,3,5,6,4,7]; // button layout, two per row
   const chromeFin=new THREE.MeshBasicMaterial({color:0xb4b4b4}), grooveMat=new THREE.LineBasicMaterial({color:0x9a9791});
   window.DOOR_LEAVES=[]; // {id,label,pivot,closed,open} — toggled by the «Двери» buttons
   DOORS.forEach((d,i)=>{
@@ -998,7 +1000,7 @@ var finishGroup=new THREE.Group();
     const spec=DOOR_SPEC[i]; if(spec){ const [label,hs,os,face,kind]=spec, W=w-0.01, H=2.04, T=kind==='entry'?0.07:0.04, pivot=new THREE.Group(), leaf=new THREE.Group(); pivot.add(leaf); // leaf: local x from the hinge to the free edge, y up, z across the wall
       const off=os*(face+0.015+T/2+0.01); pivot.position.set(o==='v'?cx+off:cx+hs*w/2, 0.01, o==='v'?cz+hs*w/2:cz+off); // hinge axis 1 cm in front of the wallpaper on the swing side: the open leaf stands clear of the wall
       const closed=o==='v'?(hs>0?Math.PI/2:-Math.PI/2):(hs>0?Math.PI:0), dir=a=>o==='v'?Math.cos(a):-Math.sin(a); // rotation.y → world direction of local x along the cross axis
-      const open=[closed+Math.PI/2,closed-Math.PI/2].find(a=>Math.sign(dir(a))===os); pivot.rotation.y=closed;
+      const SWING=80*Math.PI/180, open=[closed+SWING,closed-SWING].find(a=>Math.sign(dir(a))===os); pivot.rotation.y=closed;
       leaf.position.z=-os*(o==='v'?Math.sin(closed):Math.cos(closed))*(T+0.015); // closed leaf sits inside the wall thickness, its outer face flush with the wallpaper; the shift turns along the wall when open
       const box=(sx,sy,sz,px,py,pz,m)=>{ const mesh=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),m); mesh.position.set(px,py,pz); leaf.add(mesh); };
       box(W,H,T,0.005+W/2,H/2,0,kind==='entry'?plasterMat:frameMat2);
@@ -1007,7 +1009,7 @@ var finishGroup=new THREE.Group();
       else [1,-1].forEach(s=>{ const z=s*(T/2+0.003), r=(sx,sy,px,py)=>box(sx,sy,0.006,px,py,z,frameMat2); // raised stiles and rails: tall upper panel, short lower one
         r(0.10,H,0.005+0.05,H/2); r(0.10,H,0.005+W-0.05,H/2); r(W,0.10,0.005+W/2,H-0.05); r(W,0.12,0.005+W/2,0.06); r(W,0.08,0.005+W/2,0.60); });
       [1,-1].forEach(s=>{ const z=s*(T/2+0.03); box(0.04,0.04,0.012,0.005+W-0.07,1.02,s*(T/2+0.006),chromeFin); box(0.12,0.02,0.02,0.005+W-0.12,1.02,z,chromeFin); }); // rose and lever on both faces
-      parent.add(pivot); DOOR_LEAVES.push({id:'door'+i,label,pivot,closed,open}); }
+      parent.add(pivot); DOOR_LEAVES.push({id:'door'+i,label,pivot,closed,open,isOpen:kind!=='closed'}); }
     function bx(sx,sy,sz,px,py,pz){
       const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),frameMat2);
       m.position.set(px,py,pz); parent.add(m);
@@ -1023,7 +1025,8 @@ var finishGroup=new THREE.Group();
     }
   });
   { const grid=document.getElementById('doorgrid'); // «Двери»: one toggle button per leaf, lit while open
-    DOOR_LEAVES.forEach(d=>{ const b=document.createElement('button'); b.textContent=d.label; b.addEventListener('click',()=>{ d.isOpen=!d.isOpen; d.pivot.rotation.y=d.isOpen?d.open:d.closed; b.classList.toggle('on',d.isOpen); }); grid.appendChild(b); d.button=b; }); }
+    DOOR_ORDER.map(i=>DOOR_LEAVES.find(d=>d.id==='door'+i)).filter(Boolean).forEach(d=>{ const b=document.createElement('button'); b.textContent=d.label; const show=()=>{ d.pivot.rotation.y=d.isOpen?d.open:d.closed; b.classList.toggle('on',d.isOpen); };
+      b.addEventListener('click',()=>{ d.isOpen=!d.isOpen; show(); }); show(); grid.appendChild(b); d.button=b; }); }
 
   // белый плинтус 10 см (от чистового пола) и обои вдоль стен (кроме санузлов и дверных проёмов)
   const plinthMat=new THREE.MeshBasicMaterial({color:0xffffff});
