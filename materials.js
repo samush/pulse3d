@@ -11,7 +11,8 @@ const MATERIALS={
   whiteWall:{name:'плитка белый мрамор, стены', size:[0.6,0.6], rough:0.25, bump:0.15},
   grey:     {name:'плитка серый мрамор',  size:[0.6,0.6], rough:0.3,  bump:0.15},
   wp:       {name:'обои под покраску',    size:[1.2,1.2], rough:0.92, bump:0.45, albedo:0.82},
-  tile:     {name:'керамогранит 60×120, ровный тёмный кашемир со швами', size:[0.6,1.2], rough:0.3, bump:0.06}, // no photo coating: plain colour and the grout grid come from the concept canvas, like the bath tiles
+  tile:     {name:'керамогранит 60×120, ровный тёмный кашемир со швами', size:[0.6,1.2], rough:0.3, bump:0.06},
+  tileLight:{name:'керамогранит 60×120, светлый бежевый со швами', size:[0.6,1.2], rough:0.3, bump:0.06}, // no photo coating: plain colour and the grout grid come from the concept canvas, like the bath tiles
   bathWall: {name:'плитка санузлов 60×30 горизонтально, белый мрамор со швами', size:[0.6,0.3], rough:0.3, bump:0.06},
   bathFloor:{name:'плитка санузлов 30×60 на полу, белый мрамор со швами', size:[0.3,0.6], rough:0.3, bump:0.06},
   plaster:  {name:'гипсокартон крашеный, матовый белый', size:[1,1], rough:0.9},

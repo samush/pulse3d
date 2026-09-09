@@ -421,13 +421,13 @@ const PHYS={}; // id → boxes
     {id:'sock13',type:'розетка у шведской стенки (увлажнитель)',room:2,layer:'kid2',pos:[12.23,6.538],rot:0,size:[0.08,0.34,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.26,0.34,0,0.01,mat.plastic); }},
     // ---- master bedroom 3 (tasks/room3-master/README.md, marks M1–M28; grey materials only) ----
     // Room box: x 10.021–14.76, z 9.777–13.144. Items are built as if against the north wall and turned 180° (rot 180, pos = SE corner): the composition faces north. Wall-mounted boxes sit 0.02–0.03 in front of the wall (wallpaper at 0.015).
-    {id:'mbed',type:'кровать 160×200 на деревянном подиуме 1.74 от короба радиатора до стены с ТВ, матрас впритык к коробу, два выдвижных ящика со стороны комнаты, мягкое изголовье; верх матраса вровень с подоконником',room:3,layer:'master',pos:[14.485,13.144],rot:180,size:[1.74,1.10,2.82],coat:Object.assign({dark:'oakFurniture'},BED), /* podium in the balcony-jamb oak */ fixed:'wall',glb:'models/mbed.glb', // model by tools/models/mbed.js; the build below is proxy and fallback
+    {id:'mbed',type:'кровать 160×200 на деревянном подиуме 2.015 вплотную к стене у окна (вырез под короб радиатора) и до стены с ТВ, матрас до кромки подоконника, два выдвижных ящика со стороны комнаты, мягкое изголовье; верх матраса вровень с подоконником',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[2.015,1.10,2.82],coat:Object.assign({dark:'oakFurniture'},BED), /* podium in the balcony-jamb oak */ fixed:'wall',glb:'models/mbed.glb', // model by tools/models/mbed.js; the build below is proxy and fallback
      build(b){
-       b.phys(0,1.74,0,0.30,0,2.82); b.phys(0,1.60,0.30,0.55,0.1,2.1); b.phys(0,1.74,0.30,1.1,0,0.08); [[0.05,0.75],[0.85,1.55]].forEach(([x0,x1])=>b.phys(x0,x1,0.55,0.67,0.15,0.6)); b.phys(0,1.65,0.35,0.6,0.85,2.2); // proxy = pre-detail mesh AABBs; drawer fronts (12 mm) sit inside the podium box tolerance
-       b(0,1.716,0,0.30,0,2.82,mat.dark); [0.70,1.75].forEach(z=>b(1.716,1.74,0.05,0.25,z,z+0.90,mat.dark)); // podium to the rug end (z 2.82), drawers north of the wardrobe; east side (local x 0) meets the radiator cover
-       b(0,1.60,0.30,0.55,0.10,2.10,mat.kmat); b(0,1.74,0.30,1.10,0,0.08,mat.cushion);            // mattress flush with the cover (top 0.55 + dome = window sill 0.56), headboard
-       [[0.05,0.75],[0.85,1.55]].forEach(([x0,x1])=>b(x0,x1,0.55,0.67,0.15,0.60,mat.pillow));       // two pillows
-       b(0,1.65,0.55,0.575,0.85,2.20,mat.cushion); b(1.625,1.65,0.35,0.55,0.85,2.20,mat.cushion); // blanket: thin sheet, drop only down the room side (the cover side is flush)
+       b.phys(0,2.015,0,0.30,0,2.82); b.phys(0.275,1.875,0.30,0.55,0.1,2.1); b.phys(0,2.015,0.30,1.1,0,0.08); [[0.325,1.025],[1.125,1.825]].forEach(([x0,x1])=>b.phys(x0,x1,0.55,0.67,0.15,0.6)); b.phys(0.275,1.925,0.35,0.6,0.85,2.2); // proxy = pre-detail mesh AABBs; drawer fronts (12 mm) sit inside the podium box tolerance
+       b(0.18,1.991,0,0.30,0,2.82,mat.dark); b(0,0.18,0,0.30,0,0.894,mat.dark); b(0,0.18,0,0.30,2.494,2.82,mat.dark); [0.70,1.75].forEach(z=>b(1.991,2.015,0.05,0.25,z,z+0.90,mat.dark)); // podium to the east wall (local x 0) with a notch for the radiator cover (x<0.18, z 0.894–2.494), drawers north of the wardrobe
+       b(0.275,1.875,0.30,0.55,0.10,2.10,mat.kmat); b(0,2.015,0.30,1.10,0,0.08,mat.cushion);      // mattress ends at the sill edge (x 14.485; top 0.55 + dome = window sill 0.56), headboard wall to wall
+       [[0.325,1.025],[1.125,1.825]].forEach(([x0,x1])=>b(x0,x1,0.55,0.67,0.15,0.60,mat.pillow));   // two pillows
+       b(0.275,1.925,0.55,0.575,0.85,2.20,mat.cushion); b(1.90,1.925,0.35,0.55,0.85,2.20,mat.cushion); // blanket: thin sheet, drop only down the room side (the sill side is flush)
      }},
     {id:'mcab',type:'блок подвесных ящиков над изголовьем 2.015 (до ниши шкафа): два ряда, секция под кондиционер с решёткой',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[2.015,2.70,0.35],coat:CAB,fixed:'wall',
      build(b,g){ const t=0.02, Y0=1.85, Y1=2.28, Y2=2.30, T=2.7, A0=0.40, A1=1.30, W=2.015, H=W/2;                             // rows 1.85–2.28 and 2.30–2.70; AC section x 0.40–1.30 (socket sock16), open below; W runs 0.10 past the bed edge
@@ -834,7 +834,7 @@ const PHYS={}; // id → boxes
   window.validateItemGlb=validateItemGlb;
   const GLB_CACHE={}; // url → promise of the loaded scene; items sharing a file get clones with shared geometry (6 chairs = one geometry)
   const fetchGlb=url=>GLB_CACHE[url]||(GLB_CACHE[url]=new Promise((res,rej)=>{ if(typeof THREE.GLTFLoader!=='function') return rej(new Error('no GLTFLoader'));
-    new THREE.GLTFLoader().load(url,gltf=>{ gltf.scene.traverse(o=>{ if(o.isMesh){ const name=o.material.name; o.userData.glbMat=name; o.material.dispose(); o.material=slotMat(name); } }); res(gltf.scene); },undefined,rej); })); // glbMat = coating name from the generator, survives clone() for M1a presets
+    new THREE.GLTFLoader().load(url,gltf=>{ gltf.scene.traverse(o=>{ if(o.isMesh){ const name=o.material.name; o.userData.glbMat=name; o.material.dispose(); o.material=slotMat(name.split('#')[0]); } }); res(gltf.scene); },undefined,rej); })); // glbMat = coating name from the generator, survives clone() for M1a presets; 'slot#tag' = same material but its own mesh (BED3 moves podium parts apart)
   function loadItemGlb(id,url){
     const g=ITEM_GROUPS[id]; url=url||g.userData.glb;
     return fetchGlb(url).then(scene=>{
@@ -902,12 +902,13 @@ document.getElementById('furnBalcony').addEventListener('change',e=>balconyGroup
 // room 3 bed podium length (select #bed3, default 'wall' since 2026-09-09): the GLB holds the 2.82 podium; the podium meshes scale from the headboard, the drawer fronts from the
 // wardrobe edge (z 0.60) so the short variant keeps both drawers clear of it. Size and proxy follow, so physics and layout warnings stay honest.
 (function(){
-  const L0=2.82, WARD=0.60, KEY='pulse3d.bed3', sel=document.getElementById('bed3'); if(!sel) return;
+  const L0=2.82, WARD=0.60, NOTCH=2.494, KEY='pulse3d.bed3', sel=document.getElementById('bed3'); if(!sel) return;
   const LEN={normal:2.20,rug:L0,wall:+(13.144-(PLAN.rooms.find(r=>r.id===3).poly.reduce((m,p)=>Math.min(m,p[1]),1e9)+0.03)).toFixed(3)}; // to the finished north wall (30 mm of finish)
   function apply(){ const g=ITEM_GROUPS.mbed, L=LEN[sel.value]||L0;
     g.traverse(o=>{ if(!o.isMesh) return; const bb=o.geometry.boundingBox||o.geometry.computeBoundingBox()||o.geometry.boundingBox; if(o.userData.z0==null) o.userData.z0=o.position.z;
       if(bb.max.y+(o.position.y||0)>0.31) return; // podium and drawer parts live below 0.30 (unscaled y)
-      const pivot=bb.max.z-bb.min.z>2?0:WARD, f=pivot?(L-WARD)/(L0-WARD):L/L0; o.scale.z=f; o.position.z=pivot+(o.userData.z0-pivot)*f; });
+      if(bb.max.z<0.9) return; // wall strip south of the radiator cover: fixed
+      const pivot=bb.min.z>2.4?NOTCH:bb.max.z-bb.min.z>2?0:WARD, f=Math.max(0,(L-pivot)/(L0-pivot)); o.visible=f>0; o.scale.z=f; o.position.z=pivot+(o.userData.z0-pivot)*f; }); // wall strip north of the cover grows from the cover end, drawers from the wardrobe edge
     g.userData.size[2]=L; g.userData.proxy[0][5]=L; setItemPose('mbed'); } // same pose: rebuilds physics and runs the pose hooks
   try{ const v=localStorage.getItem(KEY); if(v&&LEN[v]) sel.value=v; }catch(e){}
   sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} apply(); });
