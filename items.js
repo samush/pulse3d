@@ -102,11 +102,12 @@ const PHYS={}; // id → boxes
     } else { cap(R,R+0.04,0.5,L); for(let z=0.55;z<L-0.03;z+=0.1) bal(R+0.02,z); cap(R,W,L-0.04,L); for(let x=R+0.1;x<W-0.03;x+=0.1) bal(x,L-0.02); }
     b(R+0.08,W-0.08,PL,PL+0.30,0,0.02,pnl); b(W-0.02,W,PL,PL+0.30,0.02,L-0.08,pnl);
     if(stairs==='wood'){ // F: two 40×100 oak stringers 30° off vertical (as D) against the wall, six 30 mm treads 140 deep recessed between them, nothing above the platform (user);
-      // handrail = Ø32 oak staple on the room side: a bar parallel to the stringer at mid-depth, 120 mm out from its face, bent legs into the stringer at both ends (.local/детский_лестиница.png)
+      // handrail = Ø32 oak staple on the room side: a bar parallel to the stringer 100 mm above its outer edge, legs down into the stringer at both ends (.local/детский_лестиница.png)
       const th=30*Math.PI/180, xb=R-0.06-PL*Math.tan(th), len=PL/Math.cos(th), sx=y=>xb+Math.tan(th)*y;
       [0.04,0.42].forEach(z=>g.add(new THREE.Mesh(new THREE.BoxGeometry(0.10,len,0.04).rotateZ(-th).translate(sx(PL/2)+0.05,PL/2+0.05*Math.sin(th),z+0.02),wood)));
       for(let y=PL/7;y<PL-0.05;y+=PL/7) b(sx(y)+0.01,sx(y)+0.15,y-0.03,y,0.08,0.42,wood);
-      const hx=0.05/Math.cos(th), y0=0.45, y1=PL-0.12; tube(sx(y0)+hx,y0,0.58,sx(y1)+hx,y1,0.58,0.016,wood); [y0,y1].forEach(y=>tube(sx(y)+hx,y,0.58,sx(y)+hx-0.06,y,0.44,0.016,wood));
+      const nx=-0.10*Math.cos(th), ny=0.10*Math.sin(th), y0=0.45, y1=PL-0.12, zc=0.44;                   // staple 100 mm above the stringer's outer edge, normal to the ladder plane (user: points up, not sideways)
+      tube(sx(y0)+nx,y0+ny,zc,sx(y1)+nx,y1+ny,zc,0.016,wood); [y0,y1].forEach(y=>tube(sx(y)+0.02,y,zc,sx(y)+nx,y+ny,zc,0.016,wood));
     } else if(stairs==='ladder'){ // C: straight painted ladder to the platform level only, leaning 30°; wide flat stringers 40×240 with six treads 200×30 every 0.257 recessed between them,
       // so the stringer edges stand proud of each tread as a low kerb for a crawling child; neutral panel colour, not oak; floor under the platform edge stays free
       const th=30*Math.PI/180, xb=R-0.06-PL*Math.tan(th), len=PL/Math.cos(th), sx=y=>xb+Math.tan(th)*y;
