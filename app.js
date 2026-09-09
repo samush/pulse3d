@@ -833,6 +833,7 @@ var finishGroup=new THREE.Group();
   const lamMat=new THREE.MeshBasicMaterial({map:lamTex});
   const whiteMat=new THREE.MeshBasicMaterial({map:whiteM});
   const whiteWall=new THREE.MeshBasicMaterial({map:whiteM}); // та же плитка, но на стенах (постирочная 7)
+  const greyBathM=marble('#8d8e91','#75767a','rgba(225,226,230,0.35)'); greyBathM.repeat.set(1/0.6,1/0.3); const greyWall=new THREE.MeshBasicMaterial({map:greyBathM}); // grey marble 600×300 laid flat: bath 9 mirror wall, bath 8 wall opposite the door (photos, 2026-09-09)
   const bathWall=new THREE.MeshBasicMaterial({map:bathM}); // санузлы 8 и 9 и постирочная 7: все стены
   const plasterMat=new THREE.MeshBasicMaterial({color:0xf3f3f0}); // постирочная 7: короб в углу у машин — крашеный гипсокартон, без плитки (фото, 2026-09-09)
   const greyMat=new THREE.MeshBasicMaterial({map:greyM});
@@ -924,8 +925,9 @@ var finishGroup=new THREE.Group();
   }
   BATHS.forEach(b=>{
     const off=0.02, midY=H/2, dep=b.z1-b.z0, wid=b.x1-b.x0;
-    panel(bathWall, dep,H, b.x0+off, midY, (b.z0+b.z1)/2, Math.PI/2);   // запад
-    panel(bathWall, wid,H, (b.x0+b.x1)/2, midY, b.z0+off, 0);                                     // север
+    const bath9=b.z0<10; // PLAN.baths: the first contour is bath 9, the second bath 8
+    panel(bath9?bathWall:greyWall, dep,H, b.x0+off, midY, (b.z0+b.z1)/2, Math.PI/2);   // запад: в санузле 8 серая (напротив входа)
+    panel(bath9?greyWall:bathWall, wid,H, (b.x0+b.x1)/2, midY, b.z0+off, 0);                                     // север: в санузле 9 серая (стена с зеркалом)
     panel(bathWall, wid,H, (b.x0+b.x1)/2, midY, b.z1-off, Math.PI);                               // юг
     // восток (стена со входом): сегменты вокруг двери + перемычка
     const ex=b.x1-off;
@@ -994,8 +996,8 @@ var finishGroup=new THREE.Group();
   // matte greige paint (kitchen-living 4, master 3, corridor 5, loggia 10): flat colour with faint roller texture, canvas = 1 × 1 m
   const paintTex=canvasTex(g=>{ g.fillStyle='#c3b8a9'; g.fillRect(0,0,256,256); for(let i=0;i<2500;i++){ g.fillStyle='rgba('+(Math.random()<0.5?'255,250,240':'120,105,90')+','+(0.03+0.05*Math.random())+')'; g.fillRect(Math.random()*256,Math.random()*256,1+Math.random()*2,1+Math.random()*2); } });
   const paintMat=new THREE.MeshBasicMaterial({map:paintTex}); const PAINTED=new Set([3,4,5,10]);
-  window.wallFinMats=[wpMat,whiteWall,bathWall,plasterMat,greyMat,woodMat,frameMat2,plinthMat,paintMat]; // гасятся ползунком «Стены»
-  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,bathWall,plaster:plasterMat,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,wallPaint:paintMat,board:boardMat}; // для PBR-двойников (materials.js)
+  window.wallFinMats=[wpMat,whiteWall,bathWall,greyWall,plasterMat,greyMat,woodMat,frameMat2,plinthMat,paintMat]; // гасятся ползунком «Стены»
+  window.finishMats={lam:lamMat,white:whiteMat,whiteWall,bathWall,greyWall,plaster:plasterMat,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,wallPaint:paintMat,board:boardMat}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
   // room 2, M10: finish block on the north wall behind the gym wall, 0.1–2.40, x 12.15–13.75; grey until the palette stage
   const accent2Mat=new THREE.MeshBasicMaterial({color:0xd6d6d3}); wallFinMats.push(accent2Mat); finishMats.accent2=accent2Mat;
