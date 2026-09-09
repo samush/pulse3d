@@ -421,26 +421,26 @@ const PHYS={}; // id → boxes
     {id:'sock13',type:'розетка у шведской стенки (увлажнитель)',room:2,layer:'kid2',pos:[12.23,6.538],rot:0,size:[0.08,0.34,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.26,0.34,0,0.01,mat.plastic); }},
     // ---- master bedroom 3 (tasks/room3-master/README.md, marks M1–M28; grey materials only) ----
     // Room box: x 10.021–14.76, z 9.777–13.144. Items are built as if against the north wall and turned 180° (rot 180, pos = SE corner): the composition faces north. Wall-mounted boxes sit 0.02–0.03 in front of the wall (wallpaper at 0.015).
-    {id:'mbed',type:'кровать 160×200 на деревянном подиуме 1.80 до края ковра (матрас отступает от подоконника), два выдвижных ящика со стороны комнаты, мягкое изголовье; верх матраса вровень с подоконником',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[1.80,1.10,2.82],coat:Object.assign({dark:'oakFurniture'},BED), /* podium in the balcony-jamb oak */ fixed:'wall',glb:'models/mbed.glb', // model by tools/models/mbed.js; the build below is proxy and fallback
+    {id:'mbed',type:'кровать 160×200 на деревянном подиуме 1.74 от короба радиатора до стены с ТВ, матрас впритык к коробу, два выдвижных ящика со стороны комнаты, мягкое изголовье; верх матраса вровень с подоконником',room:3,layer:'master',pos:[14.485,13.144],rot:180,size:[1.74,1.10,2.82],coat:Object.assign({dark:'oakFurniture'},BED), /* podium in the balcony-jamb oak */ fixed:'wall',glb:'models/mbed.glb', // model by tools/models/mbed.js; the build below is proxy and fallback
      build(b){
-       b.phys(0,1.8,0,0.30,0,2.82); b.phys(0.15,1.75,0.30,0.55,0.1,2.1); b.phys(0,1.8,0.30,1.1,0,0.08); [[0.20,0.90],[1.0,1.70]].forEach(([x0,x1])=>b.phys(x0,x1,0.55,0.67,0.15,0.6)); b.phys(0.1,1.8,0.35,0.6,0.85,2.2); // proxy = pre-detail mesh AABBs; drawer fronts (12 mm) sit inside the podium box tolerance
-       b(0,1.776,0,0.30,0,2.82,mat.dark); [0.70,1.75].forEach(z=>b(1.776,1.80,0.05,0.25,z,z+0.90,mat.dark)); // podium to the rug end (z 2.82), drawers north of the wardrobe; east side touches the wall under the window
-       b(0.15,1.75,0.30,0.55,0.10,2.10,mat.kmat); b(0,1.8,0.30,1.10,0,0.08,mat.cushion);           // mattress 0.15 off the sill wall (top 0.55 + dome = window sill 0.56), headboard
-       [[0.20,0.90],[1.0,1.70]].forEach(([x0,x1])=>b(x0,x1,0.55,0.67,0.15,0.60,mat.pillow));       // two pillows
-       b(0.10,1.80,0.55,0.575,0.85,2.20,mat.cushion); [0.10,1.775].forEach(x=>b(x,x+0.025,0.35,0.55,0.85,2.20,mat.cushion)); // blanket: thin sheet with drops down the sides
+       b.phys(0,1.74,0,0.30,0,2.82); b.phys(0,1.60,0.30,0.55,0.1,2.1); b.phys(0,1.74,0.30,1.1,0,0.08); [[0.05,0.75],[0.85,1.55]].forEach(([x0,x1])=>b.phys(x0,x1,0.55,0.67,0.15,0.6)); b.phys(0,1.65,0.35,0.6,0.85,2.2); // proxy = pre-detail mesh AABBs; drawer fronts (12 mm) sit inside the podium box tolerance
+       b(0,1.716,0,0.30,0,2.82,mat.dark); [0.70,1.75].forEach(z=>b(1.716,1.74,0.05,0.25,z,z+0.90,mat.dark)); // podium to the rug end (z 2.82), drawers north of the wardrobe; east side (local x 0) meets the radiator cover
+       b(0,1.60,0.30,0.55,0.10,2.10,mat.kmat); b(0,1.74,0.30,1.10,0,0.08,mat.cushion);            // mattress flush with the cover (top 0.55 + dome = window sill 0.56), headboard
+       [[0.05,0.75],[0.85,1.55]].forEach(([x0,x1])=>b(x0,x1,0.55,0.67,0.15,0.60,mat.pillow));       // two pillows
+       b(0,1.65,0.55,0.575,0.85,2.20,mat.cushion); b(1.625,1.65,0.35,0.55,0.85,2.20,mat.cushion); // blanket: thin sheet, drop only down the room side (the cover side is flush)
      }},
-    {id:'mcab',type:'блок подвесных ящиков над изголовьем: два ряда, секция под кондиционер по центру с решёткой',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[1.70,2.70,0.35],coat:CAB,fixed:'wall',
-     build(b,g){ const t=0.02, Y0=1.85, Y1=2.28, Y2=2.30, T=2.7, A0=0.40, A1=1.30, W=1.7;                                    // rows 1.85–2.28 and 2.30–2.70; AC section x 0.40–1.30, open below
-       b.phys(0,W,T-t,T,0,0.35); b.phys(0,W,Y1,Y2,0,0.35); b.phys(0,A0,Y0,Y0+t,0,0.35); b.phys(A1,W,Y0,Y0+t,0,0.35); b.phys(0,W,Y0,T,0,t); [0,A0,A1,W-t].forEach(x=>b.phys(x,x+t,Y0,T,t,0.35)); b.phys(0.84,0.86,Y2,T,t,0.35);
-       const doors=[[0.003,A0-0.003,Y0+0.003,Y1-0.003],[A1+0.003,W-0.003,Y0+0.003,Y1-0.003],[0.003,0.847,Y2+0.003,T-0.003],[0.853,W-0.003,Y2+0.003,T-0.003]]; // two doors 0.40 beside the AC, two doors 0.85 above
+    {id:'mcab',type:'блок подвесных ящиков над изголовьем 2.015 (до ниши шкафа): два ряда, секция под кондиционер с решёткой',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[2.015,2.70,0.35],coat:CAB,fixed:'wall',
+     build(b,g){ const t=0.02, Y0=1.85, Y1=2.28, Y2=2.30, T=2.7, A0=0.40, A1=1.30, W=2.015, H=W/2;                             // rows 1.85–2.28 and 2.30–2.70; AC section x 0.40–1.30 (socket sock16), open below; W runs 0.10 past the bed edge
+       b.phys(0,W,T-t,T,0,0.35); b.phys(0,W,Y1,Y2,0,0.35); b.phys(0,A0,Y0,Y0+t,0,0.35); b.phys(A1,W,Y0,Y0+t,0,0.35); b.phys(0,W,Y0,T,0,t); [0,A0,A1,W-t].forEach(x=>b.phys(x,x+t,Y0,T,t,0.35)); b.phys(H-0.01,H+0.01,Y2,T,t,0.35);
+       const doors=[[0.003,A0-0.003,Y0+0.003,Y1-0.003],[A1+0.003,W-0.003,Y0+0.003,Y1-0.003],[0.003,H-0.003,Y2+0.003,T-0.003],[H+0.003,W-0.003,Y2+0.003,T-0.003]]; // doors 0.40 and 0.715 beside the AC, two doors above
        doors.forEach(([x0,x1,y0])=>{ b.phys(x0,x1,y0,y0+0.02,0.33,0.35); }); doors.forEach(([x0,x1,y0])=>{ const c=(x0+x1)/2; b.phys(c-0.05,c+0.05,y0,y0+0.02,0.35,0.365); }); b.phys(A0+t,A1-t,Y0+t,Y1-t,0.33,0.35); // proxy = mesh AABBs (realism-all D1)
        b(0,W,T-t,T,0,0.35,mat.body); b(0,W,Y1,Y2,0,0.35,mat.body); b(0,A0,Y0,Y0+t,0,0.35,mat.body); b(A1,W,Y0,Y0+t,0,0.35,mat.body); b(0,W,Y0,T,0,t,mat.body); // top, shelf between the rows, bottoms beside the AC, back
-       [0,A0,A1,W-t].forEach(x=>b(x,x+t,Y0,T,t,0.35,mat.body)); b(0.84,0.86,Y2,T,t,0.35,mat.body);                                                     // section walls, divider of the upper row
+       [0,A0,A1,W-t].forEach(x=>b(x,x+t,Y0,T,t,0.35,mat.body)); b(H-0.01,H+0.01,Y2,T,t,0.35,mat.body);                                                     // section walls, divider of the upper row
        doors.forEach(([x0,x1,y0,y1])=>{ b.round(x0,x1,y0,y1,0.33,0.35,0.001,mat.wdoor); const c=(x0+x1)/2; b(c-0.05,c+0.05,y0,y0+0.02,0.347,0.3505,mat.frame); }); // doors with 3 mm gaps, flush pull profiles along the bottom edge
        for(let y=Y0+0.04;y<Y1-0.03;y+=0.04) g.add(new THREE.Mesh(new THREE.BoxGeometry(A1-A0-2*t,0.012,0.024).rotateX(-35*Math.PI/180).translate((A0+A1)/2,y+0.01,0.336),mat.wdoor)); }}, // louvre grille of the AC section
-    {id:'mward',type:'шкаф 1.30 на два отделения для одежды, антресоль 1.40 в линию с блоком над кроватью (на 0.10 нависает над подиумом); ниша-полка со стороны кровати 0.45–0.80',room:3,layer:'master',pos:[13.06,13.144],rot:180,size:[1.40,2.70,0.60],coat:CAB,fixed:'wall',
+    {id:'mward',type:'шкаф 1.30 на два отделения для одежды, антресоль 1.40 в линию с блоком над кроватью; ниша-полка со стороны кровати 0.65–1.00, в 0.10 от края кровати',room:3,layer:'master',pos:[12.745,13.144],rot:180,size:[1.40,2.70,0.60],coat:CAB,fixed:'wall',
      build(b0){ const o=0.10, b=(x0,x1,y0,y1,z0,z1,m)=>b0(x0+o,x1+o,y0,y1,z0,z1,m); b.phys=(x0,x1,y0,y1,z0,z1)=>b0.phys(x0+o,x1+o,y0,y1,z0,z1); b.round=(x0,x1,y0,y1,z0,z1,r,m)=>b0.round(x0+o,x1+o,y0,y1,z0,z1,r,m); // body sits 0.10 from the bed side; the top row runs to x=0 over the wider podium
-       const W=1.30, t=0.02, N0=0.45, N1=0.80, NW=0.30, D=0.65, Y1=2.28, Y2=2.30, T=2.7;                                      // niche: height 0.45–0.80, 0.30 deep; divider at 0.65; shelf 2.28–2.30 under the top row
+       const W=1.30, t=0.02, N0=0.65, N1=1.00, NW=0.30, D=0.65, Y1=2.28, Y2=2.30, T=2.7;                                      // niche: height 0.65–1.00, 0.30 deep; divider at 0.65; shelf 2.28–2.30 under the top row
        b.phys(-o,-o+t,Y2,T,0.03,0.58); b.phys(-o,0,Y2,T,0.03,0.05); b(-o,-o+t,Y2,T,0.03,0.58,mat.body); b(-o,0,Y2,T,0.03,0.05,mat.body); // top-row extension: side panel and back
        b.phys(0,t,0,N0,0.03,0.58); b.phys(0,t,N1,T,0.03,0.58); b.phys(W-t,W,0,T,0.03,0.58); b.phys(-o,W,T-t,T,0.03,0.58); b.phys(0,W,0,t,0.03,0.58); b.phys(t,W-t,t,T-t,0.03,0.05); b.phys(D-0.01,D+0.01,t,T-t,0.03,0.58); b.phys(-o+t,W-t,Y1,Y2,0.03,0.58);
        b.phys(0,NW,N0,N0+t,0.03,0.58); b.phys(0,NW,N1-t,N1,0.03,0.58); b.phys(NW-t,NW,N0,N1,0.03,0.58);
@@ -463,13 +463,16 @@ const PHYS={}; // id → boxes
        b.phys(0.30,1.30,0.58,0.73,0.05,0.45); b.phys(0.29,1.30,0.73,0.75,0.04,0.45); b.phys(0,0.60,0.38,0.55,0.05,0.45); b.phys(0,0.61,0.55,0.57,0.04,0.45); // proxy = mesh AABBs (realism-all D1); the fronts add theirs in flute()
        b(0.30,1.30,0.58,0.73,0.05,0.45,mat.body); b.round(0.29,1.30,0.73,0.75,0.04,0.45,0.003,mat.body); flute(0.31,1.29,0.585,0.725,0.03);   // console 1.00 on the wall, top 0.02 with 3 mm chamfer, fluted drawer front
        b(0,0.60,0.38,0.55,0.05,0.45,mat.body); b.round(0,0.61,0.55,0.57,0.04,0.45,0.003,mat.body); flute(0.01,0.59,0.385,0.545,0.03); }},     // second drawer 0.60 lower, offset 0.30 towards the bed
-    {id:'vmirror',type:'зеркало 1.00×0.90 со скруглёнными углами и LED-подсветкой сзади, над столиком; низ 0.95',room:3,layer:'master',pos:[12.44,9.827],rot:180,size:[1.04,1.87,0.03],fixed:'wall',
-     build(b,g){ b.phys(0,1.04,0.93,1.87,0.02,0.03); b.phys(0.02,1.02,0.95,1.85,0.009,0.03); b.phys(0.03,1.01,0.96,1.84,0.004,0.009); // proxy = mesh AABBs (realism-all D1); size includes the 2 cm halo
-       const plate=(w,h,r,x,y,z,d,m)=>{ const mesh=new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(w,h,r),{depth:d,bevelEnabled:false,curveSegments:24}),m); mesh.position.set(x,y,z); g.add(mesh); };
-       plate(1.04,0.94,0.10,0,0.93,0.02,0.01,mat.led); plate(1.00,0.90,0.08,0.02,0.95,0.009,0.021,mat.frame); plate(0.98,0.88,0.07,0.03,0.96,0.004,0.005,mat.mirror); }}, // LED halo on the wall (emitter of g3.vanity via led9), metal backing, 5 mm glass facing the room
-    {id:'vpouf',type:'пуфик у туалетного столика',room:3,layer:'master',pos:[12.12,10.681],rot:180,size:[0.40,0.45,0.40],glb:'models/vpouf.glb', // model by tools/models/vpouf.js
+    {id:'vmirror',type:'зеркало круглое Ø0.90 с LED-подсветкой сзади, над столиком; низ 0.95',room:3,layer:'master',pos:[12.39,9.827],rot:180,size:[0.94,1.87,0.03],fixed:'wall',
+     build(b,g){ b.phys(0,0.94,0.93,1.87,0.02,0.03); b.phys(0.02,0.92,0.95,1.85,0.009,0.03); b.phys(0.03,0.91,0.96,1.84,0.004,0.009); // proxy = mesh AABBs; size includes the 2 cm halo
+       const disc=(d,x,y,z,t,m)=>{ const mesh=new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(d,d,d/2),{depth:t,bevelEnabled:false,curveSegments:48}),m); mesh.position.set(x,y,z); g.add(mesh); }; // rrect with r = d/2 is a circle
+       disc(0.94,0,0.93,0.02,0.01,mat.led); disc(0.90,0.02,0.95,0.009,0.021,mat.frame); disc(0.88,0.03,0.96,0.004,0.005,mat.mirror); }}, // LED halo on the wall (emitter of g3.vanity via led9), metal backing, 5 mm glass facing the room
+    {id:'vpouf',type:'пуфик у туалетного столика',room:3,layer:'master',pos:[12.02,10.681],rot:180,size:[0.40,0.45,0.40],glb:'models/vpouf.glb', // model by tools/models/vpouf.js
      build(b){ b.phys(0,0.4,0.35,0.45,0,0.4); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b.phys(x,x+0.03,0,0.35,z,z+0.03)); // proxy = pre-detail mesh AABBs (realism-all D1)
        b(0,0.4,0.35,0.45,0,0.4,mat.cushion); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b(x,x+0.03,0,0.35,z,z+0.03,mat.frame)); }},
+    {id:'lmirror',type:'большое напольное зеркало 0.65×1.95 в тонкой тёмной раме, прислонено к южной стене между дверью санузла и шкафом',room:3,layer:'master',pos:[11.33,13.124],rot:180,size:[0.65,1.95,0.24],
+     build(b,g){ b.phys(0,0.65,0,1.95,0,0.24); const a=Math.asin(0.20/1.95), lean=(w,h,t,x,y,z,m)=>g.add(new THREE.Mesh(new THREE.BoxGeometry(w,h,t).translate(w/2,h/2,t/2).rotateX(-a).translate(x,y+t*Math.sin(a),z+0.22),m)); // top against the wall, foot 0.20 out
+       lean(0.65,1.95,0.02,0,0,0,mat.dark); lean(0.61,1.91,0.005,0.02,0.02,0.02,mat.mirror); }},
     {id:'mrug',type:'ковёр, короткий ворс',room:3,layer:'master',pos:[14.0,12.321],rot:180,size:[2.00,0.01,2.00],coat:{cushion:'rugPile'},
      build(b,g){ b.phys(0,2,0,0.01,0,2); // proxy = pre-detail mesh AABBs (realism-all D1)
        g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(1.998,1.998,0.04),{depth:0.006,bevelThickness:0.001,bevelSize:0.001,bevelSegments:1,curveSegments:6}).rotateX(Math.PI/2).translate(0.001,0.007,0.001),mat.cushion)); }},
@@ -486,23 +489,23 @@ const PHYS={}; // id → boxes
      build(b){ b.spot(0.04,0.04,0.04); }},
     {id:'ceil3_4',type:'точечный светильник Ø0.08 встроенный, фасады шкафа и край кровати',room:3,layer:'master',pos:[12.16,12.16],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
      build(b){ b.spot(0.04,0.04,0.04); }},
-    {id:'bra5',type:'бра для чтения, западная сторона кровати',room:3,layer:'master',pos:[13.49,13.124],rot:180,size:[0.16,1.50,0.245],coat:PLASTIC,fixed:'wall',
+    {id:'bra5',type:'бра для чтения, западная сторона кровати',room:3,layer:'master',pos:[13.275,13.124],rot:180,size:[0.16,1.50,0.245],coat:PLASTIC,fixed:'wall',
      build(b,g){ b.phys(0.03,0.13,1.3499999999999999,1.45,0,0.02); b.phys(0.075,0.085,1.395,1.4049999999999998,0.02,0.13); b.phys(0.02,0.14,1.3399999999999999,1.46,0.105,0.225); // proxy = pre-detail mesh AABBs (realism-all D1)
        b.round(0.03,0.13,1.3499999999999999,1.45,0,0.02,0.005,mat.plastic); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.09,10).rotateX(Math.PI/2).translate(0.08,1.4,0.065),mat.frame)); g.add(new THREE.Mesh(new THREE.SphereGeometry(0.012,12,8).translate(0.08,1.4,0.105),mat.frame)); // plate, swing arm Ø12, pivot
        lathe(g,[[0.04,1.3399999999999999],[0.06,1.3499999999999999],[0.06,1.45],[0.04,1.46],[0.012,1.46],[0.012,1.45],[0.05,1.442],[0.05,1.3599999999999999],[0.04,1.3499999999999999]],0.08,0.165,mat.plastic); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.045,24).rotateX(Math.PI/2).translate(0.08,1.3479999999999999,0.165),mat.led)); }},
-    {id:'bra6',type:'бра для чтения, восточная сторона кровати',room:3,layer:'master',pos:[14.49,13.124],rot:180,size:[0.16,1.50,0.245],coat:PLASTIC,fixed:'wall',
+    {id:'bra6',type:'бра для чтения, восточная сторона кровати',room:3,layer:'master',pos:[14.275,13.124],rot:180,size:[0.16,1.50,0.245],coat:PLASTIC,fixed:'wall',
      build(b,g){ b.phys(0.03,0.13,1.3499999999999999,1.45,0,0.02); b.phys(0.075,0.085,1.395,1.4049999999999998,0.02,0.13); b.phys(0.02,0.14,1.3399999999999999,1.46,0.105,0.225); // proxy = pre-detail mesh AABBs (realism-all D1)
        b.round(0.03,0.13,1.3499999999999999,1.45,0,0.02,0.005,mat.plastic); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.09,10).rotateX(Math.PI/2).translate(0.08,1.4,0.065),mat.frame)); g.add(new THREE.Mesh(new THREE.SphereGeometry(0.012,12,8).translate(0.08,1.4,0.105),mat.frame)); // plate, swing arm Ø12, pivot
        lathe(g,[[0.04,1.3399999999999999],[0.06,1.3499999999999999],[0.06,1.45],[0.04,1.46],[0.012,1.46],[0.012,1.45],[0.05,1.442],[0.05,1.3599999999999999],[0.04,1.3499999999999999]],0.08,0.165,mat.plastic); g.add(new THREE.Mesh(new THREE.CircleGeometry(0.045,24).rotateX(Math.PI/2).translate(0.08,1.3479999999999999,0.165),mat.led)); }},
-    {id:'led4',type:'LED-лента под блоком ящиков, свет на изголовье',room:3,layer:'master',pos:[14.72,12.814],rot:180,size:[1.62,1.85,0.02],fixed:'wall',
-     build(b){ b.led(0,1.62,1.84,1.85,0,0.02); }},
+    {id:'led4',type:'LED-лента под блоком ящиков, свет на изголовье',room:3,layer:'master',pos:[14.72,12.814],rot:180,size:[1.935,1.85,0.02],fixed:'wall',
+     build(b){ b.led(0,1.935,1.84,1.85,0,0.02); }},
     {id:'led5',type:'LED-подсветка по нижней кромке ТВ',room:3,layer:'master',pos:[14.37,9.837],rot:180,size:[0.92,1.07,0.01],fixed:'wall',
      build(b){ b.led(0,0.92,1.06,1.07,0,0.01); }},
     {id:'sw3',type:'выключатель у двери, 2 клавиши: общий свет M13 + бра/LED',room:3,layer:'master',pos:[10.051,10.921],rot:180,size:[0.01,0.99,0.08],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.01,0.91,0.99,0,0.08,mat.plastic,{keys:2}); }},
-    {id:'sw4',type:'проходной выключатель у кровати, 2 клавиши (над изголовьем)',room:3,layer:'master',pos:[13.42,13.124],rot:180,size:[0.08,1.24,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,1.16,1.24,0,0.01,mat.plastic,{keys:2}); }},
+    {id:'sw4',type:'проходной выключатель у кровати, 2 клавиши (над изголовьем)',room:3,layer:'master',pos:[13.205,13.124],rot:180,size:[0.08,1.24,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,1.16,1.24,0,0.01,mat.plastic,{keys:2}); }},
     // sockets: flat boxes 0.08 × 0.08 × 0.01 on the wall, purpose in the caption
-    {id:'sock14',type:'розетки 2+2 USB у западного края изголовья (над изголовьем 1.10)',room:3,layer:'master',pos:[13.28,13.124],rot:180,size:[0.08,1.24,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,1.16,1.24,0,0.01,mat.plastic,{keys:2}); }},
-    {id:'sock15',type:'розетка + USB у восточного края изголовья (над изголовьем 1.10)',room:3,layer:'master',pos:[14.6,13.124],rot:180,size:[0.08,1.24,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,1.16,1.24,0,0.01,mat.plastic); }},
+    {id:'sock14',type:'розетки 2+2 USB у западного края изголовья (над изголовьем 1.10)',room:3,layer:'master',pos:[13.065,13.124],rot:180,size:[0.08,1.24,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,1.16,1.24,0,0.01,mat.plastic,{keys:2}); }},
+    {id:'sock15',type:'розетка + USB у восточного края изголовья (над изголовьем 1.10)',room:3,layer:'master',pos:[14.385,13.124],rot:180,size:[0.08,1.24,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,1.16,1.24,0,0.01,mat.plastic); }},
     {id:'sock16',type:'розетка для кондиционера внутри секции (центр блока над кроватью)',room:3,layer:'master',pos:[13.91,13.124],rot:180,size:[0.08,2.18,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,2.10,2.18,0,0.01,mat.plastic); }},
     {id:'sock17',type:'медиаблок за телевизором (2 розетки + ТВ/RJ-45 + HDMI)',room:3,layer:'master',pos:[13.95,9.807],rot:180,size:[0.08,1.34,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,1.26,1.34,0,0.01,mat.plastic,{keys:2}); }},
     {id:'sock18',type:'розетки у консоли',room:3,layer:'master',pos:[13.95,9.807],rot:180,size:[0.08,0.39,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.31,0.39,0,0.01,mat.plastic); }},
@@ -896,7 +899,7 @@ document.getElementById('furnBath').addEventListener('change',e=>bathGroup.visib
 document.getElementById('furnBath2').addEventListener('change',e=>bath2Group.visible=e.target.checked);
 document.getElementById('furnWardrobe').addEventListener('change',e=>wardrobeGroup.visible=e.target.checked);
 document.getElementById('furnBalcony').addEventListener('change',e=>balconyGroup.visible=e.target.checked);
-// room 3 bed podium length (select #bed3): the GLB holds the 2.82 podium; the podium meshes scale from the headboard, the drawer fronts from the
+// room 3 bed podium length (select #bed3, default 'wall' since 2026-09-09): the GLB holds the 2.82 podium; the podium meshes scale from the headboard, the drawer fronts from the
 // wardrobe edge (z 0.60) so the short variant keeps both drawers clear of it. Size and proxy follow, so physics and layout warnings stay honest.
 (function(){
   const L0=2.82, WARD=0.60, KEY='pulse3d.bed3', sel=document.getElementById('bed3'); if(!sel) return;

@@ -303,7 +303,7 @@ const { chromium } = require('playwright');
   if (glbA.length) problems.push('glb: этап A — пуф/стиралка не загрузились чисто: ' + glbA.join(' '));
   // realism-all stage D: proxies for the room 3 items repeat the old mesh AABBs (count + union extent)
   const proxD = await page.evaluate(() => { const ext = id => { const bb = new THREE.Box3(); PHYS[id].forEach(m => bb.union(new THREE.Box3().setFromObject(m))); const s = new THREE.Vector3(); bb.getSize(s); return [s.x, s.y, s.z].map(v => Math.round(v * 1000) / 1000).join(); };
-    const want = { mbed: [6, '1.8,1.1,2.82'], mcab: [19, '1.7,0.85,0.365'], mward: [21, '1.4,2.7,0.59'], mtv: [2, '0.97,0.56,0.04'], vanity: [6, '1.3,0.37,0.42'], vmirror: [3, '1.04,0.94,0.026'], vpouf: [5, '0.4,0.45,0.4'], mrug: [1, '2,0.01,2'], mcurtain: [3, '0.06,2.66,3.017'], bra5: [3, '0.12,0.12,0.225'], bra6: [3, '0.12,0.12,0.225'] };
+    const want = { mbed: [6, '1.74,1.1,3.337'], mcab: [19, '2.015,0.85,0.365'], mward: [21, '1.4,2.7,0.59'], mtv: [2, '0.97,0.56,0.04'], vanity: [6, '1.3,0.37,0.42'], vmirror: [3, '0.94,0.94,0.026'], vpouf: [5, '0.4,0.45,0.4'], mrug: [1, '2,0.01,2'], mcurtain: [3, '0.06,2.66,3.017'], bra5: [3, '0.12,0.12,0.225'], bra6: [3, '0.12,0.12,0.225'] };
     return Object.entries(want).filter(([id, [n, e]]) => PHYS[id].length !== n || ext(id) !== e || !ITEM_GROUPS[id].userData.proxy.length).map(([id]) => id + ':' + PHYS[id].length + ':' + ext(id)); });
   if (proxD.length) problems.push('proxy: этап D — число боксов/габарит не сошлись: ' + proxD.join(' '));
   // realism-all stage D: detailed room 3 items stay inside size (+1 mm); plates and LED strips carry one proxy box equal to the item
@@ -328,7 +328,7 @@ const { chromium } = require('playwright');
     return Object.entries(want).filter(([id, [n, e]]) => PHYS[id].length !== n || (e && ext(id) !== e) || !ITEM_GROUPS[id].userData.proxy.length).map(([id]) => id + ':' + PHYS[id].length + ':' + ext(id)); }, {"wc": [4, "0.32,0.22,0.48"], "wc8": [4, "0.32,0.22,0.48"], "basin": [6, "0.85,0.15,0.36"], "basindrawer": [2, "0.85,0.18,0.31"], "basinmixer": [3, "0.14,0.09,0.18"], "tubmixer": [3, "0.2,0.11,0.16"], "mixer8": [4, "0.15,0.8,0.09"], "shower": [4, "0.1,0.9,0.06"], "bathmirror": [2, "0.96,1.2,0.02"], "towelrail": [27, "0.07,1.8,0.34"], "towel8": [27, "0.44,1.8,0.06"], "wcbox": [2, "0.71,1.15,0.125"], "wcbox8": [2, "0.774,2.7,0.209"], "niche8": [6, "0.6,0.3,0.1"], "curb8e": [1, "0.05,0.05,1.536"], "shower8": [1, "0.813,0.003,1.536"], "drain8": [1, "0.06,0.002,1.4"], "glass8": [2, "0.01,2.05,0.862"], "cove8": [4, "1.637,0.1,0.562"], "sock21": [1, null], "sock22": [1, null], "sock24": [1, null], "spot1": [1, "0.08,0.02,0.08"], "spot2": [1, "0.08,0.02,0.08"], "spot3": [1, "0.08,0.02,0.08"], "spot4": [1, "0.08,0.02,0.08"], "spot5": [1, "0.08,0.02,0.08"], "spot6": [1, "0.08,0.02,0.08"], "fan": [1, "0.12,0.02,0.12"], "fan8": [1, "0.12,0.02,0.12"], "rain8": [1, "0.25,0.02,0.25"]});
   if (proxE.length) problems.push('proxy: этап E — число боксов/габарит не сошлись: ' + proxE.join(' '));
   // realism-all stage D: mbed and vpouf GLBs replaced the procedural builds — no validation warnings, extent = size, slots, proxies kept
-  const glbD = await page.evaluate(async () => { const want = { mbed: ['1.8,1.1,2.82', 'fabric,leather', 6], vpouf: ['0.4,0.45,0.4', 'leather,metal', 5] }, bad = [];
+  const glbD = await page.evaluate(async () => { const want = { mbed: ['1.74,1.1,3.337', 'fabric,leather', 6], vpouf: ['0.4,0.45,0.4', 'leather,metal', 5] }, bad = [];
     for (const [id, [size, slots, boxes]] of Object.entries(want)) { const g = ITEM_GROUPS[id]; for (let i = 0; i < 100 && !g.userData.glbLoaded && !(VIZ.loadErrors || []).some(s => s.startsWith(id + ':')); i++) await new Promise(r => setTimeout(r, 100));
       const bb = new THREE.Box3().setFromObject(g), s = new THREE.Vector3(); bb.getSize(s); const mats = new Set(); g.traverse(o => { if (o.isMesh) mats.add(o.material); });
       const got = { loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), size: [s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join(), slots: [...new Set([...mats].map(m => m.userData.slot).filter(Boolean))].sort().join(), boxes: PHYS[id].length };
@@ -598,7 +598,7 @@ const { chromium } = require('playwright');
       sofa: ['upholstery', 'piping', 'cushion'].every(n => on('sofa', glb(n)) === 'sofaWeave'), lamp: on('lamp', key('plastic')) === 'plastic',
       other: ITEMS.filter(it => !it.coat && ITEM_GROUPS[it.id]).every(it => on(it.id, () => true) === 'class') }; // items without a coat of their own share concept materials with room 4 but stay class twins
     let bm, tm, pm; boardGroup.traverse(o => { if (!bm && o.isMesh) bm = o.material; }); tileGroup.traverse(o => { if (!tm && o.isMesh && (VIZ.basic.get(o.material) || o.material) === finishMats.tile) tm = o.material; }); [finishGroup, wallGroup, wallGroupR].forEach(g => g.traverse(o => { if (!pm && o.isMesh && (VIZ.basic.get(o.material) || o.material) === finishMats.wallPaint) pm = o.material; }));
-    out.finishBoard = bm.userData.coating === 'oakFloor'; out.finishTile = !!tm && tm.userData.coating === 'tile60120' && tm.roughness === 0.35 && !tm.roughnessMap; out.finishWall = !!pm && pm.userData.coating === 'wallPaint' && !pm.roughnessMap && !!pm.normalMap;
+    out.finishBoard = bm.userData.coating === 'oakFloor'; out.finishTile = !!tm && !tm.userData.coating; // corridor tile: plain concept canvas, no photo coating (2026-09-09) out.finishWall = !!pm && pm.userData.coating === 'wallPaint' && !pm.roughnessMap && !!pm.normalMap;
     out.loaded = await wait(() => [bm, tm].every(m => m.map && m.map.image && m.map.image.width > 0));
     let sp; ITEM_GROUPS.kitchen.traverse(o => { if (!sp && o.isMesh && (VIZ.basic.get(o.material) || o.material) === ITEM_MATS.wpanel) sp = o; }); const sb = new THREE.Box3().setFromObject(sp); out.splash = sb.max.x - ITEM_GROUPS.kitchen.userData.pos[0] > 0.019; // proud of the 15 mm wall finish
     return out; });
@@ -681,7 +681,7 @@ const { chromium } = require('playwright');
     VIZ.set(false); VIZ.set(true); setView('top'); setView('door'); LIGHTING.set('neutral'); const builds = VIZ.mirrorEnvBuilds();
     VIZ.set(false); setView('top'); return { ids: ids.sort(), geom, haloElsewhere, env, builds };
   });
-  if (mir.ids.join() !== 'bathmirror,mirror,vmirror,wmirror') problems.push('зеркала: слот mirror у ' + mir.ids.join(',') + ' (mirrors.md: bathmirror, mirror, vmirror, wmirror)');
+  if (mir.ids.join() !== 'bathmirror,lmirror,mirror,vmirror,wmirror') problems.push('зеркала: слот mirror у ' + mir.ids.join(',') + ' (mirrors.md: bathmirror, lmirror, mirror, vmirror, wmirror)');
   Object.entries(mir.geom).forEach(([k, ok]) => { if (!ok) problems.push('зеркала: ' + k + ' — стекло/подложка не по mirrors.md (materials-lighting M3)'); });
   if (mir.haloElsewhere) problems.push('зеркала: mirrorLed используется вне bathmirror (' + mir.haloElsewhere + ')');
   Object.entries(mir.env).forEach(([k, ok]) => { if (!ok) problems.push('зеркала: env-карта — ' + k + ' (materials-lighting M3 §5)'); });
@@ -890,7 +890,7 @@ const { chromium } = require('playwright');
   });
   if (m3.n < 25) problems.push('комната 3: предметов слоя master ' + m3.n + ' (< 25)');
   if (m3.inside.length) problems.push('комната 3: предметы вне помещения: ' + m3.inside.join(', '));
-  if (Math.abs(m3.bedEast - 14.76) > 0.01) problems.push('комната 3: кровать не у восточной стены: x1=' + m3.bedEast.toFixed(3));
+  if (Math.abs(m3.bedEast - 14.485) > 0.01) problems.push('комната 3: кровать не вплотную к коробу радиатора (x 14.485): x1=' + m3.bedEast.toFixed(3));
   if (m3.cab) problems.push('комната 3: блок ящиков/шкаф заходит на окно');
   if (m3.door.length) problems.push('комната 3: в зоне створки двери: ' + m3.door.join(', '));
   if (Math.abs(m3.tv - 13.91) > 0.02) problems.push('комната 3: ТВ не на оси кровати: x=' + m3.tv.toFixed(2));
