@@ -833,7 +833,7 @@ var finishGroup=new THREE.Group();
   const lamMat=new THREE.MeshBasicMaterial({map:lamTex});
   const whiteMat=new THREE.MeshBasicMaterial({map:whiteM});
   const whiteWall=new THREE.MeshBasicMaterial({map:whiteM}); // та же плитка, но на стенах (постирочная 7)
-  const greyBathM=marble('#8d8e91','#75767a','rgba(225,226,230,0.35)'); greyBathM.repeat.set(1/0.6,1/0.3); const greyWall=new THREE.MeshBasicMaterial({map:greyBathM}); // grey marble 600×300 laid flat: bath 9 mirror wall, bath 8 wall opposite the door (photos, 2026-09-09)
+  const greyBathM=marble('#7e8287','#676b70','rgba(225,228,232,0.35)'); greyBathM.repeat.set(1/0.6,1/0.3); const greyWall=new THREE.MeshBasicMaterial({map:greyBathM}); // grey marble 600×300 laid flat: bath 9 mirror wall, bath 8 wall opposite the door (photos, 2026-09-09)
   const bathWall=new THREE.MeshBasicMaterial({map:bathM}); // санузлы 8 и 9 и постирочная 7: все стены
   const plasterMat=new THREE.MeshBasicMaterial({color:0xf3f3f0}); // постирочная 7: короб в углу у машин — крашеный гипсокартон, без плитки (фото, 2026-09-09)
   const greyMat=new THREE.MeshBasicMaterial({map:greyM});
