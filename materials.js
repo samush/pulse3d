@@ -11,8 +11,8 @@ const MATERIALS={
   whiteWall:{name:'плитка белый мрамор, стены', size:[0.6,0.6], rough:0.25, bump:0.15},
   grey:     {name:'плитка серый мрамор',  size:[0.6,0.6], rough:0.3,  bump:0.15},
   wp:       {name:'обои под покраску',    size:[1.2,1.2], rough:0.92, bump:0.45, albedo:0.82},
-  tile:     {name:'керамогранит 60×120, тёплый серо-бежевый', size:[0.6,1.2], rough:0.25, bump:0.12},
-  bathWall: {name:'плитка санузлов 30×60 вертикально, белый мрамор со швами', size:[0.3,0.6], rough:0.3, bump:0.06},
+  tile:     {name:'керамогранит 60×120, ровный тёмный кашемир со швами', size:[0.6,1.2], rough:0.3, bump:0.06}, // no photo coating: plain colour and the grout grid come from the concept canvas, like the bath tiles
+  bathWall: {name:'плитка санузлов 60×30 горизонтально, белый мрамор со швами', size:[0.6,0.3], rough:0.3, bump:0.06},
   bathFloor:{name:'плитка санузлов 30×60 на полу, белый мрамор со швами', size:[0.3,0.6], rough:0.3, bump:0.06},
   plaster:  {name:'гипсокартон крашеный, матовый белый', size:[1,1], rough:0.9},
   greyWall: {name:'плитка санузлов 60×30 горизонтально, серый мрамор со швами', size:[0.6,0.3], rough:0.3, bump:0.06}, // no photo coating: the concept canvas keeps the grout grid the tile6060 map lacks
@@ -63,7 +63,7 @@ const COATINGS={
   tile6060grey:{name:'плитка 600×600, серая',  class:'grey',   dir:'textures/tile6060',     size:[0.6,0.6], maps:['color','normal'], rough:0.35, tint:[0.42,0.41,0.4]}, // M4-4: same set as tile6060 (shared textures), darkened to the grey marble of the bath west walls
   plastic:     {name:'пластик матовый',       class:'plastic', dir:'textures/plastic',     size:[0.5,0.5], maps:['normal','rough'], normalScale:0.3},
 };
-const VIZ={on:false,ready:false,mode:'basic',std:new Map(),neutral:new Map(),basic:new Map(),variants:new Map(),textures:new Map(),finishCoat:{board:'oakFloor',tile:'tile60120',wallPaint:'wallPaint',wood:'oakFurniture',white:'tile6060',whiteWall:'tile6060',grey:'tile6060grey'},loadErrors:[]}; // finishCoat: global coating per finish key (M2: oak boards, 60×120 stone, wall paint, oak jambs; M4: 60×60 tiles of rooms 7/8/9) // mode: basic (plan) | neutral | std (real coatings); variants: basic → Map(coating → twin)
+const VIZ={on:false,ready:false,mode:'basic',std:new Map(),neutral:new Map(),basic:new Map(),variants:new Map(),textures:new Map(),finishCoat:{board:'oakFloor',wallPaint:'wallPaint',wood:'oakFurniture',white:'tile6060',whiteWall:'tile6060',grey:'tile6060grey'},loadErrors:[]}; // finishCoat: global coating per finish key (M2: oak boards, 60×120 stone, wall paint, oak jambs; M4: 60×60 tiles of rooms 7/8/9) // mode: basic (plan) | neutral | std (real coatings); variants: basic → Map(coating → twin)
 window.VIZ=VIZ; window.MATERIALS=MATERIALS; window.COATINGS=COATINGS;
 (function(){
   const KEY='pulse3d.viz';

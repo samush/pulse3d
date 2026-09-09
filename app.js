@@ -591,6 +591,12 @@ var sillGroup=new THREE.Group();
   });
 })();
 scene.add(sillGroup);
+// radiator under the window of room 3 (base layer, like the sills): steel panel 1.40×0.35×0.10 on brackets 3 cm off the wall, ribbed front (.local/room3_70.png)
+window.RAD3={x0:14.63,x1:14.73,y0:0.10,y1:0.45,z0:10.75,z1:12.15};
+(function(){ const r=RAD3, g=new THREE.BoxGeometry(r.x1-r.x0,r.y1-r.y0,r.z1-r.z0), m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xffffff}));
+  m.position.set((r.x0+r.x1)/2,(r.y0+r.y1)/2,(r.z0+r.z1)/2); const e=new THREE.LineSegments(new THREE.EdgesGeometry(g),new THREE.LineBasicMaterial({color:0x9a978f})); e.position.copy(m.position);
+  const pts=[]; for(let z=r.z0+0.033;z<r.z1-0.01;z+=0.033) pts.push(new THREE.Vector3(r.x0-0.001,r.y0+0.02,z),new THREE.Vector3(r.x0-0.001,r.y1-0.02,z)); // vertical ribs of the panel
+  sillGroup.add(m,e,new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),e.material)); })();
 
 // сетка 1 м на стенах (по границам кубов каждой комнаты)
 var wallGridGroup=new THREE.Group();
@@ -836,7 +842,8 @@ var finishGroup=new THREE.Group();
   const whiteM=marble('#f1f0ec','#d5d4d0','rgba(140,142,148,0.28)');
   const greyM =marble('#9b9b9e','#7e7e81','rgba(230,230,235,0.30)');
   whiteM.repeat.set(1/0.6,1/0.6); greyM.repeat.set(1/0.6,1/0.6);
-  const bathM=marble('#f4f3f0','#d8d7d3','rgba(150,142,128,0.30)'); bathM.repeat.set(1/0.3,1/0.6); // bath walls: 300×600 white marble laid upright (photo of the real tiling, 2026-09-09)
+  const bathM=marble('#f4f3f0','#d8d7d3','rgba(150,142,128,0.30)'); bathM.repeat.set(1/0.6,1/0.3); // bath walls: 600×300 white marble laid flat like the grey one (user, 2026-09-09)
+  const bathFloorM=marble('#f4f3f0','#d8d7d3','rgba(150,142,128,0.30)'); bathFloorM.repeat.set(1/0.3,1/0.6); // the floor keeps the 300×600 run along z
   // настенная отделка — отдельная подгруппа и отдельные материалы: ползунок «Стены» гасит её вместе со стенами, пол остаётся
   const wallFin=new THREE.Group(); finishGroup.add(wallFin); window.wallFin=wallFin;
   const lamMat=new THREE.MeshBasicMaterial({map:lamTex});
@@ -844,8 +851,11 @@ var finishGroup=new THREE.Group();
   const whiteWall=new THREE.MeshBasicMaterial({map:whiteM}); // та же плитка, но на стенах (постирочная 7)
   const greyBathM=marble('#7e8287','#676b70','rgba(225,228,232,0.35)'); greyBathM.repeat.set(1/0.6,1/0.3); const greyWall=new THREE.MeshBasicMaterial({map:greyBathM}); // grey marble 600×300 laid flat: bath 9 mirror wall, bath 8 wall opposite the door (photos, 2026-09-09)
   const bathWall=new THREE.MeshBasicMaterial({map:bathM}); // санузлы 8 и 9 и постирочная 7: все стены
-  const bathFloor=new THREE.MeshBasicMaterial({map:bathM}); // и их пол — та же плитка 300×600 (user, 2026-09-09)
+  const bathFloor=new THREE.MeshBasicMaterial({map:bathFloorM}); // и их пол — та же плитка 300×600 (user, 2026-09-09)
   const plasterMat=new THREE.MeshBasicMaterial({color:0xf3f3f0}); // постирочная 7: короб в углу у машин — крашеный гипсокартон, без плитки (фото, 2026-09-09)
+  // room 3: radiator cover — white plasterboard box flush with the sill edge (x 14.485) from the sill's north end to the south wall; horizontal slots let the air through
+  (function(){ const X0=14.485, X1=14.76, Z0=10.29, Z1=13.144, box=(x0,x1,y0,y1,z0,z1)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0),plasterMat); m.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); wallFin.add(m); };
+    box(X0,X1,0.48,0.50,Z0,Z1); box(X0,X1,0,0.50,Z0,Z0+0.02); box(X0,X0+0.02,0,0.04,Z0,Z1); for(let y=0.04;y<0.48;y+=0.065) box(X0,X0+0.02,y,y+0.05,Z0,Z1); })(); // top, north end, base rail, seven slats with 15 mm slots
   const greyMat=new THREE.MeshBasicMaterial({map:greyM});
 
   // белые обои под покраску: почти белые, мелкое зерно
@@ -878,19 +888,10 @@ var finishGroup=new THREE.Group();
   window.TILE_SILLS=[{d:0,face:5.608},{d:1,face:4.033},{d:2,face:4.033},{d:3,face:10.904},{d:4,face:9.6},{d:5,face:10.008},{d:7,face:7.754,far:7.468}].map(({d,face,far})=>{
     const [cx,cz,o,w]=PLAN.doors[d], a=far!=null?far:(o==='v'?cx:cz), lo=Math.min(a,face), hi=Math.max(a,face);
     return o==='v'?[[lo,cz-w/2],[hi,cz-w/2],[hi,cz+w/2],[lo,cz+w/2]]:[[cx-w/2,lo],[cx+w/2,lo],[cx+w/2,hi],[cx-w/2,hi]]; });
-  const tileTex=(()=>{ // canvas = 1.8 × 1.2 m: three 0.6 × 1.2 porcelain tiles side by side, each column staggered by 0.4 (1/3 bond), 3 mm grout;
-    // warm greige stone look to sit with the oak board of layer 3: mottled body, faint veins, a few darker specks
-    const c=document.createElement('canvas'); c.width=768; c.height=512; const g=c.getContext('2d'); let sd=11; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
-    g.fillStyle='#9a8d78'; g.fillRect(0,0,768,512); // grout
-    const cw=256, tile=(x0,y0,h)=>{ g.save(); g.beginPath(); g.rect(x0+1,y0+1,cw-2,h-2); g.clip();
-      g.fillStyle='#c4b7a1'; g.fillRect(x0,y0,cw,h);
-      for(let i=0;i<40;i++){ g.fillStyle='rgba('+(rnd()<0.5?'170,155,130':'215,205,185')+','+(0.10+0.15*rnd())+')'; g.beginPath(); g.ellipse(x0+rnd()*cw,y0+rnd()*h,20+rnd()*60,10+rnd()*30,rnd()*3,0,Math.PI*2); g.fill(); } // mottling
-      for(let i=0;i<4;i++){ g.strokeStyle='rgba(140,125,100,'+(0.12+0.12*rnd())+')'; g.lineWidth=0.6+rnd(); g.beginPath(); let x=x0+rnd()*cw,y=y0; g.moveTo(x,y); for(let k=0;k<5;k++){ x+=(rnd()-0.5)*70; y+=h/5; g.lineTo(x,y); } g.stroke(); } // veins
-      for(let i=0;i<25;i++){ g.fillStyle='rgba(110,95,75,'+(0.2+0.3*rnd())+')'; g.fillRect(x0+rnd()*cw,y0+rnd()*h,1+rnd()*2,1+rnd()*2); } // specks
-      g.restore(); };
-    for(let col=0;col<3;col++){ const x0=col*cw, dy=(col*512/3)%512; tile(x0,dy,512); if(dy>0) tile(x0,dy-512,512); }
+  const tileTex=(()=>{ // canvas = one 0.6 × 1.2 m porcelain tile in a straight grid like the bath marble, 3 mm grout; plain dark cashmere brown, no mottling, to sit with the oak of layer 3 (user, 2026-09-09)
+    const c=document.createElement('canvas'); c.width=256; c.height=512; const g=c.getContext('2d'); g.fillStyle='#3f3831'; g.fillRect(0,0,256,512); g.fillStyle='#5b524a'; g.fillRect(1,1,254,510);
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t; })();
-  tileTex.repeat.set(1/1.8,1/1.2);
+  tileTex.repeat.set(1/0.6,1/1.2);
   const tileMat=new THREE.MeshBasicMaterial({map:tileTex});
   finishGroup.add(new THREE.Mesh(window.loggiaFloorGeo,tileMat)); // loggia 10 floor: dark grey porcelain tile as on the photos
   // layer 3 (BOARD_POLYS): engineered oak board to try floor coverings — the living zone of room 4 east of the tile (x 10.36–13.47) and the loggia 10
