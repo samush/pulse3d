@@ -985,10 +985,27 @@ var finishGroup=new THREE.Group();
     panel(frameMat2,w,0.15,BALC.x0-0.001,cy,cz,-Math.PI/2); panel(frameMat2,w,0.15,BALC.x1+0.001,cy,cz,Math.PI/2); }
   window.kitchenFrame=new THREE.Group(); wallFin.add(window.kitchenFrame);
   window.kitchenFrame.visible=document.getElementById('kwall').checked;
-  DOORS.forEach(d=>{
+  // door leaves (.local/двери0–3.png, 2026-09-09): white two-panel leaf on a hinge pivot, entrance flat with grooves. Per PLAN.doors index:
+  // label, hinge at the larger (+1) or smaller (−1) coordinate along the wall, leaf swings to the larger (+1) or smaller (−1) coordinate across it.
+  const DOOR_SPEC={0:['детская 1',1,-1],1:['гардеробная',-1,1],2:['постирочная',1,1],3:['детская 2',-1,1],4:['спальня',-1,1],5:['санузел 1',-1,1],6:['санузел 2',1,1],7:['входная',-1,1,'entry']};
+  const chromeFin=new THREE.MeshBasicMaterial({color:0xb4b4b4}), grooveMat=new THREE.LineBasicMaterial({color:0x9a9791});
+  window.DOOR_LEAVES=[]; // {id,label,pivot,closed,open} — toggled by the «Двери» buttons
+  DOORS.forEach((d,i)=>{
     const [cx,cz,o,w,tag]=d, jw=0.07, dep=0.32, hD=2.1;
     if(tag==='O') return; // open passage, no frame
     const parent = tag==='K' ? window.kitchenFrame : wallFin;
+    const spec=DOOR_SPEC[i]; if(spec){ const [label,hs,os,kind]=spec, W=w-0.01, H=2.04, T=kind==='entry'?0.07:0.04, pivot=new THREE.Group(); // leaf: local x from the hinge to the free edge, y up, z across the wall
+      pivot.position.set(o==='v'?cx:cx+hs*w/2, 0.01, o==='v'?cz+hs*w/2:cz);
+      const closed=o==='v'?(hs>0?Math.PI/2:-Math.PI/2):(hs>0?Math.PI:0), dir=a=>o==='v'?Math.cos(a):-Math.sin(a); // rotation.y → world direction of local x along the cross axis
+      const open=[closed+Math.PI/2,closed-Math.PI/2].find(a=>Math.sign(dir(a))===os); pivot.rotation.y=closed;
+      const box=(sx,sy,sz,px,py,pz,m)=>{ const mesh=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),m); mesh.position.set(px,py,pz); pivot.add(mesh); };
+      box(W,H,T,0.005+W/2,H/2,0,kind==='entry'?plasterMat:frameMat2);
+      if(kind==='entry'){ const pts=[], zf=T/2+0.001; [0.45,0.85,1.25,1.65].forEach(y=>[zf,-zf].forEach(z=>pts.push(new THREE.Vector3(0.10,y,z),new THREE.Vector3(0.7*W,y,z)))); [zf,-zf].forEach(z=>pts.push(new THREE.Vector3(0.7*W,0.10,z),new THREE.Vector3(0.7*W,H-0.06,z)));
+        pivot.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),grooveMat)); } // four horizontal grooves and one vertical, both faces
+      else [1,-1].forEach(s=>{ const z=s*(T/2+0.003), r=(sx,sy,px,py)=>box(sx,sy,0.006,px,py,z,frameMat2); // raised stiles and rails: tall upper panel, short lower one
+        r(0.10,H,0.005+0.05,H/2); r(0.10,H,0.005+W-0.05,H/2); r(W,0.10,0.005+W/2,H-0.05); r(W,0.12,0.005+W/2,0.06); r(W,0.08,0.005+W/2,0.60); });
+      [1,-1].forEach(s=>{ const z=s*(T/2+0.03); box(0.04,0.04,0.012,0.005+W-0.07,1.02,s*(T/2+0.006),chromeFin); box(0.12,0.02,0.02,0.005+W-0.12,1.02,z,chromeFin); }); // rose and lever on both faces
+      parent.add(pivot); DOOR_LEAVES.push({id:'door'+i,label,pivot,closed,open}); }
     function bx(sx,sy,sz,px,py,pz){
       const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),frameMat2);
       m.position.set(px,py,pz); parent.add(m);
@@ -1003,14 +1020,16 @@ var finishGroup=new THREE.Group();
       bx(w+2*jw,jw,dep, cx,hD+jw/2, cz);
     }
   });
+  { const grid=document.getElementById('doorgrid'); // «Двери»: one toggle button per leaf, lit while open
+    DOOR_LEAVES.forEach(d=>{ const b=document.createElement('button'); b.textContent=d.label; b.addEventListener('click',()=>{ d.isOpen=!d.isOpen; d.pivot.rotation.y=d.isOpen?d.open:d.closed; b.classList.toggle('on',d.isOpen); }); grid.appendChild(b); d.button=b; }); }
 
   // белый плинтус 10 см (от чистового пола) и обои вдоль стен (кроме санузлов и дверных проёмов)
   const plinthMat=new THREE.MeshBasicMaterial({color:0xffffff});
   // matte greige paint (kitchen-living 4, master 3, corridor 5, loggia 10): flat colour with faint roller texture, canvas = 1 × 1 m
   const paintTex=canvasTex(g=>{ g.fillStyle='#c3b8a9'; g.fillRect(0,0,256,256); for(let i=0;i<2500;i++){ g.fillStyle='rgba('+(Math.random()<0.5?'255,250,240':'120,105,90')+','+(0.03+0.05*Math.random())+')'; g.fillRect(Math.random()*256,Math.random()*256,1+Math.random()*2,1+Math.random()*2); } });
   const paintMat=new THREE.MeshBasicMaterial({map:paintTex}); const PAINTED=new Set([3,4,5,10]);
-  window.wallFinMats=[wpMat,whiteWall,bathWall,greyWall,plasterMat,greyMat,woodMat,frameMat2,plinthMat,paintMat]; // гасятся ползунком «Стены»
-  window.finishMats={lam:lamMat,vinyl:vinylMat,white:whiteMat,whiteWall,bathWall,bathFloor,greyWall,plaster:plasterMat,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,tile:tileMat,tileLight:tileLightMat,wallPaint:paintMat,board:boardMat}; // для PBR-двойников (materials.js)
+  window.wallFinMats=[wpMat,whiteWall,bathWall,greyWall,plasterMat,greyMat,woodMat,frameMat2,plinthMat,paintMat,chromeFin]; // гасятся ползунком «Стены»
+  window.finishMats={lam:lamMat,vinyl:vinylMat,white:whiteMat,whiteWall,bathWall,bathFloor,greyWall,plaster:plasterMat,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,chrome:chromeFin,tile:tileMat,tileLight:tileLightMat,wallPaint:paintMat,board:boardMat}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
   // room 2, M10: finish block on the north wall behind the gym wall, 0.1–2.40, x 12.15–13.75; grey until the palette stage
   const accent2Mat=new THREE.MeshBasicMaterial({color:0xd6d6d3}); wallFinMats.push(accent2Mat); finishMats.accent2=accent2Mat;
