@@ -470,9 +470,8 @@ const PHYS={}; // id → boxes
     {id:'vpouf',type:'пуфик у туалетного столика',room:3,layer:'master',pos:[12.02,10.681],rot:180,size:[0.40,0.45,0.40],glb:'models/vpouf.glb', // model by tools/models/vpouf.js
      build(b){ b.phys(0,0.4,0.35,0.45,0,0.4); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b.phys(x,x+0.03,0,0.35,z,z+0.03)); // proxy = pre-detail mesh AABBs (realism-all D1)
        b(0,0.4,0.35,0.45,0,0.4,mat.cushion); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b(x,x+0.03,0,0.35,z,z+0.03,mat.frame)); }},
-    {id:'lmirror',type:'большое напольное зеркало 0.65×1.95 в тонкой тёмной раме, прислонено к южной стене между дверью санузла и шкафом',room:3,layer:'master',pos:[11.33,13.124],rot:180,size:[0.65,1.95,0.24],
-     build(b,g){ b.phys(0,0.65,0,1.95,0,0.24); const a=Math.asin(0.20/1.95), lean=(w,h,t,x,y,z,m)=>g.add(new THREE.Mesh(new THREE.BoxGeometry(w,h,t).translate(w/2,h/2,t/2).rotateX(-a).translate(x,y+t*Math.sin(a),z+0.22),m)); // top against the wall, foot 0.20 out
-       lean(0.65,1.95,0.02,0,0,0,mat.dark); lean(0.61,1.91,0.005,0.02,0.02,0.02,mat.mirror); }},
+    {id:'lmirror',type:'большое зеркало 0.65×1.95 в тонкой тёмной раме на южной стене между дверью санузла и шкафом (низ 0.02, в створе двери санузла 8)',room:3,layer:'master',pos:[11.33,13.124],rot:180,size:[0.65,1.97,0.03],fixed:'wall',
+     build(b){ b.phys(0,0.65,0.02,1.97,0,0.03); b.round(0,0.65,0.02,1.97,0.005,0.025,0.003,mat.dark); b.round(0.02,0.63,0.04,1.95,0.025,0.03,0.002,mat.mirror); }}, // flat on the wall: the bath 8 door leaf swings along this wall
     {id:'mrug',type:'ковёр, короткий ворс',room:3,layer:'master',pos:[14.0,12.321],rot:180,size:[2.00,0.01,2.00],coat:{cushion:'rugPile'},
      build(b,g){ b.phys(0,2,0,0.01,0,2); // proxy = pre-detail mesh AABBs (realism-all D1)
        g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(1.998,1.998,0.04),{depth:0.006,bevelThickness:0.001,bevelSize:0.001,bevelSegments:1,curveSegments:6}).rotateX(Math.PI/2).translate(0.001,0.007,0.001),mat.cushion)); }},
