@@ -248,16 +248,16 @@ const PHYS={}; // id → boxes
     // ---- kids room 1 (tasks/room1-kid/README.md, marks M1–M30) ----
     // Room box: x 0.896–5.445, z 1.874–4.864. Wall-mounted boxes sit 0.02–0.03 in front of the wall so they show over the wallpaper (0.015).
     {id:'kidbed',type:'кровать-чердак с лестницей-комодом и полкой хранения',room:1,layer:'kid',pos:[2.835,1.884],rot:0,size:[2.6,2.6,2.97],coat:BED,fixed:'wall',build:kidBedBuild(2.0,mat.wdoor,mat.cushion)},
-    {id:'kiddesk',type:'стол прямой 2.14 × 0.60 вдоль южной стены, от западной стены за стойку кровати (вырез под стойку); стеллаж у окна стоит на его западном краю',room:1,layer:'kid',pos:[0.896,4.264],rot:0,size:[2.139,0.72,0.60],coat:CAB,fixed:'wall',
-     build(b){ [[0,1.939,0.68,0.72,0,0.60],[1.939,2.139,0.68,0.72,0,0.505],[0.02,0.04,0,0.68,0.02,0.58],[2.119,2.139,0,0.68,0.02,0.505]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all §0)
-       b.round(0,1.939,0.68,0.72,0,0.60,0.003,mat.kbody); b.round(1.939,2.139,0.68,0.72,0,0.505,0.003,mat.kbody); // worktop 0.04 with a 3 mm bevel; past the bed post (x 2.835–2.915, z 4.774–4.854) only the front 0.505
-       b(0.02,0.04,0,0.68,0.02,0.58,mat.kbody); b(2.119,2.139,0,0.68,0.02,0.505,mat.kbody);        // end panels (the pedestal carries the east end)
-       b(0.04,2.119,0.60,0.68,0.55,0.58,mat.kbody); }},                                            // apron along the wall
+    {id:'kiddesk',type:'стол прямой 2.14 × 0.80 вдоль южной стены, от западной стены за стойку кровати (вырез под стойку); стеллаж у окна стоит на его западном краю, столешница нависает над лежанкой на 0.20',room:1,layer:'kid',pos:[0.896,4.064],rot:0,size:[2.139,0.72,0.80],coat:CAB,fixed:'wall',
+     build(b){ [[0,1.939,0.68,0.72,0,0.80],[1.939,2.139,0.68,0.72,0,0.705],[0.02,0.04,0,0.68,0.22,0.78],[2.119,2.139,0,0.68,0.02,0.705]].forEach(q=>b.phys(...q)); // proxy = mesh AABBs; 0.80 deep since 2026-09-09
+       b.round(0,1.939,0.68,0.72,0,0.80,0.003,mat.kbody); b.round(1.939,2.139,0.68,0.72,0,0.705,0.003,mat.kbody); // worktop 0.04 with a 3 mm bevel; past the bed post (x 2.835–2.915, z 4.774–4.854) only the front 0.705
+       b(0.02,0.04,0,0.68,0.22,0.78,mat.kbody); b(2.119,2.139,0,0.68,0.02,0.705,mat.kbody);        // end panels: the west one starts behind the window seat (z 0.22), the pedestal carries the east end
+       b(0.04,2.119,0.60,0.68,0.75,0.78,mat.kbody); }},                                            // apron along the wall
     {id:'kidped',type:'тумба с 3 ящиками под столом у самого восточного края, глубина 0.40 — не упирается в стойку кровати; фасады к комнате',room:1,layer:'kid',pos:[2.615,4.364],rot:0,size:[0.42,0.68,0.40],coat:CAB,
      build(b,g){ b.phys(0.02,0.40,0,0.68,0.02,0.40); [0.06,0.26,0.46].forEach(y=>b.phys(0.02,0.40,y,y+0.18,0,0.02)); // proxy = today's AABBs
        b(0.02,0.40,0.04,0.68,0.02,0.40,mat.kbody); [[0.05,0.05],[0.35,0.05],[0.05,0.35],[0.35,0.35]].forEach(([x,z])=>{ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.02,12).rotateX(Math.PI/2).translate(x,0.02,z),mat.knob); g.add(c); }); // body on 4 casters Ø40
        [0.045,0.245,0.445].forEach(y=>{ b(0.023,0.397,y,y+0.197,0,0.02,mat.wdoor); b(0.03,0.39,y+0.16,y+0.175,0.005,0.02,mat.dark); }); }}, // fronts with 3 mm gaps, finger groove instead of a handle (the chair sits right beside, handles would leave size)
-    {id:'kidchair',type:'рабочее кресло, регулируемое, лицом к столу, сиденье на 0.26 под столешницей, 0.13 от лежанки',room:1,layer:'kid',pos:[1.59,4.57],rot:270,size:[0.55,0.85,0.55],coat:KID_CHAIR,glb:'models/kidchair.glb',
+    {id:'kidchair',type:'рабочее кресло, регулируемое, лицом к столу, сиденье на 0.30 под столешницей 0.80, 0.13 от лежанки',room:1,layer:'kid',pos:[1.59,4.37],rot:270,size:[0.55,0.85,0.55],coat:KID_CHAIR,glb:'models/kidchair.glb',
      build(b,g){
        [[0.05,0.50,0.42,0.47,0.05,0.50],[0.50,0.55,0.47,0.85,0.08,0.47],[0.25,0.30,0.03,0.42,0.25,0.30],[0.03,0.52,0,0.03,0.26,0.29],[0.26,0.29,0,0.03,0.03,0.52]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (seat, back, lift, base)
        b(0.05,0.50,0.42,0.47,0.05,0.50,mat.cushion); b(0.50,0.55,0.47,0.85,0.08,0.47,mat.cushion);   // seat and back; rot 270 puts the back on the north side
