@@ -37,6 +37,15 @@ const PHYS={}; // id → boxes
   };
   // Loft bed shared by rooms 1 and 2: stair-chest along local z 0–0.5, platform x 1.4–2.6 × z 0–L, storage shelf above the passage z L–2.97.
   // Procedural on purpose (realism-all §0 rule: boxes + bevels): the 9 proxy boxes and the step/platform/post checks in check.js keep working for both beds.
+  // puffed soft body: segmented box centred at the origin whose top (and a little of the bottom) bulges to the centre, edges stay thin; wave = quilt ripple height
+  const puff=(w,d,h,wave=0)=>{ const geo=new THREE.BoxGeometry(w,0.02,d,Math.round(w*24),1,Math.round(d*24)), pa=geo.attributes.position, sm=t=>{ t=Math.max(0,Math.min(1,t)); return t*t*(3-2*t); };
+    for(let i=0;i<pa.count;i++){ const x=pa.getX(i), y=pa.getY(i), z=pa.getZ(i), f=sm((w/2-Math.abs(x))/(w*0.22))*sm((d/2-Math.abs(z))/(d*0.22)), r=wave*Math.sin(x*17)*Math.sin(z*13);
+      pa.setY(i,y>0?y+h*f+r*f:y-h*0.3*f); } geo.computeVertexNormals(); return geo; };
+  // bedding for both loft builds: two plump pillows propped at 35° against the head end, a puffed quilted duvet with its top edge rolled back
+  const bedding=(b,x0,x1,y,z0,z1,headAtEnd,duvet=mat.cushion)=>{ const w=(x1-x0-0.03)/2, zh=headAtEnd?z1:z0, s=headAtEnd?-1:1, add=(geo,m)=>{ const o=new THREE.Mesh(geo,m); b.group.add(o); return o; };
+    [x0,x0+w+0.03].forEach(px=>{ const geo=puff(w,0.48,0.15).translate(0,0.07,0.24).rotateX(-0.70); if(!headAtEnd) geo.rotateY(Math.PI); add(geo.translate(px+w/2,y,zh+s*0.40),mat.pillow); });
+    const zf=headAtEnd?z0+0.08:z1-0.08, zk=zh+s*0.50, lo=Math.min(zf,zk), hi=Math.max(zf,zk), L=hi-lo, cz=(lo+hi)/2;                // duvet from the foot end up to the pillows
+    add(puff(x1-x0,L,0.10,0.012).translate((x0+x1)/2,y+0.02,cz),duvet); add(puff(x1-x0-0.08,0.32,0.07).translate((x0+x1)/2,y+0.12,headAtEnd?hi-0.16:lo+0.16),duvet); };
   const kidBedBuild=(L,front,blanket,tread=0.28)=>b=>{
        const PL=1.8, TOP=2.3, HF=2.2, X0=5*tread, W=X0+1.2;                                           // L — platform length along z (2.00 in room 1, 1.85 in room 2); tread — step depth
        b.phys(0,X0,0,2.4,0,0.54); [[X0,0],[W-0.08,0],[X0,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b.phys(x,x+0.08,0,PL,z,z+0.08)); // stair-chest, legs
@@ -47,8 +56,7 @@ const PHYS={}; // id → boxes
        b(X0,X0+0.04,PL-0.2,PL-0.1,0,L,mat.kbody); b(X0,W,PL-0.2,PL-0.1,L-0.04,L,mat.kbody);       // apron on the west and south edges
        b(X0+0.01,X0+0.03,PL-0.11,PL-0.1,0,L,mat.led);                                             // M20: LED strip under the west edge
        b.round(X0+0.05,W-0.03,PL,PL+0.18,0.03,L-0.05,0.04,mat.kmat);                                 // mattress 0.18, edges r 40
-       b.round(X0+0.15,W-0.13,PL+0.18,PL+0.28,0.1,0.5,0.045,mat.pillow);                             // pillow
-       b.round(X0+0.1,W-0.15,PL+0.18,PL+0.24,0.8,L-0.1,0.025,blanket); b.round(X0+0.1,W-0.15,PL+0.24,PL+0.27,0.8,1.05,0.014,blanket); // blanket, top edge folded back
+       bedding(b,X0+0.05,W-0.03,PL+0.18,0.03,L-0.05,false,blanket);                                   // head at the stair side
        const bal=(x0,x1,z0,z1)=>b(x0,x1,PL-0.1,TOP-0.04,z0,z1,mat.kleg);                             // guard: 40×40 top rail on 20×20 balusters every 0.10
        b(X0,X0+0.04,TOP-0.04,TOP,0.5,L,mat.kbody); for(let z=0.5;z<L-0.03;z+=0.1) bal(X0+0.01,X0+0.03,z,z+0.02);      // west side, from the stair landing
        b(X0,W,TOP-0.04,TOP,L-0.04,L,mat.kbody); for(let x=X0+0.1;x<W-0.03;x+=0.1) bal(x,x+0.02,L-0.03,L-0.01);       // south side
@@ -79,14 +87,13 @@ const PHYS={}; // id → boxes
       mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize()); mesh.position.set(x0,y0,z0); g.add(mesh); return mesh; }; // round bar between two local points
     // platform frame: four corner posts, the two bed-side posts and the far post rise to the tray beams; long rails west/east, end rails north/south
     [[R,0,PL],[W-0.08,0,PL],[R,L-0.08,TB],[W-0.08,L-0.08,TB],[R,2.89,TB]].forEach(([x,z,h])=>b(x+po,x+po+P,0,h,z+po,z+po+P,ST));
-    const BX=glass?PL+0.22:PL, RM=glass?wood:ST, ro=glass?0:po, rw=glass?0.08:P;                       // F: the rails are an 80 mm wood box up to the mattress top
+    const BX=glass?PL+0.06:PL, RM=glass?wood:ST, ro=glass?0:po, rw=glass?0.08:P;                       // F: the rails are a 210 mm wood band (1.65 to 60 mm over the platform), glass above it (user: .local/11.png)
     b(R+ro,R+ro+rw,RB,BX,0,L,RM); b(W-0.08+ro,W-0.08+ro+rw,RB,BX,0,L,RM); b(R,W,RB,BX,ro,ro+rw,RM); b(R,W,RB,BX,L-0.08+ro,L-0.08+ro+rw,RM);
     b(R+0.08,W-0.08,0.10,0.14,L-0.08,L,ST);                                                           // lower rail between the south posts
     b(R+0.08,W-0.08,1.70,1.72,0.08,L-0.08,pnl);                                                       // soffit panel: closes the frame from below, carries the recessed spot ceil2_3 in room 2
     for(let z=0.10;z<L-0.10;z+=0.12) b(R+0.08,W-0.08,1.78,PL,z,Math.min(z+0.09,L-0.10),wood);         // ventilated slats 90 mm with 30 mm gaps
     b(R+0.01,R+0.03,RB-0.01,RB,0,L,mat.led);                                                          // LED strip under the west rail
-    b.round(R+0.05,W-0.03,PL,PL+0.18,0.03,L-0.05,0.04,mat.kmat); b.round(R+0.15,W-0.13,PL+0.18,PL+0.28,L-0.5,L-0.1,0.045,mat.pillow); // mattress 0.18; the head is away from the stairs, feet at the landing
-    b.round(R+0.1,W-0.15,PL+0.18,PL+0.24,0.1,L-0.8,0.025,mat.cushion); b.round(R+0.1,W-0.15,PL+0.24,PL+0.27,L-1.05,L-0.8,0.014,mat.cushion); // blanket, top edge folded back at the pillow
+    b.round(R+0.05,W-0.03,PL,PL+0.18,0.03,L-0.05,0.04,mat.kmat); bedding(b,R+0.05,W-0.03,PL+0.18,0.03,L-0.05,true); // mattress 0.18; the head is away from the stairs, feet at the landing
     // guards to 2.30: wood cap, balusters 30x30 wood (A) or Ø12 rods (B) every 0.10; low boards along the walls so nothing falls behind the mattress
     const cap=(x0,x1,z0,z1)=>b(x0,x1,TOP-0.04,TOP,z0,z1,wood), bal=(x,z)=>steel?b(x-0.006,x+0.006,PL,TOP-0.04,z-0.006,z+0.006,ST):b(x-0.015,x+0.015,PL,TOP-0.04,z-0.015,z+0.015,wood);
     if(glass){ // F: 40 mm wood posts at the ladder gap and the corners, 10 mm frosted glass (mat.rail) between the box top and the cap
@@ -94,12 +101,12 @@ const PHYS={}; // id → boxes
       b(R+0.015,R+0.025,BX,TOP-0.04,0.54,L-0.04,mat.rail); b(R+0.04,W-0.04,BX,TOP-0.04,L-0.025,L-0.015,mat.rail);
     } else { cap(R,R+0.04,0.5,L); for(let z=0.55;z<L-0.03;z+=0.1) bal(R+0.02,z); cap(R,W,L-0.04,L); for(let x=R+0.1;x<W-0.03;x+=0.1) bal(x,L-0.02); }
     b(R+0.08,W-0.08,PL,PL+0.30,0,0.02,pnl); b(W-0.02,W,PL,PL+0.30,0.02,L-0.08,pnl);
-    if(stairs==='wood'){ // F: two 40×100 oak stringers 22° off vertical against the wall, six 30 mm treads 140 deep recessed between them,
-      // the stringers continue as Ø32 handrails to the guard top and are joined there by a cross bar (the loop on the reference); floor under the platform edge stays free
-      const th=22*Math.PI/180, xb=R-0.06-PL*Math.tan(th), len=PL/Math.cos(th), sx=y=>xb+Math.tan(th)*y;
+    if(stairs==='wood'){ // F: two 40×100 oak stringers 30° off vertical (as D) against the wall, six 30 mm treads 140 deep recessed between them, nothing above the platform (user);
+      // handrail = Ø32 oak staple on the room side: a bar parallel to the stringer at mid-depth, 120 mm out from its face, bent legs into the stringer at both ends (.local/детский_лестиница.png)
+      const th=30*Math.PI/180, xb=R-0.06-PL*Math.tan(th), len=PL/Math.cos(th), sx=y=>xb+Math.tan(th)*y;
       [0.04,0.42].forEach(z=>g.add(new THREE.Mesh(new THREE.BoxGeometry(0.10,len,0.04).rotateZ(-th).translate(sx(PL/2)+0.05,PL/2+0.05*Math.sin(th),z+0.02),wood)));
       for(let y=PL/7;y<PL-0.05;y+=PL/7) b(sx(y)+0.01,sx(y)+0.15,y-0.03,y,0.08,0.42,wood);
-      [0.06,0.44].forEach(z=>tube(sx(PL)+0.05,PL,z,sx(TOP)+0.05,TOP,z,0.016,wood)); tube(sx(TOP)+0.05,TOP,0.06,sx(TOP)+0.05,TOP,0.44,0.016,wood);
+      const hx=0.05/Math.cos(th), y0=0.45, y1=PL-0.12; tube(sx(y0)+hx,y0,0.58,sx(y1)+hx,y1,0.58,0.016,wood); [y0,y1].forEach(y=>tube(sx(y)+hx,y,0.58,sx(y)+hx-0.06,y,0.44,0.016,wood));
     } else if(stairs==='ladder'){ // C: straight painted ladder to the platform level only, leaning 30°; wide flat stringers 40×240 with six treads 200×30 every 0.257 recessed between them,
       // so the stringer edges stand proud of each tread as a low kerb for a crawling child; neutral panel colour, not oak; floor under the platform edge stays free
       const th=30*Math.PI/180, xb=R-0.06-PL*Math.tan(th), len=PL/Math.cos(th), sx=y=>xb+Math.tan(th)*y;
@@ -784,7 +791,7 @@ const PHYS={}; // id → boxes
     const b=(x0,x1,y0,y1,z0,z1,m)=>{ const w=x1-x0,h=y1-y0,d=z1-z0, geo=new THREE.BoxGeometry(w,h,d), uv=geo.attributes.uv, F=[[d,h],[d,h],[w,d],[w,d],[w,h],[w,h]]; // UV in metres per face (±x,±y,±z), so VIZ pattern scale holds on items too
       for(let i=0;i<uv.count;i++){ const [a,c]=F[i>>2]; uv.setXY(i,uv.getX(i)*a,uv.getY(i)*c); }
       const mesh=new THREE.Mesh(geo,m); mesh.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); g.add(mesh); return mesh; };
-    b.phys=(x0,x1,y0,y1,z0,z1)=>g.userData.proxy.push([x0,x1,y0,y1,z0,z1]); // explicit collision box (local); declared → render meshes leave physics (B02)
+    b.group=g; b.phys=(x0,x1,y0,y1,z0,z1)=>g.userData.proxy.push([x0,x1,y0,y1,z0,z1]); // explicit collision box (local); declared → render meshes leave physics (B02)
     // ---- shared detail helpers (tasks/realism-all/PLAN.md §3); all coordinates local, UV in metres ----
     const rrect=(w,h,r)=>{ const sh=new THREE.Shape(); r=Math.min(r,w/2,h/2); sh.moveTo(r,0); sh.lineTo(w-r,0); sh.absarc(w-r,r,r,-Math.PI/2,0,false); sh.lineTo(w,h-r); sh.absarc(w-r,h-r,r,0,Math.PI/2,false); sh.lineTo(r,h); sh.absarc(r,h-r,r,Math.PI/2,Math.PI,false); sh.lineTo(0,r); sh.absarc(r,r,r,Math.PI,Math.PI*1.5,false); return sh; };
     b.rrect=rrect;
