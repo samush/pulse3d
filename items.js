@@ -710,9 +710,6 @@ const PHYS={}; // id → boxes
      build(b,g){ b.phys(0,0.02,1,1.8,0,0.6); b.round(0.002,0.02,1.00,1.80,0,0.60,0.002,mat.wpanel); for(let i=0;i<8;i++) for(let j=0;j<6;j++) g.add(new THREE.Mesh(new THREE.CircleGeometry(0.004,6).rotateY(-Math.PI/2).translate(0.0015,1.10+i*0.085,0.08+j*0.085),mat.dark)); }}, // peg board 0.60×0.80 with a 48-hole grid (≈200 triangles)
     {id:'wmirror',type:'зеркало ростовое 0.50×1.60 без рамы напротив длинной штанги',room:6,layer:'wardrobe',pos:[6.845,3.00],rot:0,size:[0.02,1.90,0.50],fixed:'wall',
      build(b){ b.phys(0,0.02,0.3,1.9,0,0.5); b.round(0.004,0.02,0.30,1.90,0,0.50,0.002,mat.frame); b.round(0,0.004,0.31,1.89,0.01,0.49,0.002,mat.mirror); }}, // frameless: 4 mm mirror glass on a backing board; backing ends at the wallpaper plane x 6.865 (M3)
-    {id:'wboard',type:'держатель гладильной доски: две скобы на внутренней стороне двери (доска 1.20×0.35 висит 0.50–1.70)',room:6,layer:'wardrobe',pos:[6.30,3.874],rot:0,size:[0.40,1.20,0.02],coat:CAB,fixed:'wall',
-     build(b){ [[0,0.04,1.1,1.2,0,0.02],[0.36,0.4,1.1,1.2,0,0.02]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
-       [0,0.36].forEach(x=>b.round(x,x+0.04,1.10,1.20,0,0.02,0.004,mat.frame)); b.round(0.02,0.38,0.50,1.10,0.005,0.02,0.004,mat.wpanel); }}, // two steel brackets and the board (its part below the brackets, 15 mm)
     // hung on a hook 0.10 above the floor: a floor-standing step inside section B reads as furniture facing section C (layout.js passage rule)
     {id:'wstep',type:'складная стремянка 2 ступени на крючке у боковины секции B, низ 0.10 (разложенная 0.40×0.30×0.45)',room:6,layer:'wardrobe',pos:[5.60,2.794],rot:0,size:[0.40,0.58,0.12],fixed:'wall',
      build(b){ [[0,0.4,0.1,0.55,0.02,0.12],[0.18,0.22,0.55,0.58,0,0.02]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)

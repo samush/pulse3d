@@ -344,7 +344,7 @@ const { chromium } = require('playwright');
     return Object.entries(want).filter(([id, n]) => PHYS[id].length !== n).map(([id, n]) => id + ' ' + PHYS[id].length + '≠' + n); });
   if (stageB.length) problems.push('proxy: детская 1 — число боксов изменилось (realism-all §8): ' + stageB.join(', '));
   // realism-all stage F: closet 6 and loggia 10 — explicit proxies, box count fixed
-  const stageF = await page.evaluate(() => { const want = {wsecA:  4,  wsecB:  3,  wsecC:  21,  wmezz:  6,  wend:  15,  wpeg:  1,  wmirror:  1,  wboard:  2,  wstep:  2,  wlight:  1,  led6:  1,  sock25:  1,  bdesk:  4,  bchair:  6,  itshelf:  6,  bshelf:  12,  cable10:  1,  sock26:  1,  sock27:  1,  sock28:  1,  sock29:  1,  led7:  1,  blight:  1,  sw8:  1,  blinds10:  1};
+  const stageF = await page.evaluate(() => { const want = {wsecA:  4,  wsecB:  3,  wsecC:  21,  wmezz:  6,  wend:  15,  wpeg:  1,  wmirror:  1,  wstep:  2,  wlight:  1,  led6:  1,  sock25:  1,  bdesk:  4,  bchair:  6,  itshelf:  6,  bshelf:  12,  cable10:  1,  sock26:  1,  sock27:  1,  sock28:  1,  sock29:  1,  led7:  1,  blight:  1,  sw8:  1,  blinds10:  1};
     return Object.entries(want).filter(([id, n]) => PHYS[id].length !== n).map(([id, n]) => id + ' ' + PHYS[id].length + '≠' + n); });
   if (stageF.length) problems.push('proxy: гардеробная 6 / лоджия 10 — число боксов изменилось (realism-all §12): ' + stageF.join(', '));
   // realism-all stage F: every item of closet 6 and loggia 10 stays inside its size (1 mm procedural, 1 cm GLB), plates carry the plastic slot
@@ -979,7 +979,7 @@ const { chromium } = require('playwright');
     const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh) return; const bm = VIZ.basic.get(o.material) || o.material; if (bm.isMeshBasicMaterial || bm.transparent) return; const c = bm.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     return { n: its.length, inside, inStrip, secC, rods, warn, colored };
   });
-  if (w6.n < 13) problems.push('гардеробная 6: предметов слоя wardrobe ' + w6.n + ' (< 13)');
+  if (w6.n < 12) problems.push('гардеробная 6: предметов слоя wardrobe ' + w6.n + ' (< 12)');
   if (w6.inside.length) problems.push('гардеробная 6: предметы вне помещения: ' + w6.inside.join(', '));
   if (w6.inStrip.length) problems.push('гардеробная 6: в проходе: ' + w6.inStrip.join(', '));
   if (w6.secC > 6.10 + 1e-9) problems.push('гардеробная 6: секция C заходит в проём двери, x1 ' + w6.secC.toFixed(3));
