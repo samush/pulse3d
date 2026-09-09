@@ -119,6 +119,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <button id="vTop">Сверху</button>
     <button id="vFP">Экскурсия</button>
   </div>
+  <div class="slider-lab"><span>Масштаб</span><span id="zov">100%</span></div>
+  <input type="range" id="zoom" min="30" max="300" value="100" aria-label="Масштаб" style="margin-bottom:10px">
   <details id="cams"><summary>Камера</summary>
   <div id="camgrid" title="Камеры, закреплённые в комнатах: номер комнаты.номер вида. ЛКМ поворачивает объектив, перемещения нет; свет и материалы как в экскурсии"></div>
   <p class="sub" id="camhint" hidden style="margin:6px 0 0">камера закреплена под потолком. ЛКМ или стрелки — повернуть объектив</p>
@@ -128,15 +130,13 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   </details>
   <div class="row"><input type="checkbox" id="avatarOn" hidden checked><label for="avatarOn" class="tog" title="Фигура человека ростом 1,7 м в экскурсии">Человечек</label></div>
   <div class="row"><input type="checkbox" id="mats" hidden><label for="mats" class="tog" title="Реальные покрытия (PBR) вместо серого концепта">Материалы</label></div>
-  <div class="row"><label for="light">Свет</label><select id="light" aria-label="Световая схема" title="Иллюзия — быстрый свет: один источник на комнату без теней; нейтральный — фиксированный свет для проверки материалов; светильники квартиры — источники из lighting.js (комнаты 4 и 9), группы через LIGHTING.group"><option value="illusion">иллюзия</option><option value="neutral">нейтральный</option><option value="lamps">светильники квартиры</option></select></div>
+  <div class="row"><label for="light">Свет</label><select id="light" aria-label="Световая схема" title="Внутренний A — быстрый свет: один источник на комнату без теней; дневной — фиксированный свет для проверки материалов; внутренний B — светильники квартиры из lighting.js (комнаты 4 и 9), группы через LIGHTING.group"><option value="illusion">внутренний A</option><option value="neutral">дневной</option><option value="lamps">внутренний B</option></select></div>
   <div class="row"><label for="bed3">Кровать 3</label><select id="bed3" aria-label="Длина подиума кровати в комнате 3" title="Длина деревянного подиума кровати в спальне 3"><option value="normal">обычная, 2.2 м</option><option value="rug">до края ковра, 2.82 м</option><option value="wall" selected>до стены с ТВ</option></select></div>
-  <div class="row"><label for="kidbed">Детские</label><select id="kidbed" aria-label="Конструкция кроватей-чердаков в детских" title="Варианты конструкции кроватей-чердаков (tasks/kids-loft-beds): исходная; A — деревянная рама; B — стальной каркас с мебельной облицовкой; C — стальной каркас B с приставной лестницей; D — рама A с пологой лестницей-комодом (длиннее)"><option value="original" selected>исходная</option><option value="timber">A: деревянная рама</option><option value="steel">B: стальной каркас</option><option value="ladder">C: сталь + приставная лестница</option><option value="gentle">D: пологая лестница</option></select></div>
+  <div class="row"><label for="kidbed">Детские</label><select id="kidbed" aria-label="Конструкция кроватей-чердаков в детских" title="Варианты конструкции кроватей-чердаков (tasks/kids-loft-beds): A — исходная, сталь с пологой лестницей-комодом; B — деревянная рама; C — стальной каркас с мебельной облицовкой; D — стальной каркас C с приставной лестницей; E — рама B с пологой лестницей-комодом (длиннее)"><option value="original" selected>A</option><option value="timber">B</option><option value="steel">C</option><option value="ladder">D</option><option value="gentle">E</option></select></div>
   <div class="row"><label for="wp1">Обои 1</label><select id="wp1" aria-label="Обои детской 1" title="Обои на северной и южной стенах детской 1"><option value="none">нет</option><option value="leaves">листья</option></select></div>
   <div class="row"><label for="wp2">Обои 2</label><select id="wp2" aria-label="Обои детской 2" title="Панно на стене со стороны лестницы в детской 2"><option value="none">нет</option><option value="space">космонавт</option></select></div>
   <div class="slider-lab"><span>Стены</span><span id="wov">100%</span></div>
   <input type="range" id="wop" min="0" max="100" value="100" aria-label="Прозрачность стен">
-  <div class="slider-lab"><span>Масштаб</span><span id="zov">100%</span></div>
-  <input type="range" id="zoom" min="30" max="300" value="100" aria-label="Масштаб">
   <details id="layers"><summary>Слои и режимы</summary>
   <div class="row"><input type="checkbox" id="cubes"><label for="cubes">Кубы 1 м³</label></div>
   <div class="row"><input type="checkbox" id="labels"><label for="labels">Точки с размерами</label></div>
