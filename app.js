@@ -998,9 +998,38 @@ var finishGroup=new THREE.Group();
   // room 2, M10: finish block on the north wall behind the gym wall, 0.1–2.40, x 12.15–13.75; grey until the palette stage
   const accent2Mat=new THREE.MeshBasicMaterial({color:0xd6d6d3}); wallFinMats.push(accent2Mat); finishMats.accent2=accent2Mat;
   (()=>{ const g=new THREE.PlaneGeometry(1.6,2.3); const m=new THREE.Mesh(g,accent2Mat); m.position.set(12.95,1.25,6.518+0.017); wallFin.add(m); })();
+  // kids' wallpaper (2026-09-09): room 1 — light ground with sparse watercolour leaves on the north and south walls; room 2 — one space mural
+  // (astronaut, planets) on the south wall by the stairs. Canvas art, no image files; the selects «Обои 1/2» switch each room separately.
+  const leavesTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=512; const g=c.getContext('2d'); let sd=7; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
+    g.fillStyle='#f5f2ea'; g.fillRect(0,0,512,512); const greens=['rgba(120,150,110,0.55)','rgba(92,126,88,0.5)','rgba(150,170,120,0.45)','rgba(70,105,75,0.5)'];
+    const leaf=(x,y,l,w,a,col)=>{ g.save(); g.translate(x,y); g.rotate(a); g.fillStyle=col; g.beginPath(); g.moveTo(0,-l/2); g.quadraticCurveTo(w,0,0,l/2); g.quadraticCurveTo(-w,0,0,-l/2); g.fill(); g.strokeStyle='rgba(60,90,60,0.35)'; g.lineWidth=1.2; g.beginPath(); g.moveTo(0,-l/2+6); g.lineTo(0,l/2-6); g.stroke(); g.restore(); };
+    for(let i=0;i<9;i++){ const x=rnd()*512, y=rnd()*512, a=rnd()*Math.PI, col=greens[i%4]; [[0,0],[512,0],[-512,0],[0,512],[0,-512]].forEach(([dx,dy])=>leaf(x+dx,y+dy,70+rnd()*50,18+rnd()*10,a,col)); } // tiled copies keep the seam clean
+    for(let i=0;i<40;i++){ g.fillStyle='rgba(130,150,110,0.25)'; g.beginPath(); g.arc(rnd()*512,rnd()*512,1.5+rnd()*3,0,Math.PI*2); g.fill(); }
+    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/1.0,1/1.0); return t; })();
+  const spaceTex=(()=>{ const W=1024, Hc=720, c=document.createElement('canvas'); c.width=W; c.height=Hc; const g=c.getContext('2d'); let sd=3; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
+    const sky=g.createLinearGradient(0,0,0,Hc); sky.addColorStop(0,'#1a2140'); sky.addColorStop(1,'#0e1430'); g.fillStyle=sky; g.fillRect(0,0,W,Hc);
+    for(let i=0;i<350;i++){ g.fillStyle='rgba(255,255,255,'+(0.3+0.7*rnd())+')'; const r=0.4+rnd()*1.4; g.beginPath(); g.arc(rnd()*W,rnd()*Hc,r,0,Math.PI*2); g.fill(); }
+    g.strokeStyle='rgba(255,255,255,0.08)'; g.lineWidth=1.5; for(let i=0;i<6;i++){ g.beginPath(); g.arc(W*0.62,Hc*0.85,Hc*(0.45+0.12*i),Math.PI*1.05,Math.PI*1.95); g.stroke(); } // orbit arcs
+    const planet=(x,y,r,col,light)=>{ g.fillStyle=col; g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill(); g.save(); g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.clip(); g.strokeStyle=light; g.lineWidth=r*0.06; for(let k=0;k<7;k++){ g.beginPath(); g.ellipse(x-r*0.2,y-r*0.7+k*r*0.28,r*(0.9+0.2*rnd()),r*0.08,0.1*k-0.3,0,Math.PI*2); g.stroke(); } g.restore(); };
+    planet(W*0.64,Hc*0.86,Hc*0.38,'#4f86b4','rgba(210,235,255,0.35)'); planet(W*0.83,Hc*0.30,22,'#e0a050','rgba(255,240,200,0.5)'); planet(W*0.50,Hc*0.18,16,'#e8934a','rgba(255,240,200,0.5)');
+    g.strokeStyle='rgba(230,230,240,0.85)'; g.lineWidth=3; g.beginPath(); g.ellipse(W*0.72,Hc*0.14,40,12,-0.35,0,Math.PI*2); g.stroke(); g.fillStyle='#d9d3c8'; g.beginPath(); g.arc(W*0.72,Hc*0.14,16,0,Math.PI*2); g.fill(); // ringed planet
+    const ax=W*0.47, ay=Hc*0.46, u=Hc/9; g.strokeStyle='rgba(235,235,240,0.7)'; g.lineWidth=2; g.beginPath(); g.moveTo(ax-u*0.7,ay+u*0.9); g.bezierCurveTo(ax-u*2.5,ay+u*2.4,ax-u*4,ay+u*1.5,ax-u*5.5,ay+u*3.8); g.stroke(); // tether
+    g.lineCap='round'; g.strokeStyle='#eceef2'; g.lineWidth=u*0.42; // astronaut: limbs
+    [[ax-u*0.3,ay+u*0.2,ax-u*1.4,ay-u*0.9],[ax+u*0.3,ay+u*0.2,ax+u*1.3,ay-u*1.1],[ax-u*0.2,ay+u*1.0,ax-u*1.2,ay+u*1.9],[ax+u*0.2,ay+u*1.0,ax+u*0.9,ay+u*2.1]].forEach(([x0,y0,x1,y1])=>{ g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1); g.stroke(); });
+    g.fillStyle='#d5d8de'; g.fillRect(ax-u*0.85,ay-u*0.4,u*0.5,u*1.3); // backpack
+    g.fillStyle='#f2f3f5'; g.beginPath(); g.roundRect?g.roundRect(ax-u*0.55,ay-u*0.5,u*1.1,u*1.6,u*0.3):g.rect(ax-u*0.55,ay-u*0.5,u*1.1,u*1.6); g.fill(); // torso
+    g.fillStyle='#f6f6f8'; g.beginPath(); g.arc(ax,ay-u*1.05,u*0.6,0,Math.PI*2); g.fill(); g.fillStyle='#232a3c'; g.beginPath(); g.ellipse(ax+u*0.08,ay-u*1.05,u*0.42,u*0.34,0,0,Math.PI*2); g.fill(); g.fillStyle='rgba(255,255,255,0.35)'; g.beginPath(); g.ellipse(ax-u*0.05,ay-u*1.18,u*0.16,u*0.08,-0.4,0,Math.PI*2); g.fill(); // helmet and visor
+    g.fillStyle='#e8934a'; g.beginPath(); g.arc(ax+u*1.5,ay-u*1.4,u*0.35,0,Math.PI*2); g.fill(); // the small planet in the hand
+    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; return t; })();
+  const wpLeaves=new THREE.MeshBasicMaterial({map:leavesTex}), wpSpace=new THREE.MeshBasicMaterial({map:spaceTex}); wallFinMats.push(wpLeaves,wpSpace); finishMats.wpLeaves=wpLeaves; finishMats.wpSpace=wpSpace;
+  const WP_WALLS={1:['n','s'],2:['s']}, WP_MATS={none:wpMat,leaves:wpLeaves,space:wpSpace}, wpMeshes={1:[],2:[]}; // room → sides that take wallpaper; registered panels per room
+  window.WALLPAPER={value:{1:'none',2:'none'},options:{1:['none','leaves'],2:['none','space']},set(room,key){ if(!WP_MATS[key]) key='none'; WALLPAPER.value[room]=key;
+    wpMeshes[room].forEach(m=>{ const mat=WP_MATS[key]; if(mat===wpSpace){ const t=spaceTex; t.repeat.set(1/m.userData.wp.L,1/m.userData.wp.h); t.needsUpdate=true; } m.material=mat; }); // the mural stretches over its single panel
+    if(window.VIZ&&VIZ.ready) VIZ.coatFinish('wpLeaves',VIZ.finishCoat.wpLeaves); }}; // re-swap the finish twins in the visualization
   PLAN.rooms.forEach(r=>{
     if(r.id===8||r.id===9) return;
     const poly=r.poly;
+    const xs=poly.map(q=>q[0]), zs=poly.map(q=>q[1]), midX=(Math.min(...xs)+Math.max(...xs))/2, midZ=(Math.min(...zs)+Math.max(...zs))/2;
     let area=0;
     for(let i=0;i<poly.length;i++){const j=(i+1)%poly.length;area+=poly[i][0]*poly[j][1]-poly[j][0]*poly[i][1];}
     const ccw=area>0;
@@ -1015,6 +1044,7 @@ var finishGroup=new THREE.Group();
       const a1=horiz?a[0]:a[1], b1=horiz?b[0]:b[1];
       let lo=Math.min(a1,b1), hi=Math.max(a1,b1);
       const fixed=horiz?a[1]:a[0];
+      const side=horiz?(fixed<midZ?'n':'s'):(fixed<midX?'w':'e'); // which wall of the room this edge is
       // вычесть дверные проёмы на этой стене
       let segs=[[lo,hi]];
       const doorSpans=[]; // проёмы на этом ребре — над ними обойная перемычка
@@ -1097,6 +1127,7 @@ var finishGroup=new THREE.Group();
           // в постирочной 7 вместо обоев белая плитка, как в санузлах
           const m=new THREE.Mesh(g,r.id===7?whiteWall:PAINTED.has(r.id)?paintMat:wpMat); // laundry 7: white tile; PAINTED rooms: greige paint
           m.position.set((p0[0]+p1[0])/2,(y0+y1)/2,(p0[1]+p1[1])/2);
+          if(WP_WALLS[r.id]&&WP_WALLS[r.id].includes(side)){ m.userData.wp={room:r.id,L,h:y1-y0}; wpMeshes[r.id].push(m); }
           grpFor((s0+s1)/2).add(m);
         }
         segs.forEach(sg=>wpPanel(0.1,H,sg[0],sg[1])); // обои от верха плинтуса
@@ -1154,3 +1185,9 @@ function drawMap(){
   mapCtx.lineWidth=1.5; mapCtx.strokeStyle='#fff'; mapCtx.stroke();
 }
 (function loop(t){requestAnimationFrame(loop);walkStep(t||0);controls.update();placeTip();drawMap();if(window.LIGHTING)LIGHTING.tick(t||0);renderer.render(scene,camera);})(0);
+
+(function(){ // kids' wallpaper selects «Обои 1/2» (index.html), remembered per room
+  [1,2].forEach(room=>{ const KEY='pulse3d.wp'+room, sel=document.getElementById('wp'+room); if(!sel) return; let v=WALLPAPER.options[room][1]; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
+    if(!WALLPAPER.options[room].includes(v)) v=WALLPAPER.options[room][1]; sel.value=v; WALLPAPER.set(room,v);
+    sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} WALLPAPER.set(room,sel.value); }); });
+})();
