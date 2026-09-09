@@ -223,6 +223,7 @@ const CAMS=[ // fixed room cameras (selector «Камера»): pos [x,y,z] m, t
   {id:'r2-stairs',label:'детская 2 (вид 4)',pos:[12.3,2.65,9.5],theta:2.47,phi:Math.PI/2+0.4,fov:90},
   {id:'r2-door',label:'детская 2 (вид 5)',pos:[11.35,1.7,7.2],theta:1.06,phi:Math.PI/2+0.04,fov:75},
   {id:'r3-door',label:'спальня (вид 1)',pos:[10.2,2.5,10.3],theta:1.15,phi:Math.PI/2+0.33,fov:80},
+  {id:'r3-tv',label:'спальня (вид 2)',pos:[14.5,1.5,9.95],theta:-0.93,phi:Math.PI/2+0.05,fov:85}, // corner of the TV wall shifted towards the window, eye height 1.5 (user, 2026-09-09)
   {id:'r4-door',label:'кухня-гостиная (вид 1)',pos:[13.3,2.5,6.1],theta:-2.25,phi:Math.PI/2+0.33,fov:80},
   {id:'r4-kitchen',label:'кухня-гостиная (вид 2)',pos:[9.1,2.5,2.1],theta:0.88,phi:Math.PI/2+0.33,fov:80},
   {id:'r4-window',label:'кухня-гостиная (вид 3)',pos:[13.3,2.5,2.1],theta:-0.89,phi:Math.PI/2+0.33,fov:80},
