@@ -14,9 +14,13 @@ Furniture: rounded, low-profile, substantial silhouettes; sofa without armrests,
 
 Lighting: layered warm light (~2700K), no single central ceiling fixture — recessed spotlights, integrated LED strip lighting along cabinets, shelves and niches, a few small sconces as accents only. Light comes from the windows and from the fixtures already visible in the reference, falls off towards the far corners, and every object casts a contact shadow where it meets the floor. The view through a window keeps its detail instead of burning out to white.
 
-Decor: minimal and natural — wood and bamboo accessories in chestnut/pine tones, one statement floor plant in a woven basket per zone (fiddle-leaf fig, small palm, or potted orange tree) plus a few smaller plants elsewhere, always clear of doorways and walking paths. No frescoes, no figurines, no moldings or ornate trim, no visual clutter, no readable text or brand logos. A slightly lived-in, realistic level of tidiness is welcome, not a showroom-perfect scene.
+Decor: minimal and natural — wood and bamboo accessories in chestnut/pine tones. The floor stays clear: every plant that appears must be a small one standing on a shelf, a windowsill or a worktop. This flat has no floor-standing plants and no plants in baskets or pots on the floor — that space belongs to the people and the dog. No frescoes, no figurines, no moldings or ornate trim, no visual clutter, no readable text or brand logos. A slightly lived-in, realistic level of tidiness is welcome, not a showroom-perfect scene.
 
 Windows: minimal blackout roller blinds mounted tight inside the window recess — no fabric curtains or drapery of any kind.
+
+Mirrors: the reference marks every mirror, and a mirror stays a mirror — a frameless glass panel reflecting the room back, never turned into a door, a window, a picture or a wardrobe front. The tall mirror in the hall is 0.90 m wide and 2.40 m high on a plain wall; the bathroom mirrors sit above their basins. Their reflections show the room they stand in, lit as the room is lit.
+
+Openings: a plain rectangle on a wall is a doorway or a mirror as the shot notes say, never an invented window. Windows and balcony doors exist only where the reference shows them.
 
 Camera: 24 mm architectural lens, natural depth of field, no fisheye distortion, sharp across the room.
 
