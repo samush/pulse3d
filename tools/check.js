@@ -6,7 +6,7 @@
 //   (системные библиотеки, нужен root: npx playwright install-deps chromium)
 // Запуск:  node tools/check.js            — файл из рабочей копии
 //          node tools/check.js <url>      — например, страница на Pages
-//          CHECK_NOSHOT=1 node tools/check.js — только проверки, без скриншотов (на software GL ~20 мин вместо ~50)
+//          CHECK_NOSHOT=1 node tools/check.js — только проверки: кадровые циклы (камера + скриншот) пропускаются целиком, ~2 мин вместо ~50
 // В stderr идёт прогресс «· check.js:<строка> <сек>» — по нему видно, где тест стоит. Исключение внутри блока не обрывает прогон:
 // оно попадает в отчёт со строкой check.js, остальные блоки выполняются.
 // Проверяет: загрузку без ошибок страницы, 10 помещений и их площади, вид «Сверху»,
@@ -46,7 +46,7 @@ const { chromium } = require('playwright');
   // an «исключение» line from the same block are its consequence. Every evaluate/click also logs its line and elapsed time, so a hang is visible.
   const SAFE = new Proxy(function () {}, { get: (t, k) => k === Symbol.toPrimitive ? () => '' : k === 'then' ? undefined : SAFE, apply: () => SAFE });
   const t0 = Date.now(), where = () => { const at = new Error().stack.split('\n').filter(s => /check\.js:\d+/.test(s))[2]; return at ? at.replace(/.*check\.js:/, '').replace(/[):].*$/, '') : '?'; }; // frames: where, the wrapper, the caller
-  const noShot = !!process.env.CHECK_NOSHOT; // CHECK_NOSHOT=1: assertions only, no screenshots (each lit frame on software GL costs 30–60 s)
+  const noShot = !!process.env.CHECK_NOSHOT; // CHECK_NOSHOT=1: assertions only — the screenshot is skipped and so is every loop that only aims the camera for one (`if (!noShot) for …`), which is where the minutes went
   const guard = (obj, name) => { const raw = obj[name].bind(obj); obj[name] = async (...a) => { const line = where(); process.stderr.write('· check.js:' + line + ' ' + ((Date.now() - t0) / 1000).toFixed(0) + 's\n'); if (noShot && name === 'screenshot') return SAFE;
     try { return await raw(...a); } catch (e) { problems.push('исключение в блоке check.js:' + line + ': ' + e.message.split('\n')[0] + ' (сообщения ниже из этого блока — следствие)'); return SAFE; } }; };
   ['evaluate', 'click', 'screenshot', 'waitForTimeout'].forEach(n => guard(page, n));
@@ -657,7 +657,7 @@ const { chromium } = require('playwright');
     return out; });
   Object.entries(m2).forEach(([k, ok]) => { if (k !== 'note' && !ok) problems.push('кухня 4: «' + k + '» не сошлось (materials-lighting M2, kitchen.md): ' + m2.note); });
   await page.evaluate(() => { document.getElementById('avatarOn').checked = false; document.getElementById('avatarOn').dispatchEvent(new Event('change')); });
-  for (const [k, v] of Object.entries({ A: [12.6, 1.6, 5.6, 8.6, 1.2, 2.6], B: [9.8, 1.5, 3.0, 12.6, 0.8, 6.0], C: [11.0, 1.4, 3.0, 8.6, 0.95, 3.4] })) for (const on of [true, false]) {
+  if (!noShot) for (const [k, v] of Object.entries({ A: [12.6, 1.6, 5.6, 8.6, 1.2, 2.6], B: [9.8, 1.5, 3.0, 12.6, 0.8, 6.0], C: [11.0, 1.4, 3.0, 8.6, 0.95, 3.4] })) for (const on of [true, false]) {
     await page.evaluate(([v, on]) => { VIZ.set(on); controls.setPose(...v); }, [v, on]); await page.waitForTimeout(on ? 1500 : 400); await page.screenshot({ path: path.join(outDir, 'm2-' + k + (on ? '-on' : '-off') + '.png') }); }
   // materials-lighting M4-1: rooms 1 and 2 — casework painted, bedding linen, chair pads and the kids sofa in the sofa weave, rug pile, tulle linen, gym wall oak, plastic on lamps/sockets; metal, LED and chrome stay class
   const m41 = await page.evaluate(async () => {
@@ -675,7 +675,7 @@ const { chromium } = require('playwright');
       plastic: ['bra1', 'kidlight2', 'sock1', 'sock9'].every(id => on(id, key('plastic')) === 'plastic') && on('bra1', led) === 'class' && on('kidbed', key('kleg')) === 'class' };
   });
   Object.entries(m41).forEach(([k, ok]) => { if (!ok) problems.push('комнаты 1–2: «' + k + '» не сошлось (materials-lighting M4-1)'); });
-  for (const [name, x, z, th] of [['room1-door', 4.5, 4.55, -Math.PI / 2 + 0.45], ['room1-gallery', 1.9, 3.0, Math.PI * 0.3], ['room1-bed', 4.95, 3.3, -Math.PI / 2 - 0.15], ['room2-door', 11.9, 7.35, Math.PI / 2 + 0.15], ['room2-desk', 12.0, 8.8, Math.PI * 0.75], ['room2-gym', 14.0, 8.1, -Math.PI * 0.75]]) for (const on of [true, false]) {
+  if (!noShot) for (const [name, x, z, th] of [['room1-door', 4.5, 4.55, -Math.PI / 2 + 0.45], ['room1-gallery', 1.9, 3.0, Math.PI * 0.3], ['room1-bed', 4.95, 3.3, -Math.PI / 2 - 0.15], ['room2-door', 11.9, 7.35, Math.PI / 2 + 0.15], ['room2-desk', 12.0, 8.8, Math.PI * 0.75], ['room2-gym', 14.0, 8.1, -Math.PI * 0.75]]) for (const on of [true, false]) {
     await page.evaluate(([x, z, th, on]) => { VIZ.set(on); controls.setFPV(x, z, th); }, [x, z, th, on]); await page.waitForTimeout(on ? 1500 : 400); await page.screenshot({ path: path.join(outDir, 'm4-1-' + name + (on ? '-on' : '-off') + '.png') }); }
   // materials-lighting M4-3/M4-4: rooms 5, 7, 10, 8, 9 — main surfaces wear the coatings from kitchen.md rules; one on/off frame per room
   const M4 = { hall5: { items: [['wardrobe', 'door', 'cabinetPaint'], ['wardrobe', 'body', 'cabinetPaint'], ['wardrobe', 'hdark', 'class'], ['entry', 'door', 'cabinetPaint'], ['sw5', 'plastic', 'plastic'], ['pouf', 'glb:leather', 'class']], pose: [9.1, 6.6, 9.1, 7.7] },
@@ -694,7 +694,7 @@ const { chromium } = require('playwright');
     Object.entries(M4).forEach(([room, r]) => (r.finish || []).forEach(([k, want]) => { const m = fin[k]; if (!m || m.userData.coating !== want || m.roughnessMap || m.roughness !== 0.35) bad.push(room + ': отделка ' + k + ' = ' + (m ? m.userData.coating : 'нет меша') + ', ожидалось ' + want + ' с явной rough 0.35'); }));
     return bad; }, M4);
   m4.forEach(msg => problems.push('материалы комнат: ' + msg + ' (materials-lighting M4)'));
-  for (const [room, r] of Object.entries(M4)) for (const on of [true, false]) {
+  if (!noShot) for (const [room, r] of Object.entries(M4)) for (const on of [true, false]) {
     await page.evaluate(([[x, z, tx, tz], on]) => { VIZ.set(on); document.getElementById('avatarOn').checked = false; controls.setFPV(x, z, Math.atan2(tx - x, tz - z)); }, [r.pose, on]); await page.waitForTimeout(on ? 1500 : 400);
     await page.screenshot({ path: path.join(outDir, 'm4-' + room + (on ? '-on' : '-off') + '.png') }); }
   // materials-lighting M4-2: rooms 3 and 6 — casework painted, bed linen with the leather headboard as class, rug pile, drapes linen, plastic on lamps/sockets; pouf, mirrors and metal stay class
@@ -711,7 +711,7 @@ const { chromium } = require('playwright');
       mirrors: on('vmirror', key('mirror')) === 'class' && on('wmirror', key('mirror')) === 'class' && on('wstep', () => true) === 'class' };
   });
   Object.entries(m42).forEach(([k, ok]) => { if (!ok) problems.push('комнаты 3, 6: «' + k + '» не сошлось (materials-lighting M4-2)'); });
-  for (const [name, x, z, th] of [['room3-door', 10.9, 11.9, Math.PI / 2 + 0.25], ['room3-tv', 13.6, 12.3, Math.PI - 0.15], ['room3-south', 14.2, 10.5, -0.55], ['wardrobe6-door', 6.6, 4.5, Math.PI - 0.15], ['wardrobe6-end', 6.55, 3.2, 0.2]]) for (const on of [true, false]) {
+  if (!noShot) for (const [name, x, z, th] of [['room3-door', 10.9, 11.9, Math.PI / 2 + 0.25], ['room3-tv', 13.6, 12.3, Math.PI - 0.15], ['room3-south', 14.2, 10.5, -0.55], ['wardrobe6-door', 6.6, 4.5, Math.PI - 0.15], ['wardrobe6-end', 6.55, 3.2, 0.2]]) for (const on of [true, false]) {
     await page.evaluate(([x, z, th, on]) => { VIZ.set(on); controls.setFPV(x, z, th); }, [x, z, th, on]); await page.waitForTimeout(on ? 1500 : 400); await page.screenshot({ path: path.join(outDir, 'm4-2-' + name + (on ? '-on' : '-off') + '.png') }); }
   await page.evaluate(() => { document.getElementById('avatarOn').checked = true; document.getElementById('avatarOn').dispatchEvent(new Event('change')); VIZ.set(true); LIGHTING.set('lamps'); setView('top'); });
   await page.reload(); await page.waitForTimeout(2500);
@@ -739,7 +739,7 @@ const { chromium } = require('playwright');
   if (mir.haloElsewhere) problems.push('зеркала: mirrorLed используется вне bathmirror (' + mir.haloElsewhere + ')');
   Object.entries(mir.env).forEach(([k, ok]) => { if (!ok) problems.push('зеркала: env-карта — ' + k + ' (materials-lighting M3 §5)'); });
   if (mir.builds !== 1) problems.push('зеркала: PMREM зеркала собрана ' + mir.builds + ' раз (нужно 1)');
-  for (const [name, x, z, tx, tz] of [['m3-bath9-front', 9.3, 9.45, 9.27, 8.2], ['m3-bath9-tub', 8.45, 9.4, 9.27, 8.2], ['m3-bath9-side', 9.75, 8.4, 8.9, 8.2], ['m3-hall5-door', 7.3, 7.4, 6.37, 6.5], ['m3-hall5-north', 6.62, 5.3, 6.37, 6.6], ['m3-hall5-south', 6.62, 7.7, 6.37, 6.3]]) {
+  if (!noShot) for (const [name, x, z, tx, tz] of [['m3-bath9-front', 9.3, 9.45, 9.27, 8.2], ['m3-bath9-tub', 8.45, 9.4, 9.27, 8.2], ['m3-bath9-side', 9.75, 8.4, 8.9, 8.2], ['m3-hall5-door', 7.3, 7.4, 6.37, 6.5], ['m3-hall5-north', 6.62, 5.3, 6.37, 6.6], ['m3-hall5-south', 6.62, 7.7, 6.37, 6.3]]) {
     await page.evaluate(([x, z, tx, tz]) => { VIZ.set(true); document.getElementById('avatarOn').checked = false; controls.setFPV(x, z, Math.atan2(tx - x, tz - z)); }, [x, z, tx, tz]); await page.waitForTimeout(300); // figure hidden: it stands in front of the glass
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
@@ -792,7 +792,7 @@ const { chromium } = require('playwright');
   ['catalogue', 'on', 'env', 'pose', 'group', 'ledSplit', 'back', 'neutral', 'illusion', 'groups', 'near'].forEach(k => { if (!l1[k]) problems.push('свет: ' + k + ' — не по materials-lighting L1 (§6, lighting.js)'); });
   if (!l1.wall.ok) problems.push('свет: стена не перекрывает источник (за стеной ' + l1.wall.dark + ', в проёме ' + l1.wall.lit + ')');
   // L1 frames: kitchen from the door, from the work zone to the sofa, the work zone itself, the evening scene (only table + sofa), bath 9 in front of the mirror
-  for (const [name, x, z, tx, tz, off] of [['l1-kitchen-door', 12.6, 5.6, 8.6, 2.6], ['l1-kitchen-sofa', 9.0, 3.0, 12.5, 5.8], ['l1-kitchen-work', 10.8, 4.9, 8.6, 3.3], ['l1-kitchen-evening', 12.6, 5.6, 8.6, 2.6, 'g4.work,g4.splash,g4.main'], ['l1-bath9-front', 9.3, 9.45, 9.27, 8.2],
+  if (!noShot) for (const [name, x, z, tx, tz, off] of [['l1-kitchen-door', 12.6, 5.6, 8.6, 2.6], ['l1-kitchen-sofa', 9.0, 3.0, 12.5, 5.8], ['l1-kitchen-work', 10.8, 4.9, 8.6, 3.3], ['l1-kitchen-evening', 12.6, 5.6, 8.6, 2.6, 'g4.work,g4.splash,g4.main'], ['l1-bath9-front', 9.3, 9.45, 9.27, 8.2],
     ['l2-kid1-door', 4.9, 4.5, 2.4, 2.6], ['l2-kid1-desk', 3.0, 2.6, 2.0, 4.8], ['l2-kid1-evening', 1.5, 4.5, 4.9, 2.9, 'g1.main,g1.desk,g1.track'],
     ['l2-kid2-bed', 11.9, 7.2, 13.2, 9.0], ['l2-kid2-desk', 13.3, 9.1, 11.5, 8.9], ['l2-kid2-wall', 13.4, 8.2, 12.9, 6.6], ['l2-kid2-evening', 11.9, 7.2, 13.2, 9.0, 'g2.main,g2.desk'],
     ['l2-master-bed', 12.3, 10.6, 13.9, 12.6], ['l2-master-vanity', 10.6, 12.0, 12.1, 10.0], ['l2-master-evening', 12.3, 10.6, 13.9, 12.6, 'g3.main,g3.vanity'],
@@ -892,7 +892,7 @@ const { chromium } = require('playwright');
   // screenshots of room 1: plan, from the door, from the desk to the gallery wall, from under the bed to the window
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 2.4; controls.r = hh / TAN22; controls.target.set(3.17 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 3.37); controls.apply(); });
   await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'room1-top.png') });
-  for (const [name, x, z, th] of [['room1-door', 4.5, 4.55, -Math.PI / 2 + 0.45], ['room1-gallery', 1.9, 3.0, Math.PI * 0.3], ['room1-bed', 4.95, 3.3, -Math.PI / 2 - 0.15]]) {
+  if (!noShot) for (const [name, x, z, th] of [['room1-door', 4.5, 4.55, -Math.PI / 2 + 0.45], ['room1-gallery', 1.9, 3.0, Math.PI * 0.3], ['room1-bed', 4.95, 3.3, -Math.PI / 2 - 0.15]]) {
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
@@ -926,7 +926,7 @@ const { chromium } = require('playwright');
   if (r2.colored.length) problems.push('комната 2: цветные материалы у ' + r2.colored.join(', '));
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 2.2; controls.r = hh / TAN22; controls.target.set(12.92 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 8.07); controls.apply(); });
   await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'room2-top.png') });
-  for (const [name, x, z, th] of [['room2-door', 11.9, 7.35, Math.PI / 2 + 0.15], ['room2-desk', 12.0, 8.8, Math.PI * 0.75], ['room2-gym', 14.0, 8.1, -Math.PI * 0.75]]) {
+  if (!noShot) for (const [name, x, z, th] of [['room2-door', 11.9, 7.35, Math.PI / 2 + 0.15], ['room2-desk', 12.0, 8.8, Math.PI * 0.75], ['room2-gym', 14.0, 8.1, -Math.PI * 0.75]]) {
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
@@ -953,7 +953,7 @@ const { chromium } = require('playwright');
   if (m3.colored.length) problems.push('комната 3: цветные материалы у ' + m3.colored.join(', '));
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 2.4; controls.r = hh / TAN22; controls.target.set(12.39 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 11.46); controls.apply(); });
   await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'room3-top.png') });
-  for (const [name, x, z, th] of [['room3-door', 10.9, 11.9, Math.PI / 2 + 0.25], ['room3-tv', 13.6, 12.3, Math.PI - 0.15], ['room3-south', 14.2, 10.5, -0.55]]) {
+  if (!noShot) for (const [name, x, z, th] of [['room3-door', 10.9, 11.9, Math.PI / 2 + 0.25], ['room3-tv', 13.6, 12.3, Math.PI - 0.15], ['room3-south', 14.2, 10.5, -0.55]]) {
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
@@ -984,7 +984,7 @@ const { chromium } = require('playwright');
   if (b9.colored.length) problems.push('санузел 9: цветные материалы у ' + b9.colored.join(', '));
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 1.4; controls.r = hh / TAN22; controls.target.set(9.03 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 9.0); controls.apply(); });
   await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'bath9-top.png') });
-  for (const [name, x, z, th] of [['bath9-door', 9.8, 8.85, -Math.PI / 2 + 0.3], ['bath9-basin', 9.6, 9.0, Math.PI - 0.35], ['bath9-tub', 8.6, 8.9, Math.PI / 2 + 0.1]]) {
+  if (!noShot) for (const [name, x, z, th] of [['bath9-door', 9.8, 8.85, -Math.PI / 2 + 0.3], ['bath9-basin', 9.6, 9.0, Math.PI - 0.35], ['bath9-tub', 8.6, 8.9, Math.PI / 2 + 0.1]]) {
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
@@ -1014,7 +1014,7 @@ const { chromium } = require('playwright');
   if (b8.colored.length) problems.push('санузел 8: цветные материалы у ' + b8.colored.join(', '));
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 1.4; controls.r = hh / TAN22; controls.target.set(9.03 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 12.26); controls.apply(); });
   await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'bath8-top.png') });
-  for (const [name, x, z, th] of [['bath8-door', 9.8, 12.6, -Math.PI / 2 + 0.3], ['bath8-wc', 9.6, 12.75, -Math.PI / 2 - 0.55], ['bath8-shower', 8.7, 12.8, Math.PI / 2 - 0.1]]) {
+  if (!noShot) for (const [name, x, z, th] of [['bath8-door', 9.8, 12.6, -Math.PI / 2 + 0.3], ['bath8-wc', 9.6, 12.75, -Math.PI / 2 - 0.55], ['bath8-shower', 8.7, 12.8, Math.PI / 2 - 0.1]]) {
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
@@ -1043,7 +1043,7 @@ const { chromium } = require('playwright');
   if (w6.colored.length) problems.push('гардеробная 6: цветные материалы у ' + w6.colored.join(', '));
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 1.4; controls.r = hh / TAN22; controls.target.set(6.225 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 2.884); controls.apply(); });
   await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'wardrobe6-top.png') });
-  for (const [name, x, z, th] of [['wardrobe6-door', 6.6, 4.5, Math.PI - 0.15], ['wardrobe6-end', 6.55, 3.2, 0.2]]) {
+  if (!noShot) for (const [name, x, z, th] of [['wardrobe6-door', 6.6, 4.5, Math.PI - 0.15], ['wardrobe6-end', 6.55, 3.2, 0.2]]) {
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
@@ -1077,7 +1077,7 @@ const { chromium } = require('playwright');
   if (b10.colored.length) problems.push('лоджия 10: цветные материалы у ' + b10.colored.join(', '));
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 2.1; controls.r = hh / TAN22; controls.target.set(14.5 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 4.15); controls.apply(); });
   await page.waitForTimeout(300); await page.screenshot({ path: path.join(outDir, 'balcony10-top.png') });
-  for (const [name, x, z, th] of [['balcony10-desk', 14.3, 3.9, 0.15], ['balcony10-shelf', 14.6, 4.7, Math.PI + 0.1]]) {
+  if (!noShot) for (const [name, x, z, th] of [['balcony10-desk', 14.3, 3.9, 0.15], ['balcony10-shelf', 14.6, 4.7, Math.PI + 0.1]]) {
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
