@@ -1153,6 +1153,17 @@ const { chromium } = require('playwright');
     await page.evaluate(([x, z, th]) => { setView('fpv'); controls.setFPV(x, z, th); }, [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
+  // «Сброс» (кнопка 🔄): чистит сохранения pulse3d.* и открывает страницу как при первом заходе — последним, страница после него перезагружена
+  await page.evaluate(() => { try { localStorage.setItem('pulse3d.layout', '{"format":1}'); localStorage.setItem('pulse3d.light', 'lamps'); localStorage.setItem('other.key', 'stay'); } catch (e) {} });
+  page.once('dialog', d => d.accept());
+  await page.click('#resetBtn');
+  await page.waitForTimeout(6000);
+  const reset = await page.evaluate(() => ({ lay: localStorage.getItem('pulse3d.layout'), light: localStorage.getItem('pulse3d.light'), other: localStorage.getItem('other.key'), q: location.search + location.hash, items: Object.keys(ITEM_GROUPS).length }));
+  if (reset.lay || reset.light === 'lamps') problems.push('сброс: сохранения pulse3d.* пережили кнопку 🔄');
+  if (reset.other !== 'stay') problems.push('сброс: стёрты чужие ключи localStorage');
+  if (reset.q || !reset.items) problems.push('сброс: страница не открылась заново чистым адресом');
+  await page.evaluate(() => { try { localStorage.removeItem('other.key'); } catch (e) {} });
+
   console.log(`  кадров/с: план ${fpsPlain}, визуализация ${fpsViz} (viewport 1400×1000, прогулка в кухне)`);
   await browser.close();
 
