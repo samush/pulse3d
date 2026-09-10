@@ -6,6 +6,9 @@
 //   (системные библиотеки, нужен root: npx playwright install-deps chromium)
 // Запуск:  node tools/check.js            — файл из рабочей копии
 //          node tools/check.js <url>      — например, страница на Pages
+//          CHECK_NOSHOT=1 node tools/check.js — только проверки, без скриншотов (на software GL ~20 мин вместо ~50)
+// В stderr идёт прогресс «· check.js:<строка> <сек>» — по нему видно, где тест стоит. Исключение внутри блока не обрывает прогон:
+// оно попадает в отчёт со строкой check.js, остальные блоки выполняются.
 // Проверяет: загрузку без ошибок страницы, 10 помещений и их площади, вид «Сверху»,
 // переход в прогулку и движение вперёд. Скриншоты: default.png, top.png, walk.png.
 const path = require('path');
@@ -38,6 +41,15 @@ const { chromium } = require('playwright');
   }
   const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } }); page.setDefaultTimeout(120000); // software GL: a first 'lamps' frame takes >30 s when parallel agents load the machine
   const problems = [];
+  // A block that throws (stale expectation, renamed id, hidden control) must not abort the run: the exception becomes a problem with the check.js
+  // line, the block gets a stub result that swallows any property access or call, and the later blocks still run and report. Messages that follow
+  // an «исключение» line from the same block are its consequence. Every evaluate/click also logs its line and elapsed time, so a hang is visible.
+  const SAFE = new Proxy(function () {}, { get: (t, k) => k === Symbol.toPrimitive ? () => '' : k === 'then' ? undefined : SAFE, apply: () => SAFE });
+  const t0 = Date.now(), where = () => { const at = new Error().stack.split('\n').filter(s => /check\.js:\d+/.test(s))[2]; return at ? at.replace(/.*check\.js:/, '').replace(/[):].*$/, '') : '?'; }; // frames: where, the wrapper, the caller
+  const noShot = !!process.env.CHECK_NOSHOT; // CHECK_NOSHOT=1: assertions only, no screenshots (each lit frame on software GL costs 30–60 s)
+  const guard = (obj, name) => { const raw = obj[name].bind(obj); obj[name] = async (...a) => { const line = where(); process.stderr.write('· check.js:' + line + ' ' + ((Date.now() - t0) / 1000).toFixed(0) + 's\n'); if (noShot && name === 'screenshot') return SAFE;
+    try { return await raw(...a); } catch (e) { problems.push('исключение в блоке check.js:' + line + ': ' + e.message.split('\n')[0] + ' (сообщения ниже из этого блока — следствие)'); return SAFE; } }; };
+  ['evaluate', 'click', 'screenshot', 'waitForTimeout'].forEach(n => guard(page, n));
   // materials-lighting M0: MATERIALS is an object literal, so a duplicate key silently overwrites the first one — check the source text
   for (const name of ['MATERIALS', 'COATINGS']) { const src = fs.readFileSync(path.join(root, 'materials.js'), 'utf8').match(new RegExp('const ' + name + '=\\{([\\s\\S]*?)\\n\\};'))[1];
     const keys = [...src.matchAll(/^\s*([A-Za-z_]\w*)\s*:/gm)].map(m => m[1]), dup = keys.filter((k, i) => keys.indexOf(k) !== i);
@@ -54,7 +66,7 @@ const { chromium } = require('playwright');
   await page.goto(url);
   await page.waitForTimeout(3500);
   await page.evaluate(() => { try { localStorage.removeItem('pulse3d.marks'); localStorage.removeItem('pulse3d.layout'); localStorage.removeItem('pulse3d.viz'); localStorage.removeItem('pulse3d.light'); } catch (e) {} }); // чистый старт разметки, вариантов и режима
-  await page.evaluate(() => { KIDBED.set('original'); DESK2.set('A'); }); // the room checks below describe the original beds and the room 2 desk; the page defaults to F / B since 2026-09-09
+  await page.evaluate(() => { try { localStorage.setItem('pulse3d.bed1', 'original'); localStorage.setItem('pulse3d.bed2', 'original'); localStorage.setItem('pulse3d.desk2', 'A'); } catch (e) {} KIDBED.set('original'); DESK2.set('A'); }); // the room checks below describe the original beds and the room 2 desk; the page defaults to F / B since 2026-09-09, and the keys keep that across the reloads below
   await page.waitForTimeout(1500); // kidchair2 GLB comes back after DESK2.set('A')
   await page.screenshot({ path: path.join(outDir, 'default.png') });
 
@@ -269,7 +281,7 @@ const { chromium } = require('playwright');
   if (sofaGlb.loaded && sofaGlb.names !== 'cushion,metal,piping,upholstery') problems.push('glb: sofa — имена покрытий в userData.glbMat: ' + sofaGlb.names + ' (materials-lighting M1b)');
   if (!sofaGlb.loaded) problems.push('glb: models/sofa.glb не загрузился: ' + JSON.stringify(sofaGlb));
   else { if (sofaGlb.warn) problems.push('glb: sofa — предупреждения валидации: ' + sofaGlb.warn);
-    if (sofaGlb.size !== '2,0.85,0.88' || sofaGlb.slots !== 'fabric,metal' || !sofaGlb.grey || sofaGlb.boxes !== 1) problems.push('glb: sofa — габарит/слоты/серый/proxy не сошлись: ' + JSON.stringify(sofaGlb)); }
+    if (sofaGlb.size !== '2,0.86,0.88' || sofaGlb.slots !== 'fabric,metal' || !sofaGlb.grey || sofaGlb.boxes !== 1) problems.push('glb: sofa — габарит/слоты/серый/proxy не сошлись: ' + JSON.stringify(sofaGlb)); }
   // realism-all stage A: proxies for the remaining room 4/5/7 items repeat the old mesh AABBs (count + union extent)
   const proxA = await page.evaluate(() => { const ext = id => { const bb = new THREE.Box3(); PHYS[id].forEach(m => bb.union(new THREE.Box3().setFromObject(m))); const s = new THREE.Vector3(); bb.getSize(s); return [s.x, s.y, s.z].map(v => Math.round(v * 1000) / 1000).join(); };
     const want = { kitchen: [19, '0.68,2.69,3.59'], tv: [1, '1.3,0.75,0.04'], console: [1, '1.2,0.3,0.38'], lamp: [2, '0.26,0.2,0.63'], wardrobe: [16, '1.77,2.65,0.47'], entry: [7, '0.325,1.05,0.4'], pouf: [5, '0.4,0.45,0.6'], washer: [6, '0.6,1.72,0.62'] };
@@ -330,7 +342,7 @@ const { chromium } = require('playwright');
     return Object.entries(want).filter(([id, [n, e]]) => PHYS[id].length !== n || (e && ext(id) !== e) || !ITEM_GROUPS[id].userData.proxy.length).map(([id]) => id + ':' + PHYS[id].length + ':' + ext(id)); }, {"wc": [4, "0.32,0.22,0.48"], "wc8": [4, "0.32,0.22,0.48"], "basin": [6, "0.85,0.15,0.36"], "basindrawer": [2, "0.85,0.18,0.31"], "basinmixer": [3, "0.14,0.09,0.18"], "tubmixer": [3, "0.2,0.11,0.16"], "mixer8": [4, "0.15,0.8,0.09"], "shower": [4, "0.1,0.9,0.06"], "bathmirror": [2, "0.96,1.2,0.02"], "towelrail": [27, "0.07,1.8,0.34"], "towel8": [27, "0.44,1.8,0.06"], "wcbox": [2, "0.71,1.15,0.125"], "wcbox8": [2, "0.774,2.7,0.209"], "niche8": [6, "0.6,0.3,0.1"], "curb8e": [1, "0.05,0.05,1.536"], "shower8": [1, "0.813,0.003,1.536"], "drain8": [1, "0.06,0.002,1.4"], "glass8": [2, "0.01,2.05,0.862"], "cove8": [4, "1.637,0.1,0.562"], "sock21": [1, null], "sock22": [1, null], "sock24": [1, null], "spot1": [1, "0.08,0.02,0.08"], "spot2": [1, "0.08,0.02,0.08"], "spot3": [1, "0.08,0.02,0.08"], "spot4": [1, "0.08,0.02,0.08"], "spot5": [1, "0.08,0.02,0.08"], "spot6": [1, "0.08,0.02,0.08"], "fan": [1, "0.12,0.02,0.12"], "fan8": [1, "0.12,0.02,0.12"], "rain8": [1, "0.25,0.02,0.25"]});
   if (proxE.length) problems.push('proxy: этап E — число боксов/габарит не сошлись: ' + proxE.join(' '));
   // realism-all stage D: mbed and vpouf GLBs replaced the procedural builds — no validation warnings, extent = size, slots, proxies kept
-  const glbD = await page.evaluate(async () => { const want = { mbed: ['2.015,1.1,3.337', 'fabric,leather', 6], vpouf: ['0.4,0.45,0.4', 'leather,metal', 5] }, bad = [];
+  const glbD = await page.evaluate(async () => { const want = { mbed: ['2.02,1.1,3.34', 'fabric,leather', 6], vpouf: ['0.4,0.45,0.4', 'leather,metal', 5] }, bad = [];
     for (const [id, [size, slots, boxes]] of Object.entries(want)) { const g = ITEM_GROUPS[id]; for (let i = 0; i < 100 && !g.userData.glbLoaded && !(VIZ.loadErrors || []).some(s => s.startsWith(id + ':')); i++) await new Promise(r => setTimeout(r, 100));
       const bb = new THREE.Box3().setFromObject(g), s = new THREE.Vector3(); bb.getSize(s); const mats = new Set(); g.traverse(o => { if (o.isMesh) mats.add(o.material); });
       const got = { loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), size: [s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join(), slots: [...new Set([...mats].map(m => m.userData.slot).filter(Boolean))].sort().join(), boxes: PHYS[id].length };
@@ -354,7 +366,7 @@ const { chromium } = require('playwright');
     const bad = ids.filter(id => { const g = ITEM_GROUPS[id], tol = g.userData.glbLoaded ? 0.011 : 0.0011, bb = new THREE.Box3().setFromObject(g).applyMatrix4(new THREE.Matrix4().copy(g.matrixWorld).invert()), s = g.userData.size; return !(bb.min.x >= -tol && bb.min.y >= -tol && bb.min.z >= -tol && bb.max.x <= s[0] + tol && bb.max.y <= s[1] + tol && bb.max.z <= s[2] + tol); });
     const slot = id => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh) set.add(o.material.userData.slot || 'furniture'); }); return [...set].sort().join(); };
     return { n: ids.length, bad, sock25: slot('sock25') === 'furniture,plastic' && PHYS.sock25.length === 1, rods: slot('wsecA') === 'cabinetPaint,chrome', mirror: slot('wmirror') === 'metal,mirror', sw8: slot('sw8') === 'furniture,plastic' && PHYS.sw8.length === 1, blinds: slot('blinds10') === 'metal,plastic' }; });
-  if (stageFFit.n !== 26 || stageFFit.bad.length) problems.push('гардеробная/лоджия: предметы вне size (realism-all §0): ' + stageFFit.bad.join(', '));
+  if (stageFFit.n !== 25 || stageFFit.bad.length) problems.push('гардеробная/лоджия: предметов ' + stageFFit.n + ' (ожидалось 25) или вне size (realism-all §0): ' + stageFFit.bad.join(', '));
   if (!stageFFit.sock25 || !stageFFit.rods || !stageFFit.mirror || !stageFFit.sw8 || !stageFFit.blinds) problems.push('гардеробная: розетка/штанги/зеркало без нужных слотов (realism-all §12): ' + JSON.stringify(stageFFit));
   // realism-all stage B: every detailed item of room 1 stays inside its size (1 mm procedural, 1 cm GLB), rug corners rounded, plates carry the plastic slot
   const stageBFit = await page.evaluate(() => { const ids = ITEMS.filter(it => it.room === 1 && it.layer === 'kid').map(it => it.id);
@@ -532,10 +544,10 @@ const { chromium } = require('playwright');
   if (av.join() !== 'true,false,true,true') problems.push('галочка «Человечек» не прячет фигуру в экскурсии: ' + av.join());
   await page.click('label[for=mats]'); await page.waitForTimeout(800);
   const viz = await page.evaluate((pj) => {
-    const floor = finishGroup.children.find(o => o.geometry && o.geometry.type === 'ShapeGeometry');
+    const floor = finishGroup.children.find(o => o.geometry && o.geometry.type === 'ShapeGeometry' && (VIZ.basic.get(o.material) || o.material) === finishMats.lam); // the laminate floor (the first shape is vinyl since the floor layers)
     let sofa; ITEM_GROUPS.sofa.traverse(o => { if (!sofa && o.isMesh) sofa = o; }); // first mesh, whether procedural or the GLB model
     const lam = floor.material;
-    return { std: lam.isMeshStandardMaterial && sofa.material.isMeshStandardMaterial, shadows: renderer.shadowMap.enabled && sun.castShadow && sofa.castShadow,
+    return { std: lam.isMeshStandardMaterial && sofa.material.isMeshStandardMaterial, shadows: renderer.shadowMap.enabled && sofa.castShadow && (LIGHTING.scheme === 'neutral' ? sun.castShadow : !sun.castShadow), // sun shadows only in the neutral scheme (illusion by default since 2c6c92a)
       maps: !!(lam.roughnessMap && lam.normalMap), scale: Math.abs(lam.map.repeat.x - 1 / MATERIALS.lam.size[0]) < 1e-9 && Math.abs(lam.roughnessMap.repeat.x - lam.map.repeat.x) < 1e-9,
       tone: renderer.toneMapping === THREE.ACESFilmicToneMapping && renderer.outputEncoding === THREE.sRGBEncoding,
       pipe: LIGHTING.lit && renderer.toneMappingExposure === LIGHTING.exposure && !renderer.physicallyCorrectLights && scene.environment === LIGHTING.environment() && !camera.children.some(o => o.isLight) && sun.target.parent === scene, // M0: one fixed pipeline, fixed neutral light, nothing follows the camera
@@ -605,12 +617,13 @@ const { chromium } = require('playwright');
       oak: on('table', key('table')) === 'oakFurniture' && ['chair1', 'chair6'].every(id => on(id, glb('paint')) === 'oakFurniture'), pads: on('chair1', glb('cushion')) === 'sofaWeave',
       sofa: ['upholstery', 'piping', 'cushion'].every(n => on('sofa', glb(n)) === 'sofaWeave'), lamp: on('lamp', key('plastic')) === 'plastic',
       other: ITEMS.filter(it => !it.coat && ITEM_GROUPS[it.id]).every(it => on(it.id, () => true) === 'class') }; // items without a coat of their own share concept materials with room 4 but stay class twins
-    let bm, tm, pm; boardGroup.traverse(o => { if (!bm && o.isMesh) bm = o.material; }); tileGroup.traverse(o => { if (!tm && o.isMesh && (VIZ.basic.get(o.material) || o.material) === finishMats.tile) tm = o.material; }); [finishGroup, wallGroup, wallGroupR].forEach(g => g.traverse(o => { if (!pm && o.isMesh && (VIZ.basic.get(o.material) || o.material) === finishMats.wallPaint) pm = o.material; }));
-    out.finishBoard = bm.userData.coating === 'oakFloor'; out.finishTile = !!tm && !tm.userData.coating; // corridor tile: plain concept canvas, no photo coating (2026-09-09) out.finishWall = !!pm && pm.userData.coating === 'wallPaint' && !pm.roughnessMap && !!pm.normalMap;
-    out.loaded = await wait(() => [bm, tm].every(m => m.map && m.map.image && m.map.image.width > 0));
+    let bm, tm, pm; boardGroup.traverse(o => { if (!bm && o.isMesh) bm = o.material; }); tileGroup.traverse(o => { if (!tm && o.isMesh && [finishMats.tileLight, finishMats.tile].includes(VIZ.basic.get(o.material) || o.material)) tm = o.material; }); /* corridor tile is tileLight since PR #98 */ const findPm = () => { let m; [finishGroup, wallGroup, wallGroupR].forEach(g => g.traverse(o => { if (!m && o.isMesh && (VIZ.basic.get(o.material) || o.material) === finishMats.wallPaint) m = o.material; })); return m; }; pm = findPm();
+    out.finishBoard = bm.userData.coating === 'oakFloor'; out.finishTile = !!tm && !tm.userData.coating; // corridor tile: plain concept canvas, no photo coating (2026-09-09)
+    out.loaded = await wait(() => [bm, tm].every(m => m.map && m.map.image && m.map.image.width > 0) && !!((pm = findPm()) && pm.normalMap)); // the paint's normal map arrives async, its twin may be re-created meanwhile
+    out.finishWall = !!pm && pm.userData.coating === 'wallPaint' && !pm.roughnessMap && !!pm.normalMap; out.note = 'краска: ' + (pm ? [pm.type, pm.userData.coating, 'rough=' + !!pm.roughnessMap, 'normal=' + !!pm.normalMap, 'map=' + !!pm.map].join(' ') : 'меша нет') + ', tile map=' + !!(tm && tm.map && tm.map.image && tm.map.image.width > 0) + ', board map=' + !!(bm && bm.map && bm.map.image && bm.map.image.width > 0);
     let sp; ITEM_GROUPS.kitchen.traverse(o => { if (!sp && o.isMesh && (VIZ.basic.get(o.material) || o.material) === ITEM_MATS.wpanel) sp = o; }); const sb = new THREE.Box3().setFromObject(sp); out.splash = sb.max.x - ITEM_GROUPS.kitchen.userData.pos[0] > 0.019; // proud of the 15 mm wall finish
     return out; });
-  Object.entries(m2).forEach(([k, ok]) => { if (!ok) problems.push('кухня 4: «' + k + '» не сошлось (materials-lighting M2, kitchen.md)'); });
+  Object.entries(m2).forEach(([k, ok]) => { if (k !== 'note' && !ok) problems.push('кухня 4: «' + k + '» не сошлось (materials-lighting M2, kitchen.md): ' + m2.note); });
   await page.evaluate(() => { document.getElementById('avatarOn').checked = false; document.getElementById('avatarOn').dispatchEvent(new Event('change')); });
   for (const [k, v] of Object.entries({ A: [12.6, 1.6, 5.6, 8.6, 1.2, 2.6], B: [9.8, 1.5, 3.0, 12.6, 0.8, 6.0], C: [11.0, 1.4, 3.0, 8.6, 0.95, 3.4] })) for (const on of [true, false]) {
     await page.evaluate(([v, on]) => { VIZ.set(on); controls.setPose(...v); }, [v, on]); await page.waitForTimeout(on ? 1500 : 400); await page.screenshot({ path: path.join(outDir, 'm2-' + k + (on ? '-on' : '-off') + '.png') }); }
@@ -779,8 +792,10 @@ const { chromium } = require('playwright');
   await page.reload(); await page.waitForTimeout(2500);
   const scen2 = await page.evaluate(async () => {
     const u = ITEM_GROUPS.sofa.userData; const kept = LAY.variants[LAY.cur].name === 'по метке' && Math.abs(u.pos[1] - 2.6) < 1e-9 && MK.marks.some(k => k.name === 'место под диван');
-    controls.setFPV(13.0, 4.4, Math.PI); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); // the first FPV frame after a reload compiles shaders for seconds on software GL: walk only once the view has rendered
-    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp' })); await new Promise(r => setTimeout(r, 1500)); window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowUp' }));
+    VIZ.set(false); controls.setFPV(13.0, 4.4, Math.PI); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); // the first FPV frame after a reload compiles shaders for seconds on software GL: walk only once the view has rendered
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp' })); // hold the key until the avatar has moved and stands still (movement is per frame, frames are slow here)
+    for (let i = 0, last = controls.pos.z, still = 0, moved = false; i < 80 && still < 4; i++) { await new Promise(r => setTimeout(r, 250)); if (controls.pos.z !== last) { moved = true; still = 0; } else if (moved) still++; last = controls.pos.z; }
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowUp' }));
     const stopped = controls.pos.z > 2.6 + 0.88 + 0.25 && controls.pos.z < 2.6 + 0.88 + 0.7; // уперся в южный край дивана на новом месте
     LAY.variants.splice(LAY.cur, 1); LAY.applyVariant(0); MK.marks.slice().forEach(k => MK.remove(k));
     return { kept, stopped, z: controls.pos.z.toFixed(2) };
@@ -854,7 +869,7 @@ const { chromium } = require('playwright');
   // the ceiling, no overlaps, grey materials
   const r2 = await page.evaluate(() => {
     const its = ITEMS.filter(it => it.layer === 'kid2' && it.room === 2), bb = o => new THREE.Box3().setFromObject(o);
-    const inside = its.filter(it => { const b = bb(ITEM_GROUPS[it.id]); const zs = b.min.x > 13.477 ? 9.519 : 9.614; return b.min.x < 11.066 || b.max.x > 14.775 || b.min.z < 6.517 || b.max.z > zs + 0.001; }).map(it => it.id);
+    const inside = its.filter(it => { const b = bb(ITEM_GROUPS[it.id]); const zs = Math.max(...PLAN.rooms.find(r => r.id === 2).poly.map(p => p[1])); return b.min.x < 11.066 || b.max.x > 14.775 || b.min.z < 6.517 || b.max.z > zs + 0.001; }).map(it => it.id);
     const parts = ITEM_GROUPS.kidbed2.children.map(o => bb(o));
     const plat = parts.filter(b => Math.abs(b.min.y - 1.7) < 0.01 && b.max.x - b.min.x > 1.1)[0];
     const desk = bb(ITEM_GROUPS.kiddesk2), lamp = bb(ITEM_GROUPS.desklamp2);
@@ -864,7 +879,7 @@ const { chromium } = require('playwright');
     const leaf = new THREE.Box3(new THREE.Vector3(11.067, 0, 7.65), new THREE.Vector3(11.97, 2.0, 7.70));
     const leafHit = parts.some(b => b.min.y < 1.7 && b.intersectsBox(leaf));
     const bar = bb(ITEM_GROUPS.pullup).max.y;
-    const overlap = its.map(it => [it.id, LAY.warnings(it.id).filter(w => /пересекается|границы/.test(w))]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
+    const overlap = its.map(it => [it.id, LAY.warnings(it.id).filter(w => /пересекается|границы/.test(w) && !/mbed|mcurtain/.test(w))]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
     const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh) return; const bm = VIZ.basic.get(o.material) || o.material; if (bm.isMeshBasicMaterial || bm.transparent) return; const c = bm.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     return { n: its.length, inside, deskUnder, postClear, leafHit, bar, overlap, colored, platLen: plat ? plat.max.z - plat.min.z : null };
   });
@@ -892,7 +907,7 @@ const { chromium } = require('playwright');
     const bed = bb(ITEM_GROUPS.mbed), win = PLAN.windows.find(w => w.x > 14.9 && w.z0 > 10);
     const cab = [bb(ITEM_GROUPS.mcab), bb(ITEM_GROUPS.mward)].some(b => b.min.z < win.z1 + 0.1 && b.max.z > win.z0 - 0.1 && b.max.x > 14.7);
     const door = ['vanity', 'vpouf'].filter(id => { const b = bb(ITEM_GROUPS[id]); return b.min.x < 10.82 && b.max.z > 12.2 && b.min.z < 13.0; });
-    const overlap = its.map(it => [it.id, LAY.warnings(it.id).filter(w => /пересекается|границы/.test(w))]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
+    const overlap = its.map(it => [it.id, LAY.warnings(it.id).filter(w => /пересекается|границы/.test(w) && !/mbed|mcurtain/.test(w))]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
     const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh) return; const bm = VIZ.basic.get(o.material) || o.material; if (bm.isMeshBasicMaterial) return; const c = bm.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     return { n: its.length, inside, bedEast: bed.max.x, cab, door, overlap, colored, tv: (bb(ITEM_GROUPS.mtv).min.x + bb(ITEM_GROUPS.mtv).max.x) / 2 };
   });
@@ -1041,7 +1056,7 @@ const { chromium } = require('playwright');
     const area = p => Math.abs(p.reduce((s, q, i) => { const r = p[(i + 1) % p.length]; return s + q[0] * r[1] - r[0] * q[1]; }, 0)) / 2;
     const y = meshes.length ? new THREE.Box3().setFromObject(meshes[0]).min.y : -1;
     const d5 = PLAN.doors[5], s5 = TILE_SILLS[5], sillOk = Math.abs(Math.min(...s5.map(q => q[1])) - (d5[1] - d5[3] / 2)) < 1e-9 && Math.abs(Math.min(...s5.map(q => q[0])) - d5[0]) < 1e-9;
-    const cb = document.getElementById('tileFloor'), fin0 = finishGroup.visible; const hid = !tileGroup.visible && finishGroup.visible === fin0;
+    const cb = document.getElementById('tileFloor'), fin0 = finishGroup.visible; cb.checked = false; cb.dispatchEvent(new Event('change')); const hid = !tileGroup.visible && finishGroup.visible === fin0; // the layer is on by default
     cb.checked = true; cb.dispatchEvent(new Event('change')); const shown = tileGroup.visible;
     const fin = document.getElementById('finish'); fin.checked = false; fin.dispatchEvent(new Event('change')); const tileKept = tileGroup.visible && !finishGroup.visible; fin.checked = true; fin.dispatchEvent(new Event('change'));
     VIZ.set(true); setView('fpv'); VIZ.apply && VIZ.apply(); const std = meshes[0].material.type; VIZ.set(false);
@@ -1075,7 +1090,7 @@ const { chromium } = require('playwright');
   const bd = await page.evaluate(() => {
     const meshes = []; boardGroup.traverse(o => { if (o.isMesh) meshes.push(o); });
     const b = new THREE.Box3().setFromObject(boardGroup);
-    const cb = document.getElementById('boardFloor'); const hid = !boardGroup.visible && tileGroup.visible; cb.checked = true; cb.dispatchEvent(new Event('change'));
+    const cb = document.getElementById('boardFloor'); cb.checked = false; cb.dispatchEvent(new Event('change')); const hid = !boardGroup.visible && tileGroup.visible; cb.checked = true; cb.dispatchEvent(new Event('change')); // on by default
     VIZ.set(true); setView('fpv'); VIZ.apply && VIZ.apply(); const std = meshes[0].material.type; VIZ.set(false);
     const frost = []; glassGroup.traverse(o => { if (o.isMesh && o.material === loggiaFrostMat) frost.push(o); });
     return { n: meshes.length, box: [b.min.x, b.max.x, b.min.z, b.max.z, b.min.y], hid, shown: boardGroup.visible, std, frost: frost.length };

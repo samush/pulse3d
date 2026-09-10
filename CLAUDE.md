@@ -10,7 +10,8 @@
 - Коммитить и пушить сразу в `main`, без PR (репозиторием пользуется один человек).
 - Задачи в чате ставятся по номерам помещений («в комнате 3…») — эталон
   номеров, площадей и размеров: `APARTMENT.md`.
-- Перед пушем прогнать smoke-тест: `node tools/check.js`
+- Перед пушем прогнать smoke-тест: `node tools/check.js` (быстрее: `CHECK_NOSHOT=1 node tools/check.js` — только проверки, без скриншотов;
+  в stderr идёт прогресс `· check.js:<строка> <сек>`, исключение в блоке попадает в отчёт со строкой, а не обрывает прогон)
   (один раз на окружение: `npm i && npx playwright install chromium` — версия playwright закреплена в `package.json`;
   если системный запуск Chromium не удался, тест берёт бинарник из `CHROMIUM_PATH`;
   системные библиотеки Chromium ставятся от root: `npx playwright install-deps chromium`).
