@@ -74,13 +74,16 @@ async function send() {
     }),
   });
   const body = await res.json();
+  // картинка приходит либо в output_image, либо шагом model_output — берём первый image, какой есть
+  const img = body.output_image || (body.steps || []).flatMap(st => st.content || []).find(c => c.type === 'image' && c.data);
   if (res.status === 429) { console.error('Gemini 429: у image-моделей нет бесплатного тарифа — включить биллинг в проекте ключа (https://aistudio.google.com/apikey), кадр уже снят, повтор с --reuse-frame'); process.exit(4); }
-  if (!res.ok || !body.output_image) { console.error('Gemini ' + res.status + ': ' + JSON.stringify(body).slice(0, 600)); process.exit(3); }
+  if (!res.ok || !img) { const dump = path.join(root, 'renders', 'frames', 'last-response.json'); fs.writeFileSync(dump, JSON.stringify(body, null, 1));
+    console.error('Gemini ' + res.status + ': нет картинки в ответе, целиком в ' + path.relative(root, dump)); process.exit(3); }
 
-  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '').replace(/(\d{8})(\d{4})/, '$1-$2');
+  const stamp = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', ''); // 2026-09-10-1000
   const dir = path.join(root, 'renders', cam); fs.mkdirSync(dir, { recursive: true });
-  const out = path.join(dir, stamp + '.jpg');
-  fs.writeFileSync(out, Buffer.from(body.output_image.data, 'base64'));
+  const out = path.join(dir, stamp + ((img.mime_type || '').includes('png') ? '.png' : '.jpg'));
+  fs.writeFileSync(out, Buffer.from(img.data, 'base64'));
   fs.writeFileSync(path.join(dir, stamp + '.json'), JSON.stringify({ cam, model: MODEL, size: SIZE, aspect: ASPECT, viewport: [W, H], note: flag('note', '') || undefined, prompt, frame: path.relative(root, framePath), at: new Date().toISOString() }, null, 1));
   console.log('готово: ' + path.relative(root, out) + '\nсравнить с кадром: ' + path.relative(root, framePath));
 }
