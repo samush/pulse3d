@@ -59,7 +59,10 @@ const { launchChromium } = require('./browser');
   await page.waitForTimeout(3500);
   await page.evaluate(() => { try { localStorage.removeItem('pulse3d.marks'); localStorage.removeItem('pulse3d.layout'); localStorage.removeItem('pulse3d.viz'); localStorage.removeItem('pulse3d.light'); } catch (e) {} }); // чистый старт разметки, вариантов и режима
   await page.evaluate(() => { try { localStorage.setItem('pulse3d.bed1', 'original'); localStorage.setItem('pulse3d.bed2', 'original'); localStorage.setItem('pulse3d.desk2', 'A'); } catch (e) {} KIDBED.set('original'); DESK2.set('A'); }); // the room checks below describe the original beds and the room 2 desk; the page defaults to F / B since 2026-09-09, and the keys keep that across the reloads below
-  await page.waitForTimeout(1500); // kidchair2 GLB comes back after DESK2.set('A')
+  // the room 4 checks below describe variant A with no wall decor; since 2026-09-10 the page opens on kitchen B, sofa G, tv B, decor D/B — the keys keep A across the reloads below
+  await page.evaluate(() => { const V = { kitchen: 'A', sofa: 'A', tv: 'A', decortv: 'none', decorsofa: 'none' };
+    Object.entries(V).forEach(([k, v]) => { try { localStorage.setItem('pulse3d.k4.' + k, v); } catch (e) {} ROOM4.pick(k, v); }); });
+  await page.waitForTimeout(2500); // kidchair2 and sofa GLBs come back after DESK2.set('A') and the sofa variant switch
   await page.screenshot({ path: path.join(outDir, 'default.png') });
 
   const report = await page.evaluate(() => {
@@ -185,8 +188,8 @@ const { launchChromium } = require('./browser');
     const out = { pt: p && Math.abs(p[0] - exp[0]) < 1e-6 && Math.abs(p[1] - exp[1]) < 1e-6, len: Math.abs(Math.hypot(3, 4) - Math.hypot(seg.pts[1][0] - seg.pts[0][0], seg.pts[1][1] - seg.pts[0][1])) < 1e-9,
       txt: /поворот 90°/.test(txt) && /Шаг сетки/.test(txt) && /помещение 1/.test(txt) && /x=1\.50, z=2\.50/.test(txt) };
     // T08: привязка к краю дивана, настенная точка, экспорт → импорт, отказ битого файла
-    const sp = MK.snapPt([11.40, 5.6]); const bm = MK.addPoint(sp);
-    out.bind = !!(bm.bind && bm.bind.item === 'sofa' && bm.bind.side === 'W' && Math.abs(sp[0] - 11.35) < 1e-6);
+    const sp = MK.snapPt([11.50, 5.6]); const bm = MK.addPoint(sp);
+    out.bind = !!(bm.bind && bm.bind.item === 'sofa' && bm.bind.side === 'W' && Math.abs(sp[0] - 11.455) < 1e-6);
     const wm = MK.addPoint([2.5, 1.95]); wm.wall = { side: 'N', from: 'W', dist: 1.604, h: 1.2 }; MK.edit(wm, { y0: 1.2 });
     out.wall = /стена север помещения 1.*1\.60 м вдоль стены.*1\.20 м/.test(MK.describe(wm));
     const dumpText = MK.exportText(); const ids = MK.marks.map(m => m.id).join();
@@ -464,7 +467,7 @@ const { launchChromium } = require('./browser');
     LAY.applyVariant(0); LAY.setPose('sofa', [10.75, ITEM_GROUPS.sofa.userData.pos[1]], null);
     const d = LAY.dump(); out.fork = !LAY.variants[LAY.cur].locked && d.variants.length === 1 && Math.abs(d.variants[0].poses.sofa.pos[0] - 10.75) < 1e-9;
     LAY.variants.splice(LAY.cur, 1); LAY.applyVariant(0);
-    LAY.toggle(true); LAY.select('sofa'); out.mm = Math.abs(parseFloat(document.querySelector('#itCard [data-k=x]').value) - 11.35) < 1e-9;
+    LAY.toggle(true); LAY.select('sofa'); out.mm = Math.abs(parseFloat(document.querySelector('#itCard [data-k=x]').value) - 11.455) < 1e-9;
     LAY.tool = 'move'; MK.toggle(true); out.excl = MK.on && !LAY.on && LAY.tool == null; LAY.toggle(true); out.excl2 = LAY.on && !MK.on; LAY.toggle(false);
     const wm = MK.addPoint([3, 3]);
     try { MK.edit(wm, { wall: { side: 'N', from: 'W', dist: 1, h: 1.2 } }); MK.edit(wm, { bind: null, conflict: null }); MK.undo(); MK.undo(); out.wallEdit = !wm.wall; } catch (e) { out.wallEdit = false; out.err = e.message; }
@@ -510,6 +513,10 @@ const { launchChromium } = require('./browser');
     [['decortv', 'ABCDEFGH'], ['decorsofa', 'ABC']].forEach(([id, vs]) => { for (const v of vs) { ROOM4.set(id, v); if (!ITEM_GROUPS[id].visible || !inside(id)) out.push(id + ':' + v); } ROOM4.set(id, 'none'); if (ITEM_GROUPS[id].visible) out.push(id + ':none'); });
     return out; });
   if (decor.length) problems.push('декор комнаты 4: ' + decor.join(', '));
+  // page defaults (2026-09-10, user): kitchen B, sofa G, tv decor D, sofa decor B — the selects, not the state forced above
+  const defs = await page.evaluate(() => Object.fromEntries(['k4kitchen', 'k4sofa', 'k4tv', 'k4decortv', 'k4decorsofa', 'k4table', 'm3vanity'].map(id => [id, [...document.getElementById(id).options].find(o => o.defaultSelected).value])));
+  const wantDefs = { k4kitchen: 'B', k4sofa: 'G', k4tv: 'B', k4decortv: 'D', k4decorsofa: 'B', k4table: 'A', m3vanity: 'A' };
+  Object.entries(wantDefs).forEach(([id, v]) => { if (defs[id] !== v) problems.push('вариант по умолчанию ' + id + ': ' + defs[id] + ' (нужен ' + v + ')'); });
   // room 3 vanity (#m3vanity A–E) and dining table (#k4table A/B): every variant builds meshes inside its size box and keeps the pouf
   const vans = await page.evaluate(() => { const out = [], inside = id => { const u = ITEM_GROUPS[id].userData, bb = new THREE.Box3().setFromObject(ITEM_GROUPS[id]), t = 0.005;
       return ITEM_GROUPS[id].children.length > 0 && bb.min.y >= -t && bb.max.y <= u.size[1] + t && bb.max.x - bb.min.x <= u.size[0] + 2 * t && bb.max.z - bb.min.z <= u.size[2] + 2 * t; };
@@ -605,7 +612,7 @@ const { launchChromium } = require('./browser');
       maps: !!(lam.roughnessMap && lam.normalMap), scale: Math.abs(lam.map.repeat.x - 1 / MATERIALS.lam.size[0]) < 1e-9 && Math.abs(lam.roughnessMap.repeat.x - lam.map.repeat.x) < 1e-9,
       tone: renderer.toneMapping === THREE.ACESFilmicToneMapping && renderer.outputEncoding === THREE.sRGBEncoding,
       pipe: LIGHTING.lit && renderer.toneMappingExposure === LIGHTING.exposure && !renderer.physicallyCorrectLights && scene.environment === LIGHTING.environment() && !camera.children.some(o => o.isLight) && sun.target.parent === scene, // M0: one fixed pipeline, fixed neutral light, nothing follows the camera
-      geom: JSON.stringify(PLAN) === pj && Math.abs(ITEM_GROUPS.sofa.userData.pos[0] - 11.35) < 1e-9 };
+      geom: JSON.stringify(PLAN) === pj && Math.abs(ITEM_GROUPS.sofa.userData.pos[0] - 11.455) < 1e-9 };
   }, planJson);
   const fpsViz = await fps();
   // review 2026-09-05: wall slider drives the PBR twins and does not hide the balcony threshold; ceiling returns after plan
@@ -669,7 +676,7 @@ const { launchChromium } = require('./browser');
     const out = { fronts: on('kitchen', key('base')) === 'hplFront' && on('kitchen', key('upper')) === 'hplFront' && on('console', key('base')) === 'cabinetPaint',
       stone: on('kitchen', key('top')) === 'hplPanel' && on('kitchen', key('wpanel')) === 'hplPanel', carcass: on('kitchen', key('hdark')) === 'class' && on('kitchen', key('handle')) === 'class',
       oak: on('table', key('table')) === 'oakFurniture' && ['chair1', 'chair6'].every(id => on(id, glb('paint')) === 'oakFurniture'), pads: on('chair1', glb('cushion')) === 'sofaWeave',
-      sofa: ['upholstery', 'piping', 'cushion'].every(n => on('sofa', glb(n)) === 'sofaWeave'), lamp: on('lamp', key('plastic')) === 'plastic',
+      sofa: ['upholstery', 'piping', 'cushion'].every(n => on('sofa', glb(n)) === 'sofaWeaveLight'), lamp: on('lamp', key('plastic')) === 'plastic',
       other: ITEMS.filter(it => !it.coat && ITEM_GROUPS[it.id]).every(it => on(it.id, () => true) === 'class') }; // items without a coat of their own share concept materials with room 4 but stay class twins
     let bm, tm, pm; boardGroup.traverse(o => { if (!bm && o.isMesh) bm = o.material; }); tileGroup.traverse(o => { if (!tm && o.isMesh && [finishMats.tileLight, finishMats.tile].includes(VIZ.basic.get(o.material) || o.material)) tm = o.material; }); /* corridor tile is tileLight since PR #98 */ const findPm = () => { let m; [finishGroup, wallGroup, wallGroupR].forEach(g => g.traverse(o => { if (!m && o.isMesh && (VIZ.basic.get(o.material) || o.material) === finishMats.wallPaint) m = o.material; })); return m; }; pm = findPm();
     out.finishBoard = bm.userData.coating === 'oakFloor'; out.finishTile = !!tm && !tm.userData.coating; // corridor tile: plain concept canvas, no photo coating (2026-09-09)

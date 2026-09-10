@@ -62,12 +62,13 @@ const VARIANTS={
     return [W,0.68,D]; },
   // G — low bouclé modular (photo 5): chaise at the east wall, seat module, shorter middle module with a small pad; square back cushions lean on the wall
   G(add){ const W=2.30, D=1.50; feet(add,[[0.15,0.65],[0.75,0.65],[0.15,1.4],[1.4,1.4],[2.15,1.4],[1.6,0.15],[2.15,0.15]]);
-    add(rbox(0.85,0.37,0.95,0.06,0,0.05,0.55,{m:3,step:0.2,crown:0.01}),'upholstery');                                    // seat module 0.05–0.42
-    add(rbox(0.65,0.37,0.95,0.06,0.85,0.05,0.55,{m:3,step:0.2,crown:0.01}),'upholstery');                                 // middle module
-    add(rbox(0.80,0.37,1.50,0.06,1.50,0.05,0,{m:3,step:0.2,crown:0.01}),'upholstery');                                    // chaise
-    add(rbox(0.40,0.10,0.40,0.04,0.975,0.42,0.80,{m:2,step:0.1,crown:0.015}),'cushion');                                  // small pad on the middle module
-    [[0.08,0.70],[1.55,0.70]].forEach(([x,w])=>add(rbox(w,0.44,0.15,0.05,0,0,0,{m:2,step:0.12,crown:0.03}).rotateX(rad(12)).translate(x,0.42,1.26),'cushion')); // back cushions lean 12°, top edge at z 1.50, ≈0.86 high
-    add(rbox(0.15,0.44,0.60,0.05,0,0,0,{m:2,step:0.12,crown:0.03}).rotateZ(rad(-12)).translate(2.06,0.42,0.30),'cushion'); // side cushion leaning out to the east edge x 2.30
+    add(rbox(0.85,0.37,0.95,0.06,0,0.05,0.55,{m:3,step:0.2,crown:0.03}),'upholstery');                                    // seat module 0.05–0.42
+    add(rbox(0.65,0.37,0.95,0.06,0.85,0.05,0.55,{m:3,step:0.2,crown:0.03}),'upholstery');                                 // middle module
+    add(rbox(0.80,0.37,1.50,0.06,1.50,0.05,0,{m:3,step:0.2,crown:0.03}),'upholstery');                                    // chaise
+    add(rbox(0.40,0.14,0.40,0.05,0.975,0.42,0.80,{m:2,step:0.1,crown:0.035}),'cushion');                                  // small pad on the middle module
+    // 2026-09-10 (user): plumper cushions — 0.15 → 0.22 thick with a deeper dome; the lean puts the far corner at z 1.50 / x 2.30, so both moved back by the extra thickness
+    [[0.08,0.70],[1.55,0.70]].forEach(([x,w])=>add(rbox(w,0.42,0.22,0.06,0,0,0,{m:2,step:0.1,crown:0.055}).rotateX(rad(12)).translate(x,0.42,1.197),'cushion')); // back cushions lean 12°, top edge at z 1.50
+    add(rbox(0.22,0.42,0.60,0.06,0,0,0,{m:2,step:0.1,crown:0.055}).rotateZ(rad(-12)).translate(2.007,0.42,0.30),'cushion'); // side cushion leaning out to the east edge x 2.30
     [[0.006,0.556,0.838,0.938],[0.856,0.556,0.638,0.938],[1.506,0.006,0.788,1.488]].forEach(([x,z,w,d])=>add(piping(x,z,w,d,0.06,0.41),'piping'));
     return [W,0.87,D]; }
 };

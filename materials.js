@@ -55,6 +55,7 @@ const COATINGS={
   whiteEnamel: {name:'белая эмаль, техника',    class:'cabinetPaint', size:[1,1], maps:[], color:0xeeece8, rough:0.38}, // M4-3: washer/dryer body — the cabinetPaint set is beige, appliances are white
   wallPaint:   {name:'краска стен, тёплая светлая', class:'wallPaint', dir:'textures/wallPaint', size:[1,1], maps:['normal'], rough:0.9, color:0xe6ddd0, normalScale:0.08}, // Paint004 rough map gives glossy blotches under the environment; flat 0.9 instead,
   sofaWeave:   {name:'обивочная ткань, плетение', class:'fabric', dir:'textures/sofaWeave',   size:[0.4,0.4], tint:[1.9,1.8,1.65]}, // Fabric030 is authored dark grey; scaled to the light greige of the reference
+  sofaWeaveLight:{name:'обивка дивана, светлая, крупное плетение', class:'fabric', dir:'textures/sofaWeave', size:[0.22,0.22], tint:[2.45,2.36,2.22]}, // 2026-09-10: same set for the room 4 sofa — half the pattern size so the weave reads from the room, lighter than the chair pads
   rugPile:     {name:'ковёр, ворс',           class:'fabric', dir:'textures/rugPile',      size:[1.7,1.7]},
   curtainLinen:{name:'штора, лён',            class:'fabric', dir:'textures/curtainLinen', size:[0.5,0.5]},
   stoneCounter:{name:'камень столешницы',     class:'facade', dir:'textures/stoneCounter', size:[1.5,1.5], maps:['color','normal'], rough:0.3, tint:[0.62,0.6,0.58]}, // Marble024 rough map is polished (0.11); §4.3: no excessive gloss, darker than the splash
@@ -66,7 +67,7 @@ const COATINGS={
   hplPanel:    {name:'HPL-плита, столешница и фартук', class:'facade', size:[1,1], maps:[], color:0xb3aea7, rough:0.45}, // 2026-09-10: kitchen 4 — one panel and one tone for worktop and splashback, no texture set for HPL
   hplFront:    {name:'HPL-плита, матовый фасад', class:'facade', size:[1,1], maps:[], color:0xd0cac1, rough:0.62},       // matte fronts of the same family, a shade lighter than the worktop
 };
-const VIZ={on:false,ready:false,mode:'basic',std:new Map(),neutral:new Map(),basic:new Map(),variants:new Map(),textures:new Map(),finishCoat:{board:'oakFloor',wallPaint:'wallPaint',wood:'oakFurniture',white:'tile6060',whiteWall:'tile6060',grey:'tile6060grey'},loadErrors:[]}; // finishCoat: global coating per finish key (M2: oak boards, 60×120 stone, wall paint, oak jambs; M4: 60×60 tiles of rooms 7/8/9) // mode: basic (plan) | neutral | std (real coatings); variants: basic → Map(coating → twin)
+const VIZ={on:false,ready:false,mode:'basic',std:new Map(),neutral:new Map(),basic:new Map(),variants:new Map(),textures:new Map(),finishCoat:{board:'oakFloor',wallPaint:'wallPaint',wood:'oakFloor',woodFloor:'oakFloor',white:'tile6060',whiteWall:'tile6060',grey:'tile6060grey'},loadErrors:[]}; // finishCoat: global coating per finish key (M2: oak boards, 60×120 stone, wall paint, oak jambs; M4: 60×60 tiles of rooms 7/8/9) // mode: basic (plan) | neutral | std (real coatings); variants: basic → Map(coating → twin)
 window.VIZ=VIZ; window.MATERIALS=MATERIALS; window.COATINGS=COATINGS;
 (function(){
   const KEY='pulse3d.viz';
