@@ -479,6 +479,9 @@ const { chromium } = require('playwright');
     [['decortv', 'ABCDEFGH'], ['decorsofa', 'ABC']].forEach(([id, vs]) => { for (const v of vs) { ROOM4.set(id, v); if (!ITEM_GROUPS[id].visible || !inside(id)) out.push(id + ':' + v); } ROOM4.set(id, 'none'); if (ITEM_GROUPS[id].visible) out.push(id + ':none'); });
     return out; });
   if (decor.length) problems.push('декор комнаты 4: ' + decor.join(', '));
+  // варианты комнаты 4 держат свою опорную точку: перечитывание расстановки (оно идёт при каждом старте) не должно тянуть широкий диван к позе из items.js — он уходит за южную стену
+  const anch = await page.evaluate(() => { ROOM4.set('sofa', 'D'); const d = ITEM_GROUPS.sofa.userData.pos.slice(); LAY.applyVariant(LAY.cur); const after = ITEM_GROUPS.sofa.userData.pos.slice(); ROOM4.set('sofa', 'A'); return { d, after }; });
+  if (anch.d.some((v, i) => Math.abs(v - anch.after[i]) > 1e-6)) problems.push('расстановка: вариант дивана вернулся к позе из items.js ' + JSON.stringify(anch));
   // ruler: the segment snaps to the dominant world axis, length in whole cm, one label per measure, «off» clears everything
   const rl = await page.evaluate(() => { RULER.toggle(true); const m = RULER.add(new THREE.Vector3(1, 0, 1), new THREE.Vector3(1.02, 0.01, 2.345)); const n = RULER.items.length, lab = document.querySelectorAll('.rl').length; RULER.toggle(false);
     return { axis: m.axis, cm: m.cm, n, lab, cleared: RULER.items.length === 0 && !document.querySelector('.rl') && !RULER.on }; });
