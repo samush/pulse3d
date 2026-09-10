@@ -14,9 +14,10 @@ node tools/render.js --list                  # список ракурсов (CA
 node tools/render.js r4-door                 # кадр + генерация
 node tools/render.js r4-door --frame-only    # только чистый кадр, без API и без денег
 node tools/render.js r4-door --note "вечер, шторы задёрнуты"
+node tools/render.js r4-door --reuse-frame    # взять снятый кадр, не открывать браузер
 ```
 
-Ключ `GEMINI_API_KEY` приходит из окружения (`hub run claude`). Нет ключа — скрипт скажет об этом и не потратит ничего.
+Ключ `GEMINI_API_KEY` приходит из окружения (`hub run claude`). Нет ключа — скрипт скажет об этом и не потратит ничего. Ответ 429 значит, что в проекте ключа не включён биллинг: у image-моделей нет бесплатного тарифа.
 
 Результат: `renders/<ракурс>/<дата-время>.jpg` и рядом `.json` с промптом и параметрами. Чистый кадр — `renders/frames/<ракурс>.png` (в git не идёт, перезаписывается).
 

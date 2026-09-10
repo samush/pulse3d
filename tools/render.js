@@ -3,6 +3,7 @@
 //   node tools/render.js r4-door                 # кадр + генерация
 //   node tools/render.js r4-door --frame-only    # только чистый кадр (без API, бесплатно)
 //   node tools/render.js r4-door --note "вечер, шторы задёрнуты"
+//   node tools/render.js r4-door --reuse-frame       # взять уже снятый кадр, не открывать браузер (~40 с экономии)
 //   node tools/render.js --list                  # какие ракурсы есть (CAMS из app.js)
 //
 // Стиль и постоянные требования — renders/STYLE.md: общая часть плюс раздел «## <ракурс>», если он есть.
@@ -23,7 +24,10 @@ const SIZE = flag('size', '2K');            // 1K дешевле у lite, 2K у 
 const [W, H] = flag('viewport', '1280x960').split('x').map(Number);
 const ASPECT = flag('aspect', '4:3');
 
+const framePath = path.join(root, 'renders', 'frames', (cam || '') + '.png');
+
 (async () => {
+  if (has('reuse-frame') && cam && fs.existsSync(framePath)) { console.log('кадр (готовый): ' + path.relative(root, framePath)); return send(); }
   let browser;
   try { browser = await chromium.launch({ args: ['--allow-file-access-from-files'] }); }
   catch (e) { browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium', args: ['--allow-file-access-from-files'] }); }
@@ -42,13 +46,16 @@ const ASPECT = flag('aspect', '4:3');
   await page.evaluate(id => { VIZ.set(true); LIGHTING.set('lamps'); const a = document.getElementById('avatarOn'); a.checked = false; a.dispatchEvent(new Event('change')); setView(id);
     document.getElementById('ui').style.display = 'none'; document.querySelectorAll('.hint, .rl, #walkpad, #fpvhint, #camhint, #map').forEach(e => { e.style.display = 'none'; }); }, cam); // панель, мини-карта и подсказки лежат поверх канваса и попадают в скриншот области
   await page.waitForTimeout(2500); // PBR-двойники и тени успевают собраться
-  const framePath = path.join(root, 'renders', 'frames', cam + '.png');
   fs.mkdirSync(path.dirname(framePath), { recursive: true });
   await page.locator('#c').screenshot({ path: framePath, timeout: 120000 });
   await browser.close();
   console.log('кадр: ' + path.relative(root, framePath));
   if (has('frame-only')) return;
+  return send();
+})();
 
+// кадр (свежий или готовый) + стиль → Gemini → renders/<ракурс>/
+async function send() {
   const key = process.env.GEMINI_API_KEY;
   if (!key) { console.error('нет GEMINI_API_KEY: hub secrets set GEMINI_API_KEY, затем перезапустить агента через hub run claude'); process.exit(2); }
 
@@ -67,6 +74,7 @@ const ASPECT = flag('aspect', '4:3');
     }),
   });
   const body = await res.json();
+  if (res.status === 429) { console.error('Gemini 429: у image-моделей нет бесплатного тарифа — включить биллинг в проекте ключа (https://aistudio.google.com/apikey), кадр уже снят, повтор с --reuse-frame'); process.exit(4); }
   if (!res.ok || !body.output_image) { console.error('Gemini ' + res.status + ': ' + JSON.stringify(body).slice(0, 600)); process.exit(3); }
 
   const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '').replace(/(\d{8})(\d{4})/, '$1-$2');
@@ -75,4 +83,4 @@ const ASPECT = flag('aspect', '4:3');
   fs.writeFileSync(out, Buffer.from(body.output_image.data, 'base64'));
   fs.writeFileSync(path.join(dir, stamp + '.json'), JSON.stringify({ cam, model: MODEL, size: SIZE, aspect: ASPECT, viewport: [W, H], note: flag('note', '') || undefined, prompt, frame: path.relative(root, framePath), at: new Date().toISOString() }, null, 1));
   console.log('готово: ' + path.relative(root, out) + '\nсравнить с кадром: ' + path.relative(root, framePath));
-})();
+}
