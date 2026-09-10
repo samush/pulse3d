@@ -776,12 +776,31 @@ avatar.visible=false;
 scene.add(avatar);
 document.getElementById('avatarOn').addEventListener('change',()=>controls.apply()); // the walk keeps running, only the figure hides
 
-// потолок: всегда включён вне плана; съёмная стена коридор-кухня (slabsR) не входит ни в одну комнату — без заплатки по её следу при скрытой стене видна полоса фона
-var ceilGroup=new THREE.Group(); var ceilMat=new THREE.MeshBasicMaterial({color:0xfaf8f5,side:THREE.DoubleSide});
+// потолок: всегда включён вне плана. Натяжное полотно подвешено в каждой комнате отдельно — с зазором от стен и толщиной CEIL_T,
+// в зазоре видно перекрытие. Перекрытие сплошное: съёмная стена коридор-кухня (slabsR) не входит ни в одну комнату — без заплатки по её
+// следу при скрытой стене видна полоса фона; полотно кухни-гостиной обрывается по линии этой стены, и её след остаётся видимой нишей.
+const CEIL_GAP=0.03, CEIL_T=0.10, CEIL_Y=H-0.005;
+var ceilGroup=new THREE.Group();
+var ceilMat=new THREE.MeshBasicMaterial({color:0xfaf8f5,side:THREE.DoubleSide});      // полотно
+var ceilSlabMat=new THREE.MeshBasicMaterial({color:0x9e9a94,side:THREE.DoubleSide});  // перекрытие, видно только в зазоре
+// сдвиг граней прямоугольного контура внутрь на d: сторона зазора определяется пробной точкой, поэтому вогнутые углы (комнаты 5, 8) не нужно разбирать отдельно
+function insetPoly(poly,d){
+  const n=poly.length, inside=p=>{ let c=false; for(let i=0,j=n-1;i<n;j=i++){ const [xi,zi]=poly[i],[xj,zj]=poly[j];
+    if((zi>p[1])!==(zj>p[1])&&p[0]<(xj-xi)*(p[1]-zi)/(zj-zi)+xi) c=!c; } return c; };
+  const e=poly.map((u,i)=>{ const v=poly[(i+1)%n], vert=Math.abs(v[0]-u[0])<1e-6, m=[(u[0]+v[0])/2,(u[1]+v[1])/2];
+    const sgn=inside(vert?[m[0]+d,m[1]]:[m[0],m[1]+d])?1:-1; return {vert,val:(vert?u[0]:u[1])+sgn*d}; });
+  return poly.map((p,i)=>{ const a=e[(i-1+n)%n], b=e[i];
+    return [a.vert?a.val:(b.vert?b.val:p[0]), a.vert?(b.vert?p[1]:b.val):a.val]; });
+}
+PLAN.rooms.forEach(r=>{ // полотно вместе с торцом: ExtrudeGeometry тянет вверх, низ остаётся на прежней высоте потолка
+  const g=new THREE.ExtrudeGeometry(toShape(insetPoly(r.poly,CEIL_GAP)),{depth:CEIL_T,bevelEnabled:false});
+  g.rotateX(-Math.PI/2); g.translate(0,CEIL_Y,0);
+  ceilGroup.add(new THREE.Mesh(g,ceilMat));
+});
 PLAN.rooms.map(r=>r.poly).concat(PLAN.slabsR[PLAN.slabsR.length-1].polys.map(p=>p.s)).forEach(poly=>{
   const g=new THREE.ShapeGeometry(toShape(poly));
-  g.rotateX(-Math.PI/2); g.translate(0,H-0.005,0);
-  ceilGroup.add(new THREE.Mesh(g,ceilMat));
+  g.rotateX(-Math.PI/2); g.translate(0,CEIL_Y+CEIL_T,0);
+  ceilGroup.add(new THREE.Mesh(g,ceilSlabMat));
 });
 ceilGroup.visible=false;
 scene.add(ceilGroup);
