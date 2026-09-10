@@ -483,10 +483,11 @@ const { chromium } = require('playwright');
   const anch = await page.evaluate(() => { ROOM4.set('sofa', 'D'); const d = ITEM_GROUPS.sofa.userData.pos.slice(); LAY.applyVariant(LAY.cur); const after = ITEM_GROUPS.sofa.userData.pos.slice(); ROOM4.set('sofa', 'A'); return { d, after }; });
   if (anch.d.some((v, i) => Math.abs(v - anch.after[i]) > 1e-6)) problems.push('расстановка: вариант дивана вернулся к позе из items.js ' + JSON.stringify(anch));
   // ruler: the segment snaps to the dominant world axis, length in whole cm, one label per measure, «off» clears everything
-  const rl = await page.evaluate(() => { RULER.toggle(true); const m = RULER.add(new THREE.Vector3(1, 0, 1), new THREE.Vector3(1.02, 0.01, 2.345)); const n = RULER.items.length, lab = document.querySelectorAll('.rl').length; RULER.toggle(false);
-    return { axis: m.axis, cm: m.cm, n, lab, cleared: RULER.items.length === 0 && !document.querySelector('.rl') && !RULER.on }; });
+  const rl = await page.evaluate(() => { const sb = () => document.getElementById('snapBtn'); RULER.toggle(true); const m = RULER.add(new THREE.Vector3(1, 0, 1), new THREE.Vector3(1.02, 0.01, 2.345)); const n = RULER.items.length, lab = document.querySelectorAll('.rl').length, shown = !sb().hidden, free = RULER.snapOn === false; RULER.toggle(false);
+    return { axis: m.axis, cm: m.cm, n, lab, shown, free, gone: sb().hidden, cleared: RULER.items.length === 0 && !document.querySelector('.rl') && !RULER.on }; });
   if (rl.axis !== 'z' || rl.cm !== 135 || rl.n !== 1 || rl.lab !== 1 || !rl.cleared) problems.push('линейка: ' + JSON.stringify(rl));
-  // ruler snapping: a point near the table top's corner lands on the corner, near an edge on the edge, far from both stays put
+  if (!rl.free || !rl.shown || !rl.gone) problems.push('линейка: 🧲 по умолчанию выключено и живёт вместе с инструментом ' + JSON.stringify(rl)); // прилипание — только по кнопке
+  // ruler snapping (🧲): a point near the table top's corner lands on the corner, near an edge on the edge, far from both stays put
   const rs = await page.evaluate(() => { const g = ITEM_GROUPS.table, [x, z] = g.userData.pos, [w, h, d] = g.userData.size; let top = null; g.traverse(o => { if (o.isMesh) { const b = new THREE.Box3().setFromObject(o); if (!top || b.max.y > top.b.max.y) top = { o, b }; } });
     const P = (a, b, c) => new THREE.Vector3(a, b, c), r = v => [v.x, v.y, v.z].map(n => Math.round(n * 1000) / 1000), B = top.b;
     return { corner: r(RULER.snapEdge(top.o, P(B.min.x + 0.02, B.max.y, B.min.z + 0.03))), edge: r(RULER.snapEdge(top.o, P(B.min.x + 0.02, B.max.y, B.min.z + 0.5))), free: r(RULER.snapEdge(top.o, P(B.min.x + 0.3, B.max.y, B.min.z + 0.5))), b: [r(B.min), r(B.max)] }; });

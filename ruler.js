@@ -1,13 +1,14 @@
-// «Линейка» (button #rulerBtn): two clicks on any surface in any view; a click near a corner or an edge of the hit mesh sticks to it; the segment snaps to the world axis with the largest
+// «Линейка» (button #rulerBtn): two clicks on any surface in any view, free by default; the 🧲 button (#snapBtn) makes a click near a corner or an edge of the hit mesh stick to it; the segment snaps to the world axis with the largest
 // span (x/z — horizontal, y — vertical), the label shows whole centimetres. Measures live until the tool is switched off.
 (function(){
-  const btn=document.getElementById('rulerBtn'); if(!btn) return;
+  const btn=document.getElementById('rulerBtn'), sbtn=document.getElementById('snapBtn'); if(!btn) return;
   const ray=new THREE.Raycaster(), grp=new THREE.Group(); scene.add(grp);
   const headMat=new THREE.MeshBasicMaterial({color:0xe02020,depthTest:false});
   const R=window.RULER={on:false,items:[],start:null,draft:null};
   const shown=o=>{ for(;o;o=o.parent) if(!o.visible||o===avatar||o===grp) return false; return true; }; // r128 raycaster ignores visibility: skip hidden layers, physics boxes, the avatar and our own arrows
   function pick(e){ ray.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight*2-1)),camera);
-    const h=ray.intersectObjects(scene.children,true).find(h=>h.object.isMesh&&h.object.material.visible!==false&&shown(h.object)); return h?R.snapEdge(h.object,h.point.clone()):null; }
+    const h=ray.intersectObjects(scene.children,true).find(h=>h.object.isMesh&&h.object.material.visible!==false&&shown(h.object)); return h?(R.snapOn?R.snapEdge(h.object,h.point.clone()):h.point.clone()):null; }
+  R.snapOn=false; // measuring between arbitrary points is the default; the 🧲 button turns sticking on for the session
   // snap to the hit mesh's box: the nearest corner, else the nearest point of an edge, within SNAP metres (local bounding box → world, so rotated items keep their true edges)
   R.SNAP=0.05;
   R.snapEdge=(o,p)=>{ const g=o.geometry; if(!g.boundingBox) g.computeBoundingBox(); const {min,max}=g.boundingBox;
@@ -24,8 +25,8 @@
   const drop=m=>{ if(!m) return; grp.remove(m.g); m.el.remove(); m.g.traverse(o=>{ if(o.geometry) o.geometry.dispose(); }); };
   R.add=(a,b)=>{ const m=make(a,b); R.items.push(m); return m; };
   R.undo=()=>{ if(R.start){ drop(R.draft); R.draft=null; R.start=null; } else drop(R.items.pop()); };
-  R.hint=()=>{ document.querySelector('.hint').textContent=R.start?'Линейка: клик — конец отрезка (Esc — отмена)':'Линейка: клик — начало отрезка · Backspace — убрать последний · Esc — выход'; };
-  R.toggle=on=>{ R.on=on==null?!R.on:on; btn.classList.toggle('on',R.on);
+  R.hint=()=>{ document.querySelector('.hint').textContent=(R.start?'Линейка: клик — конец отрезка (Esc — отмена)':'Линейка: клик — начало отрезка · Backspace — убрать последний · Esc — выход')+(R.snapOn?' · 🧲 прилипание к углам':''); };
+  R.toggle=on=>{ R.on=on==null?!R.on:on; btn.classList.toggle('on',R.on); if(sbtn) sbtn.hidden=!R.on;
     if(R.on){ if(window.MK&&MK.on) MK.toggle(false); if(window.LAY&&LAY.on) LAY.toggle(false); R.hint(); }
     else { R.start=null; drop(R.draft); R.draft=null; R.items.splice(0).forEach(drop); syncMode(); } };
   R.tick=()=>{ R.items.concat(R.draft||[]).forEach(m=>{ const v=m.mid.clone().project(camera); m.el.hidden=v.z>1; m.el.style.left=((v.x+1)/2*innerWidth)+'px'; m.el.style.top=((1-(v.y+1)/2)*innerHeight-10)+'px'; }); };
@@ -39,4 +40,5 @@
     if(e.key==='Escape'){ if(R.start) R.undo(); else R.toggle(false); }
     else if(e.key==='Backspace'||e.key==='Delete'||((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z')){ R.undo(); e.preventDefault(); } });
   btn.addEventListener('click',()=>R.toggle());
+  if(sbtn) sbtn.addEventListener('click',()=>{ R.snapOn=!R.snapOn; sbtn.classList.toggle('on',R.snapOn); R.hint(); });
 })();
