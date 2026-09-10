@@ -1,10 +1,10 @@
-// Визуализация закреплённого ракурса: кадр сцены → Gemini → пара «кадр + результат» в renders/<ракурс>/.
+// Визуализация закреплённого ракурса: кадр сцены → Gemini → чистовик в render/final/.
 //
 //   node tools/render.js --list | <ракурс> [--frame-only] [--reuse-frame] [--note "..."]
 //   node tools/render.js <ракурс> --fix "<что должно быть>"    # правка предыдущего результата, до трёх на кадр
 //   node tools/render.js <ракурс> --set sofa=G,table=none --ref r4-door --as 3-dining-1
 //
-// Промпт — renders/STYLE.md, порядок работы — .claude/skills/render/SKILL.md, приёмы — docs/render-guide.md.
+// Промпт — render/STYLE.md, порядок работы — .claude/skills/render/SKILL.md, приёмы — docs/render-guide.md.
 // Ключ GEMINI_API_KEY приходит из окружения (hub run claude).
 const fs = require('fs');
 const path = require('path');
@@ -25,16 +25,16 @@ const ASPECT = flag('aspect', '16:9');
 const MAX_FIXES = 3;
 const SET = flag('set', '');   // варианты комнаты 4 в кадре: table=none,sofa=G,kitchen=B…
 const REF = flag('ref', '');   // готовый рендер другого ракурса — эталон материалов и палитры
-const AS = flag('as', '2-final');
+const AS = flag('as', '');   // имя варианта: без него результат зовётся именем ракурса
 const LABELS = has('labels');
 
-const framePath = cam ? path.join(root, 'renders', 'frames', cam + '.png') : '';
-const factsPath = cam ? path.join(root, 'renders', 'frames', cam + '.facts.json') : '';
-const dir = cam ? path.join(root, 'renders', cam) : '';
-const pair = name => path.join(dir, cam + '-' + name);                                      // кадр и результат лежат рядом и листаются подряд
+const DIR = { frames: path.join(root, 'render', 'frames'), final: path.join(root, 'render', 'final'), wip: path.join(root, 'render', 'wip') };
+const base = cam ? cam + (AS ? '-' + AS : '') : '';
+const framePath = cam ? path.join(DIR.frames, cam + '.png') : '';
+const factsPath = cam ? path.join(DIR.frames, cam + '.facts.json') : '';
 
 const rel = p => path.relative(root, p);
-const readMeta = () => { try { return JSON.parse(fs.readFileSync(pair(AS + '.json'), 'utf8')); } catch (e) { return null; } };
+const readMeta = () => { try { return JSON.parse(fs.readFileSync(path.join(DIR.final, base + '.json'), 'utf8')); } catch (e) { return null; } };
 const img = p => ({ type: 'image', mime_type: p.endsWith('.png') ? 'image/png' : 'image/jpeg', data: fs.readFileSync(p).toString('base64') });
 
 (async () => {
@@ -90,12 +90,12 @@ const img = p => ({ type: 'image', mime_type: p.endsWith('.png') ? 'image/png' :
 })();
 
 
-// кадр (+ предыдущий результат, если это правка) и стиль → Gemini → renders/<ракурс>/
+// кадр (+ предыдущий результат, если это правка) и стиль → Gemini → render/final/
 async function send() {
   const key = process.env.GEMINI_API_KEY;
   if (!key) { console.error('нет GEMINI_API_KEY: hub secrets set GEMINI_API_KEY, затем перезапустить агента через hub run claude'); process.exit(2); }
 
-  const style = fs.readFileSync(path.join(root, 'renders', 'STYLE.md'), 'utf8');
+  const style = fs.readFileSync(path.join(root, 'render', 'STYLE.md'), 'utf8');
   const shot = style.split(/^## /m).find(s => s.startsWith(cam));                            // «## <ракурс>» — заметки именно про этот вид
   const common = style.split(/^## /m)[0].trim();
   const meta = readMeta();
@@ -106,9 +106,9 @@ async function send() {
     + '° field of view — a wide-angle shot taken high in a small room, so keep furniture large relative to the walls and do not stretch the space into a hall. Objects in frame, width × height × depth: '
     + facts.items.map(o => o.id + ' ' + o.w + '×' + o.h + '×' + o.d + (o.mirror ? ' (a wall mirror, not a door or a window)' : '')).join('; ') + '.'
     + (facts.labels ? ' The white boxed captions drawn on the reference are notes to you, naming what an ambiguous shape really is and how big it is; render those objects as real objects and put no text, caption or label anywhere in the photograph.' : '') : '';
-  const refPath = REF && (fs.existsSync(REF) ? REF : path.join(root, 'renders', REF, REF + '-2-final.jpg'));
+  const refPath = REF && (fs.existsSync(REF) ? REF : path.join(DIR.final, REF + '.jpg'));
   if (REF && !fs.existsSync(refPath)) { console.error('нет эталона ' + rel(refPath) + ': сначала отрендерить ' + REF); process.exit(1); }
-  const prev = pair(AS + '.jpg');
+  const prev = path.join(DIR.final, base + '.jpg');
   let input, prompt, fixes = meta ? meta.fixes || 0 : 0;
 
   if (fix) {
@@ -137,12 +137,15 @@ async function send() {
   // картинка приходит либо в output_image, либо шагом model_output — берём первый image, какой есть
   const out = body.output_image || (body.steps || []).flatMap(st => st.content || []).find(c => c.type === 'image' && c.data);
   if (res.status === 429) { console.error('Gemini 429: у image-моделей нет бесплатного тарифа — включить биллинг в проекте ключа (https://aistudio.google.com/apikey), кадр уже снят, повтор с --reuse-frame'); process.exit(4); }
-  if (!res.ok || !out) { const dump = path.join(root, 'renders', 'frames', 'last-response.json'); fs.writeFileSync(dump, JSON.stringify(body, null, 1));
+  if (!res.ok || !out) { const dump = path.join(DIR.frames, 'last-response.json'); fs.writeFileSync(dump, JSON.stringify(body, null, 1));
     console.error('Gemini ' + res.status + ': нет картинки в ответе, целиком в ' + rel(dump)); process.exit(3); }
 
-  fs.mkdirSync(dir, { recursive: true });
-  fs.copyFileSync(framePath, pair('1-frame.png'));                                           // пара: кадр и результат под одним именем
+  Object.values(DIR).forEach(d => fs.mkdirSync(d, { recursive: true }));
+  if (fs.existsSync(prev)) {                                                                 // вытесненный чистовик уезжает в wip, а не пропадает
+    const st = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
+    fs.renameSync(prev, path.join(DIR.wip, base + '-' + st + '.jpg'));
+  }
   fs.writeFileSync(prev, Buffer.from(out.data, 'base64'));
-  fs.writeFileSync(pair(AS + '.json'), JSON.stringify({ cam, model: MODEL, size: SIZE, aspect: ASPECT, viewport: [W, H], set: SET || undefined, ref: REF || undefined, fixes, note: flag('note', '') || undefined, lastFix: fix || undefined, prompt, at: new Date().toISOString() }, null, 1));
-  console.log('готово: ' + rel(prev) + '\nпара:   ' + rel(pair('1-frame.png')));
+  fs.writeFileSync(path.join(DIR.final, base + '.json'), JSON.stringify({ cam, model: MODEL, size: SIZE, aspect: ASPECT, viewport: [W, H], set: SET || undefined, ref: REF || undefined, fixes, note: flag('note', '') || undefined, lastFix: fix || undefined, prompt, at: new Date().toISOString() }, null, 1));
+  console.log('готово: ' + rel(prev) + '\nкадр:   ' + rel(framePath));
 }
