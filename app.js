@@ -148,7 +148,10 @@ const controls={
       pinch=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
       pmx=(a.clientX+b.clientX)/2; pmy=(a.clientY+b.clientY)/2;
       mode='pinch';
-    } else { const tools=(window.MK&&MK.on)||(window.LAY&&LAY.on); mode=(e.button===2||e.shiftKey||space||panbtn.classList.contains('on')||(controls.plan&&tools))?'pan':'rot'; /* в плане ЛКМ вращает, при разметке/расстановке — сдвигает */ px=e.clientX; py=e.clientY; }
+    } else { const tools=(window.MK&&MK.on)||(window.LAY&&LAY.on), pan=e.button===2||e.shiftKey||space||panbtn.classList.contains('on');
+      if(!pan&&window.LAY&&LAY.grab&&LAY.grab(e)) mode=null; // расстановка: нажатие на предмет тянет предмет, а не план
+      else mode=(pan||(controls.plan&&tools))?'pan':'rot'; /* в плане ЛКМ вращает, при разметке/расстановке — сдвигает */
+      px=e.clientX; py=e.clientY; }
   });
   canvas.addEventListener('pointermove',e=>{
     if(!ptrs.has(e.pointerId))return;

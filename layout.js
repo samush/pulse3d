@@ -1,4 +1,5 @@
-// Layout (plan): pick an item by click, move, rotate, numeric editing, named variants.
+// Layout (plan): pick an item by click, drag it with the mouse or nudge it with the arrow keys (Enter confirms, Esc reverts),
+// rotate, numeric editing, named variants.
 // Variant = {name, poses:{id:{pos,rot}}} on top of the base layout from items.js; shared geometry and
 // materials are not duplicated. Stored in localStorage['pulse3d.layout'].
 // Uses ITEMS, ITEM_GROUPS, setItemPose, itemCorners, PLAN, controls, camera, canvas, THREE from app.js/items.js.
@@ -49,7 +50,34 @@
     return (side==='W'||side==='E')?[u.pos[0],pos[1]]:[pos[0],u.pos[1]];
   }
   LAY.setPose=setPose; LAY.undo=undo; LAY.constrain=constrain;
-  POSE_HOOKS.push(id=>{ if(LAY.sel&&LAY.sel.userData.id===id) select(id); }); // selection frame and card follow a pose set from anywhere
+  POSE_HOOKS.push(id=>{ if(!LAY.sel||LAY.sel.userData.id!==id) return; if(fast){ highlight(); syncFields(); } else select(id); }); // selection frame and card follow a pose set from anywhere
+
+  // ---------- live move: mouse drag or arrow keys, Enter confirms, Esc reverts ----------
+  const NUDGE={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}; // top view: screen up is north (−z)
+  let mv=null, drag=null, fast=false;
+  function mvBegin(id){ if(mv&&mv.id===id) return; mvEnd(true);
+    mv={id,from:poseOf(id),att:ITEMS.filter(it=>it.attach===id).map(it=>({id:it.id,pose:poseOf(it.id)}))}; }
+  function mvLive(pos){ if(!mv) return; const u=ITEM_GROUPS[mv.id].userData, d=[pos[0]-u.pos[0],pos[1]-u.pos[1]];
+    setItemPose(mv.id,pos,null);
+    mv.att.forEach(a=>{ const p=ITEM_GROUPS[a.id].userData.pos; setItemPose(a.id,[p[0]+d[0],p[1]+d[1]],null); }); }
+  // the whole move lands as one setPose: history, attached items and storage get one step, not one per keypress
+  function mvEnd(commit){ const m=mv; if(!m) return; mv=null; drag=null; fast=false; const to=poseOf(m.id);
+    setItemPose(m.id,m.from.pos,m.from.rot); m.att.forEach(a=>setItemPose(a.id,a.pose.pos,a.pose.rot));
+    if(commit&&(to.pos[0]!==m.from.pos[0]||to.pos[1]!==m.from.pos[1])) setPose(m.id,to.pos,null); else select(m.id);
+    setHint(commit?'Готово: '+m.id:'Отменено: '+m.id); }
+  function syncFields(){ const u=LAY.sel&&LAY.sel.userData; if(!u) return;
+    card.querySelectorAll('input[data-k=x],input[data-k=z]').forEach(el=>{ el.value=Math.round(u.pos[el.dataset.k==='x'?0:1]*1000)/1000; }); }
+  function hitItem(e){ const ndc=new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight*2-1)); ray.setFromCamera(ndc,camera);
+    const hits=ray.intersectObjects(Object.values(ITEM_GROUPS).filter(g=>g.parent&&g.parent.visible),true).filter(h=>h.object.isMesh);
+    let g=hits.length?hits[0].object:null; while(g&&!(g.userData&&g.userData.id)) g=g.parent; return g; }
+  // app.js asks before it starts panning the plan: a press on an item grabs the item instead
+  LAY.grab=e=>{ if(!LAY.on||!controls.plan||e.button!==0||e.shiftKey||LAY.tool==='move') return false;
+    const g=hitItem(e), p=pick(e); if(!g||!p) return false;
+    const id=g.userData.id; mvEnd(true); select(id); // a plain click must not open a pending move: the session starts on the first pointermove
+    drag={id,off:[ITEM_GROUPS[id].userData.pos[0]-p[0],ITEM_GROUPS[id].userData.pos[1]-p[1]]};
+    setHint(id+': тяните мышкой или стрелками · Enter — подтвердить · Esc — вернуть'); return true; };
+  LAY.moving=()=>mv&&mv.id; LAY.commit=()=>mvEnd(true); LAY.cancel=()=>mvEnd(false);
+  LAY.nudge=(id,dx,dz)=>{ const u=ITEM_GROUPS[id].userData; mvBegin(id); select(id); mvLive(constrain(id,[u.pos[0]+dx,u.pos[1]+dz])); };
 
   // ---------- warnings ----------
   function aabb(id){ const c=itemCorners(id); return [Math.min(...c.map(q=>q[0])),Math.min(...c.map(q=>q[1])),Math.max(...c.map(q=>q[0])),Math.max(...c.map(q=>q[1]))]; }
@@ -100,7 +128,7 @@
     if(!LAY.sel) return;
     const bb=new THREE.Box3().setFromObject(LAY.sel);
     const g=new THREE.BoxGeometry(bb.max.x-bb.min.x+0.04,bb.max.y-bb.min.y+0.04,bb.max.z-bb.min.z+0.04);
-    hl=new THREE.LineSegments(new THREE.EdgesGeometry(g),new THREE.LineBasicMaterial({color:0x2c5aa0,depthTest:false}));
+    hl=new THREE.LineSegments(new THREE.EdgesGeometry(g),new THREE.LineBasicMaterial({color:mv?0xd08000:0x2c5aa0,depthTest:false})); // orange = moved but not confirmed yet
     hl.position.set((bb.min.x+bb.max.x)/2,(bb.min.y+bb.max.y)/2,(bb.min.z+bb.max.z)/2); hl.renderOrder=30; scene.add(hl);
   }
   function renderCard(){
@@ -149,7 +177,7 @@
   LAY.dump=dump; LAY.validate=validate; LAY.importText=importText; LAY.exportText=()=>JSON.stringify(dump(),null,1); LAY.persist=persist;
 
   // ---------- events ----------
-  function toggle(on){ LAY.on=on==null?!LAY.on:on; ui.hidden=!LAY.on; btn.classList.toggle('on',LAY.on); if(LAY.on){ if(!controls.plan) setView('top'); controls.lookDown(); if(window.MK&&MK.on) MK.toggle(false); setHint('Кликните предмет на плане'); } else { LAY.tool=null; select(null); } }
+  function toggle(on){ LAY.on=on==null?!LAY.on:on; ui.hidden=!LAY.on; btn.classList.toggle('on',LAY.on); if(LAY.on){ if(!controls.plan) setView('top'); controls.lookDown(); if(window.MK&&MK.on) MK.toggle(false); setHint('Кликните предмет на плане'); } else { mvEnd(true); LAY.tool=null; select(null); } }
   LAY.toggle=toggle;
   btn.addEventListener('click',()=>toggle());
   ui.querySelector('[data-k=variant]').addEventListener('change',e=>applyVariant(parseInt(e.target.value)));
@@ -162,16 +190,25 @@
   function pick(e){ const ndc=new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight*2-1)); ray.setFromCamera(ndc,camera); const p=new THREE.Vector3(); return ray.ray.intersectPlane(plane,p)?[p.x,p.z]:null; }
   let dx0=0,dy0=0;
   canvas.addEventListener('pointerdown',e=>{dx0=e.clientX;dy0=e.clientY;});
+  canvas.addEventListener('pointermove',e=>{ if(!drag) return; const p=pick(e); if(!p) return;
+    let pos=[p[0]+drag.off[0],p[1]+drag.off[1]]; if(window.MK) pos=MK.snapPt(pos);
+    mvBegin(drag.id); fast=true; mvLive(constrain(drag.id,pos)); fast=false; });
+  canvas.addEventListener('pointerup',()=>{ if(!drag) return; const id=drag.id; drag=null; if(!mv) return; select(id); setHint(id+': Enter — подтвердить · Esc — вернуть'); });
   canvas.addEventListener('pointerup',e=>{
     if(!LAY.on||!controls.plan||e.button!==0||Math.hypot(e.clientX-dx0,e.clientY-dy0)>6) return;
     if(LAY.tool==='move'&&LAY.sel){ const p=pick(e); if(!p) return; const id=LAY.sel.userData.id; const snapped=window.MK?MK.snapPt(p):p; setPose(id,constrain(id,snapped),null); LAY.tool=null; setHint('Перенесено: '+id); return; }
     const ndc=new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight*2-1)); ray.setFromCamera(ndc,camera);
     const hits=ray.intersectObjects(Object.values(ITEM_GROUPS).filter(g=>g.parent&&g.parent.visible),true).filter(h=>h.object.isMesh);
     let g=hits.length?hits[0].object:null; while(g&&!(g.userData&&g.userData.id)) g=g.parent;
-    select(g?g.userData.id:null); if(g) setHint(g.userData.id+': перенос — кнопка или поля, поворот — кнопки');
+    select(g?g.userData.id:null); if(g) setHint(g.userData.id+': тяните мышкой или стрелками (Shift — 1 см) · Enter — подтвердить · Esc — вернуть');
   });
   addEventListener('keydown',e=>{ if(!LAY.on) return; const inField=/INPUT|TEXTAREA|SELECT/.test(document.activeElement&&document.activeElement.tagName);
-    if(e.key==='Escape'){ if(inField){document.activeElement.blur();return;} if(LAY.tool){ LAY.tool=null; setHint('Отменено'); } else select(null); }
-    if(inField) return; if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){ undo(); e.preventDefault(); } });
+    if(e.key==='Escape'){ if(inField){document.activeElement.blur();return;} if(mv) mvEnd(false); else if(LAY.tool){ LAY.tool=null; setHint('Отменено'); } else select(null); return; }
+    if(inField) return;
+    if(e.key==='Enter'){ if(mv){ mvEnd(true); e.preventDefault(); } return; }
+    const n=NUDGE[e.key];
+    if(n&&LAY.sel){ const s=e.shiftKey?0.01:(window.MK?MK.step:0.05); LAY.nudge(LAY.sel.userData.id,n[0]*s,n[1]*s);
+      setHint(LAY.sel.userData.id+': Enter — подтвердить · Esc — вернуть'); e.preventDefault(); return; }
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){ undo(); e.preventDefault(); } });
   loadLocal();
 })();
