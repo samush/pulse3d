@@ -463,6 +463,24 @@ const { chromium } = require('playwright');
     MK.marks.slice().forEach(m => MK.remove(m)); MK.toggle(false);
     return out;
   });
+  // перемещение стрелками: одна запись в истории на всё перемещение, Esc возвращает, Enter подтверждает
+  const nudge = await page.evaluate(() => {
+    const key = (k, sh) => dispatchEvent(new KeyboardEvent('keydown', { key: k, shiftKey: !!sh, bubbles: true }));
+    LAY.applyVariant(0); LAY.toggle(true); LAY.select('sofa'); LAY.hist.length = 0;
+    const p0 = ITEM_GROUPS.sofa.userData.pos.slice();
+    key('ArrowRight'); key('ArrowUp');
+    const live = Math.abs(ITEM_GROUPS.sofa.userData.pos[0] - p0[0] - MK.step) < 1e-9 && Math.abs(ITEM_GROUPS.sofa.userData.pos[1] - p0[1] + MK.step) < 1e-9
+      && LAY.moving() === 'sofa' && LAY.hist.length === 0;
+    key('Escape');
+    const back = ITEM_GROUPS.sofa.userData.pos.join() === p0.join() && !LAY.moving() && LAY.hist.length === 0;
+    key('ArrowRight', true); key('ArrowRight', true); key('Enter');
+    const done = Math.abs(ITEM_GROUPS.sofa.userData.pos[0] - p0[0] - 0.02) < 1e-9 && !LAY.moving() && LAY.hist.length === 1;
+    LAY.undo(); LAY.toggle(false); LAY.variants.splice(LAY.cur, 1); LAY.applyVariant(0);
+    return { live, back, done };
+  });
+  if (!nudge.live) problems.push('расстановка: стрелки не двигают выбранный предмет');
+  if (!nudge.back) problems.push('расстановка: Esc не вернул предмет на место');
+  if (!nudge.done) problems.push('расстановка: Enter не подтвердил перемещение одной записью истории');
   if (!rev.fork) problems.push('расстановка: правка «Исходной» не создала сохраняемый вариант');
   if (!rev.mm) problems.push('расстановка: поле x округлено не до мм');
   if (!rev.excl || !rev.excl2) problems.push('режимы: разметка и расстановка включены одновременно');
