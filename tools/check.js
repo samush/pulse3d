@@ -58,7 +58,7 @@ const { launchChromium } = require('./browser');
   await page.goto(url);
   await page.waitForTimeout(3500);
   await page.evaluate(() => { try { localStorage.removeItem('pulse3d.marks'); localStorage.removeItem('pulse3d.layout'); localStorage.removeItem('pulse3d.viz'); localStorage.removeItem('pulse3d.light'); } catch (e) {} }); // чистый старт разметки, вариантов и режима
-  await page.evaluate(() => { try { localStorage.setItem('pulse3d.bed1', 'original'); localStorage.setItem('pulse3d.bed2', 'original'); localStorage.setItem('pulse3d.desk2', 'A'); } catch (e) {} KIDBED.set('original'); DESK2.set('A'); }); // the room checks below describe the original beds and the room 2 desk; the page defaults to F / B since 2026-09-09, and the keys keep that across the reloads below
+  await page.evaluate(() => { try { localStorage.setItem('pulse3d.bed1', 'original'); localStorage.setItem('pulse3d.bed2', 'original'); localStorage.setItem('pulse3d.desk2', 'A'); localStorage.setItem('pulse3d.k4.table', 'A'); } catch (e) {} KIDBED.set('original'); DESK2.set('A'); ROOM4.set('table', 'A'); }); // the room checks below describe the original beds and the room 2 desk; the page defaults to F / B since 2026-09-09, and the keys keep that across the reloads below
   // the room 4 checks below describe variant A with no wall decor; since 2026-09-10 the page opens on kitchen B, sofa G, tv B, decor D/B — the keys keep A across the reloads below
   await page.evaluate(() => { const V = { kitchen: 'A', sofa: 'A', tv: 'A', decortv: 'none', decorsofa: 'none' };
     Object.entries(V).forEach(([k, v]) => { try { localStorage.setItem('pulse3d.k4.' + k, v); } catch (e) {} ROOM4.pick(k, v); }); });
@@ -270,7 +270,7 @@ const { launchChromium } = require('./browser');
     setItemPose('sofa', null, 90); out.sofaRot = ext('sofa').join() === '0.88,0.75,2'; setItemPose('sofa', null, 0);
     out.bedFew = PHYS.kidbed.length === 9 && PHYS.tub.length === 5 && ITEM_GROUPS.kidbed.children.length > 20;
     out.gltf = typeof THREE.GLTFLoader === 'function'; // realism-living step 2: vendored loader r128
-    out.living = PHYS.table.length === 6 && PHYS.chair1.length === 6 && PHYS.sofa.length === 1 && ext('table').join() === '0.8,0.76,1.8' && ext('chair1').join() === '0.42,0.9,0.42'; // realism-living step 1: fixed proxies
+    out.living = PHYS.table.length === 6 && PHYS.chair1.length === 6 && PHYS.sofa.length === 1 && ext('table').join() === '0.8,0.76,1.8' && ext('chair1').join() === '0.48,0.8,0.48'; // realism-living step 1: fixed proxies
     const p0 = ITEM_GROUPS.sofa.userData.pos.slice(); MK.toggle(true);
     const m = MK.addPoint([p0[0], p0[1] + 0.2]); MK.edit(m, { bind: { item: 'sofa', side: 'W' } });
     const c0 = !m.conflict; setItemPose('sofa', [p0[0] + 0.3, p0[1]]); const c1 = m.conflict === 'предмет сдвинулся'; setItemPose('sofa', p0); const c2 = !m.conflict;
@@ -515,7 +515,7 @@ const { launchChromium } = require('./browser');
   if (decor.length) problems.push('декор комнаты 4: ' + decor.join(', '));
   // page defaults (2026-09-10, user): kitchen B, sofa G, tv decor D, sofa decor B — the selects, not the state forced above
   const defs = await page.evaluate(() => Object.fromEntries(['k4kitchen', 'k4sofa', 'k4tv', 'k4decortv', 'k4decorsofa', 'k4table', 'm3vanity'].map(id => [id, [...document.getElementById(id).options].find(o => o.defaultSelected).value])));
-  const wantDefs = { k4kitchen: 'B', k4sofa: 'G', k4tv: 'B', k4decortv: 'D', k4decorsofa: 'B', k4table: 'A', m3vanity: 'A' };
+  const wantDefs = { k4kitchen: 'B', k4sofa: 'G', k4tv: 'B', k4decortv: 'D', k4decorsofa: 'B', k4table: 'D', m3vanity: 'A' };
   Object.entries(wantDefs).forEach(([id, v]) => { if (defs[id] !== v) problems.push('вариант по умолчанию ' + id + ': ' + defs[id] + ' (нужен ' + v + ')'); });
   // room 3 vanity (#m3vanity A–E) and dining table (#k4table A/B): every variant builds meshes inside its size box and keeps the pouf
   const vans = await page.evaluate(() => { const out = [], inside = id => { const u = ITEM_GROUPS[id].userData, bb = new THREE.Box3().setFromObject(ITEM_GROUPS[id]), t = 0.005;
@@ -523,7 +523,7 @@ const { launchChromium } = require('./browser');
     for (const v of 'ABCDE') { ROOM3.set('vanity', v); for (const id of ['vanity', 'vmirror']) if (!ITEM_GROUPS[id].visible || !inside(id)) out.push(id + ':' + v);
       if (!ITEM_GROUPS.vpouf.visible || ITEM_GROUPS.vanity.userData.size[2] < 0.40) out.push('пуфик/глубина:' + v); }
     ROOM3.set('vanity', 'A');
-    for (const v of ['B', 'A']) { ROOM4.set('table', v); if (!ITEM_GROUPS.table.visible || !inside('table')) out.push('table:' + v); }
+    for (const v of ['B', 'C', 'D', 'A']) { ROOM4.set('table', v); if (!ITEM_GROUPS.table.visible || !inside('table')) out.push('table:' + v); }
     return out; });
   if (vans.length) problems.push('варианты столиков: ' + vans.join(', '));
   // варианты комнаты 4 держат свою опорную точку: перечитывание расстановки (оно идёт при каждом старте) не должно тянуть широкий диван к позе из items.js — он уходит за южную стену
