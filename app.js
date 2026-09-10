@@ -1210,6 +1210,10 @@ mapBase.width=mapC.width; mapBase.height=mapC.height;
   g.fillStyle='#6b6862'; g.font='600 11px system-ui,sans-serif';
   g.textAlign='center'; g.textBaseline='middle';
   PLAN.rooms.forEach(r=>g.fillText(r.id,mx(r.label[0]),mz(r.label[1])));
+  // стороны света по краям: план всегда развёрнут севером вверх (x → восток, z → юг)
+  g.fillStyle='#8b877f'; g.font='700 10px system-ui,sans-serif';
+  const cx=mapBase.width/2, cy=(PAD+mz(maxZ))/2;
+  [['С',cx,5],['Ю',cx,mz(maxZ)+6],['З',5,cy],['В',mapBase.width-5,cy]].forEach(([t,x,y])=>g.fillText(t,x,y));
 })();
 const camDir=new THREE.Vector3();
 function drawMap(){
