@@ -1,4 +1,4 @@
-// «Линейка» (button #rulerBtn): two clicks on any surface in any view; the segment snaps to the world axis with the largest
+// «Линейка» (button #rulerBtn): two clicks on any surface in any view; a click near a corner or an edge of the hit mesh sticks to it; the segment snaps to the world axis with the largest
 // span (x/z — horizontal, y — vertical), the label shows whole centimetres. Measures live until the tool is switched off.
 (function(){
   const btn=document.getElementById('rulerBtn'); if(!btn) return;
@@ -7,7 +7,14 @@
   const R=window.RULER={on:false,items:[],start:null,draft:null};
   const shown=o=>{ for(;o;o=o.parent) if(!o.visible||o===avatar||o===grp) return false; return true; }; // r128 raycaster ignores visibility: skip hidden layers, physics boxes, the avatar and our own arrows
   function pick(e){ ray.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight*2-1)),camera);
-    const h=ray.intersectObjects(scene.children,true).find(h=>h.object.isMesh&&h.object.material.visible!==false&&shown(h.object)); return h?h.point.clone():null; }
+    const h=ray.intersectObjects(scene.children,true).find(h=>h.object.isMesh&&h.object.material.visible!==false&&shown(h.object)); return h?R.snapEdge(h.object,h.point.clone()):null; }
+  // snap to the hit mesh's box: the nearest corner, else the nearest point of an edge, within SNAP metres (local bounding box → world, so rotated items keep their true edges)
+  R.SNAP=0.05;
+  R.snapEdge=(o,p)=>{ const g=o.geometry; if(!g.boundingBox) g.computeBoundingBox(); const {min,max}=g.boundingBox;
+    const C=[0,1,2,3,4,5,6,7].map(i=>new THREE.Vector3(i&1?max.x:min.x,i&2?max.y:min.y,i&4?max.z:min.z).applyMatrix4(o.matrixWorld));
+    let best=null, bd=R.SNAP; C.forEach(c=>{ const d=c.distanceTo(p); if(d<bd){ bd=d; best=c; } }); if(best) return best;
+    C.forEach((c0,i)=>[1,2,4].forEach(bit=>{ if(i&bit) return; const c1=C[i|bit], q=new THREE.Vector3(), d=new THREE.Line3(c0,c1).closestPointToPoint(p,true,q).distanceTo(p); if(d<bd){ bd=d; best=q.clone(); } })); // 12 edges: each corner to its 3 neighbours with a higher bit
+    return best||p; };
   R.snap=(a,b)=>{ const d=b.clone().sub(a), k=['x','y','z'].reduce((m,c)=>Math.abs(d[c])>Math.abs(d[m])?c:m,'x'), end=a.clone(); end[k]=b[k]; return {end,axis:k,cm:Math.round(Math.abs(d[k])*100)}; };
   function make(a,b){ const s=R.snap(a,b), g=new THREE.Group(), dir=s.end.clone().sub(a), L=dir.length(); dir.normalize();
     if(L>0){ const bar=new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,L,8),headMat); bar.position.copy(a).addScaledVector(dir,L/2); bar.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir); g.add(bar); } // a rod, not a Line: WebGL draws lines 1 px wide

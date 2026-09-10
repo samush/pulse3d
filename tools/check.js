@@ -483,6 +483,12 @@ const { chromium } = require('playwright');
   const rl = await page.evaluate(() => { RULER.toggle(true); const m = RULER.add(new THREE.Vector3(1, 0, 1), new THREE.Vector3(1.02, 0.01, 2.345)); const n = RULER.items.length, lab = document.querySelectorAll('.rl').length; RULER.toggle(false);
     return { axis: m.axis, cm: m.cm, n, lab, cleared: RULER.items.length === 0 && !document.querySelector('.rl') && !RULER.on }; });
   if (rl.axis !== 'z' || rl.cm !== 135 || rl.n !== 1 || rl.lab !== 1 || !rl.cleared) problems.push('линейка: ' + JSON.stringify(rl));
+  // ruler snapping: a point near the table top's corner lands on the corner, near an edge on the edge, far from both stays put
+  const rs = await page.evaluate(() => { const g = ITEM_GROUPS.table, [x, z] = g.userData.pos, [w, h, d] = g.userData.size; let top = null; g.traverse(o => { if (o.isMesh) { const b = new THREE.Box3().setFromObject(o); if (!top || b.max.y > top.b.max.y) top = { o, b }; } });
+    const P = (a, b, c) => new THREE.Vector3(a, b, c), r = v => [v.x, v.y, v.z].map(n => Math.round(n * 1000) / 1000), B = top.b;
+    return { corner: r(RULER.snapEdge(top.o, P(B.min.x + 0.02, B.max.y, B.min.z + 0.03))), edge: r(RULER.snapEdge(top.o, P(B.min.x + 0.02, B.max.y, B.min.z + 0.5))), free: r(RULER.snapEdge(top.o, P(B.min.x + 0.3, B.max.y, B.min.z + 0.5))), b: [r(B.min), r(B.max)] }; });
+  { const [mn, mx] = rs.b, eq = (a, b) => a.every((v, i) => Math.abs(v - b[i]) < 1e-3);
+    if (!eq(rs.corner, [mn[0], mx[1], mn[2]]) || !eq(rs.edge, [mn[0], mx[1], mn[2] + 0.5]) || !eq(rs.free, [mn[0] + 0.3, mx[1], mn[2] + 0.5])) problems.push('линейка: прилипание ' + JSON.stringify(rs)); }
 
   // L0g: recessed ceiling spots exist with an emitter disc and a proxy each; mlight is gone; the fingerprint moved with the catalogue
   const l0g = await page.evaluate(() => { const ids = ITEMS.filter(it => /^ceil\d+_\d+$/.test(it.id)).map(it => it.id);
