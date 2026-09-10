@@ -27,14 +27,15 @@ const SET = flag('set', '');   // варианты комнаты 4 в кадр�
 const REF = flag('ref', '');   // готовый рендер другого ракурса — эталон материалов и палитры
 const AS = flag('as', '');   // имя варианта: без него результат зовётся именем ракурса
 const LABELS = has('labels');
+const PHOTO = has('photo');   // высота глаз и нормальный объектив вместо камеры под потолком
 
-const DIR = { frames: path.join(root, 'render', 'frames'), final: path.join(root, 'render', 'final'), wip: path.join(root, 'render', 'wip') };
+const DIR = { frames: path.join(root, 'render', 'frames'), final: path.join(root, 'render', 'final'), wip: path.join(root, 'render', 'wip'), meta: path.join(root, 'render', '.meta') };
 const base = cam ? cam + (AS ? '-' + AS : '') : '';
 const framePath = cam ? path.join(DIR.frames, cam + '.png') : '';
 const factsPath = cam ? path.join(DIR.frames, cam + '.facts.json') : '';
 
 const rel = p => path.relative(root, p);
-const readMeta = () => { try { return JSON.parse(fs.readFileSync(path.join(DIR.final, base + '.json'), 'utf8')); } catch (e) { return null; } };
+const readMeta = () => { try { return JSON.parse(fs.readFileSync(path.join(DIR.meta, base + '.json'), 'utf8')); } catch (e) { return null; } };
 const img = p => ({ type: 'image', mime_type: p.endsWith('.png') ? 'image/png' : 'image/jpeg', data: fs.readFileSync(p).toString('base64') });
 
 (async () => {
@@ -52,13 +53,17 @@ const img = p => ({ type: 'image', mime_type: p.endsWith('.png') ? 'image/png' :
   if (SET) await page.evaluate(pairs => pairs.forEach(([k, v]) => ROOM4.pick(k, v)), SET.split(',').map(p => p.split('=')));
   await page.evaluate(id => { VIZ.set(true); LIGHTING.set('lamps'); const a = document.getElementById('avatarOn'); a.checked = false; a.dispatchEvent(new Event('change')); setView(id);
     document.getElementById('ui').style.display = 'none'; document.querySelectorAll('.hint, .rl, #walkpad, #fpvhint, #camhint, #map').forEach(e => { e.style.display = 'none'; }); }, cam);
+  if (PHOTO) await page.evaluate(() => { controls.pos.y = 1.55; controls.phi = Math.PI / 2 + 0.03; persp.fov = 60; persp.updateProjectionMatrix(); controls.apply(); });
   await page.waitForTimeout(SET ? 5000 : 2500); // PBR-двойники и тени успевают собраться, у сменённого варианта — ещё и GLB
 
   // размеры сцены в метрах: без них модель делает из маленькой комнаты зал
-  const facts = await page.evaluate(([id, labels]) => {
+  const facts = await page.evaluate(([id, labels, photo]) => {
     const c = CAMS.find(c => c.id === id), room = PLAN.rooms.find(r => r.id === +id.match(/^r(\d+)/)[1]);
     const xs = room.poly.map(p => p[0]), zs = room.poly.map(p => p[1]), m2 = n => Math.round(n * 100) / 100;
-    const v = new THREE.Vector3(), seen = [];
+    const v = new THREE.Vector3(), seen = [], ray = new THREE.Raycaster();
+    const walls = wallGroup.children.concat(wallGroupR.visible ? wallGroupR.children : []);
+    const behindWall = p => { const dir = p.clone().sub(camera.position), len = dir.length(); ray.set(camera.position, dir.normalize()); ray.far = len - 0.15;
+      return ray.intersectObjects(walls, true).length > 0; };   // предмет соседней комнаты попадает в кадр только через проём
     Object.entries(ITEM_GROUPS).forEach(([iid, g]) => {
       if (!g.visible || !g.parent || !g.parent.visible || g.userData.hidden) return;
       const bb = new THREE.Box3().setFromObject(g); if (bb.isEmpty()) return;
@@ -66,20 +71,25 @@ const img = p => ({ type: 'image', mime_type: p.endsWith('.png') ? 'image/png' :
       const p = v.clone().project(camera); if (p.z > 1 || Math.abs(p.x) > 1.1 || Math.abs(p.y) > 1.1) return;
       const it = ITEMS.find(i => i.id === iid) || {}, [w, h, dp] = g.userData.size;
       if (Math.max(w, dp) < 0.4 || /^(led|cable|sock|ceil|switch)/.test(iid)) return; // мелочь и проводка масштаб не задают
-      if (it.room !== room.id) return;      // сквозь стены видно соседние комнаты — их предметы тут ни при чём
+      if (it.room !== room.id && (Math.max(w, dp) < 0.8 || behindWall(v))) return; // из соседней комнаты — только крупное и только если видно через проём
+      let doors = 0;
+      if (/шкаф|гардероб|пенал/i.test(it.type || '')) g.traverse(o => { const bb = o.isMesh && (o.geometry.boundingBox || (o.geometry.computeBoundingBox(), o.geometry.boundingBox));
+        if (!bb) return; const sx = bb.max.x - bb.min.x, sy = bb.max.y - bb.min.y, sz = bb.max.z - bb.min.z;
+        if (sz <= 0.035 && sy >= 0.4 && sx >= 0.25 && sx <= 1.2) doors++; }); // фасад: тонкий по глубине, широкий по фронту — боковины и задняя стенка не считаются
       let slot = /зеркал/i.test(it.type || '');   // у PBR-двойника слот в userData может не сохраниться, тип надёжнее
       g.traverse(o => { if (o.isMesh && o.material.userData && o.material.userData.slot === 'mirror') slot = true; });
-      seen.push({ id: iid, type: it.type || '', w: m2(w), h: m2(h), d: m2(dp), face: m2(Math.max(w, dp)), dist: m2(d), mirror: !!slot, sx: (p.x + 1) / 2, sy: (1 - p.y) / 2 });
+      seen.push({ id: iid, type: it.type || '', doors, w: m2(w), h: m2(h), d: m2(dp), face: m2(Math.max(w, dp)), dist: m2(d), mirror: !!slot, sx: (p.x + 1) / 2, sy: (1 - p.y) / 2 });
     });
     seen.sort((a, b) => a.dist - b.dist);
     if (labels) seen.filter(o => o.mirror || /зеркал|шкаф|порог/i.test(o.type)).forEach(o => {
-      const el = document.createElement('div'); el.textContent = (o.mirror ? 'MIRROR ' : /шкаф/i.test(o.type) ? 'WARDROBE ' : '') + o.face + '×' + o.h + ' m';
+      const el = document.createElement('div'); el.textContent = (o.mirror ? 'MIRROR ' : /шкаф/i.test(o.type) ? 'WARDROBE ' : '') + o.face + '×' + o.h + ' m' + (o.doors ? ', ' + o.doors + ' doors' : '');
       el.style.cssText = 'position:fixed;transform:translate(-50%,-50%);z-index:99;background:#fff;color:#000;font:600 15px/1.2 system-ui;padding:3px 7px;border:2px solid #000;border-radius:4px';
       el.style.left = o.sx * innerWidth + 'px'; el.style.top = o.sy * innerHeight + 'px'; el.className = 'rlabel'; document.body.appendChild(el);
     });
+    if (photo) { const c2 = { camY: 1.55, tilt: 2, fov: 60 }; return { labels, photo, room: [m2(Math.max(...xs) - Math.min(...xs)), m2(Math.max(...zs) - Math.min(...zs))], area: room.area, ...c2, items: seen.slice(0, 12) }; }
     return { labels, room: [m2(Math.max(...xs) - Math.min(...xs)), m2(Math.max(...zs) - Math.min(...zs))], area: room.area,
       camY: m2(c.pos[1]), tilt: Math.round((c.phi - Math.PI / 2) * 180 / Math.PI), fov: c.fov, items: seen.slice(0, 12) };
-  }, [cam, LABELS]);
+  }, [cam, LABELS, PHOTO]);
   fs.writeFileSync(factsPath, JSON.stringify(facts));
   fs.mkdirSync(path.dirname(framePath), { recursive: true });
   await page.locator('#c').screenshot({ path: framePath, timeout: 120000 });
@@ -103,8 +113,9 @@ async function send() {
   const scale = facts ? 'Real dimensions of this shot, in metres — respect them, the room is small: floor '
     + facts.room.join(' × ') + ' (' + facts.area + ' m²), ceiling 2.70. The camera stands ' + facts.camY
     + ' m above the floor, tilted ' + facts.tilt + '° down, with a ' + facts.fov
-    + '° field of view — a wide-angle shot taken high in a small room, so keep furniture large relative to the walls and do not stretch the space into a hall. Objects in frame, width × height × depth: '
-    + facts.items.map(o => o.id + ' ' + o.w + '×' + o.h + '×' + o.d + (o.mirror ? ' (a wall mirror, not a door or a window)' : '')).join('; ') + '.'
+    + (facts.photo ? '° field of view — an eye-level photograph on a normal lens, no wide-angle stretching and no barrel distortion. Objects in frame, width × height × depth: '
+      : '° field of view — a wide-angle shot taken high in a small room, so keep furniture large relative to the walls and do not stretch the space into a hall. Objects in frame, width × height × depth: ')
+    + facts.items.map(o => o.id + ' ' + o.w + '×' + o.h + '×' + o.d + (o.mirror ? ' (a wall mirror, not a door or a window)' : o.doors ? ' (' + o.doors + ' doors across that width, so each leaf is ' + Math.round(o.w / o.doors * 100) + ' cm wide)' : '')).join('; ') + '.'
     + (facts.labels ? ' The white boxed captions drawn on the reference are notes to you, naming what an ambiguous shape really is and how big it is; render those objects as real objects and put no text, caption or label anywhere in the photograph.' : '') : '';
   const refPath = REF && (fs.existsSync(REF) ? REF : path.join(DIR.final, REF + '.jpg'));
   if (REF && !fs.existsSync(refPath)) { console.error('нет эталона ' + rel(refPath) + ': сначала отрендерить ' + REF); process.exit(1); }
@@ -146,6 +157,6 @@ async function send() {
     fs.renameSync(prev, path.join(DIR.wip, base + '-' + st + '.jpg'));
   }
   fs.writeFileSync(prev, Buffer.from(out.data, 'base64'));
-  fs.writeFileSync(path.join(DIR.final, base + '.json'), JSON.stringify({ cam, model: MODEL, size: SIZE, aspect: ASPECT, viewport: [W, H], set: SET || undefined, ref: REF || undefined, fixes, note: flag('note', '') || undefined, lastFix: fix || undefined, prompt, at: new Date().toISOString() }, null, 1));
+  fs.writeFileSync(path.join(DIR.meta, base + '.json'), JSON.stringify({ cam, model: MODEL, size: SIZE, aspect: ASPECT, viewport: [W, H], set: SET || undefined, ref: REF || undefined, fixes, note: flag('note', '') || undefined, lastFix: fix || undefined, prompt, at: new Date().toISOString() }, null, 1));
   console.log('готово: ' + rel(prev) + '\nкадр:   ' + rel(framePath));
 }

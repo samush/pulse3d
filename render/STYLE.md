@@ -18,11 +18,13 @@ Decor: minimal and natural — wood and bamboo accessories in chestnut/pine tone
 
 Windows: minimal blackout roller blinds mounted tight inside the window recess — no fabric curtains or drapery of any kind.
 
+Cabinet fronts: a wardrobe, a tall unit or a kitchen run keeps the width and the number of doors given with its dimensions — a 1.77 m wardrobe with 4 doors shows exactly four leaves of 44 cm, it does not stretch along the wall or split into six narrow ones. Handles stay flush or recessed, in the style below.
+
 Mirrors: the reference marks every mirror, and a mirror stays a mirror — a frameless glass panel reflecting the room back, never turned into a door, a window, a picture or a wardrobe front. The tall mirror in the hall is 0.90 m wide and 2.40 m high on a plain wall; the bathroom mirrors sit above their basins. Their reflections show the room they stand in, lit as the room is lit.
 
 Openings: a plain rectangle on a wall is a doorway or a mirror as the shot notes say, never an invented window. Windows and balcony doors exist only where the reference shows them.
 
-Camera: 24 mm architectural lens, natural depth of field, no fisheye distortion, sharp across the room.
+Camera: an architectural lens matching the field of view stated with the dimensions below, natural depth of field, straight verticals, no fisheye or barrel distortion, sharp across the room.
 
 ## r4-door
 Kitchen-living room 22.9 m² (5.24 × 4.37 m, ceiling 2.7 m), seen from the hall doorway (camera 4.1). Layout of this series: corner kitchen along the far wall and turning into the right-hand corner, tall units and the fridge column at that corner; a full-height walnut slat panel on the right-hand wall carrying a large wall-mounted TV above a long white floating console; a low sofa without armrests in the near left corner, its back against a walnut slat panel.
