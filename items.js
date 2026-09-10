@@ -148,7 +148,7 @@ const PHYS={}; // id → boxes
      /* proxy = pre-detail AABBs (realism-all A) */
      if(!corner) b.phys(0,KD+0.03,0,2.69,0,0.70);                                                                       // A: fridge column in the north corner
      else { b.phys(0,KC,0,0.91,0,0.70); b.phys(KLX[0],KLX[1],0,0.91,0,KD);                                              // B/F: blind corner base, short leg
-       if(F) b.phys(0,KD+0.03,0,2.69,Z1,KZ1);                                                                           // F: fridge column inside the run
+       if(F){ b.phys(0,KD+0.03,0,2.69,Z1,KZ1); b.phys(0,0.36,1.45,2.69,0,0.70); }                                      // F: fridge column inside the run, corner wall unit up to the north wall
        else { b.phys(0,0.36,1.45,2.69,0,0.70); b.phys(0.36,KLX[1],1.45,2.69,0,0.36); b.phys(KLX[1],KLX[1]+0.80,0,2.69,0,KD+0.03); } } // B: corner wall unit, short-leg wall units, fridge column
      b.phys(0,KC,0.1,0.87,KZ0,Z1); b.phys(0,KD,0.87,0.91,KZ0,Z1); b.phys(KC,KC+0.024,0.1,0.87,KZ0,Z1);               // base run: carcass, worktop, fronts with handles
      b.phys(0.08,0.60,0.905,0.925,HOB[0],HOB[1]); b.phys(0.13,0.57,0.72,0.93,KSINK[0],KSINK[1]);                      // hob and undermount bowl
@@ -159,7 +159,8 @@ const PHYS={}; // id → boxes
        doors(KC,KD,0.02,0.68,[[0.10,0.30],[0.30,2.00],[2.00,2.69]],mat.base);                                           // drawer below, fridge door, freezer above
        b.handle(KD,1.40,0.06,0.5,'y','x'); b.handle(KD,2.30,0.06,0.3,'y','x'); }
      else { b(0,KC,0.1,0.87,0,0.70,mat.hdark); b(0,KP,0,0.1,0,0.70,mat.dark); front(0.1,0.87,0,0.70,mat.base);          // B: blind corner base with a plain panel (the short leg blocks it)
-       if(!F){ b(0,0.34,1.45,2.69,0,0.70,mat.hdark); b.round(0.34,0.36,1.45+gap/2,2.69-gap/2,0.36+gap/2,0.70-gap/2,0.001,mat.upper); } // B: corner wall unit, narrow door past the short-leg unit
+       b(0,0.34,1.45,2.69,0,0.70,mat.hdark); b.round(0.34,0.36,1.45+gap/2,2.69-gap/2,(F?0:0.36)+gap/2,0.70-gap/2,0.001,mat.upper); // corner wall unit: B a narrow door past the short-leg unit, F (no units on the short leg) a full 0.70 door up to the wall
+       if(F) b.handle(0.36,1.50,0.60,0.16,'z','x');
        b(KLX[0],KLX[1],0.1,0.87,0.02,KC,mat.hdark); b(KLX[0],KLX[1],0,0.1,0.02,KP,mat.dark);                            // short leg along the north wall: base carcass and plinth, fronts face +z
        [[0.1,0.35],[0.35,0.6],[0.6,0.87]].forEach(([y0,y1])=>{ b.round(KLX[0]+gap/2,KLX[1]-gap/2,y0+gap/2,y1-gap/2,KC,KC+0.02,0.001,mat.base); b.handle((KLX[0]+KLX[1])/2,y1-0.05,KC+0.02,0.2,'x','z'); }); // three drawers
        b(0.02,KLX[1],0.91,1.45,0,0.02,mat.wpanel);                                                                      // splashback of the short leg
