@@ -25,8 +25,9 @@ body{margin:0;background:var(--bg);color:var(--ink);
   border:1px solid var(--line);border-radius:10px;padding:14px 16px;
   box-shadow:0 6px 24px rgba(0,0,0,.10);user-select:none}
 .panel h1{font-size:16px;font-weight:800;margin:0 0 2px;letter-spacing:-.01em;cursor:pointer}
-#rulerBtn,#snapBtn{position:absolute;right:12px;top:11px;width:24px;height:24px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;font-size:14px;line-height:1;cursor:pointer}
+#rulerBtn,#snapBtn,#resetBtn{position:absolute;right:12px;top:11px;width:24px;height:24px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;font-size:14px;line-height:1;cursor:pointer}
 #snapBtn{right:40px}
+#resetBtn{top:41px}
 #rulerBtn.on,#snapBtn.on{background:var(--accent-soft);border-color:var(--accent)}
 .panel h1::after{content:' \25BE';color:var(--muted);font-size:12px}
 /* свёрнутая панель — только маленький краешек с заголовком */
@@ -119,6 +120,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <h1 onclick="this.parentElement.classList.toggle('collapsed')" title="Свернуть/развернуть">Квартира в кубах</h1>
   <button id="rulerBtn" title="Линейка: два клика по любой поверхности, отрезок по горизонтали или вертикали, длина в см" aria-label="Линейка">📏</button>
   <button id="snapBtn" hidden title="Прилипание к углам и рёбрам предмета (в 5 см от них); выключено — точка ставится свободно" aria-label="Прилипание линейки к углам и рёбрам">🧲</button>
+  <button id="resetBtn" title="Сброс: расстановка, разметка, варианты и настройки — как при первом открытии; модели и текстуры скачиваются заново" aria-label="Сброс сцены">🔄</button>
   <p class="sub">потолок 2,7 м · куб = 1 × 1 × 1 м</p>
   <div class="views" style="margin:8px 0 12px">
     <button id="vTop">Сверху</button>
@@ -241,3 +243,15 @@ window.addEventListener('error',e=>{
 <script src="ruler.js"></script>
 <script src="lighting.js"></script>
 <script src="materials.js"></script>
+<script>
+// «Сброс»: убрать сохранения pulse3d.*, заново скачать мимо кеша всё, что страница уже брала (код, модели, текстуры), и открыть её как в первый раз
+document.getElementById('resetBtn').addEventListener('click',async e=>{
+  if(!confirm('Сбросить всё к первому открытию: расстановку, разметку, варианты, отделку и настройки? Модели и текстуры будут скачаны заново.')) return;
+  const b=e.currentTarget; b.disabled=true; b.textContent='⏳';
+  try{ Object.keys(localStorage).filter(k=>k.indexOf('pulse3d.')===0).forEach(k=>localStorage.removeItem(k)); }catch(_){}
+  const clean=location.href.split('#')[0].split('?')[0], same=u=>/^https?:/.test(u)&&u.indexOf(location.origin)===0; // file:// кеша не держит, туда не ходим — иначе только ошибки в консоли
+  const urls=[...new Set(performance.getEntriesByType('resource').map(r=>r.name).filter(same).concat(same(clean)?[clean]:[]))];
+  await Promise.all(urls.map(u=>fetch(u,{cache:'reload'}).catch(()=>{}))); // cache:'reload' идёт в сеть мимо кеша и кладёт свежий ответ на его место
+  location.replace(clean);
+});
+</script>
