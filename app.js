@@ -256,6 +256,7 @@ function syncMode(){ // called by every camera-mode switch (setPlan/setFPV/setPo
   if(window.MK&&MK.on&&!controls.plan) MK.toggle(false);
   if(window.LAY&&LAY.on&&!controls.plan) LAY.toggle(false);
   if(window.VIZ) VIZ.apply();
+  if(window.RULER&&RULER.on) RULER.hint();
 }
 
 function toShape(poly){
@@ -1226,7 +1227,7 @@ function drawMap(){
   mapCtx.fillStyle='#d32f2f'; mapCtx.fill();
   mapCtx.lineWidth=1.5; mapCtx.strokeStyle='#fff'; mapCtx.stroke();
 }
-(function loop(t){requestAnimationFrame(loop);walkStep(t||0);controls.update();placeTip();drawMap();if(window.LIGHTING)LIGHTING.tick(t||0);renderer.render(scene,camera);})(0);
+(function loop(t){requestAnimationFrame(loop);walkStep(t||0);controls.update();placeTip();if(window.RULER)RULER.tick();drawMap();if(window.LIGHTING)LIGHTING.tick(t||0);renderer.render(scene,camera);})(0);
 
 (function(){ // kids' wallpaper selects «Обои 1/2» (index.html), remembered per room
   [1,2].forEach(room=>{ const KEY='pulse3d.wp'+room, sel=document.getElementById('wp'+room); if(!sel) return; let v=WALLPAPER.options[room][1]; try{ v=localStorage.getItem(KEY)||v; }catch(e){}

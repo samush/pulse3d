@@ -479,6 +479,10 @@ const { chromium } = require('playwright');
     [['decortv', 'ABCDEFGH'], ['decorsofa', 'ABC']].forEach(([id, vs]) => { for (const v of vs) { ROOM4.set(id, v); if (!ITEM_GROUPS[id].visible || !inside(id)) out.push(id + ':' + v); } ROOM4.set(id, 'none'); if (ITEM_GROUPS[id].visible) out.push(id + ':none'); });
     return out; });
   if (decor.length) problems.push('декор комнаты 4: ' + decor.join(', '));
+  // ruler: the segment snaps to the dominant world axis, length in whole cm, one label per measure, «off» clears everything
+  const rl = await page.evaluate(() => { RULER.toggle(true); const m = RULER.add(new THREE.Vector3(1, 0, 1), new THREE.Vector3(1.02, 0.01, 2.345)); const n = RULER.items.length, lab = document.querySelectorAll('.rl').length; RULER.toggle(false);
+    return { axis: m.axis, cm: m.cm, n, lab, cleared: RULER.items.length === 0 && !document.querySelector('.rl') && !RULER.on }; });
+  if (rl.axis !== 'z' || rl.cm !== 135 || rl.n !== 1 || rl.lab !== 1 || !rl.cleared) problems.push('линейка: ' + JSON.stringify(rl));
 
   // L0g: recessed ceiling spots exist with an emitter disc and a proxy each; mlight is gone; the fingerprint moved with the catalogue
   const l0g = await page.evaluate(() => { const ids = ITEMS.filter(it => /^ceil\d+_\d+$/.test(it.id)).map(it => it.id);
