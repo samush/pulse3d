@@ -2,6 +2,7 @@
 *.bak
 secrets/*.env
 secrets/*.key
+.local
 .local/**
 tools/out/
 node_modules
