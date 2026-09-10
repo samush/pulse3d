@@ -1,0 +1,14 @@
+{
+ "cam": "r4-sw",
+ "model": "gemini-3.1-flash-image",
+ "size": "2K",
+ "aspect": "16:9",
+ "viewport": [
+  1920,
+  1080
+ ],
+ "fixes": 1,
+ "lastFix": "the corner banquette sits in the corner to the left of the balcony door and clear of it, leaving the balcony door fully visible and at least 0.7 m of free floor in front of it; the slat TV panel and its white console on the far wall stay fully visible and unobstructed; the walls carry no wall-mounted lamps, only the recessed ceiling spots and the LED strip around the TV panel",
+ "prompt": "Image 1 is a photorealistic render to edit. Image 2 is the 3D scene it was made from — the geometry anchor: room shape, openings, camera and the placement of large furniture must match it.\n\nKeep everything else in image 1 exactly the same — same geometry, same camera, same materials, same lighting, same aspect ratio. Only fix: the corner banquette sits in the corner to the left of the balcony door and clear of it, leaving the balcony door fully visible and at least 0.7 m of free floor in front of it; the slat TV panel and its white console on the far wall stay fully visible and unobstructed; the walls carry no wall-mounted lamps, only the recessed ceiling spots and the LED strip around the TV panel\n\nShot notes: r4-sw\nThe same kitchen-living room seen from the south-west (camera 4.4). The corner kitchen runs along the left wall with its worktop, backsplash and tall units; the walnut slat panel with the wall-mounted TV and the white floating console is on the far wall in the centre; to the right of it a full-height glazed balcony door with a railing behind it, and the sofa without armrests in the right foreground.\nThe middle of the room is open floor — this layout has no dining table and no chairs. Tile in the kitchen zone meets oak plank flooring on a straight flush line.\n\nStyle reminder: Style: warm modern minimalism (Organic Modern / warm Japandi) for a family of four with two young children and a dog. Clean architectural lines softened by rounded, organic furniture silhouettes — no sharp corners, no thin spindly legs. Palette: warm white and light beige/greige walls and ceiling as the base; olive and forest-green accents (cabinetry, textiles); light and medium-dark natural wood tones (chestnut, pine) for furniture and decor. No cold greys, no bright saturated colors, black used only as a small accent (fixtures, hardware, faucets). Materials: matte HPL cabinet fronts (no gloss); matte engineered-stone or HPL countertops and backsplash; chrome or gunmetal plumbing fixtures; a wide rectangular kitchen sink with a combined main+filtered-water faucet; tile flooring in the hallway and kitchen zone; warm-toned quartz-vinyl (SPC) flooring in living rooms; natural woven jute/si",
+ "at": "2026-09-10T14:34:30.007Z"
+}

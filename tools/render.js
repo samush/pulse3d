@@ -2,6 +2,7 @@
 //
 //   node tools/render.js --list | <ракурс> [--frame-only] [--reuse-frame] [--note "..."]
 //   node tools/render.js <ракурс> --fix "<что должно быть>"    # правка предыдущего результата, до трёх на кадр
+//   node tools/render.js <ракурс> --set sofa=G,table=none --ref r4-door --as 3-dining-1
 //
 // Промпт — renders/STYLE.md, порядок работы — .claude/skills/render/SKILL.md, приёмы — docs/render-guide.md.
 // Ключ GEMINI_API_KEY приходит из окружения (hub run claude).
@@ -11,7 +12,7 @@ const { launchChromium } = require('./browser');
 
 const root = path.dirname(__dirname);
 const args = process.argv.slice(2);
-const VALUED = ['note', 'fix', 'model', 'size', 'viewport', 'aspect'];                       // флаги со значением: их аргумент — не имя ракурса
+const VALUED = ['note', 'fix', 'model', 'size', 'viewport', 'aspect', 'set', 'ref', 'as'];                       // флаги со значением: их аргумент — не имя ракурса
 const flag = (name, dflt) => { const i = args.indexOf('--' + name); return i < 0 ? dflt : args[i + 1]; };
 const has = name => args.includes('--' + name);
 const cam = args.find((a, i) => !a.startsWith('--') && !(i > 0 && VALUED.includes(args[i - 1].replace(/^--/, ''))));
@@ -22,13 +23,16 @@ const SIZE = flag('size', '2K');                                                
 const [W, H] = flag('viewport', '1920x1080').split('x').map(Number);
 const ASPECT = flag('aspect', '16:9');
 const MAX_FIXES = 3;
+const SET = flag('set', '');   // варианты комнаты 4 в кадре: table=none,sofa=G,kitchen=B…
+const REF = flag('ref', '');   // готовый рендер другого ракурса — эталон материалов и палитры
+const AS = flag('as', '2-final');
 
 const framePath = cam ? path.join(root, 'renders', 'frames', cam + '.png') : '';
 const dir = cam ? path.join(root, 'renders', cam) : '';
 const pair = name => path.join(dir, cam + '-' + name);                                      // кадр и результат лежат рядом и листаются подряд
 
 const rel = p => path.relative(root, p);
-const readMeta = () => { try { return JSON.parse(fs.readFileSync(pair('render.json'), 'utf8')); } catch (e) { return null; } };
+const readMeta = () => { try { return JSON.parse(fs.readFileSync(pair(AS + '.json'), 'utf8')); } catch (e) { return null; } };
 const img = p => ({ type: 'image', mime_type: p.endsWith('.png') ? 'image/png' : 'image/jpeg', data: fs.readFileSync(p).toString('base64') });
 
 (async () => {
@@ -43,9 +47,10 @@ const img = p => ({ type: 'image', mime_type: p.endsWith('.png') ? 'image/png' :
   if (!cams.some(c => c.id === cam)) { console.error('нет такого ракурса: ' + cam + ' (--list покажет все)'); await browser.close(); process.exit(1); }
 
   // чистый кадр: материалы и светильники включены, аватар и весь оверлей убраны, снимается только канвас
+  if (SET) await page.evaluate(pairs => pairs.forEach(([k, v]) => ROOM4.pick(k, v)), SET.split(',').map(p => p.split('=')));
   await page.evaluate(id => { VIZ.set(true); LIGHTING.set('lamps'); const a = document.getElementById('avatarOn'); a.checked = false; a.dispatchEvent(new Event('change')); setView(id);
     document.getElementById('ui').style.display = 'none'; document.querySelectorAll('.hint, .rl, #walkpad, #fpvhint, #camhint, #map').forEach(e => { e.style.display = 'none'; }); }, cam);
-  await page.waitForTimeout(2500); // PBR-двойники и тени успевают собраться
+  await page.waitForTimeout(SET ? 5000 : 2500); // PBR-двойники и тени успевают собраться, у сменённого варианта — ещё и GLB
   fs.mkdirSync(path.dirname(framePath), { recursive: true });
   await page.locator('#c').screenshot({ path: framePath, timeout: 120000 });
   await browser.close();
@@ -64,7 +69,9 @@ async function send() {
   const shot = style.split(/^## /m).find(s => s.startsWith(cam));                            // «## <ракурс>» — заметки именно про этот вид
   const common = style.split(/^## /m)[0].trim();
   const meta = readMeta();
-  const prev = pair('2-final.jpg');
+  const refPath = REF && (fs.existsSync(REF) ? REF : path.join(root, 'renders', REF, REF + '-2-final.jpg'));
+  if (REF && !fs.existsSync(refPath)) { console.error('нет эталона ' + rel(refPath) + ': сначала отрендерить ' + REF); process.exit(1); }
+  const prev = pair(AS + '.jpg');
   let input, prompt, fixes = meta ? meta.fixes || 0 : 0;
 
   if (fix) {
@@ -75,12 +82,13 @@ async function send() {
     prompt = 'Image 1 is a photorealistic render to edit. Image 2 is the 3D scene it was made from — the geometry anchor: room shape, openings, camera and the placement of large furniture must match it.\n\n'
       + 'Keep everything else in image 1 exactly the same — same geometry, same camera, same materials, same lighting, same aspect ratio. Only fix: ' + fix + '\n\n'
       + (shot ? 'Shot notes: ' + shot.trim() + '\n\n' : '') + 'Style reminder: ' + common.split('\n\n').slice(3).join(' ').slice(0, 900);
-    input = [{ type: 'text', text: prompt }, img(prev), img(framePath)];
+    input = [{ type: 'text', text: prompt }, img(prev), img(framePath)];   // якорь последним: от него наследуется кадрирование
     console.log('правка ' + fixes + '/' + MAX_FIXES + ' на ' + MODEL);
   } else {
     fixes = 0;
-    prompt = [common, shot ? '\n## ' + shot.trim() : '', flag('note', '') && '\nAlso for this shot: ' + flag('note', '')].filter(Boolean).join('\n');
-    input = [{ type: 'text', text: prompt }, img(framePath)];
+    const refNote = REF ? '\nImage 1 is a finished render of the same flat from another angle. Copy its finishes exactly: the same cabinet colour and fronts, the same floor, worktop, backsplash, wall paint, textiles and light temperature. It is a material reference only — take no geometry from it. The last image is the 3D scene for this shot and the only source of geometry, camera and furniture placement.' : '';
+    prompt = [common, shot ? '\n## ' + shot.trim() : '', refNote, flag('note', '') && '\nAlso for this shot: ' + flag('note', '')].filter(Boolean).join('\n');
+    input = [{ type: 'text', text: prompt }].concat(REF ? [img(refPath)] : []).concat([img(framePath)]);
     console.log('база на ' + MODEL + ', ' + SIZE + ' ' + ASPECT);
   }
 
@@ -98,6 +106,6 @@ async function send() {
   fs.mkdirSync(dir, { recursive: true });
   fs.copyFileSync(framePath, pair('1-frame.png'));                                           // пара: кадр и результат под одним именем
   fs.writeFileSync(prev, Buffer.from(out.data, 'base64'));
-  fs.writeFileSync(pair('render.json'), JSON.stringify({ cam, model: MODEL, size: SIZE, aspect: ASPECT, viewport: [W, H], fixes, note: flag('note', '') || undefined, lastFix: fix || undefined, prompt, at: new Date().toISOString() }, null, 1));
+  fs.writeFileSync(pair(AS + '.json'), JSON.stringify({ cam, model: MODEL, size: SIZE, aspect: ASPECT, viewport: [W, H], set: SET || undefined, ref: REF || undefined, fixes, note: flag('note', '') || undefined, lastFix: fix || undefined, prompt, at: new Date().toISOString() }, null, 1));
   console.log('готово: ' + rel(prev) + '\nпара:   ' + rel(pair('1-frame.png')));
 }

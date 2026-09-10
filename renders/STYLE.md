@@ -21,8 +21,13 @@ Windows: minimal blackout roller blinds mounted tight inside the window recess �
 Camera: 24 mm architectural lens, natural depth of field, no fisheye distortion, sharp across the room.
 
 ## r4-door
-Kitchen-living room 32.9 m², seen from the hall doorway. The kitchen run stands along the left wall, the dining table with six chairs in the middle, the TV and its console on the right wall, the sofa in the near left corner. The bright opening on the left is a doorway to the hall, not a window.
+Kitchen-living room 22.9 m² (5.24 × 4.37 m, ceiling 2.7 m), seen from the hall doorway (camera 4.1). Layout of this series: corner kitchen along the far wall and turning into the right-hand corner, tall units and the fridge column at that corner; a full-height walnut slat panel on the right-hand wall carrying a large wall-mounted TV above a long white floating console; a low sofa without armrests in the near left corner, its back against a walnut slat panel.
+There is no dining table and no chairs in this layout: the floor between the kitchen and the sofa stays open, showing large-format porcelain tile in the kitchen zone meeting oak plank flooring in the living zone with a flush joint and no threshold strip. The bright opening on the left is a doorway to the hall.
 
-## r4-arch
-Kitchen-living room 32.9 m², seen from the passage on its south side. The frame is open: no arch, no door frame and no wall edge in front of the camera — the picture starts at the room itself, exactly as the reference is cropped.
-The kitchen run stands against the far wall, the dining table with six chairs to the right of it, and the right-hand wall carries a large wall-mounted TV above a low floating console. That right-hand wall is solid: it has no window and no opening. The hallway with the wardrobe and the entrance door is visible on the left, past the kitchen wall.
+## r4-window
+The same kitchen-living room seen from the north-east corner towards the sofa (camera 4.3). The sofa without armrests stands along the left wall under a framed picture, its back against the walnut slat panel; the corner kitchen is visible in the depth on the right; the edge of the walnut TV panel closes the frame on the right. The doorway to the hall is in the middle of the far wall. Same finishes as the other shots of this room: same cabinet colour, same tile, same oak floor, same slat walnut.
+The floor in the foreground stays open — no dining table, no chairs, no coffee table in the walking path.
+
+## r4-sw
+The same kitchen-living room seen from the south-west (camera 4.4). The corner kitchen runs along the left wall with its worktop, backsplash and tall units; the walnut slat panel with the wall-mounted TV and the white floating console is on the far wall in the centre; to the right of it a full-height glazed balcony door with a railing behind it, and the sofa without armrests in the right foreground.
+The middle of the room is open floor — this layout has no dining table and no chairs. Tile in the kitchen zone meets oak plank flooring on a straight flush line.
