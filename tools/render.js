@@ -2,7 +2,8 @@
 //
 //   node tools/render.js --list | <ракурс> [--frame-only] [--reuse-frame] [--note "..."]
 //   node tools/render.js <ракурс> --fix "<что должно быть>"    # правка предыдущего результата, до трёх на кадр
-//   node tools/render.js <ракурс> --set sofa=G,table=none --ref r4-door --as 3-dining-1
+//   node tools/render.js <ракурс> --set sofa=G,table=none --ref r4-door --as dining-1
+//   node tools/render.js <ракурс> --wide                        # исходная камера пресета, широкий угол под потолком
 //
 // Промпт — render/STYLE.md, порядок работы — .claude/skills/render/SKILL.md, приёмы — docs/render-guide.md.
 // Ключ GEMINI_API_KEY приходит из окружения (hub run claude).
@@ -27,7 +28,7 @@ const SET = flag('set', '');   // варианты комнаты 4 в кадр�
 const REF = flag('ref', '');   // готовый рендер другого ракурса — эталон материалов и палитры
 const AS = flag('as', '');   // имя варианта: без него результат зовётся именем ракурса
 const LABELS = has('labels');
-const PHOTO = has('photo');   // высота глаз и нормальный объектив вместо камеры под потолком
+const PHOTO = !has('wide');   // по умолчанию высота глаз и нормальный объектив; --wide — исходная камера пресета под потолком
 
 const DIR = { frames: path.join(root, 'render', 'frames'), final: path.join(root, 'render', 'final'), wip: path.join(root, 'render', 'wip'), meta: path.join(root, 'render', '.meta') };
 const base = cam ? cam + (AS ? '-' + AS : '') : '';
