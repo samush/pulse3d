@@ -26,8 +26,10 @@ const MAX_FIXES = 3;
 const SET = flag('set', '');   // варианты комнаты 4 в кадре: table=none,sofa=G,kitchen=B…
 const REF = flag('ref', '');   // готовый рендер другого ракурса — эталон материалов и палитры
 const AS = flag('as', '2-final');
+const LABELS = has('labels');
 
 const framePath = cam ? path.join(root, 'renders', 'frames', cam + '.png') : '';
+const factsPath = cam ? path.join(root, 'renders', 'frames', cam + '.facts.json') : '';
 const dir = cam ? path.join(root, 'renders', cam) : '';
 const pair = name => path.join(dir, cam + '-' + name);                                      // кадр и результат лежат рядом и листаются подряд
 
@@ -51,6 +53,34 @@ const img = p => ({ type: 'image', mime_type: p.endsWith('.png') ? 'image/png' :
   await page.evaluate(id => { VIZ.set(true); LIGHTING.set('lamps'); const a = document.getElementById('avatarOn'); a.checked = false; a.dispatchEvent(new Event('change')); setView(id);
     document.getElementById('ui').style.display = 'none'; document.querySelectorAll('.hint, .rl, #walkpad, #fpvhint, #camhint, #map').forEach(e => { e.style.display = 'none'; }); }, cam);
   await page.waitForTimeout(SET ? 5000 : 2500); // PBR-двойники и тени успевают собраться, у сменённого варианта — ещё и GLB
+
+  // размеры сцены в метрах: без них модель делает из маленькой комнаты зал
+  const facts = await page.evaluate(([id, labels]) => {
+    const c = CAMS.find(c => c.id === id), room = PLAN.rooms.find(r => r.id === +id.match(/^r(\d+)/)[1]);
+    const xs = room.poly.map(p => p[0]), zs = room.poly.map(p => p[1]), m2 = n => Math.round(n * 100) / 100;
+    const v = new THREE.Vector3(), seen = [];
+    Object.entries(ITEM_GROUPS).forEach(([iid, g]) => {
+      if (!g.visible || !g.parent || !g.parent.visible || g.userData.hidden) return;
+      const bb = new THREE.Box3().setFromObject(g); if (bb.isEmpty()) return;
+      bb.getCenter(v); const d = v.distanceTo(camera.position); if (d > 14) return;
+      const p = v.clone().project(camera); if (p.z > 1 || Math.abs(p.x) > 1.1 || Math.abs(p.y) > 1.1) return;
+      const it = ITEMS.find(i => i.id === iid) || {}, [w, h, dp] = g.userData.size;
+      if (Math.max(w, dp) < 0.4 || /^(led|cable|sock|ceil|switch)/.test(iid)) return; // мелочь и проводка масштаб не задают
+      if (it.room !== room.id) return;      // сквозь стены видно соседние комнаты — их предметы тут ни при чём
+      let slot = /зеркал/i.test(it.type || '');   // у PBR-двойника слот в userData может не сохраниться, тип надёжнее
+      g.traverse(o => { if (o.isMesh && o.material.userData && o.material.userData.slot === 'mirror') slot = true; });
+      seen.push({ id: iid, type: it.type || '', w: m2(w), h: m2(h), d: m2(dp), face: m2(Math.max(w, dp)), dist: m2(d), mirror: !!slot, sx: (p.x + 1) / 2, sy: (1 - p.y) / 2 });
+    });
+    seen.sort((a, b) => a.dist - b.dist);
+    if (labels) seen.filter(o => o.mirror || /зеркал|шкаф|порог/i.test(o.type)).forEach(o => {
+      const el = document.createElement('div'); el.textContent = (o.mirror ? 'MIRROR ' : /шкаф/i.test(o.type) ? 'WARDROBE ' : '') + o.face + '×' + o.h + ' m';
+      el.style.cssText = 'position:fixed;transform:translate(-50%,-50%);z-index:99;background:#fff;color:#000;font:600 15px/1.2 system-ui;padding:3px 7px;border:2px solid #000;border-radius:4px';
+      el.style.left = o.sx * innerWidth + 'px'; el.style.top = o.sy * innerHeight + 'px'; el.className = 'rlabel'; document.body.appendChild(el);
+    });
+    return { labels, room: [m2(Math.max(...xs) - Math.min(...xs)), m2(Math.max(...zs) - Math.min(...zs))], area: room.area,
+      camY: m2(c.pos[1]), tilt: Math.round((c.phi - Math.PI / 2) * 180 / Math.PI), fov: c.fov, items: seen.slice(0, 12) };
+  }, [cam, LABELS]);
+  fs.writeFileSync(factsPath, JSON.stringify(facts));
   fs.mkdirSync(path.dirname(framePath), { recursive: true });
   await page.locator('#c').screenshot({ path: framePath, timeout: 120000 });
   await browser.close();
@@ -69,6 +99,13 @@ async function send() {
   const shot = style.split(/^## /m).find(s => s.startsWith(cam));                            // «## <ракурс>» — заметки именно про этот вид
   const common = style.split(/^## /m)[0].trim();
   const meta = readMeta();
+  let facts = null; try { facts = JSON.parse(fs.readFileSync(factsPath, 'utf8')); } catch (e) {}
+  const scale = facts ? 'Real dimensions of this shot, in metres — respect them, the room is small: floor '
+    + facts.room.join(' × ') + ' (' + facts.area + ' m²), ceiling 2.70. The camera stands ' + facts.camY
+    + ' m above the floor, tilted ' + facts.tilt + '° down, with a ' + facts.fov
+    + '° field of view — a wide-angle shot taken high in a small room, so keep furniture large relative to the walls and do not stretch the space into a hall. Objects in frame, width × height × depth: '
+    + facts.items.map(o => o.id + ' ' + o.w + '×' + o.h + '×' + o.d + (o.mirror ? ' (a wall mirror, not a door or a window)' : '')).join('; ') + '.'
+    + (facts.labels ? ' The white boxed captions drawn on the reference are notes to you, naming what an ambiguous shape really is and how big it is; render those objects as real objects and put no text, caption or label anywhere in the photograph.' : '') : '';
   const refPath = REF && (fs.existsSync(REF) ? REF : path.join(root, 'renders', REF, REF + '-2-final.jpg'));
   if (REF && !fs.existsSync(refPath)) { console.error('нет эталона ' + rel(refPath) + ': сначала отрендерить ' + REF); process.exit(1); }
   const prev = pair(AS + '.jpg');
@@ -81,13 +118,13 @@ async function send() {
     // правка, а не перегенерация: что менять — одной фразой, всё остальное сохраняется дословно; якорь геометрии идёт последним, от него наследуется кадрирование
     prompt = 'Image 1 is a photorealistic render to edit. Image 2 is the 3D scene it was made from — the geometry anchor: room shape, openings, camera and the placement of large furniture must match it.\n\n'
       + 'Keep everything else in image 1 exactly the same — same geometry, same camera, same materials, same lighting, same aspect ratio. Only fix: ' + fix + '\n\n'
-      + (shot ? 'Shot notes: ' + shot.trim() + '\n\n' : '') + 'Style reminder: ' + common.split('\n\n').slice(3).join(' ').slice(0, 900);
+      + (shot ? 'Shot notes: ' + shot.trim() + '\n\n' : '') + (scale ? scale + '\n\n' : '') + 'Style reminder: ' + common.split('\n\n').slice(3).join(' ').slice(0, 900);
     input = [{ type: 'text', text: prompt }, img(prev), img(framePath)];   // якорь последним: от него наследуется кадрирование
     console.log('правка ' + fixes + '/' + MAX_FIXES + ' на ' + MODEL);
   } else {
     fixes = 0;
     const refNote = REF ? '\nImage 1 is a finished render of the same flat from another angle. Copy its finishes exactly: the same cabinet colour and fronts, the same floor, worktop, backsplash, wall paint, textiles and light temperature. It is a material reference only — take no geometry from it. The last image is the 3D scene for this shot and the only source of geometry, camera and furniture placement.' : '';
-    prompt = [common, shot ? '\n## ' + shot.trim() : '', refNote, flag('note', '') && '\nAlso for this shot: ' + flag('note', '')].filter(Boolean).join('\n');
+    prompt = [common, shot ? '\n## ' + shot.trim() : '', scale, refNote, flag('note', '') && '\nAlso for this shot: ' + flag('note', '')].filter(Boolean).join('\n');
     input = [{ type: 'text', text: prompt }].concat(REF ? [img(refPath)] : []).concat([img(framePath)]);
     console.log('база на ' + MODEL + ', ' + SIZE + ' ' + ASPECT);
   }
