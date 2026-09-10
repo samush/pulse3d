@@ -17,9 +17,9 @@
 
 | Поверхность | Где задано | Покрытие | Почему |
 |---|---|---|---|
-| Фасады нижних, верхних и пенала, консоль под ТВ | `ITEMS.kitchen.coat.base/upper`, `console.coat.base` | `cabinetPaint` (0xd9c9ad, normal 0.25, rough из карты) | §2: матовый бежевый фасад, глаже стены |
-| Столешница | `kitchen.coat.top` | `stoneCounter` (Marble024, rough 0.30 явно, tint 0.62) | §2: темнее и глаже фартука; карта rough исходника полированная (0.11) — против §4.3 |
-| Фартук | `kitchen.coat.wpanel` | `stoneSplash` (Granite004B, 0.8 м, tint 0.85) | §2: мелкозернистый камень; при 1 м зерно не читается со стола |
+| Фасады нижних, верхних и пенала кухни | `ITEMS.kitchen.coat.base/upper` | `hplFront` (0xd0cac1, rough 0.62, без карт) | 2026-09-10, задание: фасады матовые, HPL-плита |
+| Столешница и фартук кухни | `kitchen.coat.top/wpanel` | `hplPanel` (0xb3aea7, rough 0.45, без карт) | 2026-09-10, задание: один материал и один тон, HPL-плита |
+| Консоль под ТВ | `console.coat.base` | `cabinetPaint` (0xd9c9ad, normal 0.25, rough из карты) | §2: матовый бежевый фасад, глаже стены |
 | Стол, стулья (каркас) | `table.coat.table`, `CHAIR4.paint` (материал GLB `paint`) | `oakFurniture` (rotation 0, tint 0.74/0.70/0.66) | волокна вдоль V = вдоль ножек/стоек и длины стола (z); шпон приглушён против жёлтого |
 | Сиденья стульев, диван (обивка, кант, подушки) | `CHAIR4.cushion`, `sofa.coat.upholstery/piping/cushion` | `sofaWeave` (Fabric030, 0.4 м, tint ×1.9/1.8/1.65) | §2: светлый greige с мелким плетением; Fabric030 авторски тёмно-серый, осветлён множителем |
 | Плафон бра над столом | `lamp.coat.plastic` | `plastic` (цвет концепта, normal 0.3) | §4.3: мягкий блик без металличности |

@@ -297,7 +297,7 @@ const { launchChromium } = require('./browser');
     if (sofaGlb.size !== '2,0.86,0.88' || sofaGlb.slots !== 'fabric,metal' || !sofaGlb.grey || sofaGlb.boxes !== 1) problems.push('glb: sofa — габарит/слоты/серый/proxy не сошлись: ' + JSON.stringify(sofaGlb)); }
   // realism-all stage A: proxies for the remaining room 4/5/7 items repeat the old mesh AABBs (count + union extent)
   const proxA = await page.evaluate(() => { const ext = id => { const bb = new THREE.Box3(); PHYS[id].forEach(m => bb.union(new THREE.Box3().setFromObject(m))); const s = new THREE.Vector3(); bb.getSize(s); return [s.x, s.y, s.z].map(v => Math.round(v * 1000) / 1000).join(); };
-    const want = { kitchen: [19, '0.68,2.69,3.59'], tv: [1, '1.3,0.75,0.04'], console: [1, '1.2,0.3,0.38'], lamp: [2, '0.26,0.2,0.63'], wardrobe: [16, '1.77,2.65,0.47'], entry: [7, '0.325,1.05,0.4'], pouf: [5, '0.4,0.45,0.6'], washer: [6, '0.6,1.72,0.62'] };
+    const want = { kitchen: [10, '0.73,2.69,3.59'], tv: [1, '1.3,0.75,0.04'], console: [1, '1.2,0.3,0.38'], lamp: [2, '0.26,0.2,0.63'], wardrobe: [16, '1.77,2.65,0.47'], entry: [7, '0.325,1.05,0.4'], pouf: [5, '0.4,0.45,0.6'], washer: [6, '0.6,1.72,0.62'] };
     return Object.entries(want).filter(([id, [n, e]]) => PHYS[id].length !== n || ext(id) !== e).map(([id]) => id + ':' + PHYS[id].length + ':' + ext(id)); });
   if (proxA.length) problems.push('proxy: этап A — число боксов/габарит не сошлись: ' + proxA.join(' '));
   // realism-all stage C: proxies for the room 2 items repeat the old mesh AABBs (count + union extent)
@@ -308,7 +308,7 @@ const { launchChromium } = require('./browser');
   // realism-all stage A: kitchen detailed — fronts with gaps, sink bowl under the worktop, mixer; all inside size, proxies unchanged
   const kitchenA = await page.evaluate(() => { const g = ITEM_GROUPS.kitchen, bb = new THREE.Box3().setFromObject(g).applyMatrix4(new THREE.Matrix4().copy(g.matrixWorld).invert()), s = g.userData.size; let n = 0, tri = 0; g.traverse(o => { if (o.isMesh) { n++; tri += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; } });
     return { fit: bb.min.x >= -0.001 && bb.min.y >= -0.001 && bb.min.z >= -0.001 && bb.max.x <= s[0] + 0.001 && bb.max.y <= s[1] + 0.001 && bb.max.z <= s[2] + 0.001, n, tri: Math.round(tri), boxes: PHYS.kitchen.length }; });
-  if (!kitchenA.fit || kitchenA.n < 40 || kitchenA.tri > 6000 || kitchenA.boxes !== 19) problems.push('кухня: детали вне size, мало мешей, дорого или proxy изменился: ' + JSON.stringify(kitchenA));
+  if (!kitchenA.fit || kitchenA.n < 40 || kitchenA.tri > 6000 || kitchenA.boxes !== 10) problems.push('кухня: детали вне size, мало мешей, дорого или proxy изменился: ' + JSON.stringify(kitchenA));
   // realism-all stage C: detailed room 2 items stay inside size (+1 mm); plates carry one proxy box equal to the item
   const fitC = await page.evaluate(() => { const fit = id => { const g = ITEM_GROUPS[id], bb = new THREE.Box3().setFromObject(g), inv = new THREE.Matrix4().copy(g.matrixWorld).invert(); bb.applyMatrix4(inv); const s = g.userData.size; return bb.min.x >= -0.001 && bb.min.y >= -0.001 && bb.min.z >= -0.001 && bb.max.x <= s[0] + 0.001 && bb.max.y <= s[1] + 0.001 && bb.max.z <= s[2] + 0.001; };
     const ids = ['tower2n', 'tower2s', 'kiddesk2', 'deskshelf2', 'gymwall', 'pullup', 'kidrug2', 'kidlight2', 'desklamp2', 'bra3', 'bra4', 'blind2', 'sw2', 'sock9', 'sock10', 'sock11', 'sock12', 'sock13'];
@@ -510,6 +510,15 @@ const { launchChromium } = require('./browser');
     [['decortv', 'ABCDEFGH'], ['decorsofa', 'ABC']].forEach(([id, vs]) => { for (const v of vs) { ROOM4.set(id, v); if (!ITEM_GROUPS[id].visible || !inside(id)) out.push(id + ':' + v); } ROOM4.set(id, 'none'); if (ITEM_GROUPS[id].visible) out.push(id + ':none'); });
     return out; });
   if (decor.length) problems.push('декор комнаты 4: ' + decor.join(', '));
+  // room 3 vanity (#m3vanity A–E) and dining table (#k4table A/B): every variant builds meshes inside its size box and keeps the pouf
+  const vans = await page.evaluate(() => { const out = [], inside = id => { const u = ITEM_GROUPS[id].userData, bb = new THREE.Box3().setFromObject(ITEM_GROUPS[id]), t = 0.005;
+      return ITEM_GROUPS[id].children.length > 0 && bb.min.y >= -t && bb.max.y <= u.size[1] + t && bb.max.x - bb.min.x <= u.size[0] + 2 * t && bb.max.z - bb.min.z <= u.size[2] + 2 * t; };
+    for (const v of 'ABCDE') { ROOM3.set('vanity', v); for (const id of ['vanity', 'vmirror']) if (!ITEM_GROUPS[id].visible || !inside(id)) out.push(id + ':' + v);
+      if (!ITEM_GROUPS.vpouf.visible || ITEM_GROUPS.vanity.userData.size[2] < 0.40) out.push('пуфик/глубина:' + v); }
+    ROOM3.set('vanity', 'A');
+    for (const v of ['B', 'A']) { ROOM4.set('table', v); if (!ITEM_GROUPS.table.visible || !inside('table')) out.push('table:' + v); }
+    return out; });
+  if (vans.length) problems.push('варианты столиков: ' + vans.join(', '));
   // варианты комнаты 4 держат свою опорную точку: перечитывание расстановки (оно идёт при каждом старте) не должно тянуть широкий диван к позе из items.js — он уходит за южную стену
   const anch = await page.evaluate(() => { ROOM4.set('sofa', 'D'); const d = ITEM_GROUPS.sofa.userData.pos.slice(); LAY.applyVariant(LAY.cur); const after = ITEM_GROUPS.sofa.userData.pos.slice(); ROOM4.set('sofa', 'A'); return { d, after }; });
   if (anch.d.some((v, i) => Math.abs(v - anch.after[i]) > 1e-6)) problems.push('расстановка: вариант дивана вернулся к позе из items.js ' + JSON.stringify(anch));
@@ -657,8 +666,8 @@ const { launchChromium } = require('./browser');
     setView('door'); VIZ.set(true); LIGHTING.set('neutral'); const wait = async f => { for (let i = 0; i < 100 && !f(); i++) await new Promise(r => setTimeout(r, 100)); return !!f(); };
     const on = (id, test) => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh && test(o)) set.add(o.material.userData.coating || 'class'); }); return [...set].sort().join(); };
     const key = k => o => { const b = VIZ.basic.get(o.material) || o.material; return b === ITEM_MATS[k] || (k === 'led' && b.name.startsWith('led:')); }, glb = n => o => o.userData.glbMat === n;
-    const out = { fronts: on('kitchen', key('base')) === 'cabinetPaint' && on('kitchen', key('upper')) === 'cabinetPaint' && on('console', key('base')) === 'cabinetPaint',
-      stone: on('kitchen', key('top')) === 'stoneCounter' && on('kitchen', key('wpanel')) === 'stoneSplash', carcass: on('kitchen', key('hdark')) === 'class' && on('kitchen', key('handle')) === 'class',
+    const out = { fronts: on('kitchen', key('base')) === 'hplFront' && on('kitchen', key('upper')) === 'hplFront' && on('console', key('base')) === 'cabinetPaint',
+      stone: on('kitchen', key('top')) === 'hplPanel' && on('kitchen', key('wpanel')) === 'hplPanel', carcass: on('kitchen', key('hdark')) === 'class' && on('kitchen', key('handle')) === 'class',
       oak: on('table', key('table')) === 'oakFurniture' && ['chair1', 'chair6'].every(id => on(id, glb('paint')) === 'oakFurniture'), pads: on('chair1', glb('cushion')) === 'sofaWeave',
       sofa: ['upholstery', 'piping', 'cushion'].every(n => on('sofa', glb(n)) === 'sofaWeave'), lamp: on('lamp', key('plastic')) === 'plastic',
       other: ITEMS.filter(it => !it.coat && ITEM_GROUPS[it.id]).every(it => on(it.id, () => true) === 'class') }; // items without a coat of their own share concept materials with room 4 but stay class twins

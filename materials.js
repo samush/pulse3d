@@ -63,6 +63,8 @@ const COATINGS={
   tile60120:   {name:'керамогранит 600×1200', class:'tile',   dir:'textures/tile60120',    size:[1.2,1.2], maps:['color','normal'], rough:0.35},
   tile6060grey:{name:'плитка 600×600, серая',  class:'grey',   dir:'textures/tile6060',     size:[0.6,0.6], maps:['color','normal'], rough:0.35, tint:[0.42,0.41,0.4]}, // M4-4: same set as tile6060 (shared textures), darkened to the grey marble of the bath west walls
   plastic:     {name:'пластик матовый',       class:'plastic', dir:'textures/plastic',     size:[0.5,0.5], maps:['normal','rough'], normalScale:0.3},
+  hplPanel:    {name:'HPL-плита, столешница и фартук', class:'facade', size:[1,1], maps:[], color:0xb3aea7, rough:0.45}, // 2026-09-10: kitchen 4 — one panel and one tone for worktop and splashback, no texture set for HPL
+  hplFront:    {name:'HPL-плита, матовый фасад', class:'facade', size:[1,1], maps:[], color:0xd0cac1, rough:0.62},       // matte fronts of the same family, a shade lighter than the worktop
 };
 const VIZ={on:false,ready:false,mode:'basic',std:new Map(),neutral:new Map(),basic:new Map(),variants:new Map(),textures:new Map(),finishCoat:{board:'oakFloor',wallPaint:'wallPaint',wood:'oakFurniture',white:'tile6060',whiteWall:'tile6060',grey:'tile6060grey'},loadErrors:[]}; // finishCoat: global coating per finish key (M2: oak boards, 60×120 stone, wall paint, oak jambs; M4: 60×60 tiles of rooms 7/8/9) // mode: basic (plan) | neutral | std (real coatings); variants: basic → Map(coating → twin)
 window.VIZ=VIZ; window.MATERIALS=MATERIALS; window.COATINGS=COATINGS;
