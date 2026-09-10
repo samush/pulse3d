@@ -25,8 +25,9 @@ body{margin:0;background:var(--bg);color:var(--ink);
   border:1px solid var(--line);border-radius:10px;padding:14px 16px;
   box-shadow:0 6px 24px rgba(0,0,0,.10);user-select:none}
 .panel h1{font-size:16px;font-weight:800;margin:0 0 2px;letter-spacing:-.01em;cursor:pointer}
-#rulerBtn{position:absolute;right:12px;top:11px;width:24px;height:24px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;font-size:14px;line-height:1;cursor:pointer}
-#rulerBtn.on{background:var(--accent-soft);border-color:var(--accent)}
+#rulerBtn,#snapBtn{position:absolute;right:12px;top:11px;width:24px;height:24px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;font-size:14px;line-height:1;cursor:pointer}
+#snapBtn{right:40px}
+#rulerBtn.on,#snapBtn.on{background:var(--accent-soft);border-color:var(--accent)}
 .panel h1::after{content:' \25BE';color:var(--muted);font-size:12px}
 /* свёрнутая панель — только маленький краешек с заголовком */
 .panel.collapsed{width:auto;padding:6px 12px}
@@ -117,6 +118,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 <div class="panel">
   <h1 onclick="this.parentElement.classList.toggle('collapsed')" title="Свернуть/развернуть">Квартира в кубах</h1>
   <button id="rulerBtn" title="Линейка: два клика по любой поверхности, отрезок по горизонтали или вертикали, длина в см" aria-label="Линейка">📏</button>
+  <button id="snapBtn" hidden title="Прилипание к углам и рёбрам предмета (в 5 см от них); выключено — точка ставится свободно" aria-label="Прилипание линейки к углам и рёбрам">🧲</button>
   <p class="sub">потолок 2,7 м · куб = 1 × 1 × 1 м</p>
   <div class="views" style="margin:8px 0 12px">
     <button id="vTop">Сверху</button>
