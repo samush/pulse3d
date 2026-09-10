@@ -13,7 +13,7 @@
 // переход в прогулку и движение вперёд. Скриншоты: default.png, top.png, walk.png.
 const path = require('path');
 const fs = require('fs');
-const { chromium } = require('playwright');
+const { launchChromium } = require('./browser');
 
 (async () => {
   const root = path.dirname(__dirname);
@@ -21,23 +21,15 @@ const { chromium } = require('playwright');
   const outDir = path.join(__dirname, 'out');
   fs.mkdirSync(outDir, { recursive: true });
 
-  // в облачном окружении Claude Code хром лежит по фиксированному пути; обе ошибки запуска сохраняем —
+  // сборка Chromium в образе часто не та, которую ждёт закреплённый playwright — tools/browser.js перебирает пути;
   // без браузера smoke-тест не выполнен, а не «прошёл»
   let browser;
-  try {
-    browser = await chromium.launch({ args: ['--allow-file-access-from-files'] }); // GLB models load over XHR from file:// too
-  } catch (e1) {
-    const alt = process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium';
-    try {
-      browser = await chromium.launch({ executablePath: alt, args: ['--allow-file-access-from-files'] });
-    } catch (e2) {
-      console.error('ПРОВАЛ: браузер не запустился, проверка сцены НЕ выполнена.\n' +
-        '  1) chromium.launch(): ' + e1.message.split('\n')[0] + '\n' +
-        '  2) ' + alt + ': ' + e2.message.split('\n')[0] + '\n' +
-        '  Установка: npm i --no-save playwright && npx playwright install chromium\n' +
-        '  Системные библиотеки (root): npx playwright install-deps chromium');
-      process.exit(2);
-    }
+  try { browser = await launchChromium({ args: ['--allow-file-access-from-files'] }); } // GLB models load over XHR from file:// too
+  catch (e) {
+    console.error('ПРОВАЛ: браузер не запустился, проверка сцены НЕ выполнена.\n  ' + e.message +
+      '\n  Установка: npm i --no-save playwright && npx playwright install chromium' +
+      '\n  Системные библиотеки (root): npx playwright install-deps chromium');
+    process.exit(2);
   }
   const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } }); page.setDefaultTimeout(120000); // software GL: a first 'lamps' frame takes >30 s when parallel agents load the machine
   const problems = [];
