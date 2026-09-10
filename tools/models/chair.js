@@ -1,18 +1,19 @@
-// Chair 0.42×0.9×0.42 (tasks/realism-living/PLAN.md §3): plywood seat 15 mm with 3 mm chamfer, cushion 40 mm domed +8 mm, rails 30×30 under the seat,
-// round legs Ø35, rear legs run on as back posts tilted 4°, back panel 15 mm curved in plan (R 0.6 m), height 0.55–0.88. Back at z=0.42, pivot NW corner.
+// Dining chair 0.48×0.80×0.48 (room 4, reference .local/chair-hoop: modern hoop-back chair): four round legs Ø35 tapering to Ø25 and splayed 3°,
+// the rear pair runs on to carry a bent-wood hoop 70×20 mm that wraps the back over 180° in plan, a curved upholstered back pad inside the hoop,
+// a rounded seat pad 50 mm on a thin plywood shell. Back at z=0.48, pivot NW corner. Materials: `paint` (wood frame), `cushion` (seat and back pads).
 // Usage: node tools/models/chair.js  → models/chair.glb (one file for chair1–6, rotated per item by glbRot)
-const fs=require('fs'), path=require('path'), {THREE,rbox,cylinder,toGlb}=require('./glb.js');
+const fs=require('fs'), path=require('path'), {THREE,rbox,toGlb}=require('./glb.js');
 const parts=[], add=(geo,mat)=>parts.push({geo,mat});
-const tilt=4*Math.PI/180, R=0.0175, X=[0.035,0.385];
-X.forEach(x=>add(cylinder(x,0,0.04,R,0.415),'paint'));                                        // front legs
-X.forEach(x=>add(cylinder(x,0,0.331,R,0.88/Math.cos(tilt)-0.0013).translate(-x,0,-0.331).rotateX(tilt).translate(x,0.0013,0.331),'paint')); // rear legs + posts, one piece; lifted so the tilted cap stays above the floor
-const rail=(w,h,d,x,y,z)=>new THREE.BoxGeometry(w,h,d).translate(x+w/2,y+h/2,z+d/2);
-[0.04,0.36].forEach(z=>add(rail(0.315,0.03,0.03,0.0525,0.385,z-0.015),'paint'));               // rails along x
-X.forEach(x=>add(rail(0.03,0.03,0.285,x-0.015,0.385,0.0575),'paint'));                          // rails along z
-add(rbox(0.40,0.015,0.40,0.003,0.01,0.415,0.01,{m:1,step:0.1}),'paint');                       // plywood seat
-add(rbox(0.36,0.04,0.36,0.015,0.03,0.43,0.03,{m:2,step:0.05,crown:0.008}),'cushion');          // cushion
-const phi=Math.asin(0.19/0.6), s=new THREE.Shape(); s.absarc(0.21,-0.2556,0.6,Math.PI/2-phi,Math.PI/2+phi,false); s.absarc(0.21,-0.2556,0.615,Math.PI/2+phi,Math.PI/2-phi,true);
-const panel=new THREE.ExtrudeGeometry(s,{depth:0.33,bevelEnabled:false,curveSegments:12}).rotateX(Math.PI/2).translate(0,0.88,0); // arc band in plan, extruded down to 0.55
-add(panel.translate(0,-0.415,-0.331).rotateX(tilt).translate(0,0.415,0.331),'paint');            // same lean as the posts
+const W=0.48, CX=0.24, CZ=0.25, R=0.215;                                                                   // hoop: half-ring of mean radius R about the seat centre
+const leg=(x,z,h,tilt)=>{ const g=new THREE.CylinderGeometry(0.0125,0.0175,h,12).translate(0,h/2,0); g.rotateX(tilt[1]).rotateZ(tilt[0]); return g.translate(x,0,z); }; // 3° splay outwards, foot at (x,z)
+[[0.055,0.085],[W-0.055,0.085]].forEach(([x,z])=>add(leg(x,z,0.44,[x<CX?0.05:-0.05,-0.05]),'paint'));        // front legs up to the seat shell
+[[0.10,0.385],[W-0.10,0.385]].forEach(([x,z])=>add(leg(x,z,0.74,[0,0.04]),'paint'));                          // rear legs lean back 2.3° and run on to meet the hoop at ±50°
+[[0.055,W-0.055,0.03,0.07,0.09,0.11],[0.055,W-0.055,0.03,0.07,0.365,0.385]].forEach(([x0,x1,y0,y1,z0,z1])=>add(new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0).translate((x0+x1)/2,0.405,(z0+z1)/2),'paint')); // seat rails
+add(rbox(0.44,0.012,0.42,0.005,0.02,0.428,0.04,{m:1,step:0.1}),'paint');                                    // plywood shell
+add(rbox(0.42,0.05,0.40,0.02,0.03,0.44,0.05,{m:2,step:0.05,crown:0.01}),'cushion');                         // seat pad, domed 10 mm
+const band=(r0,r1,a0,a1,y0,y1)=>{ const s=new THREE.Shape(); s.absarc(CX,CZ,r1,a0,a1,false); s.absarc(CX,CZ,r0,a1,a0,true);
+  return new THREE.ExtrudeGeometry(s,{depth:y1-y0,bevelEnabled:false,curveSegments:24}).rotateX(Math.PI/2).translate(0,y1,0); };  // arc band in plan (shape y = z after rotateX), extruded from y1 down to y0
+add(band(R-0.01,R+0.01,0.12,Math.PI-0.12,0.71,0.78),'paint');                                 // hoop: 20 mm thick, 70 mm tall, open to the front
+add(band(R-0.05,R-0.01,Math.PI/4,Math.PI*0.75,0.64,0.775),'cushion');                                          // back pad inside the hoop over 90°
 const {buf,triangles}=toGlb(parts); const out=path.join(__dirname,'../../models/chair.glb'); fs.writeFileSync(out,buf);
 console.log(out,(buf.length/1024).toFixed(0)+' KB',triangles+' triangles');

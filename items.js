@@ -28,12 +28,11 @@ const PHYS={}; // id → boxes
   const SLOTS={chrome:['handle','knob','ring'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle','drape'],emitter:['led','mirrorLed'],screen:['screen'],wood:['table'],cabinetPaint:['chair','base','upper','door','body','wbody','wdoor','wpanel','kbody'],plastic:['plastic'],ceramic:['ceramic'],acrylic:['acrylic'],leather:['leather'],mirror:['mirror']};
   Object.entries(SLOTS).forEach(([slot,keys])=>keys.forEach(k=>{ mat[k].userData.slot=slot; }));
   window.ITEM_MATS=mat;
-  const chair=(backEast)=>(b,g)=>{ // chair 0.42×0.42, back on the west or east side
-    const bx=backEast?0.38:0;
-    b.phys(0,0.42,0.42,0.49,0,0.42); b.phys(bx,bx+0.04,0.46,0.9,0,0.42); [[0.03,0.03],[0.35,0.03],[0.03,0.35],[0.35,0.35]].forEach(([x,z])=>b.phys(x,x+0.04,0,0.42,z,z+0.04)); // proxy = today's AABBs, so detailing never changes walk/layout
-    b(0,0.42,0.42,0.46,0,0.42,mat.chair); b(0.03,0.39,0.46,0.49,0.03,0.39,mat.cushion); // seat cushion
-    b(bx,bx+0.04,0.46,0.9,0,0.42,mat.chair);
-    [[0.03,0.03],[0.35,0.03],[0.03,0.35],[0.35,0.35]].forEach(([x,z])=>b(x,x+0.04,0,0.42,z,z+0.04,mat.chair));
+  const chair=side=>(b,g)=>{ // chair 0.48×0.80×0.48 fallback and proxy (seat, back strip on side W/E/N/S, four legs); models/chair.glb replaces the meshes
+    const bk={W:[0,0.04,0,0.48],E:[0.44,0.48,0,0.48],N:[0,0.48,0,0.04],S:[0,0.48,0.44,0.48]}[side], legs=[[0.03,0.03],[0.41,0.03],[0.03,0.41],[0.41,0.41]];
+    b.phys(0,0.48,0.42,0.49,0,0.48); b.phys(bk[0],bk[1],0.46,0.8,bk[2],bk[3]); legs.forEach(([x,z])=>b.phys(x,x+0.04,0,0.42,z,z+0.04));
+    b(0,0.48,0.42,0.46,0,0.48,mat.chair); b(0.03,0.45,0.46,0.49,0.03,0.45,mat.cushion); b(bk[0],bk[1],0.46,0.8,bk[2],bk[3],mat.chair);
+    legs.forEach(([x,z])=>b(x,x+0.04,0,0.42,z,z+0.04,mat.chair));
   };
   // Loft bed shared by rooms 1 and 2: stair-chest along local z 0–0.5, platform x 1.4–2.6 × z 0–L, storage shelf above the passage z L–2.97.
   // Procedural on purpose (realism-all §0 rule: boxes + bevels): the 9 proxy boxes and the step/platform/post checks in check.js keep working for both beds.
@@ -252,12 +251,12 @@ const PHYS={}; // id → boxes
        const top=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.04-2*r,bevelThickness:r,bevelSize:r,bevelSegments:2}).rotateX(Math.PI/2).translate(0,0.76-r,0),mat.table); g.add(top);
        [[0.08,0.10,0.10,1.70],[0.70,0.72,0.10,1.70],[0.10,0.70,0.08,0.10],[0.10,0.70,1.70,1.72]].forEach(([x0,x1,z0,z1])=>b(x0,x1,0.65,0.72,z0,z1,mat.table)); // apron rails 20×70, 30 mm in from the leg faces
        [[0.075,0.075],[0.725,0.075],[0.075,1.725],[0.725,1.725]].forEach(([x,z])=>{ const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.05/Math.SQRT2,0.035/Math.SQRT2,0.72,4).rotateY(Math.PI/4).translate(x,0.36,z),mat.table); g.add(leg); }); }}, // square legs tapering 50→35 mm
-    {id:'chair1',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:90,build:chair(false)},
-    {id:'chair2',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:90,build:chair(false)},
-    {id:'chair3',type:'стул',room:4,layer:'kitchen',pos:[9.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:90,build:chair(false)},
-    {id:'chair4',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+0.35-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:-90,build:chair(true)},
-    {id:'chair5',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+0.94-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:-90,build:chair(true)},
-    {id:'chair6',type:'стул',room:4,layer:'kitchen',pos:[10.54,KN+0.04+1.53-0.21],rot:0,size:[0.42,0.9,0.42],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:-90,build:chair(true)},
+    {id:'chair1',type:'стул',room:4,layer:'kitchen',pos:[9.51,KN+0.04+0.35-0.24],rot:0,size:[0.48,0.8,0.48],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:90,build:chair('W')},
+    {id:'chair2',type:'стул',room:4,layer:'kitchen',pos:[9.51,KN+0.04+0.94-0.24],rot:0,size:[0.48,0.8,0.48],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:90,build:chair('W')},
+    {id:'chair3',type:'стул',room:4,layer:'kitchen',pos:[9.51,KN+0.04+1.53-0.24],rot:0,size:[0.48,0.8,0.48],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:90,build:chair('W')},
+    {id:'chair4',type:'стул',room:4,layer:'kitchen',pos:[10.51,KN+0.04+0.35-0.24],rot:0,size:[0.48,0.8,0.48],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:-90,build:chair('E')},
+    {id:'chair5',type:'стул',room:4,layer:'kitchen',pos:[10.51,KN+0.04+0.94-0.24],rot:0,size:[0.48,0.8,0.48],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:-90,build:chair('E')},
+    {id:'chair6',type:'стул',room:4,layer:'kitchen',pos:[10.51,KN+0.04+1.53-0.24],rot:0,size:[0.48,0.8,0.48],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:-90,build:chair('E')},
     {id:'lamp',type:'настенный светильник над столом',room:4,layer:'kitchen',pos:[10.12,KN],rot:0,size:[0.26,1.94,0.63],fixed:'wall',coat:{plastic:'plastic'}, // size by the shade
      build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0.11,0.15,1.9,1.94,0,0.5); b.phys(0,0.26,1.74,1.9,0.37,0.63);
        b.round(0.08,0.18,1.86,1.94,0,0.012,0.002,mat.frame); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.49,10).rotateX(Math.PI/2).translate(0.13,1.92,0.012+0.245),mat.frame)); // wall plate and Ø12 arm
@@ -1017,7 +1016,16 @@ const PHYS={}; // id → boxes
     b.phys(0,0.90,0.72,0.76,0,1.80); [0.45,1.35].forEach(z=>b.phys(0.26,0.64,0,0.72,z-0.19,z+0.19));
     g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(0.892,1.792,0.446),{depth:0.032,bevelThickness:0.004,bevelSize:0.004,bevelSegments:2,curveSegments:24}).rotateX(Math.PI/2).translate(0.004,0.756,0.004),mat.table));
     [0.45,1.35].forEach(z=>lathe(g,[[0,0],[0.19,0],[0.19,0.60],[0.16,0.66],[0.16,0.72],[0,0.72]],0.45,z,mat.table,24)); }};
-  const R4={table:{ids:['table','chair1','chair2','chair3','chair4','chair5','chair6'],V:{B:{items:{table:TABLE_B}}}},sofa:{ids:['sofa'],V:Object.fromEntries(Object.entries(SOFA4).map(([k,v])=>[k,sofaV(v,k)]))},
+  // dining tables C/D (user 2026-09-10): light pine, four chairs each, set off the north wall so the north chair stands 0.60 south of kitchen B's fridge column (z 2.645); same centre for both
+  const PINE={table:'pineFurniture'}, ptop=(b,g,w,d,r,seg)=>g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(w-0.008,d-0.008,r),{depth:0.032,bevelThickness:0.004,bevelSize:0.004,bevelSegments:2,curveSegments:seg}).rotateX(Math.PI/2).translate(0.004,0.756,0.004),mat.table)); // 40 mm top with a 4 mm bevel, 0.72–0.76
+  const TABLE_C={pos:[9.85,3.505],size:[0.80,0.76,1.00],coat:PINE,build:(b,g)=>{ b.phys(0,0.80,0.72,0.76,0,1.00); [[0.06,0.06],[0.70,0.06],[0.06,0.90],[0.70,0.90]].forEach(([x,z])=>b.phys(x,x+0.05,0,0.72,z,z+0.05));
+    ptop(b,g,0.80,1.00,0.08,16); [[0.085,0.085],[0.715,0.085],[0.085,0.915],[0.715,0.915]].forEach(([x,z])=>lathe(g,[[0,0],[0.025,0],[0.02,0.72],[0,0.72]],x,z,mat.table,16)); }}; // round legs Ø50 tapering to Ø40 under the top
+  const TABLE_D={pos:[9.80,3.555],size:[0.90,0.76,0.90],coat:PINE,build:(b,g)=>{ b.phys(0,0.90,0.72,0.76,0,0.90); b.phys(0.225,0.675,0,0.72,0.225,0.675);
+    ptop(b,g,0.90,0.90,0.446,48); lathe(g,[[0,0],[0.225,0],[0.225,0.03],[0.14,0.66],[0.14,0.72],[0,0.72]],0.45,0.45,mat.table,48); }}; // conical drum Ø0.45 at the floor, Ø0.28 under the top
+  const ch4=(x,z,side,rot)=>({pos:[x,z],size:[0.48,0.8,0.48],glb:'models/chair.glb',glbRot:rot,coat:CHAIR4,build:chair(side)}); // chairs tucked 0.15–0.17 under the top edge
+  const SET_C={table:TABLE_C,chair1:ch4(9.52,3.515,'W',90),chair2:ch4(9.52,4.015,'W',90),chair3:ch4(10.50,3.515,'E',-90),chair4:ch4(10.50,4.015,'E',-90),chair5:null,chair6:null};
+  const SET_D={table:TABLE_D,chair1:ch4(9.49,3.765,'W',90),chair2:ch4(10.53,3.765,'E',-90),chair3:ch4(10.01,3.245,'N',180),chair4:ch4(10.01,4.285,'S',0),chair5:null,chair6:null};
+  const R4={table:{ids:['table','chair1','chair2','chair3','chair4','chair5','chair6'],V:{B:{items:{table:TABLE_B}},C:{items:SET_C},D:{items:SET_D}}},sofa:{ids:['sofa'],V:Object.fromEntries(Object.entries(SOFA4).map(([k,v])=>[k,sofaV(v,k)]))},
     kitchen:{ids:['kitchen','lamp'],V:{B:{items:{kitchen:kitchenV('B',2.23),lamp:null}}}}, // lamp over the table sits inside the fridge column: hidden in B
    
     decortv:{ids:['decortv'],V:Object.fromEntries(Object.keys(DECOR_TV).map(k=>[k,{pos:[10.95,KN],size:[2.52,2.7,{F:0.27,G:0.22}[k]||0.02],coat:k==='D'?DEC.floorCoat:DEC.coat,build:DECOR_TV[k]}]))}, // F/G: shelves stand off the wall
@@ -1063,7 +1071,7 @@ const PHYS={}; // id → boxes
   function variantSelects(prefix,R){
     const API={value:{},set(key,v){ const r=R[key], V=r&&r.V&&r.V[v]; if(!r||!(v==='none'||v==='A'||V)||API.value[key]===v) return; const was=API.value[key]; API.value[key]=v;
       r.ids.forEach(id=>{ const it=ITEMS.find(i=>i.id===id), g=ITEM_GROUPS[id], src=spec(V,it)||it;
-        if(V||(r.V&&r.V[was])){ g.userData.pos=src.pos.slice(); g.userData.size=src.size.slice(); g.userData.glb=src.glb; g.userData.glbFacade=src.glbFacade; rebuildItem(id,src.build,src.coat); if(src.glb) loadItemGlb(id); if(window.LAY) LAY.rebase(id); }
+        if(V||(r.V&&r.V[was])){ g.userData.pos=src.pos.slice(); g.userData.size=src.size.slice(); g.userData.glb=src.glb; g.userData.glbRot=src.glbRot||0; g.userData.glbFacade=src.glbFacade; rebuildItem(id,src.build,src.coat); if(src.glb) loadItemGlb(id); if(window.LAY) LAY.rebase(id); }
         hideItem(id,v==='none'||spec(V,it)===null); }); },
       pick(key,v){ const sel=document.getElementById(prefix+key); if(sel){ sel.value=v; try{ localStorage.setItem('pulse3d.'+prefix+'.'+key,v); }catch(e){} } API.set(key,v); }};
     Object.keys(R).forEach(key=>{ const KEY='pulse3d.'+prefix+'.'+key, sel=document.getElementById(prefix+key); if(!sel) return; API.value[key]='A'; let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
