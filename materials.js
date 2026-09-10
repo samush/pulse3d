@@ -129,10 +129,10 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS; window.COATINGS=COATINGS;
   function twins(k,b){ VIZ.std.set(b,stdFor(k,b)); VIZ.neutral.set(b,neutralFor(b)); }
   function prepare(){ // build the twins once
     if(VIZ.ready) return; VIZ.ready=true;
-    const fm=window.finishMats||{}; Object.entries(fm).forEach(([k,b])=>FINISH_KEYS.set(b,k)); FINISH_KEYS.set(wallMat,'wall'); FINISH_KEYS.set(ceilMat,'ceiling'); facadeMats.forEach(b=>FINISH_KEYS.set(b,'facade'));
+    const fm=window.finishMats||{}; Object.entries(fm).forEach(([k,b])=>FINISH_KEYS.set(b,k)); FINISH_KEYS.set(wallMat,'wall'); FINISH_KEYS.set(ceilMat,'ceiling'); FINISH_KEYS.set(ceilSlabMat,'ceiling'); facadeMats.forEach(b=>FINISH_KEYS.set(b,'facade'));
     (window.ITEMS||[]).forEach(it=>{ ITEMS_BY_ID[it.id]=it; });
     Object.entries(fm).forEach(([k,b])=>twins(k,b));
-    twins('wall',wallMat); twins('ceiling',ceilMat);
+    twins('wall',wallMat); twins('ceiling',ceilMat); twins('ceiling',ceilSlabMat);
     facadeMats.forEach(b=>twins('facade',b));
     Object.values(ITEM_GROUPS).forEach(g=>g.traverse(o=>{ if(o.isMesh&&!VIZ.std.has(o.material)) twins(o.material.userData.slot||'furniture',o.material); }));
     VIZ.std.forEach((s,b)=>VIZ.basic.set(s,b)); VIZ.neutral.forEach((s,b)=>VIZ.basic.set(s,b));

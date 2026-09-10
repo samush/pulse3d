@@ -110,6 +110,27 @@ const { chromium } = require('playwright');
   if (hts.furnitureMin < -0.001) problems.push('мебель утоплена ниже пола: min y=' + hts.furnitureMin);
   if (!hts.doorTop) problems.push('дверные коробки: верх перемычки не на 2.1+0.07');
 
+  // потолок: в каждой комнате своё полотно толщиной 10 см с зазором от стен; над снесённой стеной кухня-коридор полотна нет — граница видна
+  const ceil = await page.evaluate(() => {
+    const bb = o => new THREE.Box3().setFromObject(o);
+    const panels = ceilGroup.children.filter(o => o.material === ceilMat);
+    const up = (x, z) => { const h = new THREE.Raycaster(new THREE.Vector3(x, 1, z), new THREE.Vector3(0, 1, 0)).intersectObjects(ceilGroup.children, false)[0];
+      return h ? (h.object.material === ceilMat ? 'полотно' : 'перекрытие') : 'ничего'; };
+    const box = panels.map(bb);
+    return {
+      n: panels.length,
+      thick: box.every(b => Math.abs(b.min.y - 2.695) < 1e-3 && Math.abs(b.max.y - 2.795) < 1e-3),
+      gap: PLAN.rooms.every((r, i) => { const b = box[i], xs = r.poly.map(p => p[0]), zs = r.poly.map(p => p[1]);
+        return b.min.x > Math.min(...xs) + 0.01 && b.max.x < Math.max(...xs) - 0.01 && b.min.z > Math.min(...zs) + 0.01 && b.max.z < Math.max(...zs) - 0.01; }),
+      wall: [up(9.5, 6.0), up(9.5, 6.375), up(9.5, 6.9)], // кухня-гостиная, след снесённой стены, коридор
+      edge: up(0.906, 3.0), // в 1 см от стены комнаты 1 — зазор
+    };
+  });
+  if (ceil.n !== 10 || !ceil.thick) problems.push('потолок: полотен ' + ceil.n + ' (нужно 10) или толщина не 2.695–2.795');
+  if (!ceil.gap) problems.push('потолок: полотно доходит до стены, зазора нет');
+  if (ceil.wall.join() !== 'полотно,перекрытие,полотно') problems.push('потолок: граница по снесённой стене кухня-коридор пропала: ' + ceil.wall.join(' / '));
+  if (ceil.edge !== 'перекрытие') problems.push('потолок: у стены комнаты 1 вместо зазора ' + ceil.edge);
+
   // ползунок «Стены»: настенная отделка гаснет и прячется вместе со стенами, пол остаётся; съёмная стена и её коробка согласованы
   const vis = await page.evaluate(() => {
     const set = v => { const s = document.getElementById('wop'); s.value = v; s.dispatchEvent(new Event('input')); };
