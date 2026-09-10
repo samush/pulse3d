@@ -9,7 +9,10 @@
   const KEY='pulse3d.layout', FORMAT=1, PASS=0.7; // PASS — minimum passage width, m
   const ray=new THREE.Raycaster(), plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
   const DIRS={N:'север',S:'юг',E:'восток',W:'запад'};
-  const base={}; ITEMS.forEach(it=>{ base[it.id]={pos:it.pos.slice(),rot:it.rot||0}; }); // base layout (immutable)
+  // base layout: the pose the item has right after items.js — including the room-4 variant chosen at startup, whose anchor differs from ITEMS (wider sofa keeps its SE corner)
+  const base={}; ITEMS.forEach(it=>{ const u=ITEM_GROUPS[it.id].userData; base[it.id]={pos:u.pos.slice(),rot:u.rot}; });
+  // a room-4 variant switch redefines the item's own place: the base follows it and a pose saved for the old geometry is dropped
+  LAY.rebase=id=>{ const u=ITEM_GROUPS[id].userData; base[id]={pos:u.pos.slice(),rot:u.rot}; const v=variant(); if(v.poses&&v.poses[id]){ delete v.poses[id]; persist(); } };
 
   // ---------- variants ----------
   function poseOf(id){ const u=ITEM_GROUPS[id].userData; return {pos:u.pos.slice(),rot:u.rot}; }

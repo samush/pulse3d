@@ -998,7 +998,7 @@ const PHYS={}; // id → boxes
   const spec=(V,it)=>V?(V.items?V.items[it.id]:V):it; // a variant is one spec for every id of the group, or items:{id:spec|null} (null = hidden)
   window.ROOM4={value:{},set(key,v){ const r=R4[key], V=r&&r.V&&r.V[v]; if(!r||!(v==='none'||v==='A'||V)||ROOM4.value[key]===v) return; const was=ROOM4.value[key]; ROOM4.value[key]=v;
     r.ids.forEach(id=>{ const it=ITEMS.find(i=>i.id===id), g=ITEM_GROUPS[id], src=spec(V,it)||it;
-      if(V||(r.V&&r.V[was])){ g.userData.pos=src.pos.slice(); g.userData.size=src.size.slice(); g.userData.glb=src.glb; g.userData.glbFacade=src.glbFacade; rebuildItem(id,src.build,src.coat); if(src.glb) loadItemGlb(id); }
+      if(V||(r.V&&r.V[was])){ g.userData.pos=src.pos.slice(); g.userData.size=src.size.slice(); g.userData.glb=src.glb; g.userData.glbFacade=src.glbFacade; rebuildItem(id,src.build,src.coat); if(src.glb) loadItemGlb(id);  if(window.LAY) LAY.rebase(id); }
       hideItem(id,v==='none'||spec(V,it)===null); });
     if(key==='kitchen'&&v==='C') ROOM4.pick('table','none'); }, // the island seats three: no separate dining table
     pick(key,v){ const sel=document.getElementById('k4'+key); if(sel){ sel.value=v; try{ localStorage.setItem('pulse3d.k4.'+key,v); }catch(e){} } ROOM4.set(key,v); }};
