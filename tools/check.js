@@ -515,7 +515,7 @@ const { launchChromium } = require('./browser');
   if (decor.length) problems.push('декор комнаты 4: ' + decor.join(', '));
   // page defaults (2026-09-10, user): kitchen B, sofa G, tv decor D, sofa decor B — the selects, not the state forced above
   const defs = await page.evaluate(() => Object.fromEntries(['k4kitchen', 'k4sofa', 'k4tv', 'k4decortv', 'k4decorsofa', 'k4table', 'm3vanity'].map(id => [id, [...document.getElementById(id).options].find(o => o.defaultSelected).value])));
-  const wantDefs = { k4kitchen: 'B', k4sofa: 'G', k4tv: 'B', k4decortv: 'D', k4decorsofa: 'B', k4table: 'D', m3vanity: 'A' };
+  const wantDefs = { k4kitchen: 'I', k4sofa: 'G', k4tv: 'B', k4decortv: 'D', k4decorsofa: 'B', k4table: 'D', m3vanity: 'A' };
   Object.entries(wantDefs).forEach(([id, v]) => { if (defs[id] !== v) problems.push('вариант по умолчанию ' + id + ': ' + defs[id] + ' (нужен ' + v + ')'); });
   // room 3 vanity (#m3vanity A–E) and dining table (#k4table A/B): every variant builds meshes inside its size box and keeps the pouf
   const vans = await page.evaluate(() => { const out = [], inside = id => { const u = ITEM_GROUPS[id].userData, bb = new THREE.Box3().setFromObject(ITEM_GROUPS[id]), t = 0.005;
