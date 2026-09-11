@@ -142,7 +142,7 @@ const PHYS={}; // id → boxes
   const KD=0.70, KC=0.66, KP=0.63;            // worktop depth; carcass front (run fronts 20 mm, column doors 40 mm on top of it); plinth
   const KZ0=0.70, KZ1=2.99, KLX=[0.70,1.43];  // base run between the north element and the appliance column; x of B's short leg along the north wall
   const KSINK=[0.73,1.43], KHOB=[2.06,2.56];  // sink cut-out 0.70 and hob module 0.50 along z; the worktop strip x < 0.13 behind the bowl carries the mixer and the dispenser
-  function kitchenBuild(b,g,mode){ const corner=mode!=='A', F=mode==='F', Z1=F?2.29:KZ1, HOB=F?[1.79,2.29]:KHOB; // F: fridge column moved next to the appliance column (z 2.29–2.99), run shortened, hob beside the column
+  function kitchenBuild(b,g,mode){ const corner=mode!=='A', G=mode==='G', F=mode==='F'||G, Z1=F?2.29:KZ1, HOB=G?[0.70,1.20]:F?[1.79,2.29]:KHOB, SINK=G?[1.49,2.19]:KSINK; // F: fridge column moved next to the appliance column (z 2.29–2.99), run shortened, hob beside the column; G: F with the hob at the corner and the sink 0.10 short of the column
      const gap=0.003, front=(y0,y1,z0,z1,m)=>b.round(KC,KC+0.02,y0+gap/2,y1-gap/2,z0+gap/2,z1-gap/2,0.001,m); // fronts face +x; carcasses sit behind them so the 3 mm gaps read as dark lines
      const doors=(x0,x1,z0,z1,rows,m)=>rows.forEach(([y0,y1])=>b.round(x0,x1,y0+gap/2,y1-gap/2,z0,z1,0.002,m)); // 40 mm column doors, flush with the worktop edge
      /* proxy = pre-detail AABBs (realism-all A) */
@@ -151,8 +151,9 @@ const PHYS={}; // id → boxes
        if(F){ b.phys(0,KD+0.03,0,2.69,Z1,KZ1); b.phys(0,0.36,1.45,2.69,0,0.70); }                                      // F: fridge column inside the run, corner wall unit up to the north wall
        else { b.phys(0,0.36,1.45,2.69,0,0.70); b.phys(0.36,KLX[1],1.45,2.69,0,0.36); b.phys(KLX[1],KLX[1]+0.80,0,2.69,0,KD+0.03); } } // B: corner wall unit, short-leg wall units, fridge column
      b.phys(0,KC,0.1,0.87,KZ0,Z1); b.phys(0,KD,0.87,0.91,KZ0,Z1); b.phys(KC,KC+0.024,0.1,0.87,KZ0,Z1);               // base run: carcass, worktop, fronts with handles
-     b.phys(0.08,0.60,0.905,0.925,HOB[0],HOB[1]); b.phys(0.13,0.57,0.72,0.93,KSINK[0],KSINK[1]);                      // hob and undermount bowl
-     b.phys(0.05,0.33,0.90,1.29,1.06,1.10); b.phys(0.05,0.13,0.90,0.99,0.80,0.84);                                      // mixer and soap dispenser
+     b.phys(0.08,0.60,0.905,0.925,HOB[0],HOB[1]); b.phys(0.13,0.57,0.72,0.93,SINK[0],SINK[1]);                      // hob and undermount bowl
+     const mz=(SINK[0]+SINK[1])/2, sd=SINK[0]+0.09; // centre of the bowl, soap dispenser north of the mixer
+     b.phys(0.05,0.33,0.90,1.29,mz-0.02,mz+0.02); b.phys(0.05,0.13,0.90,0.99,sd-0.02,sd+0.02);                                      // mixer and soap dispenser
      b.phys(0,0.36,1.45,2.69,KZ0,Z1); b.phys(0,KD+0.03,0,2.69,KZ1,3.59);                                               // wall units and the appliance column
      // ---- north end of the run
      if(!corner){ b(0,KC,0.1,2.69,0,0.70,mat.hdark); b(0,KP,0,0.1,0,0.70,mat.dark);                                     // A: fridge column 0.70, carcass and plinth
@@ -172,24 +173,24 @@ const PHYS={}; // id → boxes
          b.handle(FX+0.07,1.40,KD,0.5,'y','z'); b.handle(FX+0.07,2.30,KD,0.3,'y','z'); } }
      // ---- base run: carcass, plinth, fronts
      b(0,KC,0.1,0.87,KZ0,Z1,mat.hdark); b(0,KP,0,0.1,KZ0,Z1,mat.dark);
-     (F?[[KZ0,1.46,'door'],[1.46,1.79,'drawers'],[1.79,2.29,'drawers2']]:[[KZ0,1.46,'door'],[1.46,2.06,'drawers'],[2.06,2.56,'drawers2'],[2.56,KZ1,'door']]).forEach(([z0,z1,k])=>{
+     (G?[[KZ0,1.20,'drawers2'],[1.20,1.46,'drawers'],[1.46,2.29,'door']]:F?[[KZ0,1.46,'door'],[1.46,1.79,'drawers'],[1.79,2.29,'drawers2']]:[[KZ0,1.46,'door'],[1.46,2.06,'drawers'],[2.06,2.56,'drawers2'],[2.56,KZ1,'door']]).forEach(([z0,z1,k])=>{
        if(k==='door'){ front(0.1,0.87,z0,z1,mat.base); b.handle(KC+0.02,0.80,(z0+z1)/2,0.16,'z','x'); }
        else { const ys=k==='drawers'?[0.1,0.35,0.6,0.87]:[0.1,0.5,0.87]; for(let i=0;i<ys.length-1;i++){ front(ys[i],ys[i+1],z0,z1,mat.base); b.handle(KC+0.02,ys[i+1]-0.05,(z0+z1)/2,0.2,'z','x'); } } });
      // ---- worktop 40 mm with the sink cut-out; L-shaped in the corner kitchen
      const sh=corner?polyXZ([[0.002,0.002],[KLX[1],0.002],[KLX[1],KD-0.002],[KD-0.002,KD-0.002],[KD-0.002,Z1-0.002],[0.002,Z1-0.002]])
                     :rrectXZ(0.002,KD-0.002,KZ0+0.002,Z1-0.002,0.002);
-     sh.holes.push(rrectXZ(0.13,0.57,KSINK[0],KSINK[1],0.02));
+     sh.holes.push(rrectXZ(0.13,0.57,SINK[0],SINK[1],0.02));
      g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.036,bevelThickness:0.002,bevelSize:0.002,bevelSegments:1,curveSegments:2}).rotateX(Math.PI/2).translate(0,0.908,0),mat.top));
-     b(0.13,0.57,0.72,0.73,KSINK[0],KSINK[1],mat.frame); [[0.13,0.14],[0.56,0.57]].forEach(([x0,x1])=>b(x0,x1,0.72,0.905,KSINK[0],KSINK[1],mat.frame));
-     [[KSINK[0],KSINK[0]+0.01],[KSINK[1]-0.01,KSINK[1]]].forEach(([z0,z1])=>b(0.13,0.57,0.72,0.905,z0,z1,mat.frame)); // undermount bowl
+     b(0.13,0.57,0.72,0.73,SINK[0],SINK[1],mat.frame); [[0.13,0.14],[0.56,0.57]].forEach(([x0,x1])=>b(x0,x1,0.72,0.905,SINK[0],SINK[1],mat.frame));
+     [[SINK[0],SINK[0]+0.01],[SINK[1]-0.01,SINK[1]]].forEach(([z0,z1])=>b(0.13,0.57,0.72,0.905,z0,z1,mat.frame)); // undermount bowl
      // ---- chrome mixer with a pull-down spout and a built-in soap dispenser beside it, both on the worktop strip behind the bowl
-     const mz=(KSINK[0]+KSINK[1])/2, curve=new THREE.CatmullRomCurve3([[0.075,0.92],[0.075,1.16],[0.09,1.25],[0.19,1.28],[0.29,1.23],[0.31,1.15]].map(([x,y])=>new THREE.Vector3(x,y,mz)));
+     const curve=new THREE.CatmullRomCurve3([[0.075,0.92],[0.075,1.16],[0.09,1.25],[0.19,1.28],[0.29,1.23],[0.31,1.15]].map(([x,y])=>new THREE.Vector3(x,y,mz)));
      g.add(new THREE.Mesh(new THREE.TubeGeometry(curve,20,0.013,10),mat.handle));
      g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.02,16).translate(0.075,0.918,mz),mat.handle));           // base plate
      g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.021,0.017,0.08,12).translate(0.31,1.11,mz),mat.handle));           // pull-down spray head
      b(0.075,0.15,1.05,1.08,mz-0.011,mz+0.011,mat.handle);                                                                // lever
-     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.021,0.021,0.06,14).translate(0.075,0.935,0.82),mat.handle));       // soap dispenser head
-     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,0.05,10).rotateZ(Math.PI/2).translate(0.105,0.955,0.82),mat.handle)); // its spout over the bowl, north of the mixer
+     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.021,0.021,0.06,14).translate(0.075,0.935,sd),mat.handle));       // soap dispenser head
+     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,0.05,10).rotateZ(Math.PI/2).translate(0.105,0.955,sd),mat.handle)); // its spout over the bowl, north of the mixer
      // ---- splashback 20 mm: proud of the wall finish panel (15 mm off the wall face, app.js)
      b(0,0.02,0.91,1.45,corner?0:KZ0,Z1,mat.wpanel);
      // ---- hob: four burners on a 0.50 panel, hood under the wall units
@@ -1015,6 +1016,7 @@ const PHYS={}; // id → boxes
     b.phys(x0,x1,0.05,0.42,d-sd,d); if(side) b.phys(c0,c1,0.05,0.42,0,d); b.phys(0,w,0.42,h,d-0.2,d);
     b(x0,x1,0.05,0.42,d-sd,d,mat.sofa); if(side) b(c0,c1,0.05,0.42,0,d,mat.sofa); b(0,w,0.42,h,d-0.2,d,mat.cushion); }});
   const kitchenV=(mode,w,coat)=>({pos:[8.23,KN],size:[w,2.69,3.59],coat:Object.assign({},ITEMS.find(i=>i.id==='kitchen').coat,coat),build:(b,g)=>kitchenBuild(b,g,mode)});
+  const LED8_F={pos:[8.55,2.575],size:[0.03,1.45,1.63],build(b){ b.led(0,0.03,1.43,1.45,0,1.63); }}; // F/G: the strip ends with the wall units at z 2.29
   const WOOD_UP={upper:'oakFurniture'}; // D/E (user 2026-09-10, .local/kitchen-wood): A/B as they are, wall-unit doors in oak
   // dining table B (.local/examples2): stadium-shaped oak top 0.90×1.80 on two round drums, same centre as A so the six chairs keep their places
   const TABLE_B={pos:[9.80,KN+0.04],size:[0.90,0.76,1.80],coat:{table:'oakFurniture'},build:(b,g)=>{
@@ -1032,7 +1034,7 @@ const PHYS={}; // id → boxes
   const SET_D={table:TABLE_D,chair1:ch4(9.49,3.765,'W',90),chair2:ch4(10.53,3.765,'E',-90),chair3:ch4(10.01,3.245,'N',180),chair4:ch4(10.01,4.285,'S',0),chair5:null,chair6:null};
   const R4={table:{ids:['table','chair1','chair2','chair3','chair4','chair5','chair6'],V:{B:{items:{table:TABLE_B}},C:{items:SET_C},D:{items:SET_D}}},sofa:{ids:['sofa'],V:Object.fromEntries(Object.entries(SOFA4).map(([k,v])=>[k,sofaV(v,k)]))},
     kitchen:{ids:['kitchen','lamp','led8'],V:{B:{items:{kitchen:kitchenV('B',2.23),lamp:null}},D:{items:{kitchen:kitchenV('A',0.74,WOOD_UP)}},E:{items:{kitchen:kitchenV('B',2.23,WOOD_UP),lamp:null}},
-      F:{items:{kitchen:kitchenV('F',1.43,WOOD_UP),led8:{pos:[8.55,2.575],size:[0.03,1.45,1.63],build(b){ b.led(0,0.03,1.43,1.45,0,1.63); }}}}}}, // lamp over the table sits inside B's fridge column: hidden in B/E; F's wall units end at z 2.29, so the LED strip stops there too
+      F:{items:{kitchen:kitchenV('F',1.43,WOOD_UP),led8:LED8_F}},G:{items:{kitchen:kitchenV('G',1.43,WOOD_UP),led8:LED8_F}}}}, // lamp over the table sits inside B's fridge column: hidden in B/E; F's wall units end at z 2.29, so the LED strip stops there too
    
     decortv:{ids:['decortv'],V:Object.fromEntries(Object.keys(DECOR_TV).map(k=>[k,{pos:[10.95,KN],size:[2.52,2.7,{F:0.27,G:0.22}[k]||0.02],coat:k==='D'?DEC.floorCoat:DEC.coat,build:DECOR_TV[k]}]))}, // F/G: shelves stand off the wall
     decorsofa:{ids:['decorsofa'],V:Object.fromEntries(Object.keys(DECOR_SOFA).map(k=>[k,{pos:[13.47,6.287],size:[2.51,2.7,0.06],coat:DEC.floorCoat,build:DECOR_SOFA[k]}]))},
