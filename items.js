@@ -225,8 +225,8 @@ const PHYS={}; // id → boxes
   const KN=1.915; // north wall of kitchen-living room 4
   const SOFA_E=13.455; // east edge of every sofa variant: against the east wall finish (15 mm off the wall face x 13.47)
   const CHAIR4={paint:'oakFurniture',cushion:'sofaWeave'}; // M2: dining chairs — oak frame (GLB material `paint`), seat pad in the sofa fabric
-  // bar stools at the peninsula of kitchens H/I (models/stool.glb = chair.js with legs +0.08): three along the room side, one at the south end, seat front 0.07 off the slab, backs out
-  const STOOLS={stool1:[10.62,2.06,'E',-90],stool2:[10.62,2.61,'E',-90],stool3:[10.62,3.16,'E',-90],stool4:[9.91,3.785,'S',0]};
+  // bar stools at the peninsula of kitchens H/I (models/stool.glb = chair.js with legs +0.08): three along the room side, one at the south end, tucked under the slab with the hoop backs out
+  const STOOLS={stool1:[10.19,1.98,'E',-90],stool2:[10.19,2.46,'E',-90],stool3:[10.19,2.94,'E',-90],stool4:[9.80,3.42,'S',0]}; // tucked in: seats 0.33 under the slab, rear legs just past the frame rails, the row touching so the end stool fits between the far posts
   const stoolSpec=([x,z,side,rot])=>({pos:[x,z],size:[0.48,0.86,0.48],glb:'models/stool.glb',glbRot:rot,coat:CHAIR4,build:chair(side)});
   const CAB={cabinetPaint:'cabinetPaint'}; // M4: casework and desks — painted MDF on every cabinetPaint-slot detail (body, fronts, panels)
   const BED={cabinetPaint:'cabinetPaint',kmat:'curtainLinen',pillow:'curtainLinen',cushion:'curtainLinen',cover:'curtainLinen'}; // M4: beds and window seats — bedding in linen, not the sofa weave (kitchen.md rule 3)
