@@ -169,7 +169,7 @@ const PHYS={}; // id → boxes
        if(H){ // H (user 2026-09-11, .local/bar): the worktop runs on along the north wall to PX1 and bends into a peninsula 0.80×1.80 towards the room, 0.82 off the west run's worktop (user: 0.80) — one 40 mm slab on a slim 40×40 frame, open underneath
          const bar=polyXZ([[KLX[1],0.002],[PX1-0.002,0.002],[PX1-0.002,1.798],[PX0+0.002,1.798],[PX0+0.002,KD-0.002],[KLX[1],KD-0.002]]);
          g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(bar,{depth:0.036,bevelThickness:0.002,bevelSize:0.002,bevelSegments:1,curveSegments:2}).rotateX(Math.PI/2).translate(0,0.748,0),mat.top));
-         b(0.02,PX1,0.75,1.45,0,0.02,mat.wpanel);                                                                      // splashback continues to the end of the wall run
+         b(0.02,LX1,0.75,1.45,0,0.02,mat.wpanel);                                                                      // splashback only behind the base unit: past it the wall stays bare (user 2026-09-11)
          [[PX0,1.76],[PX1-0.04,1.76],[PX1-0.04,0.02]].forEach(([x,z])=>b(x,x+0.04,0,0.71,z,z+0.04,mat.frame));             // posts: the two far corners and the east edge at the wall; the west side rests on the base unit
          b(LX1,PX1,0.67,0.71,0.02,0.06,mat.frame);                                                                        // rail under the top along the wall past the base unit
          b(PX0,PX0+0.04,0.67,0.71,KD,1.80,mat.frame); b(PX1-0.04,PX1,0.67,0.71,0.06,1.80,mat.frame); b(PX0,PX1,0.67,0.71,1.76,1.80,mat.frame); } // peninsula perimeter
