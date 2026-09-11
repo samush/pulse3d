@@ -212,7 +212,7 @@ const PHYS={}; // id → boxes
      // ---- wall units over the run, 4 doors
      b(0,0.34,1.45,2.69,KZ0,Z1,mat.hdark);
      const U0=I?0.36:KZ0, UN=I?2:4; // I: two wide doors run from the short-leg unit to the fridge column (corner unit included)
-     for(let i=0;i<UN;i++){ const z0=U0+i*(Z1-U0)/UN, z1=z0+(Z1-U0)/UN; b.round(0.34,0.36,1.45+gap/2,2.69-gap/2,z0+gap/2,z1-gap/2,0.001,mat.upper); b.handle(0.36,1.50,(z0+z1)/2,0.16,'z','x'); }
+     for(let i=0;i<UN;i++){ const z0=U0+i*(Z1-U0)/UN, z1=z0+(Z1-U0)/UN; b.round(0.34,0.36,1.45+ugap/2,2.69-ugap/2,z0+ugap/2,z1-ugap/2,0.001,mat.upper); b.handle(0.36,1.50,(z0+z1)/2,0.16,'z','x'); }
      // ---- appliance column: dishwasher, oven, microwave, cupboard on top
      b(0,KC,0.1,2.69,KZ1,3.59,mat.hdark); b(0,KP,0,0.1,KZ1,3.59,mat.dark);
      const pz=[KZ1+0.02,3.57], pc=(KZ1+3.59)/2;
