@@ -265,7 +265,7 @@ const PHYS={}; // id → boxes
   Object.keys(DECOR_TV).forEach(k=>DECOR_TV[k]=DEC.wall(DEC_TV_W[k]||2.52,DECOR_TV[k])); Object.keys(DECOR_SOFA).forEach(k=>DECOR_SOFA[k]=DEC.wall(2.51,DECOR_SOFA[k]));
   const ITEMS=[
     // ---- kitchen-living room 4 (sketch .local/R1.jpg) ----
-    {id:'kitchen',type:'кухонный блок',room:4,layer:'kitchen',pos:[8.23,KN],rot:0,size:[0.74,2.69,3.59],fixed:'wall',coat:{base:'hplFront',upper:'hplFront',top:'hplPanel',wpanel:'hplPanel'}, // 2026-09-10: matte HPL fronts, worktop and splashback one HPL panel of the same tone; carcass, plinth, hob and metal stay class twins
+    {id:'kitchen',type:'кухонный блок',room:4,layer:'kitchen',pos:[8.23,KN],rot:0,size:[0.74,2.69,3.59],fixed:'wall',coat:{base:'oliveFront',upper:'beigeFront',hdark:'oliveFront',top:'hplWhite',wpanel:'hplWhite'}, // 2026-09-11: olive fronts and carcass sides, wall-unit doors in the beige of the floor tile, worktop and splashback one white HPL panel; plinth, hob and metal stay class twins
      build(b,g){ kitchenBuild(b,g,'A'); }},
     {id:'table',type:'стол на 6 мест',room:4,layer:'kitchen',pos:[9.85,KN+0.04],rot:0,size:[0.8,0.76,1.8],coat:{table:'oakFurniture'},
      build(b,g){ b.phys(0,0.8,0.72,0.76,0,1.8); b.phys(0.05,0.75,0.64,0.72,0.05,1.75); [[0.05,0.05],[0.7,0.05],[0.05,1.7],[0.7,1.7]].forEach(([x,z])=>b.phys(x,x+0.05,0,0.72,z,z+0.05)); // proxy = the old block AABBs (top, apron, legs)
@@ -1038,7 +1038,6 @@ const PHYS={}; // id → boxes
   const led8V=L=>({pos:[8.55,2.575],size:[0.03,1.45,L],build(b){ b.led(0,0.03,1.43,1.45,0,L); }}), LED8_F=led8V(1.63), LED8_I=led8V(1.53); // F/G/H: the strip ends with the wall units at z 2.29; I: fridge column from 2.19
   const STOOL_ITEMS=Object.fromEntries(Object.entries(STOOLS).map(([id,st])=>[id,stoolSpec(st)]));
   const WOOD_UP={upper:'oakFurniture'}; // D/E (user 2026-09-10, .local/kitchen-wood): A/B as they are, wall-unit doors in oak
-  const ORANGE_UP={upper:'oakOrange'};  // F–I (user 2026-09-11): bright ginger wall-unit fronts with a faint grain — the number of doors reads from the room
   // dining table B (.local/examples2): stadium-shaped oak top 0.90×1.80 on two round drums, same centre as A so the six chairs keep their places
   const TABLE_B={pos:[9.80,KN+0.04],size:[0.90,0.76,1.80],coat:{table:'oakFurniture'},build:(b,g)=>{
     b.phys(0,0.90,0.72,0.76,0,1.80); [0.45,1.35].forEach(z=>b.phys(0.26,0.64,0,0.72,z-0.19,z+0.19));
@@ -1055,7 +1054,7 @@ const PHYS={}; // id → boxes
   const SET_D={table:TABLE_D,chair1:ch4(9.49,3.765,'W',90),chair2:ch4(10.53,3.765,'E',-90),chair3:ch4(10.01,3.245,'N',180),chair4:ch4(10.01,4.285,'S',0),chair5:null,chair6:null};
   const R4={table:{ids:['table','chair1','chair2','chair3','chair4','chair5','chair6'],V:{B:{items:{table:TABLE_B}},C:{items:SET_C},D:{items:SET_D}}},sofa:{ids:['sofa'],V:Object.fromEntries(Object.entries(SOFA4).map(([k,v])=>[k,sofaV(v,k)]))},
     kitchen:{ids:['kitchen','lamp','led8','stool1','stool2','stool3','stool4'],V:{B:{items:{kitchen:kitchenV('B',2.23),lamp:null}},D:{items:{kitchen:kitchenV('A',0.74,WOOD_UP)}},E:{items:{kitchen:kitchenV('B',2.23,WOOD_UP),lamp:null}},
-      F:{items:{kitchen:kitchenV('F',1.43,ORANGE_UP),led8:LED8_F}},G:{items:{kitchen:kitchenV('G',1.43,ORANGE_UP),led8:LED8_F}},H:{items:Object.assign({kitchen:kitchenV('H',PX1,ORANGE_UP),led8:LED8_F},STOOL_ITEMS),pick:{table:'none'}},I:{items:Object.assign({kitchen:kitchenV('I',PX1,ORANGE_UP),led8:LED8_I},STOOL_ITEMS),pick:{table:'none'}}}}, // the peninsula stands where the dining sets are: H switches the table off // lamp over the table sits inside B's fridge column: hidden in B/E; F's wall units end at z 2.29, so the LED strip stops there too
+      F:{items:{kitchen:kitchenV('F',1.43),led8:LED8_F}},G:{items:{kitchen:kitchenV('G',1.43),led8:LED8_F}},H:{items:Object.assign({kitchen:kitchenV('H',PX1),led8:LED8_F},STOOL_ITEMS),pick:{table:'none'}},I:{items:Object.assign({kitchen:kitchenV('I',PX1),led8:LED8_I},STOOL_ITEMS),pick:{table:'none'}}}}, // the peninsula stands where the dining sets are: H switches the table off // lamp over the table sits inside B's fridge column: hidden in B/E; F's wall units end at z 2.29, so the LED strip stops there too
    
     decortv:{ids:['decortv'],V:Object.fromEntries(Object.keys(DECOR_TV).map(k=>{ const w=DEC_TV_W[k]||2.52; return [k,{pos:[10.95+2.52-w,KN],size:[w,2.7,{F:0.27,G:0.22}[k]||0.02],coat:k==='D'?DEC.floorCoat:DEC.coat,build:DECOR_TV[k]}]; }))}, // F/G: shelves stand off the wall
     decorsofa:{ids:['decorsofa'],V:Object.fromEntries(Object.keys(DECOR_SOFA).map(k=>[k,{pos:[13.47,6.287],size:[2.51,2.7,0.06],coat:DEC.floorCoat,build:DECOR_SOFA[k]}]))},
