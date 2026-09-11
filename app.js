@@ -468,8 +468,6 @@ wallGroupR.visible=false; // стена коридор-кухня по умол�
 document.getElementById('kwall').addEventListener('change',e=>{wallGroupR.visible=e.target.checked&&wop.value/100>0.01; if(window.kitchenFrame)window.kitchenFrame.visible=e.target.checked;}); // стена появляется только если ползунок «Стены» не на нуле
 document.getElementById('wgrid').addEventListener('change',e=>{wallGridGroup.visible=e.target.checked;addrGroup.visible=e.target.checked;});
 document.getElementById('finish').addEventListener('change',e=>finishGroup.visible=e.target.checked);
-document.getElementById('tileFloor').addEventListener('change',e=>tileGroup.visible=e.target.checked);
-document.getElementById('boardFloor').addEventListener('change',e=>boardGroup.visible=e.target.checked);
 const wop=document.getElementById('wop'),wov=document.getElementById('wov');
 const fade=(m,v)=>{ m.opacity=v; m.transparent=v<0.999; m.depthWrite=v>=0.5; m.needsUpdate=true; if(window.VIZ) VIZ.twins(m).forEach(s=>fade(s,v)); }; // every lit twin follows the basic material
 wop.addEventListener('input',()=>{
@@ -920,6 +918,8 @@ var finishGroup=new THREE.Group();
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/0.6,1/1.2); return t; };
   const tileMat=new THREE.MeshBasicMaterial({map:tileTex('#3f3831','#5b524a')}); // loggia: dark cashmere brown
   const tileLightMat=new THREE.MeshBasicMaterial({map:tileTex('#9c8266','#b7997a')}); // corridor 5 + kitchen zone: warm caramel tan, plain — the soft clouds read as dirt (user, 2026-09-09)
+  const tileWhiteM=tileTex('#dcdad5','#f4f3f0'); // entry zone: the flat's 60×120 tile in the laundry white; floor and walls share the texture but not the material — the wall slider fades only the walls
+  const tileWhiteMat=new THREE.MeshBasicMaterial({map:tileWhiteM}), tileWhiteWall=new THREE.MeshBasicMaterial({map:tileWhiteM});
   finishGroup.add(new THREE.Mesh(window.loggiaFloorGeo,tileMat)); // loggia 10 floor: dark grey porcelain tile as on the photos
   // layer 3 (BOARD_POLYS): engineered oak board to try floor coverings — the living zone of room 4 east of the tile (x 10.36–13.47) and the loggia 10
   const boardTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=512; const g=c.getContext('2d'); let sd=7; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; }; // canvas = 2.0 × 2.0 m
@@ -943,14 +943,21 @@ var finishGroup=new THREE.Group();
     tileGroup.add(new THREE.Mesh(g,tileLightMat));
   }
 
-  // пол общего коридора: белый мрамор
+  // общий коридор до входа (отсюда начинается «Экскурсия»): та же плитка 60×120, что в квартире, только белая — пол и стены
   {
     const g=new THREE.PlaneGeometry(1.48,5.80);
     scaleUV(g,1.48,5.80);
     g.rotateX(-Math.PI/2); 
-    const m=new THREE.Mesh(g,whiteMat);
+    const m=new THREE.Mesh(g,tileWhiteMat);
     m.position.set(7.31,FLOOR,10.66);
     finishGroup.add(m);
+    const [dx,,,dw]=PLAN.doors[7], d0=dx-dw/2, d1=dx+dw/2, DH=2.1; // входная дверь: плитка обходит проём и идёт по перемычке
+    panel(tileWhiteWall, 5.80, H, 6.635, H/2, 10.66, Math.PI/2);                       // западная стена коридора
+    panel(tileWhiteWall, 1.70, H, 8.020, H/2, 10.73, -Math.PI/2);                      // стена, закрывающая нишу квартиры
+    panel(tileWhiteWall, d0-6.625, H, (6.625+d0)/2, H/2, 7.764, 0);                    // северная стена: простенок западнее двери
+    panel(tileWhiteWall, 7.876-d0, H-DH, (d0+7.876)/2, DH+(H-DH)/2, 7.764, 0);         // перемычка над дверью
+    panel(tileWhiteWall, 8.05-7.876, H-DH, (7.876+8.05)/2, DH+(H-DH)/2, 7.546, 0);     // уступ стены восточнее: только перемычка
+    panel(tileWhiteWall, 8.05-d1, H, (d1+8.05)/2, H/2, 7.546, 0);                      // простенок восточнее двери
   }
   // плитка на стенах санузлов: белый мрамор 300×600 вертикально на всех стенах (серая западная стена убрана по фото)
   const BATHS=PLAN.baths; // контуры санузлов и их дверей — в плане, двигаются вместе со стенами (remap)
@@ -1058,8 +1065,8 @@ var finishGroup=new THREE.Group();
   // matte greige paint (kitchen-living 4, master 3, corridor 5, loggia 10): flat colour with faint roller texture, canvas = 1 × 1 m
   const paintTex=canvasTex(g=>{ g.fillStyle='#c3b8a9'; g.fillRect(0,0,256,256); for(let i=0;i<2500;i++){ g.fillStyle='rgba('+(Math.random()<0.5?'255,250,240':'120,105,90')+','+(0.03+0.05*Math.random())+')'; g.fillRect(Math.random()*256,Math.random()*256,1+Math.random()*2,1+Math.random()*2); } });
   const paintMat=new THREE.MeshBasicMaterial({map:paintTex}); const PAINTED=new Set([3,4,5,10]);
-  window.wallFinMats=[wpMat,whiteWall,bathWall,greyWall,plasterMat,greyMat,woodMat,frameMat2,plinthMat,paintMat,chromeFin]; // гасятся ползунком «Стены»
-  window.finishMats={lam:lamMat,vinyl:vinylMat,white:whiteMat,whiteWall,bathWall,bathFloor,greyWall,plaster:plasterMat,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,chrome:chromeFin,tile:tileMat,tileLight:tileLightMat,wallPaint:paintMat,board:boardMat}; // для PBR-двойников (materials.js)
+  window.wallFinMats=[wpMat,whiteWall,tileWhiteWall,bathWall,greyWall,plasterMat,greyMat,woodMat,frameMat2,plinthMat,paintMat,chromeFin]; // гасятся ползунком «Стены»
+  window.finishMats={lam:lamMat,vinyl:vinylMat,white:whiteMat,whiteWall,bathWall,bathFloor,greyWall,plaster:plasterMat,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,chrome:chromeFin,tile:tileMat,tileLight:tileLightMat,tileWhite:tileWhiteMat,tileWhiteWall,wallPaint:paintMat,board:boardMat}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
   // room 2, M10: finish block on the north wall behind the gym wall, 0.1–2.40, x 12.15–13.75; grey until the palette stage
   const accent2Mat=new THREE.MeshBasicMaterial({color:0xd6d6d3}); wallFinMats.push(accent2Mat); finishMats.accent2=accent2Mat;
@@ -1208,6 +1215,10 @@ var finishGroup=new THREE.Group();
   });
 })();
 scene.add(finishGroup); scene.add(tileGroup); scene.add(boardGroup);
+// floor layers as room selects (#h5tile — «Коридор», #k4board — «Кухня-гостиная»): 'none' hides the layer, 'A' is the one built here
+[['h5tile',tileGroup],['k4board',boardGroup]].forEach(([id,grp])=>{ const sel=document.getElementById(id); if(!sel) return; const KEY='pulse3d.'+id;
+  let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){} if([...sel.options].some(o=>o.value===v)) sel.value=v;
+  const apply=()=>{ grp.visible=sel.value!=='none'; }; sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} apply(); }); apply(); });
 
 // мебель — в items.js (предметы с id, локальными координатами и слоями)
 

@@ -20,12 +20,13 @@ const PHYS={}; // id → boxes
     kbody:M(0xdadad6), kleg:M(0xbdbdb8), kmat:M(0xf0ede6), knob:M(0x4a4a4a),
     rail:new THREE.MeshLambertMaterial({color:0xbfd7e6,transparent:true,opacity:0.35}),
     cushion:M(0x9a9a9a), screen:M(0x2a2a2a), ring:M(0x2f2f2f), pillow:M(0xf7f5ef),
+    gloss:new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:0.16,depthWrite:false}), // slanted highlight over a mirror: not a reflection, a cue that the plane is glass
     oak:M(0xc9a97a), hpl:M(0xe7e2d8), terra:M(0xc2704e), fabric:M(0xb8ab9a), rug:M(0xd9cfc0), ochre:M(0xd08a5a),
     tulle:new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:0.3,side:THREE.DoubleSide}),
     drape:new THREE.MeshLambertMaterial({color:0xb4b4b4,side:THREE.DoubleSide}), // opaque curtain fabric, both faces of a folded plane
   };
   // material slot = physical class for the visualization twin (B04); concept colours stay grey, MATERIALS[slot] gives roughness/metalness/emissive
-  const SLOTS={chrome:['handle','knob','ring'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle','drape'],emitter:['led','mirrorLed'],screen:['screen'],wood:['table'],cabinetPaint:['chair','base','upper','door','body','wbody','wdoor','wpanel','kbody'],plastic:['plastic'],ceramic:['ceramic'],acrylic:['acrylic'],leather:['leather'],mirror:['mirror']};
+  const SLOTS={chrome:['handle','knob','ring'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle','drape'],emitter:['led','mirrorLed','gloss'],screen:['screen'],wood:['table'],cabinetPaint:['chair','base','upper','door','body','wbody','wdoor','wpanel','kbody'],plastic:['plastic'],ceramic:['ceramic'],acrylic:['acrylic'],leather:['leather'],mirror:['mirror']};
   Object.entries(SLOTS).forEach(([slot,keys])=>keys.forEach(k=>{ mat[k].userData.slot=slot; }));
   window.ITEM_MATS=mat;
   const chair=side=>(b,g)=>{ // chair 0.48×0.80×0.48 fallback and proxy (seat, back strip on side W/E/N/S, four legs); models/chair.glb replaces the meshes
@@ -311,7 +312,8 @@ const PHYS={}; // id → boxes
        b.round(0,1.3,1.0,1.75,0.008,0.028,0.002,mat.dark); b(0.008,1.292,1.008,1.742,0.028,0.031,mat.screen); // slim panel with an 8 mm bezel, screen 3 mm proud
        b(0.35,0.95,1.0,1.012,0.02,0.034,mat.frame); b(0.45,0.85,1.2,1.5,0,0.008,mat.frame); // bottom strip and wall bracket
      }},
-    {id:'console',type:'подвесная консоль под ТВ',room:4,layer:'kitchen',pos:[11.9,KN],rot:0,size:[1.2,0.75,0.38],fixed:'wall',coat:{base:'cabinetPaint'},build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,1.2,0.45,0.75,0,0.38);
+    {id:'console',type:'подвесная консоль под ТВ',room:4,layer:'kitchen',pos:[11.9,KN],rot:0,size:[1.2,0.75,0.38],fixed:'wall',coat:{cabinetPaint:'hplWhite'}, // 2026-09-11: белый HPL, как столешница кухни
+     build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,1.2,0.45,0.75,0,0.38);
        b(0,1.2,0.45,0.73,0,0.36,mat.hdark); b.round(0,1.2,0.73,0.75,0,0.38,0.002,mat.base); // carcass under a 20 mm chamfered top (no shared top plane)
        [[0.0015,0.5985],[0.6015,1.1985]].forEach(([x0,x1])=>b.round(x0,x1,0.4515,0.7285,0.36,0.38,0.001,mat.base)); // two push-to-open fronts, 3 mm gaps
      }},
@@ -322,10 +324,11 @@ const PHYS={}; // id → boxes
     // ---- hallway 5 (sketches .local/R2_*) ----
     {id:'wardrobe',type:'шкаф в нише',room:5,layer:'hall',pos:[8.20,7.974-0.45],rot:0,size:[1.77,2.65,0.45],fixed:'wall',coat:{door:'cabinetPaint',body:'cabinetPaint'}, // M4-3: painted doors and visible carcass; shoe niche stays dark class
      build(b){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.02,0,2.65,0,0.45); b.phys(1.75,1.77,0,2.65,0,0.45); b.phys(0,1.77,0,2.65,0.43,0.45); b.phys(0,1.77,2.63,2.65,0,0.45); b.phys(0.02,1.75,0.02,0.04,0.05,0.43); b.phys(0.02,1.75,0.43,0.45,0,0.43); b.phys(0.02,1.75,0.04,0.43,0.35,0.43); b.phys(0.02,0.881,0.45,1.95,0,0.02); b.phys(0.889,1.75,0.45,1.95,0,0.02); b.phys(0.825,0.84,1,1.3,-0.02,0); b.phys(0.93,0.945,1,1.3,-0.02,0); b.phys(0.02,1.75,1.95,1.97,0,0.43); b.phys(0.02,0.881,1.97,2.63,0,0.02); b.phys(0.889,1.75,1.97,2.63,0,0.02); b.phys(0.825,0.84,2.07,2.23,-0.02,0); b.phys(0.93,0.945,2.07,2.23,-0.02,0);
-       const W=1.77, D=0.45, t=0.02, mid=W/2, gap=0.004, H0=0.45, H1=1.95, H2=2.65;
+       const W=1.77, D=0.45, t=0.02, mid=W/2, gap=0.004, H0=0.45, H1=1.95, H2=2.65, dg=0.005; // dg: зазор двери, 5 мм вместо 1.5 — Gemini рисовал на сплошном поле случайное число дверей
        b(0,t,0,H2,0,D,mat.body); b(W-t,W,0,H2,0,D,mat.body); b(0,W,0,H2,D-t,D,mat.body); b(0,W,H2-t,H2,0,D,mat.body); // body
        b(t,W-t,0.02,0.04,0.05,D-t,mat.body); b(t,W-t,H0-t,H0,0,D-t,mat.body); b(t,W-t,0.04,H0-t,D-0.10,D-t,mat.hdark); // shoe niche
-       const door=(x0,x1,y0,y1)=>b.round(x0+0.0015,x1-0.0015,y0+0.0015,y1-0.0015,0,t,0.001,mat.door); // 3 mm gaps between doors and to the body
+       b(t,W-t,H0,H2,0.0005,0.0015,mat.dark); // тёмный фон за фасадами: каждый зазор читается линией, а не стыком одного цвета
+       const door=(x0,x1,y0,y1)=>b.round(x0+dg,x1-dg,y0+dg,y1-dg,0.002,t,0.001,mat.door); // 10 mm gaps between the doors, 5 mm to the body
        door(t,mid-gap,H0,H1); door(mid+gap,W-t,H0,H1);                                                                // doors
        b(mid-0.02,mid-gap-0.001,H0+0.02,H1-0.02,0,0.003,mat.frame); b(mid+gap+0.001,mid+0.02,H0+0.02,H1-0.02,0,0.003,mat.frame); // flush vertical pull profiles along the meeting edge
        b(t,W-t,H1,H1+t,0,D-t,mat.body); door(t,mid-gap,H1+t,H2-t); door(mid+gap,W-t,H1+t,H2-t);                       // top cabinets
@@ -350,8 +353,11 @@ const PHYS={}; // id → boxes
      build(b){ b.spot(0.04,0.04,0.04); }},
     {id:'ceil5_6',type:'точечный светильник Ø0.08 встроенный, у дверей комнаты 3 и санузла 9',room:5,layer:'hall',pos:[10.41,9.26],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
      build(b){ b.spot(0.04,0.04,0.04); }},
-    {id:'mirror',type:'зеркало',room:5,layer:'hall',pos:[6.346,6.05],rot:0,size:[0.025,2.4,0.9],fixed:'wall',
-     build(b){ b.phys(0,0.025,0.15,2.40,0,0.9); b.round(0.01,0.02,0.15,2.40,0,0.9,0.005,mat.frame); b.round(0.02,0.025,0.16,2.39,0.01,0.89,0.002,mat.mirror); }}, // backing board from the wallpaper plane (local x 0.01), 5 mm mirror glass in front (M3)
+    {id:'mirror',type:'зеркало',room:5,layer:'hall',pos:[6.346,6.05],rot:0,size:[0.025,2.4,0.9],fixed:'wall', // 2026-09-11: скруглённые углы и косой блик — прямоугольник без них Gemini принимает за дверь или картину
+     build(b,g){ b.phys(0,0.025,0.15,2.40,0,0.9);
+       const plate=(w,h,r,x,t,y0,z0,m)=>{ const o=new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(w,h,r),{depth:t,bevelEnabled:false,curveSegments:16}).rotateY(Math.PI/2).translate(x,y0,z0+w),m); g.add(o); return o; }; // shape x → world −z, extrusion → world +x
+       plate(0.90,2.25,0.09,0.010,0.010,0.15,0,mat.frame); plate(0.88,2.23,0.08,0.020,0.005,0.16,0.01,mat.mirror);  // backing board from the wallpaper plane, 5 mm glass in front (M3)
+       [[0.26,0.45],[0.09,0.63]].forEach(([w,z])=>{ const gl=new THREE.Mesh(new THREE.PlaneGeometry(w,1.60),mat.gloss); gl.rotation.set(0,Math.PI/2,14*Math.PI/180); gl.position.set(0.0255,1.28,z); g.add(gl); }); }}, // две косые полосы блика под 14°: габарит подобран так, чтобы углы не вылезли за стекло
     {id:'pouf',type:'пуфик',room:5,layer:'hall',pos:[6.396,6.75],rot:0,size:[0.4,0.45,0.6],glb:'models/pouf.glb',
      build(b){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.4,0.12,0.45,0,0.6); b.phys(0.03,0.06,0,0.12,0.03,0.06); b.phys(0.34,0.37,0,0.12,0.03,0.06); b.phys(0.03,0.06,0,0.12,0.54,0.57); b.phys(0.34,0.37,0,0.12,0.54,0.57); b(0,0.4,0.12,0.45,0,0.6,mat.pouf); [[0.03,0.03],[0.34,0.03],[0.03,0.54],[0.34,0.54]].forEach(([x,z])=>b(x,x+0.03,0,0.12,z,z+0.03,mat.frame)); }},
     // ---- laundry 7 ----
@@ -549,7 +555,7 @@ const PHYS={}; // id → boxes
        [[0.325,1.025],[1.125,1.825]].forEach(([x0,x1])=>b(x0,x1,0.55,0.67,0.15,0.60,mat.pillow));   // two pillows
        b(0.275,1.925,0.55,0.575,0.85,2.20,mat.cushion); b(1.90,1.925,0.35,0.55,0.85,2.20,mat.cushion); // blanket: thin sheet, drop only down the room side (the sill side is flush)
      }},
-    {id:'mcab',type:'блок подвесных ящиков над изголовьем 2.015 (до ниши шкафа): два ряда, секция под кондиционер с решёткой',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[2.015,2.70,0.35],coat:CAB,fixed:'wall',
+    {id:'mcab',type:'блок подвесных ящиков над изголовьем 2.015 (до ниши шкафа): два ряда, секция под кондиционер с решёткой',room:3,layer:'master',pos:[14.76,13.144],rot:180,size:[2.015,2.70,0.35],coat:{cabinetPaint:'oliveFront'},fixed:'wall',
      build(b,g){ const t=0.02, Y0=1.85, Y1=2.28, Y2=2.30, T=2.7, A0=0.40, A1=1.30, W=2.015, H=W/2;                             // rows 1.85–2.28 and 2.30–2.70; AC section x 0.40–1.30 (socket sock16), open below; W runs 0.10 past the bed edge
        b.phys(0,W,T-t,T,0,0.35); b.phys(0,W,Y1,Y2,0,0.35); b.phys(0,A0,Y0,Y0+t,0,0.35); b.phys(A1,W,Y0,Y0+t,0,0.35); b.phys(0,W,Y0,T,0,t); [0,A0,A1,W-t].forEach(x=>b.phys(x,x+t,Y0,T,t,0.35)); b.phys(H-0.01,H+0.01,Y2,T,t,0.35);
        const doors=[[0.003,A0-0.003,Y0+0.003,Y1-0.003],[A1+0.003,W-0.003,Y0+0.003,Y1-0.003],[0.003,H-0.003,Y2+0.003,T-0.003],[H+0.003,W-0.003,Y2+0.003,T-0.003]]; // doors 0.40 and 0.715 beside the AC, two doors above
@@ -558,7 +564,7 @@ const PHYS={}; // id → boxes
        [0,A0,A1,W-t].forEach(x=>b(x,x+t,Y0,T,t,0.35,mat.body)); b(H-0.01,H+0.01,Y2,T,t,0.35,mat.body);                                                     // section walls, divider of the upper row
        doors.forEach(([x0,x1,y0,y1])=>{ b.round(x0,x1,y0,y1,0.33,0.35,0.001,mat.wdoor); const c=(x0+x1)/2; b(c-0.05,c+0.05,y0,y0+0.02,0.347,0.3505,mat.frame); }); // doors with 3 mm gaps, flush pull profiles along the bottom edge
        for(let y=Y0+0.04;y<Y1-0.03;y+=0.04) g.add(new THREE.Mesh(new THREE.BoxGeometry(A1-A0-2*t,0.012,0.024).rotateX(-35*Math.PI/180).translate((A0+A1)/2,y+0.01,0.336),mat.wdoor)); }}, // louvre grille of the AC section
-    {id:'mward',type:'шкаф 1.30 на два отделения для одежды, антресоль 1.40 в линию с блоком над кроватью; ниша-полка со стороны кровати 0.65–1.00, в 0.10 от края кровати',room:3,layer:'master',pos:[12.745,13.144],rot:180,size:[1.40,2.70,0.60],coat:CAB,fixed:'wall',
+    {id:'mward',type:'шкаф 1.30 на два отделения для одежды, антресоль 1.40 в линию с блоком над кроватью; ниша-полка со стороны кровати 0.65–1.00, в 0.10 от края кровати',room:3,layer:'master',pos:[12.745,13.144],rot:180,size:[1.40,2.70,0.60],coat:{cabinetPaint:'oliveFront'},fixed:'wall',
      build(b0){ const o=0.10, b=(x0,x1,y0,y1,z0,z1,m)=>b0(x0+o,x1+o,y0,y1,z0,z1,m); b.phys=(x0,x1,y0,y1,z0,z1)=>b0.phys(x0+o,x1+o,y0,y1,z0,z1); b.round=(x0,x1,y0,y1,z0,z1,r,m)=>b0.round(x0+o,x1+o,y0,y1,z0,z1,r,m); // body sits 0.10 from the bed side; the top row runs to x=0 over the wider podium
        const W=1.30, t=0.02, N0=0.65, N1=1.00, NW=0.30, D=0.65, Y1=2.28, Y2=2.30, T=2.7;                                      // niche: height 0.65–1.00, 0.30 deep; divider at 0.65; shelf 2.28–2.30 under the top row
        b.phys(-o,-o+t,Y2,T,0.03,0.58); b.phys(-o,0,Y2,T,0.03,0.05); b(-o,-o+t,Y2,T,0.03,0.58,mat.body); b(-o,0,Y2,T,0.03,0.05,mat.body); // top-row extension: side panel and back
@@ -1058,7 +1064,7 @@ const PHYS={}; // id → boxes
    
     decortv:{ids:['decortv'],V:Object.fromEntries(Object.keys(DECOR_TV).map(k=>{ const w=DEC_TV_W[k]||2.52; return [k,{pos:[10.95+2.52-w,KN],size:[w,2.7,{F:0.27,G:0.22}[k]||0.02],coat:k==='D'?DEC.floorCoat:DEC.coat,build:DECOR_TV[k]}]; }))}, // F/G: shelves stand off the wall
     decorsofa:{ids:['decorsofa'],V:Object.fromEntries(Object.keys(DECOR_SOFA).map(k=>[k,{pos:[13.47,6.287],size:[2.51,2.7,0.06],coat:DEC.floorCoat,build:DECOR_SOFA[k]}]))},
-    console:{ids:['console'],V:{B:{pos:[11.775,KN],size:[1.45,0.34,0.42],coat:{cabinetPaint:'cabinetPaint'},build:b=>{ b.phys(0,1.45,0,0.34,0,0.42); b.round(0,1.45,0,0.34,0,0.42,0.004,mat.wbody); }}}}, // B: floor plinth 0.34 high (user: +0.20), 250 mm longer than A, centred under the tv (.local/консоль.png)
+    console:{ids:['console'],V:{B:{pos:[11.775,KN],size:[1.45,0.34,0.42],coat:{cabinetPaint:'hplWhite'},build:b=>{ b.phys(0,1.45,0,0.34,0,0.42); b.round(0,1.45,0,0.34,0,0.42,0.004,mat.wbody); }}}}, // B: floor plinth 0.34 high (user: +0.20), 250 mm longer than A, centred under the tv (.local/консоль.png)
     tv:{ids:['tv'],V:{B:{pos:[11.72,KN+0.02],size:[1.56,1.825,0.04],build:(b,g)=>{ ITEMS.find(i=>i.id==='tv').build(b,g); g.userData.proxy=[[0,1.56,0.925,1.825,0,0.04]]; // B: A scaled 1.2 (58" → 70") about the screen centre, still on the wall
       g.children.forEach(m=>{ if(!m.isMesh) return; m.geometry.translate(m.position.x-0.65,m.position.y-1.375,m.position.z).scale(1.2,1.2,1).translate(0.78,1.375,0); m.position.set(0,0,0); }); }}}}};
   // ---- room 3 vanity variants (select #m3vanity, one reference picture from .local/examples each): A — items.js as is (fluted
@@ -1095,17 +1101,35 @@ const PHYS={}; // id → boxes
       vmirror:VMIR(0.75,1.85,12.17,roundMirror(0.75,1.10,mat.frame))}}}}};
   // a variant with its own glb reloads it after the procedural rebuild; loadItemGlb drops a model whose url is no longer userData.glb (fast switching)
   const spec=(V,it)=>V?(V.items?V.items[it.id]:V):it; // a variant is one spec for every id of the group, or items:{id:spec|null} (null = hidden)
+  const COAT_HOOKS=[]; // colour selects re-apply their coating after a layout variant has rebuilt the item
   // one API per room: select id = <prefix><key>, saved under pulse3d.<prefix>.<key>
   function variantSelects(prefix,R){
     const API={value:{},set(key,v){ const r=R[key], V=r&&r.V&&r.V[v]; if(!r||!(v==='none'||v==='A'||V)||API.value[key]===v) return; const was=API.value[key]; API.value[key]=v;
       r.ids.forEach(id=>{ const it=ITEMS.find(i=>i.id===id), g=ITEM_GROUPS[id], src=spec(V,it)||it;
         if(V||(r.V&&r.V[was])){ g.userData.pos=src.pos.slice(); g.userData.size=src.size.slice(); g.userData.glb=src.glb; g.userData.glbRot=src.glbRot||0; g.userData.glbFacade=src.glbFacade; rebuildItem(id,src.build,src.coat); if(src.glb) loadItemGlb(id); if(window.LAY) LAY.rebase(id); }
-        const sp=spec(V,it); hideItem(id,v==='none'||sp===null||(it.hidden&&(!sp||sp===it))); }); /* hidden items (bar stools) show only where a variant spells them out */ if(V&&V.pick) Object.entries(V.pick).forEach(([k,x])=>API.pick(k,x)); }, // V.pick: a variant that forces another select (kitchen H hides the table)
+        const sp=spec(V,it); hideItem(id,v==='none'||sp===null||(it.hidden&&(!sp||sp===it))); }); /* hidden items (bar stools) show only where a variant spells them out */ COAT_HOOKS.forEach(f=>f(r.ids)); if(V&&V.pick) Object.entries(V.pick).forEach(([k,x])=>API.pick(k,x)); }, // V.pick: a variant that forces another select (kitchen H hides the table)
       pick(key,v){ const sel=document.getElementById(prefix+key); if(sel){ sel.value=v; try{ localStorage.setItem('pulse3d.'+prefix+'.'+key,v); }catch(e){} } API.set(key,v); }};
     Object.keys(R).forEach(key=>{ const KEY='pulse3d.'+prefix+'.'+key, sel=document.getElementById(prefix+key); if(!sel) return; API.value[key]='A'; let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
       if([...sel.options].some(o=>o.value===v)){ sel.value=v; API.set(key,v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} API.set(key,sel.value); }); });
     return API; }
   window.ROOM4=variantSelects('k4',R4); window.ROOM3=variantSelects('m3',R3);
+  // ---- colour selects (#k4kbase/#k4kupper, #m3wbase/#m3wupper): a coating over the item's own coat, no rebuild.
+  // 'A' keeps what the item or its layout variant declares (so kitchen D/E keep their oak wall units); any other value overrides it until switched back.
+  const DECL={}; // coat as declared before a colour override, dropped when a layout variant rebuilds the item
+  const setCoat=(id,key,c)=>{ const g=ITEM_GROUPS[id]; if(!g) return; if(window.VIZ&&VIZ.coat) return VIZ.coat(id,key,c); // materials.js loads after this file
+    const cur=g.userData.coat=Object.assign({},(ITEMS.find(i=>i.id===id)||{}).coat,g.userData.coat); cur[key]=c; };
+  function colorSelects(defs){ const recs=[];
+    const paint=({d,sel})=>d.ids.forEach(id=>{ const g=ITEM_GROUPS[id]; if(!g) return;
+      const base=DECL[id]||(DECL[id]=Object.assign({},(ITEMS.find(i=>i.id===id)||{}).coat,g.userData.coat));
+      d.keys.forEach(k=>setCoat(id,k,sel.value==='A'?base[k]:d.V[sel.value])); });
+    defs.forEach(d=>{ const sel=document.getElementById(d.sel); if(!sel) return; const KEY='pulse3d.'+d.sel;
+      let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){} if([...sel.options].some(o=>o.value===v)) sel.value=v;
+      const rec={d,sel}; recs.push(rec); paint(rec);
+      sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} paint(rec); }); });
+    COAT_HOOKS.push(ids=>{ const hit=recs.filter(r=>r.d.ids.some(i=>ids.indexOf(i)>=0)); if(!hit.length) return;
+      hit.forEach(r=>r.d.ids.forEach(i=>{ delete DECL[i]; })); hit.forEach(paint); }); }
+  colorSelects([{sel:'k4kbase',ids:['kitchen'],keys:['base','hdark'],V:{}},{sel:'k4kupper',ids:['kitchen'],keys:['upper'],V:{}},
+    {sel:'m3wbase',ids:['mward'],keys:['cabinetPaint'],V:{}},{sel:'m3wupper',ids:['mcab'],keys:['cabinetPaint'],V:{}}]); // палитра пока в один цвет: новые цвета добавляются опцией селекта и ключом в V
   (function(){ const KEY='pulse3d.desk2', sel=document.getElementById('desk2'); if(!sel) return; let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
     if(v==='A'||v==='B'){ sel.value=v; DESK2.set(v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} DESK2.set(sel.value); }); })();
 })();

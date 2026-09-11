@@ -367,7 +367,7 @@ const { launchChromium } = require('./browser');
   // realism-all stage A: shared helpers — plate/round keep the item inside size with one proxy box; new slots reach VIZ
   const helpers = await page.evaluate(() => { const fit = id => { const g = ITEM_GROUPS[id], bb = new THREE.Box3().setFromObject(g), inv = new THREE.Matrix4().copy(g.matrixWorld).invert(); bb.applyMatrix4(inv); const s = g.userData.size; return bb.min.x >= -0.001 && bb.min.y >= -0.001 && bb.min.z >= -0.001 && bb.max.x <= s[0] + 0.001 && bb.max.y <= s[1] + 0.001 && bb.max.z <= s[2] + 0.001; };
     const n = id => { let k = 0; ITEM_GROUPS[id].traverse(o => { if (o.isMesh) k++; }); return k; };
-    return { sw5: fit('sw5') && PHYS.sw5.length === 1 && n('sw5') === 3, sw7: fit('sw7') && PHYS.sw7.length === 1 && n('sw7') === 2, mirror: fit('mirror') && PHYS.mirror.length === 1 && n('mirror') === 2, slots: ['plastic', 'ceramic', 'acrylic', 'leather', 'mirror'].every(k => ITEM_MATS[k].userData.slot === k && MATERIALS[k]) }; });
+    return { sw5: fit('sw5') && PHYS.sw5.length === 1 && n('sw5') === 3, sw7: fit('sw7') && PHYS.sw7.length === 1 && n('sw7') === 2, mirror: fit('mirror') && PHYS.mirror.length === 1 && n('mirror') === 4, slots: ['plastic', 'ceramic', 'acrylic', 'leather', 'mirror'].every(k => ITEM_MATS[k].userData.slot === k && MATERIALS[k]) }; });
   Object.entries(helpers).forEach(([k, ok]) => { if (!ok) problems.push('helpers: «' + k + '» вне size, число боксов/мешей или слот не сошлись (realism-all §3/§4)'); });
   // realism-all stage B: kids room 1 — explicit proxies for every item, box count fixed so detailing never changes walk/layout
   const stageB = await page.evaluate(() => { const want = { kidbed: 9, kiddesk: 4, kidped: 4, kidchair: 5, kidshelf: 13, kidshelf2: 8, kidshelf3: 3, windowseat1: 9, kidsofa: 8, kidrug: 1, projector: 3, screen: 2, curtain: 2, kidlight: 1, track: 3, bra1: 3, bra2: 2, sw1: 1, sock1: 1, sock2: 1, sock3: 1, sock4: 1, sock5: 1, sock6: 1, sock7: 1 };
@@ -673,7 +673,7 @@ const { launchChromium } = require('./browser');
     setView('door'); VIZ.set(true); LIGHTING.set('neutral'); const wait = async f => { for (let i = 0; i < 100 && !f(); i++) await new Promise(r => setTimeout(r, 100)); return !!f(); };
     const on = (id, test) => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh && test(o)) set.add(o.material.userData.coating || 'class'); }); return [...set].sort().join(); };
     const key = k => o => { const b = VIZ.basic.get(o.material) || o.material; return b === ITEM_MATS[k] || (k === 'led' && b.name.startsWith('led:')); }, glb = n => o => o.userData.glbMat === n;
-    const out = { fronts: on('kitchen', key('base')) === 'hplFront' && on('kitchen', key('upper')) === 'hplFront' && on('console', key('base')) === 'cabinetPaint',
+    const out = { fronts: on('kitchen', key('base')) === 'hplFront' && on('kitchen', key('upper')) === 'hplFront' && on('console', key('base')) === 'hplWhite',
       stone: on('kitchen', key('top')) === 'hplPanel' && on('kitchen', key('wpanel')) === 'hplPanel', carcass: on('kitchen', key('hdark')) === 'class' && on('kitchen', key('handle')) === 'class',
       oak: on('table', key('table')) === 'oakFurniture' && ['chair1', 'chair6'].every(id => on(id, glb('paint')) === 'oakFurniture'), pads: on('chair1', glb('cushion')) === 'sofaWeave',
       sofa: ['upholstery', 'piping', 'cushion'].every(n => on('sofa', glb(n)) === 'sofaWeaveLight'), lamp: on('lamp', key('plastic')) === 'plastic',
@@ -733,7 +733,7 @@ const { launchChromium } = require('./browser');
     const on = (id, test) => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh && test(o)) set.add(o.material.userData.coating || 'class'); }); return [...set].sort().join(); };
     const key = k => o => (VIZ.basic.get(o.material) || o.material) === ITEM_MATS[k], glb = n => o => o.userData.glbMat === n, cab = o => ['body', 'door', 'wdoor', 'wpanel'].some(k => key(k)(o)), led = o => (VIZ.basic.get(o.material) || o.material).userData.slot === 'emitter';
     return { loaded,
-      casework: ['mcab', 'mward', 'vanity', 'wsecA', 'wsecC', 'wend', 'wpeg'].every(id => on(id, cab) === 'cabinetPaint') && on('mbed', glb('dark')) === 'oakFurniture',
+      casework: ['mcab', 'mward'].every(id => on(id, cab) === 'oliveFront') && ['vanity', 'wsecA', 'wsecC', 'wend', 'wpeg'].every(id => on(id, cab) === 'cabinetPaint') && on('mbed', glb('dark')) === 'oakFurniture',
       bed: ['kmat', 'pillow', 'cover'].every(n => on('mbed', glb(n)) === 'curtainLinen') && on('mbed', glb('leather')) === 'class',
       pouf: on('vpouf', glb('leather')) === 'class' && on('vpouf', glb('metal')) === 'class', rug: on('mrug', key('cushion')) === 'rugPile', drape: on('mcurtain', key('drape')) === 'curtainLinen',
       plastic: ['bra5', 'sock14', 'sw6'].every(id => on(id, key('plastic')) === 'plastic') && on('bra5', led) === 'class' && on('mward', key('frame')) === 'class',
@@ -1117,8 +1117,8 @@ const { launchChromium } = require('./browser');
     const area = p => Math.abs(p.reduce((s, q, i) => { const r = p[(i + 1) % p.length]; return s + q[0] * r[1] - r[0] * q[1]; }, 0)) / 2;
     const y = meshes.length ? new THREE.Box3().setFromObject(meshes[0]).min.y : -1;
     const d5 = PLAN.doors[5], s5 = TILE_SILLS[5], sillOk = Math.abs(Math.min(...s5.map(q => q[1])) - (d5[1] - d5[3] / 2)) < 1e-9 && Math.abs(Math.min(...s5.map(q => q[0])) - d5[0]) < 1e-9;
-    const cb = document.getElementById('tileFloor'), fin0 = finishGroup.visible; cb.checked = false; cb.dispatchEvent(new Event('change')); const hid = !tileGroup.visible && finishGroup.visible === fin0; // the layer is on by default
-    cb.checked = true; cb.dispatchEvent(new Event('change')); const shown = tileGroup.visible;
+    const cb = document.getElementById('h5tile'), fin0 = finishGroup.visible; cb.value = 'none'; cb.dispatchEvent(new Event('change')); const hid = !tileGroup.visible && finishGroup.visible === fin0; // «Коридор → Плитка пол», вариант A по умолчанию
+    cb.value = 'A'; cb.dispatchEvent(new Event('change')); const shown = tileGroup.visible;
     const fin = document.getElementById('finish'); fin.checked = false; fin.dispatchEvent(new Event('change')); const tileKept = tileGroup.visible && !finishGroup.visible; fin.checked = true; fin.dispatchEvent(new Event('change'));
     VIZ.set(true); setView('fpv'); VIZ.apply && VIZ.apply(); const std = meshes[0].material.type; VIZ.set(false);
     return { n: meshes.length, area: area(TILE_POLY), y, sillOk, toggle: hid && shown && tileKept, std, sills: TILE_SILLS.length };
@@ -1147,11 +1147,11 @@ const { launchChromium } = require('./browser');
   if (lg.walls < 3) problems.push('лоджия 10: крашеных стеновых панелей ' + lg.walls + ' (< 3)');
   await page.evaluate(() => { setView('fpv'); controls.setFPV(14.45, 4.7, Math.PI / 2 + 0.3); }); await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(outDir, 'balcony10-glazing.png') });
-  // floor layer 3: oak board over the living zone of room 4 (x 10.36–13.47) and the loggia, its own checkbox, PBR twin in visualization
+  // floor layer 3: oak board over the living zone of room 4 (x 10.36–13.47) and the loggia, select «Покрытие», PBR twin in visualization
   const bd = await page.evaluate(() => {
     const meshes = []; boardGroup.traverse(o => { if (o.isMesh) meshes.push(o); });
     const b = new THREE.Box3().setFromObject(boardGroup);
-    const cb = document.getElementById('boardFloor'); cb.checked = false; cb.dispatchEvent(new Event('change')); const hid = !boardGroup.visible && tileGroup.visible; cb.checked = true; cb.dispatchEvent(new Event('change')); // on by default
+    const cb = document.getElementById('k4board'); cb.value = 'none'; cb.dispatchEvent(new Event('change')); const hid = !boardGroup.visible && tileGroup.visible; cb.value = 'A'; cb.dispatchEvent(new Event('change')); // «Кухня-гостиная → Покрытие», вариант A по умолчанию
     VIZ.set(true); setView('fpv'); VIZ.apply && VIZ.apply(); const std = meshes[0].material.type; VIZ.set(false);
     const frost = []; glassGroup.traverse(o => { if (o.isMesh && o.material === loggiaFrostMat) frost.push(o); });
     return { n: meshes.length, box: [b.min.x, b.max.x, b.min.z, b.max.z, b.min.y], hid, shown: boardGroup.visible, std, frost: frost.length };
