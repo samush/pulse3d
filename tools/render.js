@@ -4,6 +4,7 @@
 //   node tools/render.js <ракурс> --fix "<что должно быть>"    # правка предыдущего результата, до трёх на кадр
 //   node tools/render.js <ракурс> --set sofa=G,table=none --ref r4-door --as dining-1
 //   node tools/render.js <ракурс> --wide                        # исходная камера пресета, широкий угол под потолком
+//   node tools/render.js <ракурс> --film                        # пасмурный свет, зерно и несовершенства съёмки (раздел «## film» в STYLE.md)
 //
 // Промпт — render/STYLE.md, порядок работы — .claude/skills/render/SKILL.md, приёмы — docs/render-guide.md.
 // Ключ GEMINI_API_KEY приходит из окружения (hub run claude).
@@ -28,6 +29,7 @@ const SET = flag('set', '');   // варианты комнаты 4 в кадр�
 const REF = flag('ref', '');   // готовый рендер другого ракурса — эталон материалов и палитры
 const AS = flag('as', '');   // имя варианта: без него результат зовётся именем ракурса
 const LABELS = has('labels');
+const FILM = has('film');   // «как снято на телефон в пасмурный день»: включается только по явной просьбе
 const PHOTO = !has('wide');   // по умолчанию высота глаз и нормальный объектив; --wide — исходная камера пресета под потолком
 
 const DIR = { frames: path.join(root, 'render', 'frames'), final: path.join(root, 'render', 'final'), wip: path.join(root, 'render', 'wip'), meta: path.join(root, 'render', '.meta') };
@@ -110,6 +112,7 @@ async function send() {
   const style = fs.readFileSync(path.join(root, 'render', 'STYLE.md'), 'utf8');
   const shot = style.split(/^## /m).find(s => s.startsWith(cam));                            // «## <ракурс>» — заметки именно про этот вид
   const common = style.split(/^## /m)[0].trim();
+  const film = FILM ? '\n' + ((style.split(/^## /m).find(s => s.startsWith('film')) || '').replace(/^film\s*/, '').trim() || 'Re-shoot as an ordinary photograph on an overcast day: soft cool daylight, uneven exposure, visible fine grain, no studio gloss.') : '';   // раздел «## film» в STYLE.md; fallback — если его удалили
   const meta = readMeta();
   let facts = null; try { facts = JSON.parse(fs.readFileSync(factsPath, 'utf8')); } catch (e) {}
   const scale = facts ? 'Real dimensions of this shot, in metres — respect them, the room is small: floor '
@@ -131,13 +134,13 @@ async function send() {
     // правка, а не перегенерация: что менять — одной фразой, всё остальное сохраняется дословно; якорь геометрии идёт последним, от него наследуется кадрирование
     prompt = 'Image 1 is a photorealistic render to edit. Image 2 is the 3D scene it was made from — the geometry anchor: room shape, openings, camera and the placement of large furniture must match it.\n\n'
       + 'Keep everything else in image 1 exactly the same — same geometry, same camera, same materials, same lighting, same aspect ratio. Only fix: ' + fix + '\n\n'
-      + (shot ? 'Shot notes: ' + shot.trim() + '\n\n' : '') + (scale ? scale + '\n\n' : '') + 'Style reminder: ' + common.split('\n\n').slice(3).join(' ').slice(0, 900);
+      + (shot ? 'Shot notes: ' + shot.trim() + '\n\n' : '') + (scale ? scale + '\n\n' : '') + 'Style reminder: ' + common.split('\n\n').slice(3).join(' ').slice(0, 900) + film;
     input = [{ type: 'text', text: prompt }, img(prev), img(framePath)];   // якорь последним: от него наследуется кадрирование
     console.log('правка ' + fixes + '/' + MAX_FIXES + ' на ' + MODEL);
   } else {
     fixes = 0;
     const refNote = REF ? '\nImage 1 is a finished render of the same flat from another angle. Copy its finishes exactly: the same cabinet colour and fronts, the same floor, worktop, backsplash, wall paint, textiles and light temperature. It is a material reference only — take no geometry from it. The last image is the 3D scene for this shot and the only source of geometry, camera and furniture placement.' : '';
-    prompt = [common, shot ? '\n## ' + shot.trim() : '', scale, refNote, flag('note', '') && '\nAlso for this shot: ' + flag('note', '')].filter(Boolean).join('\n');
+    prompt = [common, shot ? '\n## ' + shot.trim() : '', scale, refNote, film, flag('note', '') && '\nAlso for this shot: ' + flag('note', '')].filter(Boolean).join('\n');
     input = [{ type: 'text', text: prompt }].concat(REF ? [img(refPath)] : []).concat([img(framePath)]);
     console.log('база на ' + MODEL + ', ' + SIZE + ' ' + ASPECT);
   }
@@ -159,6 +162,6 @@ async function send() {
     fs.renameSync(prev, path.join(DIR.wip, base + '-' + st + '.jpg'));
   }
   fs.writeFileSync(prev, Buffer.from(out.data, 'base64'));
-  fs.writeFileSync(path.join(DIR.meta, base + '.json'), JSON.stringify({ cam, model: MODEL, size: SIZE, aspect: ASPECT, viewport: [W, H], set: SET || undefined, ref: REF || undefined, fixes, note: flag('note', '') || undefined, lastFix: fix || undefined, prompt, at: new Date().toISOString() }, null, 1));
+  fs.writeFileSync(path.join(DIR.meta, base + '.json'), JSON.stringify({ cam, model: MODEL, size: SIZE, aspect: ASPECT, viewport: [W, H], set: SET || undefined, ref: REF || undefined, film: FILM || undefined, fixes, note: flag('note', '') || undefined, lastFix: fix || undefined, prompt, at: new Date().toISOString() }, null, 1));
   console.log('готово: ' + rel(prev) + '\nкадр:   ' + rel(framePath));
 }

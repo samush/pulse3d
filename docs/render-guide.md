@@ -195,6 +195,7 @@ Aspect ratio: keep identical to the input image. Do not change the input aspect 
 - [ ] Комната не выглядит «стерильной шоурумной» — уместны лёгкие естественные несовершенства (складка на пледе, книга под углом)
 - [ ] Не все предметы расставлены идеально симметрично/по линейке без вариаций
 - [ ] Есть разумное количество «жилых» деталей (текстиль, растения, мелкий декор), но без визуального захламления
+- [ ] Кадр выглядит как снятый на смартфон/фотоаппарат агентством недвижимости, а не как студийный CGI-рендер: нет идеально ровного студийного света, есть естественный шум/зерно и небольшие несовершенства баланса белого (см. §10)
 
 ([источник: MeltFlex AI](https://www.meltflexai.com/blog/why-ai-renders-look-fake))
 
@@ -268,6 +269,60 @@ to match the reference" / "the sofa fabric to matte boucle instead of glossy lea
 ```
 
 ---
+
+## 10. Как убрать «рендерный» глянец и получить эффект живого снимка
+
+Эта проблема — частный случай пункта «Реализм» из чек-листа (§8), настолько частый, что заслуживает отдельного разбора и готового промпта.
+
+### Почему кадр выглядит «искусственным»
+
+Если сравнить сгенерированный кадр с реальными фотографиями из объявлений о недвижимости, разница системная, а не случайная:
+
+| Признак рендера | Как выглядит на реальном фото |
+|---|---|
+| Идеально ровный студийный свет без пересветов и бликов | Смешанный свет (тёплые лампы + холодный день из окна), реальные пересветы у окна, блики на глянцевых поверхностях |
+| Идеальная симметрия, кадр выровнен по уровню | Лёгкий наклон, неидеальное кадрирование, геометрические искажения широкоугольной камеры телефона по краям |
+| Стерильная сцена без единого лишнего предмета | Бытовой шум: пульт, зарядка, случайный стул, неаккуратно висящее полотенце |
+| «Пластиковая» безупречность материалов | Разводы на фасадах, потёртости пола, неидеальные швы плитки |
+| Ровный, «каталожный» баланс белого | Баланс белого «плывёт» под лампами, лёгкий цифровой шум, обычная JPEG-резкость смартфона, а не ретушированный HDR |
+
+Вывод: просьба «сделай реалистичнее» не работает, потому что она ничего не говорит модели о физическом носителе съёмки. Нужно явно попросить имитировать **конкретное устройство и условия съёмки** (телефон агента по недвижимости, а не архитектурную камеру) и явно **разрешить** несовершенства — модель по умолчанию тяготеет к «отретушированному» результату, если её не остановить.
+
+### Готовый промпт (правка уже сгенерированного кадра, диалоговый режим — «edit, don't re-roll»)
+
+```
+Keep the room geometry, furniture and materials exactly the same. Re-render this as if
+it were an ordinary smartphone photo taken by a real-estate agent for an online listing
+— not a professional architectural photograph.
+
+Camera: shot handheld on a phone's wide-angle lens, slightly uneven framing, not
+perfectly level, mild edge distortion typical of a phone camera, natural handheld
+perspective rather than a tripod-perfect architectural angle.
+
+Lighting: realistic mixed lighting — warm ceiling lights combined with cooler daylight
+from the window, uneven exposure with a slightly overexposed bright patch near the
+window, visible soft glare on glossy surfaces (extractor hood, faucet, glass), natural
+falloff into darker corners rather than even studio-balanced light.
+
+Surface realism: matte and semi-gloss surfaces show believable everyday wear — faint
+smudges and fingerprints on cabinet fronts, minor scuffs on the floor, slightly uneven
+grout lines, countertop with a few realistic objects in mild disorder rather than a
+perfectly staged arrangement.
+
+Photo processing: natural phone-camera color rendering — slightly warm white balance
+under artificial light, mild sensor noise/grain, ordinary JPEG sharpness rather than
+high-end retouched HDR processing.
+
+Avoid: glossy CGI/render look, magazine-perfect symmetry, spotless catalog surfaces,
+uniform studio lighting, ultra-smooth HDR tone mapping.
+```
+
+### Дополнительные приёмы
+
+- **Правьте, а не перегенерируйте.** Подавайте этот промпт как реплику в том же диалоге, где был создан исходный кадр — так сохранятся геометрия и материалы, изменится только «фотографичность» (см. принцип «Edit, don't re-roll» в §5).
+- **Используйте реальное фото как референс фотореализма, а не геометрии.** Приложите одно из ваших реальных фото с Авито вторым изображением и явно назовите его роль: *«use the attached real photo only as a reference for camera realism, lighting and photographic imperfection — not for room layout, furniture or materials»*. Это использует способность Gemini к переносу стиля/фактуры съёмки отдельно от геометрии.
+- **Замените профессиональную операторскую лексику на любительскую.** В базовых промптах (§3) для финальных «глянцевых» кадров вы используете `architectural lens`, `professional photograph` — для этой задачи, наоборот, явно укажите `smartphone camera`, `real-estate listing photo`, `handheld`, `amateur photography`, это один из самых сильных рычагов управления реализмом.
+- **Не переусердствуйте.** Если после правки кадр стал слишком «грязным» или тёмным — уточняющей репликой попросите смягчить конкретный параметр («keep the same realism, but slightly brighten the room and reduce the noise»), а не отменяйте всю правку.
 
 ## Источники
 

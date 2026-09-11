@@ -232,6 +232,8 @@ const CAMS=[ // fixed room cameras (selector «Камера»): pos [x,y,z] m, t
   {id:'r4-window',label:'кухня-гостиная (вид 3)',pos:[13.3,2.5,2.5],theta:-0.89,phi:Math.PI/2+0.33,fov:80},
   {id:'r4-sw',label:'кухня-гостиная (вид 4)',pos:[9.1,2.5,6.1],theta:2.26,phi:Math.PI/2+0.33,fov:80},
   {id:'r4-arch',label:'кухня-гостиная (вид 5)',pos:[13.6,1.7,4.16],theta:-1.59,phi:Math.PI/2+0.04,fov:75},
+  {id:'r4-mid',label:'кухня-гостиная (вид 6)',pos:[12.40,1.60,4.23],theta:-1.571,phi:Math.PI/2+0.03,fov:65}, // eye level from the middle of the living zone, straight down the room at the kitchen (user, 2026-09-11)
+  {id:'r4-ne',label:'кухня-гостиная (вид 7)',pos:[12.97,1.60,2.82],theta:-0.97,phi:Math.PI/2+0.03,fov:65}, // eye level from the north-east corner: kitchen on the right, hall doorway ahead (user, 2026-09-11)
   {id:'r5-entry',label:'коридор (вид 1)',pos:[7.3,2.5,7.3],theta:-3.11,phi:Math.PI/2+0.3,fov:80},
   {id:'r6',label:'гардеробная (вид 1)',pos:[6.55,2.4,3.65],theta:-2.74,phi:Math.PI/2+0.5,fov:80},
   {id:'r7',label:'постирочная (вид 1)',pos:[7.5,2.55,3.5],theta:Math.PI,phi:Math.PI/2+0.7,fov:80},

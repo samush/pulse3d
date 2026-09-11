@@ -37,3 +37,22 @@ The floor in the foreground stays open — no dining table, no chairs, no coffee
 ## r4-sw
 The same kitchen-living room seen from the south-west (camera 4.4). The corner kitchen runs along the left wall with its worktop, backsplash and tall units; the walnut slat panel with the wall-mounted TV and the white floating console is on the far wall in the centre; to the right of it a full-height glazed balcony door with a railing behind it, and the sofa without armrests in the right foreground.
 The middle of the room is open floor — this layout has no dining table and no chairs. Tile in the kitchen zone meets oak plank flooring on a straight flush line.
+
+## r4-mid
+The same kitchen-living room seen from the middle of the living zone, at eye level, looking straight west down the room at the kitchen (camera 4.6). The corner kitchen fills the far wall: the tall appliance column with two built-in ovens and the fridge column stand in the centre of the frame, the sink run with its worktop and wall units to the right of them, then the corner and the short leg along the right-hand wall with the hob under its own wall unit. The dining table with its chairs is in the right foreground, cut by the frame edge. On the left, past the kitchen, the bright opening in the side wall is the doorway to the hall — a doorway, never a window. The right edge of the frame carries the walnut slat panel of the TV wall and the wall lamp over the table. The floor in the centre stays open: large-format porcelain tile in the kitchen zone meets oak plank flooring in the living zone on a straight flush joint with no threshold strip.
+
+## r4-ne
+The same kitchen-living room seen from the north-east corner, at eye level, looking west-south-west across the room (camera 4.7). The sofa without armrests is in the left foreground, the walnut slat panel of the sofa wall closes the left edge of the frame and a framed picture hangs on the painted wall beside it. In the centre of the far wall is the doorway to the hall with a light door visible beyond it — a doorway, never a window. The kitchen takes the right half of the frame: the appliance and fridge columns, the wall units over the sink run, the worktop with its sink and mixer, and the dining table with its chairs in the right foreground. Same finishes as the other shots of this room: same cabinet colour, same tile, same oak floor, same slat walnut.
+
+## film
+Photographic realism pass — the result must read as a photograph of this flat, not as an architectural render. Keep the geometry, the furniture, the layout and the materials exactly as described above; change only how the picture was shot and processed.
+
+Lighting: an overcast day — soft, cool, even daylight through the windows with no hard sun patches, mixed with the warm lamps already present in the scene. Exposure is uneven: a slightly blown-out area near the window, natural falloff into darker corners, no flat studio fill.
+
+Camera: an ordinary handheld photo at eye level, framing not perfectly level, natural perspective instead of a tripod-perfect architectural angle. No fisheye, no wide-angle stretching.
+
+Surfaces: believable everyday wear — faint smudges and fingerprints on cabinet fronts, light scuffs on the floor, slightly uneven grout lines, soft glare on glossy surfaces (hood, faucet, glass), a few objects in mild disorder rather than a staged arrangement.
+
+Processing: natural camera colour, slightly warm white balance under the lamps, visible fine grain — a bit more than a clean render, still a photograph and not noise — ordinary JPEG sharpness instead of retouched HDR.
+
+Avoid: glossy CGI look, magazine-perfect symmetry, spotless catalog surfaces, uniform studio lighting, ultra-smooth HDR tone mapping.
