@@ -143,38 +143,39 @@ const PHYS={}; // id → boxes
   const KZ0=0.70, KZ1=2.99, KLX=[0.70,1.43];  // base run between the north element and the appliance column; x of B's short leg along the north wall
   const PX0=1.52, PX1=2.32;                   // H: x of the bar peninsula (0.80 wide), west edge 0.82 off the west run's worktop front (KD 0.70)
   const KSINK=[0.73,1.43], KHOB=[2.06,2.56];  // sink cut-out 0.70 and hob module 0.50 along z; the worktop strip x < 0.13 behind the bowl carries the mixer and the dispenser
+  // worktop top at 0.75 (user 2026-09-11): base carcass 0.10–0.71, slab 0.712–0.75; columns and wall units keep their heights
   function kitchenBuild(b,g,mode){ const corner=mode!=='A', I=mode==='I', H=mode==='H'||I, G=mode==='G'||H, LX1=H?KLX[1]+0.35:KLX[1], F=mode==='F'||G, Z1=F?2.29:KZ1, HOB=G?[0.70,1.20]:F?[1.79,2.29]:KHOB, SINK=G?[1.49,2.19]:KSINK; // F: fridge column moved next to the appliance column (z 2.29–2.99), run shortened, hob beside the column; G: F with the hob at the corner and the sink 0.10 short of the column; H: short leg 0.35 longer (LX1); I: hob on the short leg under its own wall unit
      const gap=0.003, front=(y0,y1,z0,z1,m)=>b.round(KC,KC+0.02,y0+gap/2,y1-gap/2,z0+gap/2,z1-gap/2,0.001,m); // fronts face +x; carcasses sit behind them so the 3 mm gaps read as dark lines
      const doors=(x0,x1,z0,z1,rows,m)=>rows.forEach(([y0,y1])=>b.round(x0,x1,y0+gap/2,y1-gap/2,z0,z1,0.002,m)); // 40 mm column doors, flush with the worktop edge
      /* proxy = pre-detail AABBs (realism-all A) */
      if(!corner) b.phys(0,KD+0.03,0,2.69,0,0.70);                                                                       // A: fridge column in the north corner
-     else { b.phys(0,KC,0,0.91,0,0.70); b.phys(KLX[0],LX1,0,0.91,0,KD);                                              // B/F: blind corner base, short leg
+     else { b.phys(0,KC,0,0.75,0,0.70); b.phys(KLX[0],LX1,0,0.75,0,KD);                                              // B/F: blind corner base, short leg
        if(F){ b.phys(0,KD+0.03,0,2.69,Z1,KZ1); b.phys(0,0.36,1.45,2.69,0,0.70); }                                      // F: fridge column inside the run, corner wall unit up to the north wall
-       if(H){ b.phys(KLX[1],PX1,0.87,0.91,0,KD); b.phys(PX0,PX1,0.87,0.91,KD,1.80); [[PX0,1.76],[PX1-0.04,1.76],[PX1-0.04,0.02]].forEach(([x,z])=>b.phys(x,x+0.04,0,0.87,z,z+0.04)); } // H: bar counter and its three posts
+       if(H){ b.phys(KLX[1],PX1,0.71,0.75,0,KD); b.phys(PX0,PX1,0.71,0.75,KD,1.80); [[PX0,1.76],[PX1-0.04,1.76],[PX1-0.04,0.02]].forEach(([x,z])=>b.phys(x,x+0.04,0,0.71,z,z+0.04)); } // H: bar counter and its three posts
        else { b.phys(0,0.36,1.45,2.69,0,0.70); b.phys(0.36,KLX[1],1.45,2.69,0,0.36); b.phys(KLX[1],KLX[1]+0.80,0,2.69,0,KD+0.03); } } // B: corner wall unit, short-leg wall units, fridge column
-     b.phys(0,KC,0.1,0.87,KZ0,Z1); b.phys(0,KD,0.87,0.91,KZ0,Z1); b.phys(KC,KC+0.024,0.1,0.87,KZ0,Z1);               // base run: carcass, worktop, fronts with handles
-     if(I){ b.phys(0.90,1.40,0.905,0.925,0.08,0.60); b.phys(0.36,LX1,1.45,2.69,0,0.36); } else b.phys(0.08,0.60,0.905,0.925,HOB[0],HOB[1]); b.phys(0.13,0.57,0.72,0.93,SINK[0],SINK[1]);                      // hob and undermount bowl
+     b.phys(0,KC,0.1,0.71,KZ0,Z1); b.phys(0,KD,0.71,0.75,KZ0,Z1); b.phys(KC,KC+0.024,0.1,0.71,KZ0,Z1);               // base run: carcass, worktop, fronts with handles
+     if(I){ b.phys(0.90,1.40,0.745,0.765,0.08,0.60); b.phys(0.36,LX1,1.45,2.69,0,0.36); } else b.phys(0.08,0.60,0.745,0.765,HOB[0],HOB[1]); b.phys(0.13,0.57,0.56,0.77,SINK[0],SINK[1]);                      // hob and undermount bowl
      const mz=(SINK[0]+SINK[1])/2, sd=SINK[0]+0.09; // centre of the bowl, soap dispenser north of the mixer
-     b.phys(0.05,0.33,0.90,1.29,mz-0.02,mz+0.02); b.phys(0.05,0.13,0.90,0.99,sd-0.02,sd+0.02);                                      // mixer and soap dispenser
+     b.phys(0.05,0.33,0.74,1.13,mz-0.02,mz+0.02); b.phys(0.05,0.13,0.74,0.83,sd-0.02,sd+0.02);                                      // mixer and soap dispenser
      b.phys(0,0.36,1.45,2.69,KZ0,Z1); b.phys(0,KD+0.03,0,2.69,KZ1,3.59);                                               // wall units and the appliance column
      // ---- north end of the run
      if(!corner){ b(0,KC,0.1,2.69,0,0.70,mat.hdark); b(0,KP,0,0.1,0,0.70,mat.dark);                                     // A: fridge column 0.70, carcass and plinth
        doors(KC,KD,0.02,0.68,[[0.10,0.30],[0.30,2.00],[2.00,2.69]],mat.base);                                           // drawer below, fridge door, freezer above
        b.handle(KD,1.40,0.06,0.5,'y','x'); b.handle(KD,2.30,0.06,0.3,'y','x'); }
-     else { b(0,KC,0.1,0.87,0,0.70,mat.hdark); b(0,KP,0,0.1,0,0.70,mat.dark); front(0.1,0.87,0,0.70,mat.base);          // B: blind corner base with a plain panel (the short leg blocks it)
+     else { b(0,KC,0.1,0.71,0,0.70,mat.hdark); b(0,KP,0,0.1,0,0.70,mat.dark); front(0.1,0.71,0,0.70,mat.base);          // B: blind corner base with a plain panel (the short leg blocks it)
        b(0,0.34,1.45,2.69,0,0.70,mat.hdark); b.round(0.34,0.36,1.45+gap/2,2.69-gap/2,(F&&!I?0:0.36)+gap/2,0.70-gap/2,0.001,mat.upper); // corner wall unit: B a narrow door past the short-leg unit, F (no units on the short leg) a full 0.70 door up to the wall
        if(F&&!I) b.handle(0.36,1.50,0.60,0.16,'z','x');
        if(I){ b(0.36,LX1,1.45,2.69,0,0.34,mat.hdark); [[0.36,1.07],[1.07,LX1]].forEach(([x0,x1])=>{ b.round(x0+gap/2,x1-gap/2,1.45+gap/2,2.69-gap/2,0.34,0.36,0.001,mat.upper); b.handle((x0+x1)/2,1.50,0.36,0.16,'x','z'); }); } // I: wall unit over the short leg, the hob sits under it
        if(H){ // H (user 2026-09-11, .local/bar): the worktop runs on along the north wall to PX1 and bends into a peninsula 0.80×1.80 towards the room, 0.82 off the west run's worktop (user: 0.80) — one 40 mm slab on a slim 40×40 frame, open underneath
          const bar=polyXZ([[KLX[1],0.002],[PX1-0.002,0.002],[PX1-0.002,1.798],[PX0+0.002,1.798],[PX0+0.002,KD-0.002],[KLX[1],KD-0.002]]);
-         g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(bar,{depth:0.036,bevelThickness:0.002,bevelSize:0.002,bevelSegments:1,curveSegments:2}).rotateX(Math.PI/2).translate(0,0.908,0),mat.top));
-         b(0.02,PX1,0.91,1.45,0,0.02,mat.wpanel);                                                                      // splashback continues to the end of the wall run
-         [[PX0,1.76],[PX1-0.04,1.76],[PX1-0.04,0.02]].forEach(([x,z])=>b(x,x+0.04,0,0.87,z,z+0.04,mat.frame));             // posts: the two far corners and the east edge at the wall; the west side rests on the base unit
-         b(LX1,PX1,0.83,0.87,0.02,0.06,mat.frame);                                                                        // rail under the top along the wall past the base unit
-         b(PX0,PX0+0.04,0.83,0.87,KD,1.80,mat.frame); b(PX1-0.04,PX1,0.83,0.87,0.06,1.80,mat.frame); b(PX0,PX1,0.83,0.87,1.76,1.80,mat.frame); } // peninsula perimeter
-       b(KLX[0],LX1,0.1,0.87,0.02,KC,mat.hdark); b(KLX[0],LX1,0,0.1,0.02,KP,mat.dark);                            // short leg along the north wall: base carcass and plinth, fronts face +z
-       [[0.1,0.35],[0.35,0.6],[0.6,0.87]].forEach(([y0,y1])=>{ b.round(KLX[0]+gap/2,LX1-gap/2,y0+gap/2,y1-gap/2,KC,KC+0.02,0.001,mat.base); b.handle((KLX[0]+LX1)/2,y1-0.05,KC+0.02,0.2,'x','z'); }); // three drawers
-       b(0.02,KLX[1],0.91,1.45,0,0.02,mat.wpanel);                                                                      // splashback of the short leg
+         g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(bar,{depth:0.036,bevelThickness:0.002,bevelSize:0.002,bevelSegments:1,curveSegments:2}).rotateX(Math.PI/2).translate(0,0.748,0),mat.top));
+         b(0.02,PX1,0.75,1.45,0,0.02,mat.wpanel);                                                                      // splashback continues to the end of the wall run
+         [[PX0,1.76],[PX1-0.04,1.76],[PX1-0.04,0.02]].forEach(([x,z])=>b(x,x+0.04,0,0.71,z,z+0.04,mat.frame));             // posts: the two far corners and the east edge at the wall; the west side rests on the base unit
+         b(LX1,PX1,0.67,0.71,0.02,0.06,mat.frame);                                                                        // rail under the top along the wall past the base unit
+         b(PX0,PX0+0.04,0.67,0.71,KD,1.80,mat.frame); b(PX1-0.04,PX1,0.67,0.71,0.06,1.80,mat.frame); b(PX0,PX1,0.67,0.71,1.76,1.80,mat.frame); } // peninsula perimeter
+       b(KLX[0],LX1,0.1,0.71,0.02,KC,mat.hdark); b(KLX[0],LX1,0,0.1,0.02,KP,mat.dark);                            // short leg along the north wall: base carcass and plinth, fronts face +z
+       [[0.1,0.30],[0.30,0.50],[0.50,0.71]].forEach(([y0,y1])=>{ b.round(KLX[0]+gap/2,LX1-gap/2,y0+gap/2,y1-gap/2,KC,KC+0.02,0.001,mat.base); b.handle((KLX[0]+LX1)/2,y1-0.05,KC+0.02,0.2,'x','z'); }); // three drawers
+       b(0.02,KLX[1],0.75,1.45,0,0.02,mat.wpanel);                                                                      // splashback of the short leg
        if(F){ b(0,KC,0.1,2.69,Z1,KZ1,mat.hdark); b(0,KP,0,0.1,Z1,KZ1,mat.dark);                                         // F: fridge column between the run and the appliance column, short leg stays worktop only (an island or bar may grow from it later)
          doors(KC,KD,Z1+0.02,KZ1-0.02,[[0.10,0.30],[0.30,2.00],[2.00,2.69]],mat.base); b.handle(KD,1.40,Z1+0.06,0.5,'y','x'); b.handle(KD,2.30,Z1+0.06,0.3,'y','x'); }
        else { b(0.36,KLX[1],1.45,2.69,0,0.34,mat.hdark); [[0.36,0.90],[0.90,KLX[1]]].forEach(([x0,x1])=>{ b.round(x0+gap/2,x1-gap/2,1.45+gap/2,2.69-gap/2,0.34,0.36,0.001,mat.upper); b.handle((x0+x1)/2,1.50,0.36,0.16,'x','z'); }); // B: wall units, 2 doors
@@ -182,31 +183,31 @@ const PHYS={}; // id → boxes
          doors(FX+0.02,FX+FW-0.02,KC,KD,[[0.10,0.30],[0.30,2.00],[2.00,2.69]],mat.base);
          b.handle(FX+0.07,1.40,KD,0.5,'y','z'); b.handle(FX+0.07,2.30,KD,0.3,'y','z'); } }
      // ---- base run: carcass, plinth, fronts
-     b(0,KC,0.1,0.87,KZ0,Z1,mat.hdark); b(0,KP,0,0.1,KZ0,Z1,mat.dark);
+     b(0,KC,0.1,0.71,KZ0,Z1,mat.hdark); b(0,KP,0,0.1,KZ0,Z1,mat.dark);
      (I?[[KZ0,1.46,'drawers'],[1.46,2.29,'door']]:G?[[KZ0,1.20,'drawers2'],[1.20,1.46,'drawers'],[1.46,2.29,'door']]:F?[[KZ0,1.46,'door'],[1.46,1.79,'drawers'],[1.79,2.29,'drawers2']]:[[KZ0,1.46,'door'],[1.46,2.06,'drawers'],[2.06,2.56,'drawers2'],[2.56,KZ1,'door']]).forEach(([z0,z1,k])=>{
-       if(k==='door'){ front(0.1,0.87,z0,z1,mat.base); b.handle(KC+0.02,0.80,(z0+z1)/2,0.16,'z','x'); }
-       else { const ys=k==='drawers'?[0.1,0.35,0.6,0.87]:[0.1,0.5,0.87]; for(let i=0;i<ys.length-1;i++){ front(ys[i],ys[i+1],z0,z1,mat.base); b.handle(KC+0.02,ys[i+1]-0.05,(z0+z1)/2,0.2,'z','x'); } } });
+       if(k==='door'){ front(0.1,0.71,z0,z1,mat.base); b.handle(KC+0.02,0.64,(z0+z1)/2,0.16,'z','x'); }
+       else { const ys=k==='drawers'?[0.1,0.30,0.50,0.71]:[0.1,0.40,0.71]; for(let i=0;i<ys.length-1;i++){ front(ys[i],ys[i+1],z0,z1,mat.base); b.handle(KC+0.02,ys[i+1]-0.05,(z0+z1)/2,0.2,'z','x'); } } });
      // ---- worktop 40 mm with the sink cut-out; L-shaped in the corner kitchen
      const sh=corner?polyXZ([[0.002,0.002],[KLX[1],0.002],[KLX[1],KD-0.002],[KD-0.002,KD-0.002],[KD-0.002,Z1-0.002],[0.002,Z1-0.002]])
                     :rrectXZ(0.002,KD-0.002,KZ0+0.002,Z1-0.002,0.002);
      sh.holes.push(rrectXZ(0.13,0.57,SINK[0],SINK[1],0.02));
-     g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.036,bevelThickness:0.002,bevelSize:0.002,bevelSegments:1,curveSegments:2}).rotateX(Math.PI/2).translate(0,0.908,0),mat.top));
-     b(0.13,0.57,0.72,0.73,SINK[0],SINK[1],mat.frame); [[0.13,0.14],[0.56,0.57]].forEach(([x0,x1])=>b(x0,x1,0.72,0.905,SINK[0],SINK[1],mat.frame));
-     [[SINK[0],SINK[0]+0.01],[SINK[1]-0.01,SINK[1]]].forEach(([z0,z1])=>b(0.13,0.57,0.72,0.905,z0,z1,mat.frame)); // undermount bowl
+     g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.036,bevelThickness:0.002,bevelSize:0.002,bevelSegments:1,curveSegments:2}).rotateX(Math.PI/2).translate(0,0.748,0),mat.top));
+     b(0.13,0.57,0.56,0.57,SINK[0],SINK[1],mat.frame); [[0.13,0.14],[0.56,0.57]].forEach(([x0,x1])=>b(x0,x1,0.56,0.745,SINK[0],SINK[1],mat.frame));
+     [[SINK[0],SINK[0]+0.01],[SINK[1]-0.01,SINK[1]]].forEach(([z0,z1])=>b(0.13,0.57,0.56,0.745,z0,z1,mat.frame)); // undermount bowl
      // ---- chrome mixer with a pull-down spout and a built-in soap dispenser beside it, both on the worktop strip behind the bowl
-     const curve=new THREE.CatmullRomCurve3([[0.075,0.92],[0.075,1.16],[0.09,1.25],[0.19,1.28],[0.29,1.23],[0.31,1.15]].map(([x,y])=>new THREE.Vector3(x,y,mz)));
+     const curve=new THREE.CatmullRomCurve3([[0.075,0.76],[0.075,1.00],[0.09,1.09],[0.19,1.12],[0.29,1.07],[0.31,0.99]].map(([x,y])=>new THREE.Vector3(x,y,mz)));
      g.add(new THREE.Mesh(new THREE.TubeGeometry(curve,20,0.013,10),mat.handle));
-     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.02,16).translate(0.075,0.918,mz),mat.handle));           // base plate
-     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.021,0.017,0.08,12).translate(0.31,1.11,mz),mat.handle));           // pull-down spray head
-     b(0.075,0.15,1.05,1.08,mz-0.011,mz+0.011,mat.handle);                                                                // lever
-     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.021,0.021,0.06,14).translate(0.075,0.935,sd),mat.handle));       // soap dispenser head
-     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,0.05,10).rotateZ(Math.PI/2).translate(0.105,0.955,sd),mat.handle)); // its spout over the bowl, north of the mixer
+     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.02,16).translate(0.075,0.758,mz),mat.handle));           // base plate
+     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.021,0.017,0.08,12).translate(0.31,0.95,mz),mat.handle));           // pull-down spray head
+     b(0.075,0.15,0.89,0.92,mz-0.011,mz+0.011,mat.handle);                                                                // lever
+     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.021,0.021,0.06,14).translate(0.075,0.775,sd),mat.handle));       // soap dispenser head
+     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,0.05,10).rotateZ(Math.PI/2).translate(0.105,0.795,sd),mat.handle)); // its spout over the bowl, north of the mixer
      // ---- splashback 20 mm: proud of the wall finish panel (15 mm off the wall face, app.js)
-     b(0,0.02,0.91,1.45,corner?0:KZ0,Z1,mat.wpanel);
+     b(0,0.02,0.75,1.45,corner?0:KZ0,Z1,mat.wpanel);
      // ---- hob: four burners on a 0.50 panel, hood under the wall units
      const HR=I?[0.92,1.38,0.08,0.60]:[0.08,0.60,HOB[0]+0.02,HOB[1]-0.02], BX=I?[1.03,1.27]:[0.235,0.455], BZ=I?[0.235,0.455]:[HOB[0]+0.13,HOB[1]-0.13]; // I: hob panel turned along x on the short leg
-     b.round(HR[0],HR[1],0.908,0.918,HR[2],HR[3],0.001,mat.screen);
-     BX.forEach(x=>BZ.forEach(z=>{ const r=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.002,24),mat.ring); r.position.set(x,0.919,z); g.add(r); }));
+     b.round(HR[0],HR[1],0.748,0.758,HR[2],HR[3],0.001,mat.screen);
+     BX.forEach(x=>BZ.forEach(z=>{ const r=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.002,24),mat.ring); r.position.set(x,0.759,z); g.add(r); }));
      if(I){ b(0.90,1.40,1.45,1.50,0.34,0.52,mat.frame); b.round(0.90,1.40,1.45,1.50,0.52,0.53,0.001,mat.dark); } else { b(0.34,0.52,1.45,1.50,HOB[0],HOB[1],mat.frame); b.round(0.52,0.53,1.45,1.50,HOB[0],HOB[1],0.001,mat.dark); }
      // ---- wall units over the run, 4 doors
      b(0,0.34,1.45,2.69,KZ0,Z1,mat.hdark);
@@ -224,6 +225,9 @@ const PHYS={}; // id → boxes
   const KN=1.915; // north wall of kitchen-living room 4
   const SOFA_E=13.455; // east edge of every sofa variant: against the east wall finish (15 mm off the wall face x 13.47)
   const CHAIR4={paint:'oakFurniture',cushion:'sofaWeave'}; // M2: dining chairs — oak frame (GLB material `paint`), seat pad in the sofa fabric
+  // bar stools at the peninsula of kitchens H/I (models/stool.glb = chair.js with legs +0.08): three along the room side, one at the south end, seat front 0.07 off the slab, backs out
+  const STOOLS={stool1:[10.62,2.06,'E',-90],stool2:[10.62,2.61,'E',-90],stool3:[10.62,3.16,'E',-90],stool4:[9.91,3.785,'S',0]};
+  const stoolSpec=([x,z,side,rot])=>({pos:[x,z],size:[0.48,0.86,0.48],glb:'models/stool.glb',glbRot:rot,coat:CHAIR4,build:chair(side)});
   const CAB={cabinetPaint:'cabinetPaint'}; // M4: casework and desks — painted MDF on every cabinetPaint-slot detail (body, fronts, panels)
   const BED={cabinetPaint:'cabinetPaint',kmat:'curtainLinen',pillow:'curtainLinen',cushion:'curtainLinen',cover:'curtainLinen'}; // M4: beds and window seats — bedding in linen, not the sofa weave (kitchen.md rule 3)
   const KID_CHAIR={cushion:'sofaWeave',plastic:'plastic'}; // M4-1: desk chairs — seat pad as the dining chairs, plastic shell
@@ -273,6 +277,7 @@ const PHYS={}; // id → boxes
     {id:'chair4',type:'стул',room:4,layer:'kitchen',pos:[10.51,KN+0.04+0.35-0.24],rot:0,size:[0.48,0.8,0.48],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:-90,build:chair('E')},
     {id:'chair5',type:'стул',room:4,layer:'kitchen',pos:[10.51,KN+0.04+0.94-0.24],rot:0,size:[0.48,0.8,0.48],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:-90,build:chair('E')},
     {id:'chair6',type:'стул',room:4,layer:'kitchen',pos:[10.51,KN+0.04+1.53-0.24],rot:0,size:[0.48,0.8,0.48],attach:'table',coat:CHAIR4,glb:'models/chair.glb',glbRot:-90,build:chair('E')},
+    ...Object.entries(STOOLS).map(([id,st])=>Object.assign({id,type:'барный стул у стойки',room:4,layer:'kitchen',rot:0,hidden:true},stoolSpec(st))), // hidden until kitchen H/I shows them
     {id:'lamp',type:'настенный светильник над столом',room:4,layer:'kitchen',pos:[10.12,KN],rot:0,size:[0.26,1.94,0.63],fixed:'wall',coat:{plastic:'plastic'}, // size by the shade
      build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0.11,0.15,1.9,1.94,0,0.5); b.phys(0,0.26,1.74,1.9,0.37,0.63);
        b.round(0.08,0.18,1.86,1.94,0,0.012,0.002,mat.frame); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.49,10).rotateX(Math.PI/2).translate(0.13,1.92,0.012+0.245),mat.frame)); // wall plate and Ø12 arm
@@ -1020,6 +1025,7 @@ const PHYS={}; // id → boxes
       rebuildItem(id,v==='B'?DESK2_B[id]:it.build,v==='B'?(id==='kiddesk2'?{table:'oakFurniture'}:{cushion:'sofaWeave'}):it.coat); if(v==='A'&&it.glb) loadItemGlb(id); }); }};
   // ---- room 4 variant selects (#k4*): 'none' hides the items (group invisible, physics dropped), 'A' = items.js as is, 'B' = own build/pos/size below
   const hideItem=(id,h)=>{ const g=ITEM_GROUPS[id]; g.visible=!h; g.userData.hidden=h; rebuildPhys(id); };
+  ITEMS.forEach(it=>{ if(it.hidden) hideItem(it.id,true); }); // items that only a variant shows (bar stools)
   // sofa variants B–G (tools/models/sofa4.js): [w,h,d, chaise side E/W or null, chaise width, seat depth]; all keep A's SE corner (east edge SOFA_E, back on the south wall)
   const SOFA4={B:[2.40,0.78,1.60,'E',0.90,0.95,false],C:[2.60,0.87,1.85,'E',0.95,0.95],D:[2.60,0.87,1.85,'W',0.95,0.95],E:[2.50,0.90,1.55,'W',0.85,0.95,false],F:[2.20,0.68,0.95,null,0,0.95],G:[2.30,0.87,1.50,'E',0.80,0.95]}; // 7th = glbFacade:false (wrap-around back / leaning cushions confuse the validator)
   const sofaV=([w,h,d,side,cw,sd,facade],k)=>({pos:[+(SOFA_E-w).toFixed(3),6.287-d],size:[w,h,d],glb:'models/sofa'+k+'.glb',glbFacade:facade,coat:ITEMS.find(i=>i.id==='sofa').coat,build:b=>{ // fallback + proxy: seat run, chaise, back strip
@@ -1028,6 +1034,7 @@ const PHYS={}; // id → boxes
     b(x0,x1,0.05,0.42,d-sd,d,mat.sofa); if(side) b(c0,c1,0.05,0.42,0,d,mat.sofa); b(0,w,0.42,h,d-0.2,d,mat.cushion); }});
   const kitchenV=(mode,w,coat)=>({pos:[8.23,KN],size:[w,2.69,3.59],coat:Object.assign({},ITEMS.find(i=>i.id==='kitchen').coat,coat),build:(b,g)=>kitchenBuild(b,g,mode)});
   const LED8_F={pos:[8.55,2.575],size:[0.03,1.45,1.63],build(b){ b.led(0,0.03,1.43,1.45,0,1.63); }}; // F/G: the strip ends with the wall units at z 2.29
+  const STOOL_ITEMS=Object.fromEntries(Object.entries(STOOLS).map(([id,st])=>[id,stoolSpec(st)]));
   const WOOD_UP={upper:'oakFurniture'}; // D/E (user 2026-09-10, .local/kitchen-wood): A/B as they are, wall-unit doors in oak
   // dining table B (.local/examples2): stadium-shaped oak top 0.90×1.80 on two round drums, same centre as A so the six chairs keep their places
   const TABLE_B={pos:[9.80,KN+0.04],size:[0.90,0.76,1.80],coat:{table:'oakFurniture'},build:(b,g)=>{
@@ -1044,8 +1051,8 @@ const PHYS={}; // id → boxes
   const SET_C={table:TABLE_C,chair1:ch4(9.52,3.515,'W',90),chair2:ch4(9.52,4.015,'W',90),chair3:ch4(10.50,3.515,'E',-90),chair4:ch4(10.50,4.015,'E',-90),chair5:null,chair6:null};
   const SET_D={table:TABLE_D,chair1:ch4(9.49,3.765,'W',90),chair2:ch4(10.53,3.765,'E',-90),chair3:ch4(10.01,3.245,'N',180),chair4:ch4(10.01,4.285,'S',0),chair5:null,chair6:null};
   const R4={table:{ids:['table','chair1','chair2','chair3','chair4','chair5','chair6'],V:{B:{items:{table:TABLE_B}},C:{items:SET_C},D:{items:SET_D}}},sofa:{ids:['sofa'],V:Object.fromEntries(Object.entries(SOFA4).map(([k,v])=>[k,sofaV(v,k)]))},
-    kitchen:{ids:['kitchen','lamp','led8'],V:{B:{items:{kitchen:kitchenV('B',2.23),lamp:null}},D:{items:{kitchen:kitchenV('A',0.74,WOOD_UP)}},E:{items:{kitchen:kitchenV('B',2.23,WOOD_UP),lamp:null}},
-      F:{items:{kitchen:kitchenV('F',1.43,WOOD_UP),led8:LED8_F}},G:{items:{kitchen:kitchenV('G',1.43,WOOD_UP),led8:LED8_F}},H:{items:{kitchen:kitchenV('H',PX1,WOOD_UP),led8:LED8_F},pick:{table:'none'}},I:{items:{kitchen:kitchenV('I',PX1,WOOD_UP),led8:LED8_F},pick:{table:'none'}}}}, // the peninsula stands where the dining sets are: H switches the table off // lamp over the table sits inside B's fridge column: hidden in B/E; F's wall units end at z 2.29, so the LED strip stops there too
+    kitchen:{ids:['kitchen','lamp','led8','stool1','stool2','stool3','stool4'],V:{B:{items:{kitchen:kitchenV('B',2.23),lamp:null}},D:{items:{kitchen:kitchenV('A',0.74,WOOD_UP)}},E:{items:{kitchen:kitchenV('B',2.23,WOOD_UP),lamp:null}},
+      F:{items:{kitchen:kitchenV('F',1.43,WOOD_UP),led8:LED8_F}},G:{items:{kitchen:kitchenV('G',1.43,WOOD_UP),led8:LED8_F}},H:{items:Object.assign({kitchen:kitchenV('H',PX1,WOOD_UP),led8:LED8_F},STOOL_ITEMS),pick:{table:'none'}},I:{items:Object.assign({kitchen:kitchenV('I',PX1,WOOD_UP),led8:LED8_F},STOOL_ITEMS),pick:{table:'none'}}}}, // the peninsula stands where the dining sets are: H switches the table off // lamp over the table sits inside B's fridge column: hidden in B/E; F's wall units end at z 2.29, so the LED strip stops there too
    
     decortv:{ids:['decortv'],V:Object.fromEntries(Object.keys(DECOR_TV).map(k=>[k,{pos:[10.95,KN],size:[2.52,2.7,{F:0.27,G:0.22}[k]||0.02],coat:k==='D'?DEC.floorCoat:DEC.coat,build:DECOR_TV[k]}]))}, // F/G: shelves stand off the wall
     decorsofa:{ids:['decorsofa'],V:Object.fromEntries(Object.keys(DECOR_SOFA).map(k=>[k,{pos:[13.47,6.287],size:[2.51,2.7,0.06],coat:DEC.floorCoat,build:DECOR_SOFA[k]}]))},
@@ -1091,7 +1098,7 @@ const PHYS={}; // id → boxes
     const API={value:{},set(key,v){ const r=R[key], V=r&&r.V&&r.V[v]; if(!r||!(v==='none'||v==='A'||V)||API.value[key]===v) return; const was=API.value[key]; API.value[key]=v;
       r.ids.forEach(id=>{ const it=ITEMS.find(i=>i.id===id), g=ITEM_GROUPS[id], src=spec(V,it)||it;
         if(V||(r.V&&r.V[was])){ g.userData.pos=src.pos.slice(); g.userData.size=src.size.slice(); g.userData.glb=src.glb; g.userData.glbRot=src.glbRot||0; g.userData.glbFacade=src.glbFacade; rebuildItem(id,src.build,src.coat); if(src.glb) loadItemGlb(id); if(window.LAY) LAY.rebase(id); }
-        hideItem(id,v==='none'||spec(V,it)===null); }); if(V&&V.pick) Object.entries(V.pick).forEach(([k,x])=>API.pick(k,x)); }, // V.pick: a variant that forces another select (kitchen H hides the table)
+        const sp=spec(V,it); hideItem(id,v==='none'||sp===null||(it.hidden&&(!sp||sp===it))); }); /* hidden items (bar stools) show only where a variant spells them out */ if(V&&V.pick) Object.entries(V.pick).forEach(([k,x])=>API.pick(k,x)); }, // V.pick: a variant that forces another select (kitchen H hides the table)
       pick(key,v){ const sel=document.getElementById(prefix+key); if(sel){ sel.value=v; try{ localStorage.setItem('pulse3d.'+prefix+'.'+key,v); }catch(e){} } API.set(key,v); }};
     Object.keys(R).forEach(key=>{ const KEY='pulse3d.'+prefix+'.'+key, sel=document.getElementById(prefix+key); if(!sel) return; API.value[key]='A'; let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
       if([...sel.options].some(o=>o.value===v)){ sel.value=v; API.set(key,v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} API.set(key,sel.value); }); });
