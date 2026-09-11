@@ -145,7 +145,7 @@ const PHYS={}; // id → boxes
   const KSINK=[0.73,1.43], KHOB=[2.06,2.56];  // sink cut-out 0.70 and hob module 0.50 along z; the worktop strip x < 0.13 behind the bowl carries the mixer and the dispenser
   // worktop top at 0.75 (user 2026-09-11): base carcass 0.10–0.71, slab 0.712–0.75; columns and wall units keep their heights
   function kitchenBuild(b,g,mode){ const corner=mode!=='A', I=mode==='I', H=mode==='H'||I, G=mode==='G'||H, LX1=H?KLX[1]+0.35:KLX[1], F=mode==='F'||G, Z1=I?2.19:F?2.29:KZ1, HOB=G?[0.70,1.20]:F?[1.79,2.29]:KHOB, SINK=I?[1.39,2.09]:G?[1.49,2.19]:KSINK; // F: fridge column moved next to the appliance column (z 2.29–2.99), run shortened, hob beside the column; G: F with the hob at the corner and the sink 0.10 short of the column; H: short leg 0.35 longer (LX1); I: hob on the short leg under its own wall unit, fridge column 0.80 (z 2.19–2.99), wall units over corner and run as one 4-door block
-     const gap=0.003, front=(y0,y1,z0,z1,m)=>b.round(KC,KC+0.02,y0+gap/2,y1-gap/2,z0+gap/2,z1-gap/2,0.001,m); // fronts face +x; carcasses sit behind them so the 3 mm gaps read as dark lines
+     const gap=0.003, ugap=0.008, front=(y0,y1,z0,z1,m)=>b.round(KC,KC+0.02,y0+gap/2,y1-gap/2,z0+gap/2,z1-gap/2,0.001,m); // fronts face +x; carcasses sit behind them so the gaps read as dark lines; ugap on wall-unit doors — 3 mm vanishes in a render, 8 mm still shows how many doors there are
      const doors=(x0,x1,z0,z1,rows,m)=>rows.forEach(([y0,y1])=>b.round(x0,x1,y0+gap/2,y1-gap/2,z0,z1,0.002,m)); // 40 mm column doors, flush with the worktop edge
      /* proxy = pre-detail AABBs (realism-all A) */
      if(!corner) b.phys(0,KD+0.03,0,2.69,0,0.70);                                                                       // A: fridge column in the north corner
@@ -163,9 +163,9 @@ const PHYS={}; // id → boxes
        doors(KC,KD,0.02,0.68,[[0.10,0.30],[0.30,2.00],[2.00,2.69]],mat.base);                                           // drawer below, fridge door, freezer above
        b.handle(KD,1.40,0.06,0.5,'y','x'); b.handle(KD,2.30,0.06,0.3,'y','x'); }
      else { b(0,KC,0.1,0.71,0,0.70,mat.hdark); b(0,KP,0,0.1,0,0.70,mat.dark); front(0.1,0.71,0,0.70,mat.base);          // B: blind corner base with a plain panel (the short leg blocks it)
-       b(0,0.34,1.45,2.69,0,0.70,mat.hdark); if(!I) b.round(0.34,0.36,1.45+gap/2,2.69-gap/2,(F?0:0.36)+gap/2,0.70-gap/2,0.001,mat.upper); // corner wall unit: B a narrow door past the short-leg unit, F (no units on the short leg) a full 0.70 door up to the wall
+       b(0,0.34,1.45,2.69,0,0.70,mat.hdark); if(!I) b.round(0.34,0.36,1.45+ugap/2,2.69-ugap/2,(F?0:0.36)+ugap/2,0.70-ugap/2,0.001,mat.upper); // corner wall unit: B a narrow door past the short-leg unit, F (no units on the short leg) a full 0.70 door up to the wall
        if(F&&!I) b.handle(0.36,1.50,0.60,0.16,'z','x');
-       if(I){ b(0.36,LX1,1.45,2.69,0,0.34,mat.hdark); [[0.36,1.07],[1.07,LX1]].forEach(([x0,x1])=>{ b.round(x0+gap/2,x1-gap/2,1.45+gap/2,2.69-gap/2,0.34,0.36,0.001,mat.upper); b.handle((x0+x1)/2,1.50,0.36,0.16,'x','z'); }); } // I: wall unit over the short leg, the hob sits under it
+       if(I){ b(0.36,LX1,1.45,2.69,0,0.34,mat.hdark); [[0.36,1.07],[1.07,LX1]].forEach(([x0,x1])=>{ b.round(x0+ugap/2,x1-ugap/2,1.45+ugap/2,2.69-ugap/2,0.34,0.36,0.001,mat.upper); b.handle((x0+x1)/2,1.50,0.36,0.16,'x','z'); }); } // I: wall unit over the short leg, the hob sits under it
        if(H){ // H (user 2026-09-11, .local/bar): the worktop runs on along the north wall to PX1 and bends into a peninsula 0.80×1.80 towards the room, 0.82 off the west run's worktop (user: 0.80) — one 40 mm slab on a slim 40×40 frame, open underneath
          const bar=polyXZ([[KLX[1],0.002],[PX1-0.002,0.002],[PX1-0.002,1.798],[PX0+0.002,1.798],[PX0+0.002,KD-0.002],[KLX[1],KD-0.002]]);
          g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(bar,{depth:0.036,bevelThickness:0.002,bevelSize:0.002,bevelSegments:1,curveSegments:2}).rotateX(Math.PI/2).translate(0,0.748,0),mat.top));
@@ -178,7 +178,7 @@ const PHYS={}; // id → boxes
        b(0.02,KLX[1],0.75,1.45,0,0.02,mat.wpanel);                                                                      // splashback of the short leg
        if(F){ b(0,KC,0.1,2.69,Z1,KZ1,mat.hdark); b(0,KP,0,0.1,Z1,KZ1,mat.dark);                                         // F: fridge column between the run and the appliance column, short leg stays worktop only (an island or bar may grow from it later)
          doors(KC,KD,Z1+0.02,KZ1-0.02,[[0.10,0.30],[0.30,2.00],[2.00,2.69]],mat.base); b.handle(KD,1.40,Z1+0.06,0.5,'y','x'); b.handle(KD,2.30,Z1+0.06,0.3,'y','x'); }
-       else { b(0.36,KLX[1],1.45,2.69,0,0.34,mat.hdark); [[0.36,0.90],[0.90,KLX[1]]].forEach(([x0,x1])=>{ b.round(x0+gap/2,x1-gap/2,1.45+gap/2,2.69-gap/2,0.34,0.36,0.001,mat.upper); b.handle((x0+x1)/2,1.50,0.36,0.16,'x','z'); }); // B: wall units, 2 doors
+       else { b(0.36,KLX[1],1.45,2.69,0,0.34,mat.hdark); [[0.36,0.90],[0.90,KLX[1]]].forEach(([x0,x1])=>{ b.round(x0+ugap/2,x1-ugap/2,1.45+ugap/2,2.69-ugap/2,0.34,0.36,0.001,mat.upper); b.handle((x0+x1)/2,1.50,0.36,0.16,'x','z'); }); // B: wall units, 2 doors
          const FX=KLX[1], FW=0.80; b(FX,FX+FW,0.1,2.69,0,KC,mat.hdark); b(FX,FX+FW,0,0.1,0,KP,mat.dark);                // fridge column at the east end of the short leg
          doors(FX+0.02,FX+FW-0.02,KC,KD,[[0.10,0.30],[0.30,2.00],[2.00,2.69]],mat.base);
          b.handle(FX+0.07,1.40,KD,0.5,'y','z'); b.handle(FX+0.07,2.30,KD,0.3,'y','z'); } }
@@ -249,7 +249,7 @@ const PHYS={}; // id → boxes
     A:b=>{ DEC.slats(b,0,0.40,0,2.60); DEC.boards(b,0.40,2.52,0,2.60,4,DEC.paint); DEC.glow(b,0,2.52,2.60,2.62); },                       // slat strip + painted boards, LED cove under the ceiling
     B:b=>{ for(let r=0;r<4;r++) DEC.boards(b,0,2.52,r*0.626,r*0.626+0.622,3,DEC.paint); DEC.glow(b,0,2.52,2.50,2.52); },              // 3×4 painted tiles, LED cove
     C:b=>{ DEC.boards(b,0.65,2.45,0,2.60,3,DEC.wood); DEC.glow(b,0.63,0.65,0,2.60); },                                                  // three wide oak boards, LED on the left edge
-    D:b=>DEC.boards(b,0,2.52,0,2.70,6,DEC.wood),                                                                                        // oak boards over the whole wall, no light
+    D:b=>DEC.boards(b,0,2.10,0,2.70,5,DEC.wood),                                                                                        // oak boards, no light; one board narrower than the wall, west edge moved east (user 2026-09-11)
     E:b=>{ DEC.slats(b,0,0.50,0,2.70); DEC.shape(b,b.rrect(1.98,2.19,0.29),0.54,0.28,0,0.004,mat.led); DEC.shape(b,b.rrect(1.94,2.15,0.27),0.56,0.30,0.004,0.02,DEC.paint); }, // panel ends at x 2.52 = the east wall // rounded painted panel with a halo, slats on the left (mirrored: the wall ends at the tv side)
     F:b=>{ DEC.slats(b,0,2.52,0,2.70,0.012); const D=r=>{ const sh=new THREE.Shape(); sh.moveTo(2.52,1.4-r); sh.lineTo(1.5,1.4-r); sh.absarc(1.5,1.4,r,-Math.PI/2,Math.PI/2,true); sh.lineTo(2.52,1.4+r); sh.closePath(); return sh; };
       DEC.shape(b,D(0.97),0,0,0.012,0.016,mat.led); DEC.shape(b,D(0.95),0,0,0.016,0.02,mat.dark); [1.3,1.65,2.0].forEach(y=>b(0.03,0.45,y,y+0.025,0.012,0.27,DEC.wood)); }, // dark half-disc with a halo on a slat wall, three shelves on the left
@@ -261,7 +261,8 @@ const PHYS={}; // id → boxes
     B:b=>{ b.round(0,0.55,0,2.70,0,0.02,0.002,DEC.wood); b.round(0.61,1.25,0,2.70,0,0.02,0.002,DEC.wood); DEC.glow(b,0.55,0.61,0,2.70); DEC.art(b,1.5,2.35,1.2,2.4); // two oak boards with a LED slot, relief picture on the painted part
       b.group.add(new THREE.Mesh(new THREE.RingGeometry(0.25,0.27,32,1,0,Math.PI).translate(1.925,1.7,0.053),mat.wpanel)); },
     C:b=>{ DEC.slats(b,0,0.95,0,2.70); DEC.glow(b,0.95,0.99,0,2.70); DEC.art(b,1.55,2.15,1.25,2.10); DEC.shape(b,DEC.ellipse(1.93,1.68,0.17,0.32),0,0,0.052,0.055,mat.dark); }}; // slat panel, LED slot, black-and-white picture
-  Object.keys(DECOR_TV).forEach(k=>DECOR_TV[k]=DEC.wall(2.52,DECOR_TV[k])); Object.keys(DECOR_SOFA).forEach(k=>DECOR_SOFA[k]=DEC.wall(2.51,DECOR_SOFA[k]));
+  const DEC_TV_W={D:2.10};   // a variant narrower than the wall: the panel keeps its east edge, pos shifts east by the difference
+  Object.keys(DECOR_TV).forEach(k=>DECOR_TV[k]=DEC.wall(DEC_TV_W[k]||2.52,DECOR_TV[k])); Object.keys(DECOR_SOFA).forEach(k=>DECOR_SOFA[k]=DEC.wall(2.51,DECOR_SOFA[k]));
   const ITEMS=[
     // ---- kitchen-living room 4 (sketch .local/R1.jpg) ----
     {id:'kitchen',type:'кухонный блок',room:4,layer:'kitchen',pos:[8.23,KN],rot:0,size:[0.74,2.69,3.59],fixed:'wall',coat:{base:'hplFront',upper:'hplFront',top:'hplPanel',wpanel:'hplPanel'}, // 2026-09-10: matte HPL fronts, worktop and splashback one HPL panel of the same tone; carcass, plinth, hob and metal stay class twins
@@ -1037,6 +1038,7 @@ const PHYS={}; // id → boxes
   const led8V=L=>({pos:[8.55,2.575],size:[0.03,1.45,L],build(b){ b.led(0,0.03,1.43,1.45,0,L); }}), LED8_F=led8V(1.63), LED8_I=led8V(1.53); // F/G/H: the strip ends with the wall units at z 2.29; I: fridge column from 2.19
   const STOOL_ITEMS=Object.fromEntries(Object.entries(STOOLS).map(([id,st])=>[id,stoolSpec(st)]));
   const WOOD_UP={upper:'oakFurniture'}; // D/E (user 2026-09-10, .local/kitchen-wood): A/B as they are, wall-unit doors in oak
+  const ORANGE_UP={upper:'oakOrange'};  // F–I (user 2026-09-11): bright ginger wall-unit fronts with a faint grain — the number of doors reads from the room
   // dining table B (.local/examples2): stadium-shaped oak top 0.90×1.80 on two round drums, same centre as A so the six chairs keep their places
   const TABLE_B={pos:[9.80,KN+0.04],size:[0.90,0.76,1.80],coat:{table:'oakFurniture'},build:(b,g)=>{
     b.phys(0,0.90,0.72,0.76,0,1.80); [0.45,1.35].forEach(z=>b.phys(0.26,0.64,0,0.72,z-0.19,z+0.19));
@@ -1053,9 +1055,9 @@ const PHYS={}; // id → boxes
   const SET_D={table:TABLE_D,chair1:ch4(9.49,3.765,'W',90),chair2:ch4(10.53,3.765,'E',-90),chair3:ch4(10.01,3.245,'N',180),chair4:ch4(10.01,4.285,'S',0),chair5:null,chair6:null};
   const R4={table:{ids:['table','chair1','chair2','chair3','chair4','chair5','chair6'],V:{B:{items:{table:TABLE_B}},C:{items:SET_C},D:{items:SET_D}}},sofa:{ids:['sofa'],V:Object.fromEntries(Object.entries(SOFA4).map(([k,v])=>[k,sofaV(v,k)]))},
     kitchen:{ids:['kitchen','lamp','led8','stool1','stool2','stool3','stool4'],V:{B:{items:{kitchen:kitchenV('B',2.23),lamp:null}},D:{items:{kitchen:kitchenV('A',0.74,WOOD_UP)}},E:{items:{kitchen:kitchenV('B',2.23,WOOD_UP),lamp:null}},
-      F:{items:{kitchen:kitchenV('F',1.43,WOOD_UP),led8:LED8_F}},G:{items:{kitchen:kitchenV('G',1.43,WOOD_UP),led8:LED8_F}},H:{items:Object.assign({kitchen:kitchenV('H',PX1,WOOD_UP),led8:LED8_F},STOOL_ITEMS),pick:{table:'none'}},I:{items:Object.assign({kitchen:kitchenV('I',PX1,WOOD_UP),led8:LED8_I},STOOL_ITEMS),pick:{table:'none'}}}}, // the peninsula stands where the dining sets are: H switches the table off // lamp over the table sits inside B's fridge column: hidden in B/E; F's wall units end at z 2.29, so the LED strip stops there too
+      F:{items:{kitchen:kitchenV('F',1.43,ORANGE_UP),led8:LED8_F}},G:{items:{kitchen:kitchenV('G',1.43,ORANGE_UP),led8:LED8_F}},H:{items:Object.assign({kitchen:kitchenV('H',PX1,ORANGE_UP),led8:LED8_F},STOOL_ITEMS),pick:{table:'none'}},I:{items:Object.assign({kitchen:kitchenV('I',PX1,ORANGE_UP),led8:LED8_I},STOOL_ITEMS),pick:{table:'none'}}}}, // the peninsula stands where the dining sets are: H switches the table off // lamp over the table sits inside B's fridge column: hidden in B/E; F's wall units end at z 2.29, so the LED strip stops there too
    
-    decortv:{ids:['decortv'],V:Object.fromEntries(Object.keys(DECOR_TV).map(k=>[k,{pos:[10.95,KN],size:[2.52,2.7,{F:0.27,G:0.22}[k]||0.02],coat:k==='D'?DEC.floorCoat:DEC.coat,build:DECOR_TV[k]}]))}, // F/G: shelves stand off the wall
+    decortv:{ids:['decortv'],V:Object.fromEntries(Object.keys(DECOR_TV).map(k=>{ const w=DEC_TV_W[k]||2.52; return [k,{pos:[10.95+2.52-w,KN],size:[w,2.7,{F:0.27,G:0.22}[k]||0.02],coat:k==='D'?DEC.floorCoat:DEC.coat,build:DECOR_TV[k]}]; }))}, // F/G: shelves stand off the wall
     decorsofa:{ids:['decorsofa'],V:Object.fromEntries(Object.keys(DECOR_SOFA).map(k=>[k,{pos:[13.47,6.287],size:[2.51,2.7,0.06],coat:DEC.floorCoat,build:DECOR_SOFA[k]}]))},
     console:{ids:['console'],V:{B:{pos:[11.775,KN],size:[1.45,0.34,0.42],coat:{cabinetPaint:'cabinetPaint'},build:b=>{ b.phys(0,1.45,0,0.34,0,0.42); b.round(0,1.45,0,0.34,0,0.42,0.004,mat.wbody); }}}}, // B: floor plinth 0.34 high (user: +0.20), 250 mm longer than A, centred under the tv (.local/консоль.png)
     tv:{ids:['tv'],V:{B:{pos:[11.72,KN+0.02],size:[1.56,1.825,0.04],build:(b,g)=>{ ITEMS.find(i=>i.id==='tv').build(b,g); g.userData.proxy=[[0,1.56,0.925,1.825,0,0.04]]; // B: A scaled 1.2 (58" → 70") about the screen centre, still on the wall
