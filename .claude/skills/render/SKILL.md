@@ -20,7 +20,7 @@ node tools/render.js r4-arch                 # база
 node tools/render.js r4-arch --frame-only    # только кадр, без API и без денег
 node tools/render.js r4-arch --fix "..."     # правка
 node tools/render.js r4-arch --note "вечер, свет только от ламп"   # разовое дополнение к базе
-node tools/render.js r4-sw --set table=none,sofa=G,kitchen=B       # варианты комнаты 4 в кадре
+node tools/render.js r4-sw --set table=none,sofa=G,k4kbase=sage,h5tile=B   # любой селект по id; ключ без префикса — комната 4
 node tools/render.js r4-sw --ref r4-door                           # материалы как на готовом ракурсе
 node tools/render.js r4-sw --as bar-1 --note "..."                 # именованный вариант
 node tools/render.js r4-door --wide                                 # исходная камера пресета вместо высоты глаз

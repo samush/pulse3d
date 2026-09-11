@@ -2,7 +2,7 @@
 //
 //   node tools/render.js --list | <ракурс> [--frame-only] [--reuse-frame] [--note "..."]
 //   node tools/render.js <ракурс> --fix "<что должно быть>"    # правка предыдущего результата, до трёх на кадр
-//   node tools/render.js <ракурс> --set sofa=G,table=none --ref r4-door --as dining-1
+//   node tools/render.js <ракурс> --set sofa=G,k4kbase=sage,h5tile=B --ref r4-door --as dining-1   # any select by id; bare key = room 4
 //   node tools/render.js <ракурс> --wide                        # исходная камера пресета, широкий угол под потолком
 //   node tools/render.js <ракурс> --film                        # пасмурный свет, зерно и несовершенства съёмки (раздел «## film» в STYLE.md)
 //
@@ -25,7 +25,7 @@ const SIZE = flag('size', '2K');                                                
 const [W, H] = flag('viewport', '1920x1080').split('x').map(Number);
 const ASPECT = flag('aspect', '16:9');
 const MAX_FIXES = 3;
-const SET = flag('set', '');   // варианты комнаты 4 в кадре: table=none,sofa=G,kitchen=B…
+const SET = flag('set', '');   // селекты в кадре: table=none,sofa=G (комната 4) или полный id — k4kbase=sage,h5tile=B
 const REF = flag('ref', '');   // готовый рендер другого ракурса — эталон материалов и палитры
 const AS = flag('as', '');   // имя варианта: без него результат зовётся именем ракурса
 const LABELS = has('labels');
@@ -53,7 +53,7 @@ const img = p => ({ type: 'image', mime_type: p.endsWith('.png') ? 'image/png' :
   if (!cams.some(c => c.id === cam)) { console.error('нет такого ракурса: ' + cam + ' (--list покажет все)'); await browser.close(); process.exit(1); }
 
   // чистый кадр: материалы и светильники включены, аватар и весь оверлей убраны, снимается только канвас
-  if (SET) await page.evaluate(pairs => pairs.forEach(([k, v]) => ROOM4.pick(k, v)), SET.split(',').map(p => p.split('=')));
+  if (SET) await page.evaluate(pairs => pairs.forEach(([k, v]) => { const sel = document.getElementById(k) || document.getElementById('k4' + k); if (!sel) throw new Error('нет селекта ' + k); sel.value = v; sel.dispatchEvent(new Event('change')); }), SET.split(',').map(p => p.split('=')));   // any select by id (h5tile, k4kbase…); a bare key is room 4
   await page.evaluate(id => { VIZ.set(true); LIGHTING.set('lamps'); const a = document.getElementById('avatarOn'); a.checked = false; a.dispatchEvent(new Event('change')); setView(id);
     document.getElementById('ui').style.display = 'none'; document.querySelectorAll('.hint, .rl, #walkpad, #fpvhint, #camhint, #map').forEach(e => { e.style.display = 'none'; }); }, cam);
   if (PHOTO) await page.evaluate(() => { controls.pos.y = 1.55; controls.phi = Math.PI / 2 + 0.03; persp.fov = 60; persp.updateProjectionMatrix(); controls.apply(); });
