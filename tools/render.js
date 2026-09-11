@@ -93,7 +93,8 @@ const img = p => ({ type: 'image', mime_type: p.endsWith('.png') ? 'image/png' :
   }, [cam, LABELS, PHOTO]);
   fs.writeFileSync(factsPath, JSON.stringify(facts));
   fs.mkdirSync(path.dirname(framePath), { recursive: true });
-  await page.locator('#c').screenshot({ path: framePath, timeout: 120000 });
+  const clip = await page.evaluate(() => { const r = document.getElementById('c').getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; });
+  await page.screenshot({ path: framePath, clip, timeout: 300000 }); // page screenshot with a clip: a locator screenshot waits for the canvas to be «stable», which never happens on a software GL
   await browser.close();
   console.log('кадр: ' + rel(framePath));
   if (has('frame-only')) return;
