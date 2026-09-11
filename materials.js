@@ -68,6 +68,16 @@ const COATINGS={
   tile60120:   {name:'керамогранит 600×1200', class:'tile',   dir:'textures/tile60120',    size:[1.2,1.2], maps:['color','normal'], rough:0.35},
   tile6060grey:{name:'плитка 600×600, серая',  class:'grey',   dir:'textures/tile6060',     size:[0.6,0.6], maps:['color','normal'], rough:0.35, tint:[0.42,0.41,0.4]}, // M4-4: same set as tile6060 (shared textures), darkened to the grey marble of the bath west walls
   plastic:     {name:'пластик матовый',       class:'plastic', dir:'textures/plastic',     size:[0.5,0.5], maps:['normal','rough'], normalScale:0.3},
+  // 2026-09-11: палитра фасадов. Зелёные — матовый HPL как oliveFront; древесные — рельеф дуба без альбедо и свой тон, как beigeFront
+  sageFront:   {name:'фасад шалфей, матовый',    class:'facade', size:[1,1], maps:[], color:0x9aa791, rough:0.62},
+  avocadoFront:{name:'фасад авокадо, матовый',   class:'facade', size:[1,1], maps:[], color:0x7d8a5c, rough:0.62},
+  pistachioFront:{name:'фасад фисташковый, матовый', class:'facade', size:[1,1], maps:[], color:0xb3c08c, rough:0.62},
+  jadeFront:   {name:'фасад нефрит, матовый',    class:'facade', size:[1,1], maps:[], color:0x5f7d6e, rough:0.62},
+  mushroomFront:{name:'фасад грибной, слабый рисунок дерева', class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0xb5a89a, normalScale:0.22},
+  cherryFront: {name:'фасад вишня, слабый рисунок дерева',    class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0x8a4a3c, normalScale:0.22},
+  walnutFront: {name:'фасад ореховый, слабый рисунок дерева', class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0x6e523c, normalScale:0.22},
+  pineFront:   {name:'фасад сосна, слабый рисунок дерева',    class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0xd8b880, normalScale:0.22},
+  creamFront:  {name:'фасад кремовый, слабый рисунок дерева', class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0xece2cf, normalScale:0.22},
   hplWhite:    {name:'HPL-плита белая, столешница и фартук', class:'facade', size:[1,1], maps:[], color:0xeae7e1, rough:0.45}, // 2026-09-11: kitchen 4 — one white panel and one tone for worktop and splashback, no texture set for HPL
   oliveFront:  {name:'HPL-плита оливковая, матовый фасад', class:'facade', size:[1,1], maps:[], color:0x8a8f70, rough:0.62}, // 2026-09-11: нижние ящики, пенал с техникой, холодильник и боковины навесных шкафов
 };

@@ -327,8 +327,8 @@ const PHYS={}; // id → boxes
        const W=1.77, D=0.45, t=0.02, mid=W/2, gap=0.004, H0=0.45, H1=1.95, H2=2.65, dg=0.005; // dg: зазор двери, 5 мм вместо 1.5 — Gemini рисовал на сплошном поле случайное число дверей
        b(0,t,0,H2,0,D,mat.body); b(W-t,W,0,H2,0,D,mat.body); b(0,W,0,H2,D-t,D,mat.body); b(0,W,H2-t,H2,0,D,mat.body); // body
        b(t,W-t,0.02,0.04,0.05,D-t,mat.body); b(t,W-t,H0-t,H0,0,D-t,mat.body); b(t,W-t,0.04,H0-t,D-0.10,D-t,mat.hdark); // shoe niche
-       b(t,W-t,H0,H2,0.0005,0.0015,mat.dark); // тёмный фон за фасадами: каждый зазор читается линией, а не стыком одного цвета
-       const door=(x0,x1,y0,y1)=>b.round(x0+dg,x1-dg,y0+dg,y1-dg,0.002,t,0.001,mat.door); // 10 mm gaps between the doors, 5 mm to the body
+       b(t,W-t,H0,H2,t,t+0.002,mat.dark); // тёмный фон сразу за фасадами (лицо двери — локальная z=0): каждый зазор читается линией, а не стыком одного цвета
+       const door=(x0,x1,y0,y1)=>b.round(x0+dg,x1-dg,y0+dg,y1-dg,0,t,0.001,mat.door); // 10 mm gaps between the doors, 5 mm to the body
        door(t,mid-gap,H0,H1); door(mid+gap,W-t,H0,H1);                                                                // doors
        b(mid-0.02,mid-gap-0.001,H0+0.02,H1-0.02,0,0.003,mat.frame); b(mid+gap+0.001,mid+0.02,H0+0.02,H1-0.02,0,0.003,mat.frame); // flush vertical pull profiles along the meeting edge
        b(t,W-t,H1,H1+t,0,D-t,mat.body); door(t,mid-gap,H1+t,H2-t); door(mid+gap,W-t,H1+t,H2-t);                       // top cabinets
@@ -1128,8 +1128,13 @@ const PHYS={}; // id → boxes
       sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} paint(rec); }); });
     COAT_HOOKS.push(ids=>{ const hit=recs.filter(r=>r.d.ids.some(i=>ids.indexOf(i)>=0)); if(!hit.length) return;
       hit.forEach(r=>r.d.ids.forEach(i=>{ delete DECL[i]; })); hit.forEach(paint); }); }
-  colorSelects([{sel:'k4kbase',ids:['kitchen'],keys:['base','hdark'],V:{}},{sel:'k4kupper',ids:['kitchen'],keys:['upper'],V:{}},
-    {sel:'m3wbase',ids:['mward'],keys:['cabinetPaint'],V:{}},{sel:'m3wupper',ids:['mcab'],keys:['cabinetPaint'],V:{}}]); // палитра пока в один цвет: новые цвета добавляются опцией селекта и ключом в V
+  // палитра фасадов (COATINGS): зелёные — базы и корпуса, древесные — навесные; новый цвет = опция селекта плюс строка здесь
+  const GREEN={olive:'oliveFront',sage:'sageFront',avocado:'avocadoFront',pistachio:'pistachioFront',jade:'jadeFront'};
+  const WOOD={mushroom:'mushroomFront',cherry:'cherryFront',walnut:'walnutFront',pine:'pineFront',cream:'creamFront'};
+  const BOTH=Object.assign({},GREEN,WOOD);
+  colorSelects([{sel:'k4kbase',ids:['kitchen'],keys:['base','hdark'],V:GREEN},{sel:'k4kupper',ids:['kitchen'],keys:['upper'],V:WOOD},
+    {sel:'m3wbase',ids:['mward'],keys:['cabinetPaint'],V:GREEN},{sel:'m3wupper',ids:['mcab'],keys:['cabinetPaint'],V:WOOD},
+    {sel:'h5wbase',ids:['wardrobe'],keys:['body'],V:BOTH},{sel:'h5wdoor',ids:['wardrobe'],keys:['door'],V:BOTH}]);
   (function(){ const KEY='pulse3d.desk2', sel=document.getElementById('desk2'); if(!sel) return; let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
     if(v==='A'||v==='B'){ sel.value=v; DESK2.set(v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} DESK2.set(sel.value); }); })();
 })();

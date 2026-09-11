@@ -908,6 +908,8 @@ var finishGroup=new THREE.Group();
   // of the removable L-wall (x 8.066–8.23 × z 5.516–6.464, z 6.287–6.464 × x 8.23–10.96) so no bare floor shows when it is hidden; контур плитки, план v2
   // (tasks/floor-tile/README.md). Numbers, not PLAN: remap does not move it — recompute by hand if the corridor changes.
   window.TILE_POLY=[[5.608,4.033],[5.608,4.861],[6.336,4.861],[6.336,7.468],[8.161,7.468],[8.161,7.984],[10.008,7.984],[10.008,9.6],[10.904,9.6],[10.904,6.464],[10.96,6.464],[10.96,6.287],[10.36,6.287],[10.36,1.915],[8.23,1.915],[8.23,5.516],[8.066,5.516],[8.066,4.033]];
+  const TILE_E_B=10.904; // B: восточная грань коридора — плитка идёт от двери спальни до северной стены кухни без уступа (.local/пол.png)
+  window.TILE_POLY_B=[[5.608,4.033],[5.608,4.861],[6.336,4.861],[6.336,7.468],[8.161,7.468],[8.161,7.984],[10.008,7.984],[10.008,9.6],[10.904,9.6],[10.904,6.464],[10.96,6.464],[10.96,6.287],[TILE_E_B,6.287],[TILE_E_B,1.915],[8.23,1.915],[8.23,5.516],[8.066,5.516],[8.066,4.033]];
   // door thresholds: tile runs into the wall from the corridor face to the leaf axis (PLAN.doors), the entrance door to the outer face
   window.TILE_SILLS=[{d:0,face:5.608},{d:1,face:4.033},{d:2,face:4.033},{d:3,face:10.904},{d:4,face:9.6},{d:5,face:10.008},{d:7,face:7.754,far:7.468}].map(({d,face,far})=>{
     const [cx,cz,o,w]=PLAN.doors[d], a=far!=null?far:(o==='v'?cx:cz), lo=Math.min(a,face), hi=Math.max(a,face);
@@ -931,17 +933,21 @@ var finishGroup=new THREE.Group();
       g.strokeStyle='rgba(50,32,15,0.45)'; g.beginPath(); g.moveTo(0,y+0.5); g.lineTo(512,y+0.5); g.stroke(); }
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/2,1/2); return t; })();
   const boardMat=new THREE.MeshBasicMaterial({map:boardTex});
-  window.BOARD_POLYS=[[[10.36,1.915],[13.47,1.915],[13.47,6.287],[10.36,6.287]],PLAN.rooms.find(r=>r.id===10).poly];
+  const loggiaPoly=PLAN.rooms.find(r=>r.id===10).poly;
+  window.BOARD_POLYS=[[[10.36,1.915],[13.47,1.915],[13.47,6.287],[10.36,6.287]],loggiaPoly];
+  window.BOARD_POLYS_B=[[[TILE_E_B,1.915],[13.47,1.915],[13.47,6.287],[TILE_E_B,6.287]],loggiaPoly]; // B: доска начинается от той же линии, что и граница плитки в варианте B (.local/пол2.png)
+  // оба слоя пола держат по подгруппе на вариант: селект показывает одну, остальные гасит
+  const sub=(group,key,build)=>{ const g=new THREE.Group(); g.userData.variant=key; build(g); group.add(g); return g; };
   window.boardGroup=new THREE.Group();
-  BOARD_POLYS.forEach(poly=>{ const g=new THREE.ShapeGeometry(toShape(poly)); const uv=g.attributes.uv; for(let i=0;i<uv.count;i++) uv.setXY(i,uv.getY(i),uv.getX(i)); // planks run north–south, along the long side of the loggia
-    g.rotateX(-Math.PI/2); g.translate(0,TILE+0.0015,0); boardGroup.add(new THREE.Mesh(g,boardMat)); });
+  [['A',BOARD_POLYS],['B',BOARD_POLYS_B]].forEach(([k,polys])=>sub(boardGroup,k,parent=>polys.forEach(poly=>{
+    const g=new THREE.ShapeGeometry(toShape(poly)); const uv=g.attributes.uv; for(let i=0;i<uv.count;i++) uv.setXY(i,uv.getY(i),uv.getX(i)); // planks run north–south, along the long side of the loggia
+    g.rotateX(-Math.PI/2); g.translate(0,TILE+0.0015,0); parent.add(new THREE.Mesh(g,boardMat)); })));
   window.tileGroup=new THREE.Group();
-  {
-    const g=new THREE.ShapeGeometry([toShape(TILE_POLY)].concat(TILE_SILLS.map(toShape)));
+  [['A',TILE_POLY],['B',TILE_POLY_B]].forEach(([k,poly])=>sub(tileGroup,k,parent=>{
+    const g=new THREE.ShapeGeometry([toShape(poly)].concat(TILE_SILLS.map(toShape)));
     const uv=g.attributes.uv; for(let i=0;i<uv.count;i++) uv.setXY(i,uv.getX(i)-8.23,uv.getY(i)+1.915); // whole tiles from the kitchen zone's north-west corner (8.23, 1.915); shape v = -z
     g.rotateX(-Math.PI/2); g.translate(0,TILE,0);
-    tileGroup.add(new THREE.Mesh(g,tileLightMat));
-  }
+    parent.add(new THREE.Mesh(g,tileLightMat)); }));
 
   // общий коридор до входа (отсюда начинается «Экскурсия»): та же плитка 60×120, что в квартире, только белая — пол и стены
   {
@@ -1218,7 +1224,7 @@ scene.add(finishGroup); scene.add(tileGroup); scene.add(boardGroup);
 // floor layers as room selects (#h5tile — «Коридор», #k4board — «Кухня-гостиная»): 'none' hides the layer, 'A' is the one built here
 [['h5tile',tileGroup],['k4board',boardGroup]].forEach(([id,grp])=>{ const sel=document.getElementById(id); if(!sel) return; const KEY='pulse3d.'+id;
   let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){} if([...sel.options].some(o=>o.value===v)) sel.value=v;
-  const apply=()=>{ grp.visible=sel.value!=='none'; }; sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} apply(); }); apply(); });
+  const apply=()=>{ grp.visible=sel.value!=='none'; grp.children.forEach(g=>{ g.visible=g.userData.variant===sel.value; }); }; sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} apply(); }); apply(); });
 
 // мебель — в items.js (предметы с id, локальными координатами и слоями)
 

@@ -723,6 +723,11 @@ const { launchChromium } = require('./browser');
     Object.entries(M4).forEach(([room, r]) => (r.finish || []).forEach(([k, want]) => { const m = fin[k]; if (!m || m.userData.coating !== want || m.roughnessMap || m.roughness !== 0.35) bad.push(room + ': отделка ' + k + ' = ' + (m ? m.userData.coating : 'нет меша') + ', ожидалось ' + want + ' с явной rough 0.35'); }));
     return bad; }, M4);
   m4.forEach(msg => problems.push('материалы комнат: ' + msg + ' (materials-lighting M4)'));
+  // шкаф в прихожей: лицо двери — самая передняя поверхность блока (тёмный фон щелей лежит за фасадами, не перед ними)
+  const wardFace = await page.evaluate(() => { const g = ITEM_GROUPS.wardrobe, rc = new THREE.Raycaster();
+    const keyOf = m => { const b = (window.VIZ && VIZ.basic.get(m)) || m; return Object.keys(ITEM_MATS).find(n => ITEM_MATS[n] === b) || '?'; };
+    return [1.0, 2.2].map(y => { rc.set(new THREE.Vector3(8.6, y, 7.0), new THREE.Vector3(0, 0, 1)); const h = rc.intersectObject(g, true)[0]; return h ? keyOf(h.object.material) : 'none'; }).join(); });
+  if (wardFace !== 'door,door') problems.push('шкаф 5: первой по лучу поверхностью фасада оказалось ' + wardFace + ' (ожидались двери)');
   if (!noShot) for (const [room, r] of Object.entries(M4)) for (const on of [true, false]) {
     await page.evaluate(([[x, z, tx, tz], on]) => { VIZ.set(on); document.getElementById('avatarOn').checked = false; controls.setFPV(x, z, Math.atan2(tx - x, tz - z)); }, [r.pose, on]); await page.waitForTimeout(on ? 1500 : 400);
     await page.screenshot({ path: path.join(outDir, 'm4-' + room + (on ? '-on' : '-off') + '.png') }); }
@@ -1113,7 +1118,7 @@ const { launchChromium } = require('./browser');
   // floor-tile: one mesh in tileGroup at TILE=0.0075, contour area 22.21 (Gauss, without sills; includes the removable wall footprint), sills come from PLAN.doors
   // (bath 9 sill follows doors[5]), the checkbox toggles tileGroup only, visualization gives the tile a MeshStandardMaterial
   const ft = await page.evaluate(() => {
-    const meshes = []; tileGroup.traverse(o => { if (o.isMesh) meshes.push(o); });
+    const meshes = []; tileGroup.traverse(o => { if (o.isMesh && o.visible && o.parent.visible) meshes.push(o); }); // по подгруппе на вариант, считаем только показанную
     const area = p => Math.abs(p.reduce((s, q, i) => { const r = p[(i + 1) % p.length]; return s + q[0] * r[1] - r[0] * q[1]; }, 0)) / 2;
     const y = meshes.length ? new THREE.Box3().setFromObject(meshes[0]).min.y : -1;
     const d5 = PLAN.doors[5], s5 = TILE_SILLS[5], sillOk = Math.abs(Math.min(...s5.map(q => q[1])) - (d5[1] - d5[3] / 2)) < 1e-9 && Math.abs(Math.min(...s5.map(q => q[0])) - d5[0]) < 1e-9;
@@ -1149,7 +1154,7 @@ const { launchChromium } = require('./browser');
   await page.screenshot({ path: path.join(outDir, 'balcony10-glazing.png') });
   // floor layer 3: oak board over the living zone of room 4 (x 10.36–13.47) and the loggia, select «Покрытие», PBR twin in visualization
   const bd = await page.evaluate(() => {
-    const meshes = []; boardGroup.traverse(o => { if (o.isMesh) meshes.push(o); });
+    const meshes = []; boardGroup.traverse(o => { if (o.isMesh && o.visible && o.parent.visible) meshes.push(o); });
     const b = new THREE.Box3().setFromObject(boardGroup);
     const cb = document.getElementById('k4board'); cb.value = 'none'; cb.dispatchEvent(new Event('change')); const hid = !boardGroup.visible && tileGroup.visible; cb.value = 'A'; cb.dispatchEvent(new Event('change')); // «Кухня-гостиная → Покрытие», вариант A по умолчанию
     VIZ.set(true); setView('fpv'); VIZ.apply && VIZ.apply(); const std = meshes[0].material.type; VIZ.set(false);
@@ -1160,6 +1165,13 @@ const { launchChromium } = require('./browser');
   if (Math.abs(bd.box[0] - 10.36) > 1e-6 || Math.abs(bd.box[1] - 15.1) > 1e-6 || Math.abs(bd.box[2] - 1.915) > 1e-6 || Math.abs(bd.box[3] - 6.287) > 1e-6) problems.push('покрытие: контур ' + bd.box.slice(0, 4).map(v => v.toFixed(3)).join(' '));
   if (Math.abs(bd.box[4] - 0.009) > 1e-6) problems.push('покрытие: высота ' + bd.box[4]);
   if (!bd.hid || !bd.shown) problems.push('покрытие: галочка не переключает слой или трогает плитку');
+  const varB = await page.evaluate(() => { const E = 10.904, vis = g => g.children.filter(c => c.visible).map(c => c.userData.variant).join();
+    const pick = (id, v) => { const s = document.getElementById(id); s.value = v; s.dispatchEvent(new Event('change')); };
+    pick('h5tile', 'B'); pick('k4board', 'B'); const on = vis(tileGroup) === 'B' && vis(boardGroup) === 'B';
+    pick('h5tile', 'A'); pick('k4board', 'A'); const back = vis(tileGroup) === 'A' && vis(boardGroup) === 'A';
+    return { on, back, tileE: Math.max(...TILE_POLY_B.map(p => p[0])), boardW: Math.min(...BOARD_POLYS_B[0].map(p => p[0])), E }; });
+  if (!varB.on || !varB.back) problems.push('пол: селекты не переключают вариант подгруппы (плитка/покрытие)');
+  if (Math.abs(varB.tileE - 10.96) > 1e-6 || Math.abs(varB.boardW - varB.E) > 1e-6) problems.push('пол B: граница ' + varB.tileE + '/' + varB.boardW + ' (плитка до 10.96 с выступом, доска от 10.904)');
   if (bd.std !== 'MeshStandardMaterial') problems.push('покрытие: в визуализации материал ' + bd.std);
   if (bd.frost !== 3) problems.push('лоджия 10: матовых вставок ' + bd.frost + ' (нужно 3)');
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 2.6; controls.r = hh / TAN22; controls.target.set(12.7 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 4.1); controls.apply(); });
