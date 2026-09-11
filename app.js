@@ -229,7 +229,7 @@ const CAMS=[ // fixed room cameras (selector «Камера»): pos [x,y,z] m, t
   {id:'r3-tv',label:'спальня (вид 2)',pos:[14.5,1.5,9.95],theta:-0.93,phi:Math.PI/2+0.05,fov:85}, // corner of the TV wall shifted towards the window, eye height 1.5 (user, 2026-09-09)
   {id:'r4-door',label:'кухня-гостиная (вид 1)',pos:[13.3,2.5,6.1],theta:-2.25,phi:Math.PI/2+0.33,fov:80},
   {id:'r4-kitchen',label:'кухня-гостиная (вид 2)',pos:[9.1,2.5,2.1],theta:0.88,phi:Math.PI/2+0.33,fov:80},
-  {id:'r4-window',label:'кухня-гостиная (вид 3)',pos:[13.3,2.5,2.1],theta:-0.89,phi:Math.PI/2+0.33,fov:80},
+  {id:'r4-window',label:'кухня-гостиная (вид 3)',pos:[13.3,2.5,2.5],theta:-0.89,phi:Math.PI/2+0.33,fov:80},
   {id:'r4-sw',label:'кухня-гостиная (вид 4)',pos:[9.1,2.5,6.1],theta:2.26,phi:Math.PI/2+0.33,fov:80},
   {id:'r4-arch',label:'кухня-гостиная (вид 5)',pos:[13.6,1.7,4.16],theta:-1.59,phi:Math.PI/2+0.04,fov:75},
   {id:'r5-entry',label:'коридор (вид 1)',pos:[7.3,2.5,7.3],theta:-3.11,phi:Math.PI/2+0.3,fov:80},
