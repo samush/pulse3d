@@ -45,6 +45,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .views{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 #cams,#doors,.roomblk{margin:4px 0 10px} .roomblk{width:100%} .roomblk .row{margin:6px 0} #cams .room{display:flex;gap:6px;margin-top:6px} #cams .room button{width:40px;height:30px;flex:none;padding:0} #cams button.on,#doors button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 #layers{margin-top:10px} #doors .room button{width:auto;padding:0 8px;font-size:12px} #layers summary,#cams summary,#doors summary,.roomblk summary{cursor:pointer;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
+.views.three button{flex-basis:30%}
 .views button{flex:1 1 45%;background:transparent;border:1px solid var(--line);color:var(--ink);
   font:600 12px "Manrope",system-ui,sans-serif;padding:6px 0;border-radius:7px;cursor:pointer}
 .views button:hover{background:var(--accent-soft);border-color:var(--accent)}
@@ -122,9 +123,10 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <button id="snapBtn" hidden title="Прилипание к углам и рёбрам предмета (в 5 см от них); выключено — точка ставится свободно" aria-label="Прилипание линейки к углам и рёбрам">🧲</button>
   <button id="resetBtn" title="Сброс: расстановка, разметка, варианты и настройки — как при первом открытии; модели и текстуры скачиваются заново" aria-label="Сброс сцены">🔄</button>
   <p class="sub">потолок 2,7 м · куб = 1 × 1 × 1 м</p>
-  <div class="views" style="margin:8px 0 12px">
+  <div class="views three" style="margin:8px 0 12px">
     <button id="vTop">Сверху</button>
     <button id="vFP">Экскурсия</button>
+    <button id="vPOV" title="Осмотр от первого лица: камера на высоте глаз человека ростом 1,7 м">POV</button>
   </div>
   <div class="slider-lab"><span>Масштаб</span><span id="zov">100%</span></div>
   <input type="range" id="zoom" min="30" max="300" value="100" aria-label="Масштаб" style="margin-bottom:10px">
