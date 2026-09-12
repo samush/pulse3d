@@ -181,5 +181,5 @@ window.LIGHTS=LIGHTS;
   };
   document.getElementById('light').addEventListener('change',e=>LIGHTING.set(e.target.value));
   let saved=null; try{ saved=localStorage.getItem(KEY); }catch(e){}
-  LIGHTING.set(saved||'illusion');
+  LIGHTING.set(saved||'lamps'); // 2026-09-12: внутренний B по умолчанию, выбор пользователя из localStorage сохраняется
 })();

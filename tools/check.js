@@ -58,7 +58,7 @@ const { launchChromium } = require('./browser');
   await page.goto(url);
   await page.waitForTimeout(3500);
   await page.evaluate(() => { try { localStorage.removeItem('pulse3d.marks'); localStorage.removeItem('pulse3d.layout'); localStorage.removeItem('pulse3d.viz'); localStorage.removeItem('pulse3d.light'); } catch (e) {} }); // чистый старт разметки, вариантов и режима
-  await page.evaluate(() => { try { localStorage.setItem('pulse3d.bed1', 'original'); localStorage.setItem('pulse3d.bed2', 'original'); localStorage.setItem('pulse3d.desk2', 'A'); localStorage.setItem('pulse3d.k4.table', 'A'); } catch (e) {} KIDBED.set('original'); DESK2.set('A'); ROOM4.set('table', 'A'); }); // the room checks below describe the original beds and the room 2 desk; the page defaults to F / B since 2026-09-09, and the keys keep that across the reloads below
+  await page.evaluate(() => { try { localStorage.setItem('pulse3d.bed1', 'original'); localStorage.setItem('pulse3d.bed2', 'original'); localStorage.setItem('pulse3d.desk2', 'A'); localStorage.setItem('pulse3d.k4.table', 'A'); localStorage.setItem('pulse3d.m3.vtable', 'A'); } catch (e) {} KIDBED.set('original'); DESK2.set('A'); ROOM4.set('table', 'A'); ROOM3.set('vtable', 'A'); }); // the room checks below describe the original beds and the room 2 desk; the page defaults to F / B since 2026-09-09, and the keys keep that across the reloads below
   // the room 4 checks below describe variant A with no wall decor; since 2026-09-10 the page opens on kitchen B, sofa G, tv B, decor D/B — the keys keep A across the reloads below
   await page.evaluate(() => { const V = { kitchen: 'A', sofa: 'A', tv: 'A', decortv: 'none', decorsofa: 'none' };
     Object.entries(V).forEach(([k, v]) => { try { localStorage.setItem('pulse3d.k4.' + k, v); } catch (e) {} ROOM4.pick(k, v); }); });
@@ -305,7 +305,7 @@ const { launchChromium } = require('./browser');
   if (proxA.length) problems.push('proxy: этап A — число боксов/габарит не сошлись: ' + proxA.join(' '));
   // realism-all stage C: proxies for the room 2 items repeat the old mesh AABBs (count + union extent)
   const proxC = await page.evaluate(() => { const ext = id => { const bb = new THREE.Box3(); PHYS[id].forEach(m => bb.union(new THREE.Box3().setFromObject(m))); const s = new THREE.Vector3(); bb.getSize(s); return [s.x, s.y, s.z].map(v => Math.round(v * 1000) / 1000).join(); };
-    const want = { kidbed2: [9, '2.4,2.6,2.97'], kiddesk2: [4, '0.75,0.72,1.65'], kidchair2: [5, '0.52,0.85,0.49'], deskshelf2: [3, '0.22,0.15,1.55'], tower2n: [10, '0.615,2.7,0.68'], tower2s: [13, '0.615,2.7,0.619'], windowseat2: [9, '0.615,0.65,1.702'], gymwall: [14, '0.8,2.7,0.06'], pullup: [3, '0.9,0.04,0.53'], kidrug2: [1, '1.6,0.02,2'], kidlight2: [1, '0.45,0.04,0.45'], desklamp2: [3, '0.16,0.48,0.16'], bra3: [3, '0.12,0.12,0.225'], bra4: [2, '0.12,0.12,0.165'], blind2: [2, '0.08,0.09,1.48'] };
+    const want = { kidbed2: [9, '2.4,2.6,2.97'], kiddesk2: [4, '0.75,0.72,1.65'], kidchair2: [5, '0.52,0.85,0.49'], deskshelf2: [3, '0.22,0.15,1.55'], tower2n: [10, '0.615,2.7,0.68'], tower2s: [13, '0.615,2.7,0.619'], windowseat2: [6, '0.6,0.65,1.702'], gymwall: [14, '0.8,2.7,0.06'], pullup: [3, '0.9,0.04,0.53'], kidrug2: [1, '1.6,0.02,2'], kidlight2: [1, '0.45,0.04,0.45'], desklamp2: [3, '0.16,0.48,0.16'], bra3: [3, '0.12,0.12,0.225'], bra4: [2, '0.12,0.12,0.165'], blind2: [2, '0.08,0.09,1.48'] };
     return Object.entries(want).filter(([id, [n, e]]) => PHYS[id].length !== n || ext(id) !== e || !ITEM_GROUPS[id].userData.proxy.length).map(([id]) => id + ':' + PHYS[id].length + ':' + ext(id)); });
   if (proxC.length) problems.push('proxy: этап C — число боксов/габарит не сошлись: ' + proxC.join(' '));
   // realism-all stage A: kitchen detailed — fronts with gaps, sink bowl under the worktop, mixer; all inside size, proxies unchanged
@@ -326,7 +326,7 @@ const { launchChromium } = require('./browser');
     const bb = new THREE.Box3().setFromObject(g), s = new THREE.Vector3(); bb.getSize(s); const mats = new Set(); g.traverse(o => { if (o.isMesh) mats.add(o.material); });
     return { loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), size: [s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join(), slots: [...new Set([...mats].map(m => m.userData.slot))].sort().join(), boxes: PHYS.windowseat2.length }; });
   if (!wsGlb.loaded) problems.push('glb: models/windowseat2.glb не загрузился: ' + JSON.stringify(wsGlb));
-  else if (wsGlb.warn || wsGlb.size !== '0.61,0.65,1.7' || wsGlb.slots !== 'cabinetPaint,chrome,fabric' || wsGlb.boxes !== 9) problems.push('glb: windowseat2 — предупреждения/габарит/слоты/proxy не сошлись: ' + JSON.stringify(wsGlb));
+  else if (wsGlb.warn || wsGlb.size !== '0.6,0.65,1.7' || wsGlb.slots !== 'cabinetPaint,fabric' || wsGlb.boxes !== 6) problems.push('glb: windowseat2 — предупреждения/габарит/слоты/proxy не сошлись: ' + JSON.stringify(wsGlb));
   // realism-all stage A: pouf and washer GLB loaded without warnings, proxies as before
   const glbA = await page.evaluate(async () => { const ids = ['pouf', 'washer']; for (let i = 0; i < 100 && !ids.every(id => ITEM_GROUPS[id].userData.glbLoaded || (VIZ.loadErrors || []).some(s => s.startsWith(id + ':'))); i++) await new Promise(r => setTimeout(r, 100));
     return ids.filter(id => !ITEM_GROUPS[id].userData.glbLoaded || (ITEM_GROUPS[id].userData.glbWarnings || []).length || PHYS[id].length !== { pouf: 5, washer: 6 }[id]).map(id => id + ':' + JSON.stringify(ITEM_GROUPS[id].userData.glbWarnings)); });
@@ -370,7 +370,7 @@ const { launchChromium } = require('./browser');
     return { sw5: fit('sw5') && PHYS.sw5.length === 1 && n('sw5') === 3, sw7: fit('sw7') && PHYS.sw7.length === 1 && n('sw7') === 2, mirror: fit('mirror') && PHYS.mirror.length === 1 && n('mirror') === 4, slots: ['plastic', 'ceramic', 'acrylic', 'leather', 'mirror'].every(k => ITEM_MATS[k].userData.slot === k && MATERIALS[k]) }; });
   Object.entries(helpers).forEach(([k, ok]) => { if (!ok) problems.push('helpers: «' + k + '» вне size, число боксов/мешей или слот не сошлись (realism-all §3/§4)'); });
   // realism-all stage B: kids room 1 — explicit proxies for every item, box count fixed so detailing never changes walk/layout
-  const stageB = await page.evaluate(() => { const want = { kidbed: 9, kiddesk: 2, kidped: 4, kidchair: 5, kidshelf: 13, kidshelf2: 8, kidshelf3: 3, windowseat1: 9, kidsofa: 8, kidrug: 1, projector: 3, screen: 2, curtain: 2, kidlight: 1, track: 3, bra1: 3, bra2: 2, sw1: 1, sock1: 1, sock2: 1, sock3: 1, sock4: 1, sock5: 1, sock6: 1, sock7: 1 };
+  const stageB = await page.evaluate(() => { const want = { kidbed: 9, kiddesk: 2, kidped: 4, kidchair: 5, kidshelf: 13, kidshelf2: 8, kidshelf3: 3, windowseat1: 6, kidsofa: 8, kidrug: 1, projector: 3, screen: 2, curtain: 2, kidlight: 1, track: 3, bra1: 3, bra2: 2, sw1: 1, sock1: 1, sock2: 1, sock3: 1, sock4: 1, sock5: 1, sock6: 1, sock7: 1 };
     return Object.entries(want).filter(([id, n]) => PHYS[id].length !== n).map(([id, n]) => id + ' ' + PHYS[id].length + '≠' + n); });
   if (stageB.length) problems.push('proxy: детская 1 — число боксов изменилось (realism-all §8): ' + stageB.join(', '));
   // realism-all stage F: closet 6 and loggia 10 — explicit proxies, box count fixed
@@ -397,7 +397,7 @@ const { launchChromium } = require('./browser');
       return { id, loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), grey: [...mats].every(m => m.isMeshLambertMaterial && Math.max(m.color.r, m.color.g, m.color.b) - Math.min(m.color.r, m.color.g, m.color.b) <= 0.08), fits: [s.x, s.y, s.z].every((v, i) => v <= g.userData.size[i] + 0.011 && v >= g.userData.size[i] * 0.85), boxes: PHYS[id].length }; }); });
   const chairShared = await page.evaluate(() => { const geos = id => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh) set.add(o.geometry); }); return set; }; const a = geos('kidchair'), b = geos('kidchair2'); return a.size > 0 && a.size === b.size && [...a].every(g => b.has(g)); });
   if (!chairShared) problems.push('glb: kidchair и kidchair2 не делят geometry одного файла models/kidchair.glb (realism-all §2)');
-  stageBGlb.forEach(r => { if (!r.loaded || r.warn || !r.grey || !r.fits || r.boxes !== { kidsofa: 8, kidchair: 5, kidchair2: 5, windowseat1: 9, bchair: 6 }[r.id]) problems.push('glb: ' + r.id + ' — загрузка/валидация/серый/габарит/proxy не сошлись (realism-all §8): ' + JSON.stringify(r)); });
+  stageBGlb.forEach(r => { if (!r.loaded || r.warn || !r.grey || !r.fits || r.boxes !== { kidsofa: 8, kidchair: 5, kidchair2: 5, windowseat1: 6, bchair: 6 }[r.id]) problems.push('glb: ' + r.id + ' — загрузка/валидация/серый/габарит/proxy не сошлись (realism-all §8): ' + JSON.stringify(r)); });
   // realism-living step 6: six chairs from one GLB — every chair loaded without warnings, one shared geometry per material, back on the table side
   const chairGlb = await page.evaluate(async () => { const ids = [1, 2, 3, 4, 5, 6].map(i => 'chair' + i); for (let i = 0; i < 100 && !ids.every(id => ITEM_GROUPS[id].userData.glbLoaded); i++) await new Promise(r => setTimeout(r, 100));
     const geos = new Set(), sizes = new Set(); let warn = ''; ids.forEach(id => { const g = ITEM_GROUPS[id]; warn += (g.userData.glbWarnings || []).join('|'); g.traverse(o => { if (o.isMesh) geos.add(o.geometry); }); const s = new THREE.Vector3(); new THREE.Box3().setFromObject(g).getSize(s); sizes.add([s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join()); });
@@ -515,7 +515,7 @@ const { launchChromium } = require('./browser');
   if (decor.length) problems.push('декор комнаты 4: ' + decor.join(', '));
   // page defaults (2026-09-10, user): kitchen B, sofa G, tv decor D, sofa decor B — the selects, not the state forced above
   const defs = await page.evaluate(() => Object.fromEntries(['k4kitchen', 'k4sofa', 'k4tv', 'k4decortv', 'k4decorsofa', 'k4table', 'm3vtable', 'm3vmirror'].map(id => [id, [...document.getElementById(id).options].find(o => o.defaultSelected).value])));
-  const wantDefs = { k4kitchen: 'I', k4sofa: 'G', k4tv: 'B', k4decortv: 'D', k4decorsofa: 'B', k4table: 'D', m3vtable: 'A', m3vmirror: 'A' };
+  const wantDefs = { k4kitchen: 'I', k4sofa: 'G', k4tv: 'B', k4decortv: 'D', k4decorsofa: 'B', k4table: 'D', m3vtable: 'B', m3vmirror: 'A' };
   Object.entries(wantDefs).forEach(([id, v]) => { if (defs[id] !== v) problems.push('вариант по умолчанию ' + id + ': ' + defs[id] + ' (нужен ' + v + ')'); });
   // room 3 vanity (#m3vtable A/B, #m3vmirror A/E/F/G) and dining table (#k4table A/B): every variant builds meshes inside its size box and keeps the pouf
   const vans = await page.evaluate(() => { const out = [], inside = id => { const u = ITEM_GROUPS[id].userData, bb = new THREE.Box3().setFromObject(ITEM_GROUPS[id]), t = 0.005;
@@ -609,7 +609,7 @@ const { launchChromium } = require('./browser');
     const floor = finishGroup.children.find(o => o.geometry && o.geometry.type === 'ShapeGeometry' && (VIZ.basic.get(o.material) || o.material) === finishMats.lam); // the laminate floor (the first shape is vinyl since the floor layers)
     let sofa; ITEM_GROUPS.sofa.traverse(o => { if (!sofa && o.isMesh) sofa = o; }); // first mesh, whether procedural or the GLB model
     const lam = floor.material;
-    return { std: lam.isMeshStandardMaterial && sofa.material.isMeshStandardMaterial, shadows: renderer.shadowMap.enabled && sofa.castShadow && (LIGHTING.scheme === 'neutral' ? sun.castShadow : !sun.castShadow), // sun shadows only in the neutral scheme (illusion by default since 2c6c92a)
+    return { std: lam.isMeshStandardMaterial && sofa.material.isMeshStandardMaterial, shadows: renderer.shadowMap.enabled && sofa.castShadow && (LIGHTING.scheme === 'neutral' ? sun.castShadow : !sun.castShadow), // sun shadows only in the neutral scheme
       maps: !!(lam.roughnessMap && lam.normalMap), scale: Math.abs(lam.map.repeat.x - 1 / MATERIALS.lam.size[0]) < 1e-9 && Math.abs(lam.roughnessMap.repeat.x - lam.map.repeat.x) < 1e-9,
       tone: renderer.toneMapping === THREE.ACESFilmicToneMapping && renderer.outputEncoding === THREE.sRGBEncoding,
       pipe: LIGHTING.lit && renderer.toneMappingExposure === LIGHTING.exposure && !renderer.physicallyCorrectLights && scene.environment === LIGHTING.environment() && !camera.children.some(o => o.isLight) && sun.target.parent === scene, // M0: one fixed pipeline, fixed neutral light, nothing follows the camera
@@ -1196,12 +1196,12 @@ const { launchChromium } = require('./browser');
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
   // «Сброс» (кнопка 🔄): чистит сохранения pulse3d.* и открывает страницу как при первом заходе — последним, страница после него перезагружена
-  await page.evaluate(() => { try { localStorage.setItem('pulse3d.layout', '{"format":1}'); localStorage.setItem('pulse3d.light', 'lamps'); localStorage.setItem('other.key', 'stay'); } catch (e) {} });
+  await page.evaluate(() => { try { localStorage.setItem('pulse3d.layout', '{"format":1}'); localStorage.setItem('pulse3d.light', 'neutral'); localStorage.setItem('other.key', 'stay'); } catch (e) {} });
   page.once('dialog', d => d.accept());
   await page.click('#resetBtn');
   await page.waitForTimeout(6000);
   const reset = await page.evaluate(() => ({ lay: localStorage.getItem('pulse3d.layout'), light: localStorage.getItem('pulse3d.light'), other: localStorage.getItem('other.key'), q: location.search + location.hash, items: Object.keys(ITEM_GROUPS).length }));
-  if (reset.lay || reset.light === 'lamps') problems.push('сброс: сохранения pulse3d.* пережили кнопку 🔄');
+  if (reset.lay || reset.light === 'neutral') problems.push('сброс: сохранения pulse3d.* пережили кнопку 🔄');
   if (reset.other !== 'stay') problems.push('сброс: стёрты чужие ключи localStorage');
   if (reset.q || !reset.items) problems.push('сброс: страница не открылась заново чистым адресом');
   await page.evaluate(() => { try { localStorage.removeItem('other.key'); } catch (e) {} });
