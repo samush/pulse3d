@@ -3,6 +3,7 @@
 //   node tools/render.js --list | <ракурс> [--frame-only] [--reuse-frame] [--note "..."]
 //   node tools/render.js <ракурс> --fix "<что должно быть>"    # правка предыдущего результата, до трёх на кадр
 //   node tools/render.js <ракурс> --set sofa=G,k4kbase=sage,h5tile=B --ref r4-door --as dining-1   # any select by id; bare key = room 4
+//   node tools/render.js <ракурс> --as wp2 --from r1-door-wp1 --fix "..."   # вариант: правка чужого чистовика в новое имя
 //   node tools/render.js <ракурс> --wide                        # исходная камера пресета, широкий угол под потолком
 //   node tools/render.js <ракурс> --film                        # пасмурный свет, зерно и несовершенства съёмки (раздел «## film» в STYLE.md)
 //
@@ -14,7 +15,7 @@ const { launchChromium } = require('./browser');
 
 const root = path.dirname(__dirname);
 const args = process.argv.slice(2);
-const VALUED = ['note', 'fix', 'model', 'size', 'viewport', 'aspect', 'set', 'ref', 'as'];                       // флаги со значением: их аргумент — не имя ракурса
+const VALUED = ['note', 'fix', 'model', 'size', 'viewport', 'aspect', 'set', 'ref', 'as', 'from'];                       // флаги со значением: их аргумент — не имя ракурса
 const flag = (name, dflt) => { const i = args.indexOf('--' + name); return i < 0 ? dflt : args[i + 1]; };
 const has = name => args.includes('--' + name);
 const cam = args.find((a, i) => !a.startsWith('--') && !(i > 0 && VALUED.includes(args[i - 1].replace(/^--/, ''))));
@@ -28,6 +29,7 @@ const MAX_FIXES = 3;
 const SET = flag('set', '');   // селекты в кадре: table=none,sofa=G (комната 4) или полный id — k4kbase=sage,h5tile=B
 const REF = flag('ref', '');   // готовый рендер другого ракурса — эталон материалов и палитры
 const AS = flag('as', '');   // имя варианта: без него результат зовётся именем ракурса
+const FROM = flag('from', '');   // --fix поверх чужого чистовика (final/<from>.jpg) в новое имя --as: варианты одного кадра, где меняется одно
 const LABELS = has('labels');
 const FILM = has('film');   // «как снято на телефон в пасмурный день»: включается только по явной просьбе
 const PHOTO = !has('wide');   // по умолчанию высота глаз и нормальный объектив; --wide — исходная камера пресета под потолком
@@ -128,14 +130,15 @@ async function send() {
   let input, prompt, fixes = meta ? meta.fixes || 0 : 0;
 
   if (fix) {
-    if (!fs.existsSync(prev)) { console.error('нечего править: сначала базовый прогон без --fix'); process.exit(1); }
+    const src = FROM ? path.join(DIR.final, FROM + '.jpg') : prev; if (FROM) fixes = 0;
+    if (!fs.existsSync(src)) { console.error('нечего править: ' + (FROM ? 'нет ' + rel(src) : 'сначала базовый прогон без --fix')); process.exit(1); }
     if (fixes >= MAX_FIXES && !has('force')) { console.error('правок уже ' + fixes + ' из ' + MAX_FIXES + ': дальше --force или новый базовый прогон (модель уплывает от геометрии)'); process.exit(5); }
     fixes++;
     // правка, а не перегенерация: что менять — одной фразой, всё остальное сохраняется дословно; якорь геометрии идёт последним, от него наследуется кадрирование
     prompt = 'Image 1 is a photorealistic render to edit. Image 2 is the 3D scene it was made from — the geometry anchor: room shape, openings, camera and the placement of large furniture must match it.\n\n'
       + 'Keep everything else in image 1 exactly the same — same geometry, same camera, same materials, same lighting, same aspect ratio. Only fix: ' + fix + '\n\n'
       + (shot ? 'Shot notes: ' + shot.trim() + '\n\n' : '') + (scale ? scale + '\n\n' : '') + 'Style reminder: ' + common.split('\n\n').slice(3).join(' ').slice(0, 900) + film;
-    input = [{ type: 'text', text: prompt }, img(prev), img(framePath)];   // якорь последним: от него наследуется кадрирование
+    input = [{ type: 'text', text: prompt }, img(src), img(framePath)];   // якорь последним: от него наследуется кадрирование
     console.log('правка ' + fixes + '/' + MAX_FIXES + ' на ' + MODEL);
   } else {
     fixes = 0;
