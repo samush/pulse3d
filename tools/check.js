@@ -389,7 +389,7 @@ const { launchChromium } = require('./browser');
     const bad = ids.filter(id => { const g = ITEM_GROUPS[id], tol = g.userData.glbLoaded ? 0.011 : 0.0011, bb = new THREE.Box3().setFromObject(g).applyMatrix4(new THREE.Matrix4().copy(g.matrixWorld).invert()), s = g.userData.size; return !(bb.min.x >= -tol && bb.min.y >= -tol && bb.min.z >= -tol && bb.max.x <= s[0] + tol && bb.max.y <= s[1] + tol && bb.max.z <= s[2] + tol); });
     const slot = id => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh) set.add(o.material.userData.slot || 'furniture'); }); return [...set].sort().join(); };
     return { n: ids.length, bad, rug: ITEM_GROUPS.kidrug.children[0].geometry.type === 'ExtrudeGeometry', sw1: slot('sw1') === 'furniture,plastic' && PHYS.sw1.length === 1, curtain: slot('curtain') === 'fabric,metal', bed: ITEM_GROUPS.kidbed.children.length > 50 }; });
-  if (stageBFit.n !== 26 || stageBFit.bad.length) problems.push('детская 1: предметы вне size (realism-all §0): ' + stageBFit.bad.join(', '));
+  if (stageBFit.n !== 27 || stageBFit.bad.length) problems.push('детская 1: предметы вне size (realism-all §0): ' + stageBFit.bad.join(', '));
   if (!stageBFit.rug || !stageBFit.sw1 || !stageBFit.curtain || !stageBFit.bed) problems.push('детская 1: ковёр/выключатель/тюль/кровать не детализированы (realism-all §8): ' + JSON.stringify(stageBFit));
   // realism-all stage B: kidsofa/kidchair/windowseat1 GLBs replaced the procedural builds — no validation warnings, grey materials, proxies untouched
   const stageBGlb = await page.evaluate(async () => { const ids = ['kidsofa', 'kidchair', 'kidchair2', 'windowseat1', 'bchair']; for (let i = 0; i < 100 && !ids.every(id => ITEM_GROUPS[id].userData.glbLoaded || (VIZ.loadErrors || []).some(s => s.startsWith(id + ':'))); i++) await new Promise(r => setTimeout(r, 100));
@@ -874,7 +874,7 @@ const { launchChromium } = require('./browser');
   const kid = await page.evaluate(() => {
     const kids = ITEMS.filter(it => it.layer === 'kid' && it.room === 1), bb = o => new THREE.Box3().setFromObject(o);
     const room = PLAN.rooms.find(r => r.id === 1), xs = room.poly.map(q => q[0]), zs = room.poly.map(q => q[1]);
-    const inside = kids.filter(it => { const b = bb(ITEM_GROUPS[it.id]); return b.min.x < Math.min(...xs) - 0.001 || b.max.x > Math.max(...xs) + 0.001 || b.min.z < Math.min(...zs) - 0.001 || b.max.z > Math.max(...zs) + 0.001; }).map(it => it.id);
+    const inside = kids.filter(it => !it.inWall).filter(it => { const b = bb(ITEM_GROUPS[it.id]); return b.min.x < Math.min(...xs) - 0.001 || b.max.x > Math.max(...xs) + 0.001 || b.min.z < Math.min(...zs) - 0.001 || b.max.z > Math.max(...zs) + 0.001; }).map(it => it.id);
     const plat = new THREE.Box3(new THREE.Vector3(4.235, 1.7, 1.884), new THREE.Vector3(5.435, 1.8, 3.884));
     const hitPlat = kids.filter(it => it.id !== 'kidbed' && bb(ITEM_GROUPS[it.id]).intersectsBox(plat)).map(it => it.id);
     const warn = kids.map(it => [it.id, LAY.warnings(it.id)]).filter(([, w]) => w.length).map(([id, w]) => id + ': ' + w.join('; '));
@@ -935,7 +935,7 @@ const { launchChromium } = require('./browser');
   // the ceiling, no overlaps, grey materials
   const r2 = await page.evaluate(() => {
     const its = ITEMS.filter(it => it.layer === 'kid2' && it.room === 2), bb = o => new THREE.Box3().setFromObject(o);
-    const inside = its.filter(it => { const b = bb(ITEM_GROUPS[it.id]); const zs = Math.max(...PLAN.rooms.find(r => r.id === 2).poly.map(p => p[1])); return b.min.x < 11.066 || b.max.x > 14.775 || b.min.z < 6.517 || b.max.z > zs + 0.001; }).map(it => it.id);
+    const inside = its.filter(it => !it.inWall).filter(it => { const b = bb(ITEM_GROUPS[it.id]); const zs = Math.max(...PLAN.rooms.find(r => r.id === 2).poly.map(p => p[1])); return b.min.x < 11.066 || b.max.x > 14.775 || b.min.z < 6.517 || b.max.z > zs + 0.001; }).map(it => it.id);
     const parts = ITEM_GROUPS.kidbed2.children.map(o => bb(o));
     const plat = parts.filter(b => Math.abs(b.min.y - 1.7) < 0.01 && b.max.x - b.min.x > 1.1)[0];
     const desk = bb(ITEM_GROUPS.kiddesk2), lamp = bb(ITEM_GROUPS.desklamp2);
@@ -969,7 +969,7 @@ const { launchChromium } = require('./browser');
   const m3 = await page.evaluate(() => {
     const its = ITEMS.filter(it => it.layer === 'master'), bb = o => new THREE.Box3().setFromObject(o);
     const room = PLAN.rooms.find(r => r.id === 3), xs = room.poly.map(q => q[0]), zs = room.poly.map(q => q[1]);
-    const inside = its.filter(it => { const b = bb(ITEM_GROUPS[it.id]); return b.min.x < Math.min(...xs) - 0.001 || b.max.x > Math.max(...xs) + 0.001 || b.min.z < Math.min(...zs) - 0.001 || b.max.z > Math.max(...zs) + 0.001; }).map(it => it.id);
+    const inside = its.filter(it => !it.inWall).filter(it => { const b = bb(ITEM_GROUPS[it.id]); return b.min.x < Math.min(...xs) - 0.001 || b.max.x > Math.max(...xs) + 0.001 || b.min.z < Math.min(...zs) - 0.001 || b.max.z > Math.max(...zs) + 0.001; }).map(it => it.id);
     const bed = bb(ITEM_GROUPS.mbed), win = PLAN.windows.find(w => w.x > 14.9 && w.z0 > 10);
     const cab = [bb(ITEM_GROUPS.mcab), bb(ITEM_GROUPS.mward)].some(b => b.min.z < win.z1 + 0.1 && b.max.z > win.z0 - 0.1 && b.max.x > 14.7);
     const door = ['vanity', 'vpouf'].filter(id => { const b = bb(ITEM_GROUPS[id]); return b.min.x < 10.82 && b.max.z > 12.2 && b.min.z < 13.0; });
