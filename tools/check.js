@@ -514,15 +514,15 @@ const { launchChromium } = require('./browser');
     return out; });
   if (decor.length) problems.push('декор комнаты 4: ' + decor.join(', '));
   // page defaults (2026-09-10, user): kitchen B, sofa G, tv decor D, sofa decor B — the selects, not the state forced above
-  const defs = await page.evaluate(() => Object.fromEntries(['k4kitchen', 'k4sofa', 'k4tv', 'k4decortv', 'k4decorsofa', 'k4table', 'm3vanity'].map(id => [id, [...document.getElementById(id).options].find(o => o.defaultSelected).value])));
-  const wantDefs = { k4kitchen: 'I', k4sofa: 'G', k4tv: 'B', k4decortv: 'D', k4decorsofa: 'B', k4table: 'D', m3vanity: 'A' };
+  const defs = await page.evaluate(() => Object.fromEntries(['k4kitchen', 'k4sofa', 'k4tv', 'k4decortv', 'k4decorsofa', 'k4table', 'm3vtable', 'm3vmirror'].map(id => [id, [...document.getElementById(id).options].find(o => o.defaultSelected).value])));
+  const wantDefs = { k4kitchen: 'I', k4sofa: 'G', k4tv: 'B', k4decortv: 'D', k4decorsofa: 'B', k4table: 'D', m3vtable: 'A', m3vmirror: 'A' };
   Object.entries(wantDefs).forEach(([id, v]) => { if (defs[id] !== v) problems.push('вариант по умолчанию ' + id + ': ' + defs[id] + ' (нужен ' + v + ')'); });
-  // room 3 vanity (#m3vanity A–E) and dining table (#k4table A/B): every variant builds meshes inside its size box and keeps the pouf
+  // room 3 vanity (#m3vtable/#m3vmirror A–E, set together here) and dining table (#k4table A/B): every variant builds meshes inside its size box and keeps the pouf
   const vans = await page.evaluate(() => { const out = [], inside = id => { const u = ITEM_GROUPS[id].userData, bb = new THREE.Box3().setFromObject(ITEM_GROUPS[id]), t = 0.005;
       return ITEM_GROUPS[id].children.length > 0 && bb.min.y >= -t && bb.max.y <= u.size[1] + t && bb.max.x - bb.min.x <= u.size[0] + 2 * t && bb.max.z - bb.min.z <= u.size[2] + 2 * t; };
-    for (const v of 'ABCDE') { ROOM3.set('vanity', v); for (const id of ['vanity', 'vmirror']) if (!ITEM_GROUPS[id].visible || !inside(id)) out.push(id + ':' + v);
+    for (const v of 'ABCDE') { ROOM3.set('vtable', v); ROOM3.set('vmirror', v); for (const id of ['vanity', 'vmirror']) if (!ITEM_GROUPS[id].visible || !inside(id)) out.push(id + ':' + v);
       if (!ITEM_GROUPS.vpouf.visible || ITEM_GROUPS.vanity.userData.size[2] < 0.40) out.push('пуфик/глубина:' + v); }
-    ROOM3.set('vanity', 'A');
+    ROOM3.set('vtable', 'A'); ROOM3.set('vmirror', 'A');
     for (const v of ['B', 'C', 'D', 'A']) { ROOM4.set('table', v); if (!ITEM_GROUPS.table.visible || !inside('table')) out.push('table:' + v); }
     return out; });
   if (vans.length) problems.push('варианты столиков: ' + vans.join(', '));
