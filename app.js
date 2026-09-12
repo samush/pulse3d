@@ -221,11 +221,13 @@ const CAMS=[ // fixed room cameras (selector «Камера»): pos [x,y,z] m, t
   {id:'r1-bed',label:'детская 1 (вид 3)',pos:[4.3,2.62,3.2],theta:-1.6,phi:Math.PI/2+0.45,fov:90},
   {id:'r1-stairs',label:'детская 1 (вид 4)',pos:[4.2,2.65,2.35],theta:-0.79,phi:Math.PI/2+0.4,fov:90},
   {id:'r1-door',label:'детская 1 (вид 5)',pos:[5.15,1.7,4.42],theta:-2.06,phi:Math.PI/2+0.04,fov:75},
+  {id:'r1-win',label:'детская 1 (вид 6)',pos:[1.15,2.55,3.37],theta:1.571,phi:Math.PI/2+0.33,fov:90}, // от окна вглубь комнаты: стол справа, кровать и дверь впереди (user, 2026-09-12)
   {id:'r2-n',label:'детская 2 (вид 1)',pos:[14.0,2.55,7.4],theta:-0.85,phi:Math.PI/2+0.33,fov:80},
   {id:'r2-s',label:'детская 2 (вид 2)',pos:[13.8,2.55,9.45],theta:-2.49,phi:Math.PI/2+0.33,fov:80},
   {id:'r2-bed',label:'детская 2 (вид 3)',pos:[12.2,2.62,8.4],theta:1.5,phi:Math.PI/2+0.45,fov:90},
   {id:'r2-stairs',label:'детская 2 (вид 4)',pos:[12.3,2.65,9.5],theta:2.47,phi:Math.PI/2+0.4,fov:90},
   {id:'r2-door',label:'детская 2 (вид 5)',pos:[11.35,1.7,7.2],theta:1.06,phi:Math.PI/2+0.04,fov:75},
+  {id:'r2-win',label:'детская 2 (вид 6)',pos:[14.52,2.55,8.05],theta:-1.571,phi:Math.PI/2+0.33,fov:90}, // от окна вглубь комнаты: стол под кроватью впереди, дверь справа (user, 2026-09-12)
   {id:'r3-door',label:'спальня (вид 1)',pos:[10.2,2.5,10.3],theta:1.15,phi:Math.PI/2+0.33,fov:80},
   {id:'r3-tv',label:'спальня (вид 2)',pos:[14.5,1.5,9.95],theta:-0.93,phi:Math.PI/2+0.05,fov:85}, // corner of the TV wall shifted towards the window, eye height 1.5 (user, 2026-09-09)
   {id:'r4-door',label:'кухня-гостиная (вид 1)',pos:[13.3,2.5,6.1],theta:-2.25,phi:Math.PI/2+0.33,fov:80},

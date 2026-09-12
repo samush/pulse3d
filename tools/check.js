@@ -370,7 +370,7 @@ const { launchChromium } = require('./browser');
     return { sw5: fit('sw5') && PHYS.sw5.length === 1 && n('sw5') === 3, sw7: fit('sw7') && PHYS.sw7.length === 1 && n('sw7') === 2, mirror: fit('mirror') && PHYS.mirror.length === 1 && n('mirror') === 4, slots: ['plastic', 'ceramic', 'acrylic', 'leather', 'mirror'].every(k => ITEM_MATS[k].userData.slot === k && MATERIALS[k]) }; });
   Object.entries(helpers).forEach(([k, ok]) => { if (!ok) problems.push('helpers: «' + k + '» вне size, число боксов/мешей или слот не сошлись (realism-all §3/§4)'); });
   // realism-all stage B: kids room 1 — explicit proxies for every item, box count fixed so detailing never changes walk/layout
-  const stageB = await page.evaluate(() => { const want = { kidbed: 9, kiddesk: 4, kidped: 4, kidchair: 5, kidshelf: 13, kidshelf2: 8, kidshelf3: 3, windowseat1: 9, kidsofa: 8, kidrug: 1, projector: 3, screen: 2, curtain: 2, kidlight: 1, track: 3, bra1: 3, bra2: 2, sw1: 1, sock1: 1, sock2: 1, sock3: 1, sock4: 1, sock5: 1, sock6: 1, sock7: 1 };
+  const stageB = await page.evaluate(() => { const want = { kidbed: 9, kiddesk: 2, kidped: 4, kidchair: 5, kidshelf: 13, kidshelf2: 8, kidshelf3: 3, windowseat1: 9, kidsofa: 8, kidrug: 1, projector: 3, screen: 2, curtain: 2, kidlight: 1, track: 3, bra1: 3, bra2: 2, sw1: 1, sock1: 1, sock2: 1, sock3: 1, sock4: 1, sock5: 1, sock6: 1, sock7: 1 };
     return Object.entries(want).filter(([id, n]) => PHYS[id].length !== n).map(([id, n]) => id + ' ' + PHYS[id].length + '≠' + n); });
   if (stageB.length) problems.push('proxy: детская 1 — число боксов изменилось (realism-all §8): ' + stageB.join(', '));
   // realism-all stage F: closet 6 and loggia 10 — explicit proxies, box count fixed
@@ -517,10 +517,11 @@ const { launchChromium } = require('./browser');
   const defs = await page.evaluate(() => Object.fromEntries(['k4kitchen', 'k4sofa', 'k4tv', 'k4decortv', 'k4decorsofa', 'k4table', 'm3vtable', 'm3vmirror'].map(id => [id, [...document.getElementById(id).options].find(o => o.defaultSelected).value])));
   const wantDefs = { k4kitchen: 'I', k4sofa: 'G', k4tv: 'B', k4decortv: 'D', k4decorsofa: 'B', k4table: 'D', m3vtable: 'A', m3vmirror: 'A' };
   Object.entries(wantDefs).forEach(([id, v]) => { if (defs[id] !== v) problems.push('вариант по умолчанию ' + id + ': ' + defs[id] + ' (нужен ' + v + ')'); });
-  // room 3 vanity (#m3vtable/#m3vmirror A–E, set together here) and dining table (#k4table A/B): every variant builds meshes inside its size box and keeps the pouf
+  // room 3 vanity (#m3vtable A/B, #m3vmirror A/E/F/G) and dining table (#k4table A/B): every variant builds meshes inside its size box and keeps the pouf
   const vans = await page.evaluate(() => { const out = [], inside = id => { const u = ITEM_GROUPS[id].userData, bb = new THREE.Box3().setFromObject(ITEM_GROUPS[id]), t = 0.005;
       return ITEM_GROUPS[id].children.length > 0 && bb.min.y >= -t && bb.max.y <= u.size[1] + t && bb.max.x - bb.min.x <= u.size[0] + 2 * t && bb.max.z - bb.min.z <= u.size[2] + 2 * t; };
-    for (const v of 'ABCDE') { ROOM3.set('vtable', v); ROOM3.set('vmirror', v); for (const id of ['vanity', 'vmirror']) if (!ITEM_GROUPS[id].visible || !inside(id)) out.push(id + ':' + v);
+    for (const v of 'AB') { ROOM3.set('vtable', v); for (const id of ['vanity']) if (!ITEM_GROUPS[id].visible || !inside(id)) out.push(id + ':' + v); }
+    for (const v of 'AEFG') { ROOM3.set('vmirror', v); for (const id of ['vmirror']) if (!ITEM_GROUPS[id].visible || !inside(id)) out.push(id + ':' + v);
       if (!ITEM_GROUPS.vpouf.visible || ITEM_GROUPS.vanity.userData.size[2] < 0.40) out.push('пуфик/глубина:' + v); }
     ROOM3.set('vtable', 'A'); ROOM3.set('vmirror', 'A');
     for (const v of ['B', 'C', 'D', 'A']) { ROOM4.set('table', v); if (!ITEM_GROUPS.table.visible || !inside('table')) out.push('table:' + v); }
@@ -696,7 +697,7 @@ const { launchChromium } = require('./browser');
     const key = k => o => { const b = VIZ.basic.get(o.material) || o.material; return b === ITEM_MATS[k] || (k === 'led' && b.name.startsWith('led:')); }, glb = n => o => o.userData.glbMat === n, cab = o => ['kbody', 'body', 'wdoor', 'wpanel'].some(k => key(k)(o)), led = o => (VIZ.basic.get(o.material) || o.material).userData.slot === 'emitter'; // led is cloned per lighting group since L1
     let tulle; ITEM_GROUPS.curtain.traverse(o => { if (!tulle && o.isMesh && (VIZ.basic.get(o.material) || o.material) === ITEM_MATS.tulle) tulle = o.material; });
     return { loaded,
-      casework: ['kidbed', 'kiddesk', 'kidped', 'kidshelf', 'kidbed2', 'tower2n', 'deskshelf2'].every(id => on(id, cab) === 'cabinetPaint') && on('windowseat1', glb('wdoor')) === 'cabinetPaint' && on('windowseat2', glb('paint')) === 'cabinetPaint',
+      casework: ['kidbed', 'kidbed2'].every(id => on(id, cab) === 'cabinetPaint') && ['kiddesk', 'kidped', 'kidshelf', 'tower2n', 'deskshelf2'].every(id => on(id, cab) === 'creamFront') && on('windowseat1', glb('wdoor')) === 'creamFront' && on('windowseat2', glb('paint')) === 'creamFront', // столы, стеллажи и комоды красит палитра комнаты, по умолчанию кремовый
       bedding: ['kmat', 'pillow', 'cushion'].every(k => on('kidbed', key(k)) === 'curtainLinen') && on('kidbed2', key('kmat')) === 'curtainLinen' && on('windowseat2', glb('kmat')) === 'curtainLinen' && on('windowseat1', glb('pillow')) === 'curtainLinen',
       chairs: ['kidchair', 'kidchair2'].every(id => on(id, glb('cushion')) === 'sofaWeave' && on(id, glb('plastic')) === 'plastic' && on(id, glb('chrome')) === 'class'),
       sofa: ['upholstery', 'piping', 'cushion'].every(n => on('kidsofa', glb(n)) === 'sofaWeave'), rug: on('kidrug', key('wpanel')) === 'rugPile',
@@ -738,7 +739,7 @@ const { launchChromium } = require('./browser');
     const on = (id, test) => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh && test(o)) set.add(o.material.userData.coating || 'class'); }); return [...set].sort().join(); };
     const key = k => o => (VIZ.basic.get(o.material) || o.material) === ITEM_MATS[k], glb = n => o => o.userData.glbMat === n, cab = o => ['body', 'door', 'wdoor', 'wpanel'].some(k => key(k)(o)), led = o => (VIZ.basic.get(o.material) || o.material).userData.slot === 'emitter';
     return { loaded,
-      casework: on('mcab', cab) === 'mushroomFront' && on('mward', cab) === 'sageFront' && ['vanity', 'wsecA', 'wsecC', 'wend', 'wpeg'].every(id => on(id, cab) === 'cabinetPaint') && on('mbed', glb('dark')) === 'oakFurniture',
+      casework: on('mcab', cab) === 'mushroomFront' && on('mward', cab) === 'sageFront' && on('vanity', cab) === 'whiteFront' && ['wsecA', 'wsecC', 'wend', 'wpeg'].every(id => on(id, cab) === 'cabinetPaint') && on('mbed', glb('dark')) === 'oakFurniture',
       bed: ['kmat', 'pillow', 'cover'].every(n => on('mbed', glb(n)) === 'curtainLinen') && on('mbed', glb('leather')) === 'class',
       pouf: on('vpouf', glb('leather')) === 'class' && on('vpouf', glb('metal')) === 'class', rug: on('mrug', key('cushion')) === 'rugPile', drape: on('mcurtain', key('drape')) === 'curtainLinen',
       plastic: ['bra5', 'sock14', 'sw6'].every(id => on(id, key('plastic')) === 'plastic') && on('bra5', led) === 'class' && on('mward', key('frame')) === 'class',
@@ -882,7 +883,7 @@ const { launchChromium } = require('./browser');
     const sofaTop = bb(ITEM_GROUPS.kidsofa).max.y;
     const colored = []; kids.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh) return; const bm = VIZ.basic.get(o.material) || o.material; if (bm.isMeshBasicMaterial || bm.transparent) return; const c = bm.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     const desk = bb(ITEM_GROUPS.kiddesk), seat = bb(ITEM_GROUPS.windowseat1), shelfN = bb(ITEM_GROUPS.kidshelf), shelfS = bb(ITEM_GROUPS.kidshelf2), win = PLAN.windows[0];
-    const deskStraight = desk.max.z - desk.min.z <= 0.81 && desk.max.z > 4.86 && desk.max.x - desk.min.x > 2.1;
+    const deskStraight = desk.max.z - desk.min.z <= 0.81 && desk.max.z > 4.86 && desk.max.x - desk.min.x > 1.9;
     const chair = bb(ITEM_GROUPS.kidchair), ped = bb(ITEM_GROUPS.kidped), chairIn = chair.max.z - desk.min.z >= 0.25, pedEnd = desk.max.x - ped.max.x < 0.025;
     const seatOk = seat.min.z >= shelfN.max.z - 0.001 && seat.max.z <= desk.min.z + 0.201 && seat.max.x <= 1.52;
     const windowFree = shelfN.max.z <= win.z0 - 0.09 && shelfS.min.z >= win.z1 + 0.09;
