@@ -65,16 +65,16 @@ const controls={
     this.apply(); syncMode();
   },
   lookDown(){ this.theta=0; this.phi=this.minPhi; this.apply(); }, // ровный план для разметки и расстановки
-  setFPV(x,z,theta){
-    this.fpv=true; this.plan=false; this.cam=false;
-    persp.near=0.5; persp.fov=60; persp.updateProjectionMatrix();
+  setFPV(x,z,theta,pov){ // pov: first-person, camera at eye level of the same 1.7 m walker, no figure
+    this.fpv=true; this.plan=false; this.cam=false; this.pov=!!pov;
+    persp.near=this.pov?0.15:0.5; persp.fov=60; persp.updateProjectionMatrix();
     const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
     this.pos.set(x,1.57,z);
     this.theta=theta; this.phi=Math.PI/2+0.03;
     this.apply(); syncMode();
   },
   setCam(c){ // fixed camera from CAMS: lens turns with the mouse, position stays
-    this.fpv=true; this.cam=true; this.plan=false; this.camId=c.id;
+    this.fpv=true; this.cam=true; this.plan=false; this.pov=false; this.camId=c.id;
     persp.fov=c.fov||70; persp.near=0.05; persp.updateProjectionMatrix(); // small rooms: the wall next to the lens must not be clipped
     const zs=document.getElementById('zoom'); if(zs){zs.value=100;document.getElementById('zov').textContent='100%';}
     this.pos.set(c.pos[0],c.pos[1],c.pos[2]); this.theta=c.theta; this.phi=c.phi;
@@ -82,7 +82,7 @@ const controls={
   },
   apply(){
     camera=this.plan?ortho:persp;
-    if(typeof avatar!=='undefined'){ avatar.visible=this.fpv&&!this.cam&&document.getElementById('avatarOn').checked; }
+    if(typeof avatar!=='undefined'){ avatar.visible=this.fpv&&!this.cam&&!this.pov&&document.getElementById('avatarOn').checked; }
     if(typeof backdropGroup!=='undefined'){ backdropGroup.visible=this.fpv; }
     if(typeof ceilGroup!=='undefined') ceilGroup.visible=!this.plan; // hidden in plan only; set before the fpv return so walk mode restores it
     if(this.fpv){
@@ -90,6 +90,7 @@ const controls={
       const d=this.dir();
       if(this.cam){ camera.position.copy(this.pos); camera.lookAt(this.pos.clone().add(d)); return; }
       const head=this.pos.clone(); head.y=1.57;
+      if(this.pov){ head.y=1.60; camera.position.copy(head); camera.lookAt(head.clone().add(d)); return; } // eyes of a 1.7 m person
       if(typeof avatar!=='undefined'){
         avatar.position.set(this.pos.x,0,this.pos.z);
         avatar.rotation.y=this.theta;
@@ -250,11 +251,13 @@ function setView(kind){
   if(kind==='top'){controls.setPlan();}
   else if(kind==='eye'){controls.setPose(cx+span*0.62,1.7,cz+span*0.72,cx,1.3,cz);}
   else if(kind==='door'){controls.setFPV(7.35,8.6,Math.PI);}
+  else if(kind==='pov'){controls.setFPV(7.35,8.6,Math.PI,true);}
   else if(kind==='room4'){controls.setFPV(11.0,3.4,-0.75);}
   else{const d=fitDist(0.78);controls.setPose(cx+d*0.72,d*0.82,cz+d*0.77,cx,0,cz);}
 }
 function syncMode(){ // called by every camera-mode switch (setPlan/setFPV/setPose): UI, plan tools and render mode follow the camera (A03)
   fpvhint.hidden=!controls.fpv||controls.cam; walkpad.hidden=!controls.fpv||controls.cam;
+  fpvhint.textContent=(controls.pov?'камера — глаза человека ростом 1,7 м. ':'камера — за плечом человечка ростом 1,7 м. ')+'Стрелки ↑↓ — идти, ←→ — повернуться (или WASD); мышь — оглядеться, колесо — идти, ПКМ — шаг в сторону';
   document.getElementById('camhint').hidden=!controls.cam; document.querySelectorAll('#camgrid button').forEach(b=>b.classList.toggle('on',controls.cam&&b.dataset.id===controls.camId));
   panbtn.hidden=controls.fpv; panbtn.classList.remove('on');
   document.querySelector('.hint').textContent=controls.plan?'ЛКМ — вращать · колесо — масштаб · ПКМ или пробел — сдвиг':'ЛКМ — вращать · колесо — зум · ПКМ или пробел — сдвиг';
@@ -493,6 +496,7 @@ zoom.addEventListener('input',()=>{
 });
 document.getElementById('vTop').addEventListener('click',()=>setView('top'));
 document.getElementById('vFP').addEventListener('click',()=>setView('door'));
+document.getElementById('vPOV').addEventListener('click',()=>setView('pov'));
 (function(){ const grid=document.getElementById('camgrid'), rows={}; // one row of square buttons per room: «room.view», rooms and order as in CAMS
   CAMS.forEach(c=>{ const room=c.id.match(/^r(\d+)/)[1]; if(!rows[room]){ rows[room]=document.createElement('div'); rows[room].className='room views'; grid.appendChild(rows[room]); }
     const b=document.createElement('button'); b.dataset.id=c.id; b.textContent=room+'.'+(rows[room].children.length+1); b.title=c.label; b.addEventListener('click',()=>setView(c.id)); rows[room].appendChild(b); }); })();
