@@ -85,7 +85,7 @@
   function warnings(id){
     const w=[]; const u=ITEM_GROUPS[id].userData; const c=itemCorners(id); const b=aabb(id);
     const room=PLAN.rooms.find(r=>r.id===u.room);
-    if(room&&!c.every(q=>inPoly([Math.min(Math.max(q[0],b[0]+0.001),b[2]-0.001),Math.min(Math.max(q[1],b[1]+0.001),b[3]-0.001)],room.poly))) w.push('выходит за границы помещения '+u.room);
+    const def=ITEMS.find(i=>i.id===id); if(room&&!(def&&def.inWall)&&!c.every(q=>inPoly([Math.min(Math.max(q[0],b[0]+0.001),b[2]-0.001),Math.min(Math.max(q[1],b[1]+0.001),b[3]-0.001)],room.poly))) w.push('выходит за границы помещения '+u.room);
     ITEMS.filter(it=>it.id!==id&&it.attach!==id&&u.attach!==it.id&&!passive(it.id)&&!passive(id)).forEach(it=>{
       const o=aabb(it.id);
       const ox=Math.min(b[2],o[2])-Math.max(b[0],o[0]), oz=Math.min(b[3],o[3])-Math.max(b[1],o[1]);

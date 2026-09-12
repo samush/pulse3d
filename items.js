@@ -435,6 +435,8 @@ const PHYS={}; // id → boxes
     {id:'screen',type:'кассета моторизованного экрана 1.70×0.96 под полкой (свёрнут)',room:1,layer:'kid',pos:[0.99,2.474],rot:0,size:[0.12,2.30,1.79],coat:PLASTIC,fixed:'wall',
      build(b,g){ b.phys(0,0.12,2.18,2.30,0,1.79); b.phys(0.03,0.09,2.17,2.18,0.05,1.74); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1.79,20).rotateX(Math.PI/2).translate(0.06,2.24,0.895),mat.plastic)); [0.005,1.785].forEach(z=>g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.056,0.056,0.01,20).rotateX(Math.PI/2).translate(0.06,2.24,z),mat.plastic))); // cassette Ø100 with end caps
        b(0.03,0.09,2.17,2.185,0.05,1.74,mat.frame); }},   // weighted bottom bar; ponytail: canvas not modelled, add a toggle when the cinema view is needed
+    {id:'reveal1',type:'откосы окна: верх и боковины проёма от рамы до плоскости стены, без подоконника',room:1,layer:'kid',pos:[0.685,2.47],rot:0,size:[0.211,2.30,1.80],coat:{body:'whiteEnamel'},fixed:'wall',inWall:true, // lives in the wall thickness: room-bounds checks skip it
+     build(b){ b(0,0.211,2.29,2.30,0,1.80,mat.body); b(0,0.211,0.55,2.30,0,0.012,mat.body); b(0,0.211,0.55,2.30,1.80-0.012,1.80,mat.body); }},
     {id:'curtain',type:'карниз с тюлем (блэкаут в проёме окна)',room:1,layer:'kid',pos:[0.911,2.474],rot:0,size:[0.05,2.30,1.79],coat:{tulle:'curtainLinen'},fixed:'wall',
      build(b,g){ b.phys(0.01,0.04,2.27,2.30,0,1.79); b.phys(0.015,0.025,0.75,2.26,0.05,1.74); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.01,1.79,12).rotateX(Math.PI/2).translate(0.025,2.285,0.895),mat.frame)); [0.05,0.895,1.74].forEach(z=>b(0,0.025,2.28,2.29,z-0.01,z+0.01,mat.frame)); // rod Ø20 on three brackets
        const pl=new THREE.PlaneGeometry(1.69,1.51,80,1).rotateY(Math.PI/2).translate(0,1.505,0.895), pp=pl.attributes.position; for(let i=0;i<pp.count;i++) pp.setX(i,0.025+0.018*Math.sin(pp.getZ(i)*2*Math.PI/0.14)); pl.computeVertexNormals(); g.add(new THREE.Mesh(pl,mat.tulle)); }}, // tulle 0.75–2.26 in 0.14 m waves
@@ -534,6 +536,8 @@ const PHYS={}; // id → boxes
      build(b){ b.spot(0.04,0.04,0.04); }},
     {id:'ceil2_3',type:'мебельный врезной светильник Ø0.08 в плите платформы кровати над столом, 3500 K; едет за кроватью',room:2,layer:'kid2',pos:[11.66,8.56],rot:0,size:[0.08,1.7,0.08],attach:'kidbed2',
      build(b){ b.spot(0.04,0.04,0.04,1.7); }},
+    {id:'reveal2',type:'откосы окна: верх и боковины проёма от рамы до плоскости стены, без подоконника',room:2,layer:'kid2',pos:[14.774,7.30],rot:0,size:[0.191,2.30,1.50],coat:{body:'whiteEnamel'},fixed:'wall',inWall:true, // lives in the wall thickness: room-bounds checks skip it
+     build(b){ b(0,0.191,2.29,2.30,0,1.50,mat.body); b(0,0.191,0.55,2.30,0,0.012,mat.body); b(0,0.191,0.55,2.30,1.50-0.012,1.50,mat.body); }},
     {id:'blind2',type:'кассета рулонной блэкаут-шторы над окном',room:2,layer:'kid2',pos:[14.694,7.31],rot:0,size:[0.08,2.38,1.48],coat:PLASTIC,fixed:'wall',
      build(b,g){ b.phys(0,0.08,2.3,2.38,0,1.48); b.phys(0.02,0.06,2.29,2.3,0.03,1.45); // proxy = pre-detail mesh AABBs (realism-all C1)
        g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.039,0.039,1.44,24).rotateX(Math.PI/2).translate(0.04,2.34,0.74),mat.plastic)); // cassette Ø78
@@ -601,6 +605,8 @@ const PHYS={}; // id → boxes
     {id:'mrug',type:'ковёр, короткий ворс',room:3,layer:'master',pos:[14.0,12.321],rot:180,size:[2.00,0.01,2.00],coat:{cushion:'rugPile'},
      build(b,g){ b.phys(0,2,0,0.01,0,2); // proxy = pre-detail mesh AABBs (realism-all D1)
        g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(1.998,1.998,0.04),{depth:0.006,bevelThickness:0.001,bevelSize:0.001,bevelSegments:1,curveSegments:6}).rotateX(Math.PI/2).translate(0.001,0.007,0.001),mat.cushion)); }},
+    {id:'reveal3',type:'откосы окна: верх и боковины проёма от рамы до плоскости стены, без подоконника',room:3,layer:'master',pos:[14.76,10.35],rot:0,size:[0.205,2.30,2.20],coat:{body:'whiteEnamel'},fixed:'wall',inWall:true, // lives in the wall thickness: room-bounds checks skip it
+     build(b){ b(0,0.205,2.29,2.30,0,2.20,mat.body); b(0,0.205,0.55,2.30,0,0.012,mat.body); b(0,0.205,0.55,2.30,2.20-0.012,2.20,mat.body); }},
     {id:'mcurtain',type:'потолочный карниз по восточной стене, шторы собраны у краёв',room:3,layer:'master',pos:[14.7,12.794],rot:180,size:[0.10,2.68,3.017],coat:{drape:'curtainLinen'},fixed:'wall',
      build(b,g){ b.phys(0.02,0.05,2.65,2.68,0,3.017); b.phys(0.02,0.08,1.15,2.64,0,0.15); b.phys(0.02,0.08,0.02,2.64,2.867,3.017); // proxy = pre-detail mesh AABBs (realism-all D1)
        b(0.02,0.05,2.65,2.68,0,3.017,mat.frame);                                                                        // ceiling track
@@ -1100,7 +1106,7 @@ const PHYS={}; // id → boxes
       vanity:VAN(1.10,0.76,0.42,CAB,b=>{ b.phys(0,1.10,0.60,0.76,0,0.42); b.round(0,1.10,0.72,0.76,0,0.42,0.003,mat.body);
         [[0.01,0.545],[0.555,1.09]].forEach(([x0,x1])=>{ b.round(x0,x1,0.60,0.715,0.03,0.42,0.002,mat.body); b(x0+0.06,x1-0.06,0.655,0.668,0.018,0.032,mat.handle); }); }),
       vmirror:VMIR(0.75,1.85,12.17,roundMirror(0.75,1.10,mat.frame))}}};
-  const R3={vtable:{ids:['vanity'],V:VAN_V},vmirror:{ids:['vmirror'],V:VAN_V}}; // spec() reads only its own id from items, so the same set serves both
+  const R3={vtable:{ids:['vanity'],V:VAN_V},vmirror:{ids:['vmirror'],V:VAN_V},curtain:{ids:['mcurtain']},reveal:{ids:['reveal3']}}; // keys without V: only «нет»/A // spec() reads only its own id from items, so the same set serves both
   // a variant with its own glb reloads it after the procedural rebuild; loadItemGlb drops a model whose url is no longer userData.glb (fast switching)
   const spec=(V,it)=>V?(V.items?V.items[it.id]:V):it; // a variant is one spec for every id of the group, or items:{id:spec|null} (null = hidden)
   const COAT_HOOKS=[]; // colour selects re-apply their coating after a layout variant has rebuilt the item
@@ -1115,6 +1121,9 @@ const PHYS={}; // id → boxes
       if([...sel.options].some(o=>o.value===v)){ sel.value=v; API.set(key,v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} API.set(key,sel.value); }); });
     return API; }
   window.ROOM4=variantSelects('k4',R4); window.ROOM3=variantSelects('m3',R3);
+  window.KID1=variantSelects('r1',{curtain:{ids:['curtain']},reveal:{ids:['reveal1']}}); window.KID2=variantSelects('r2',{curtain:{ids:['blind2']},reveal:{ids:['reveal2']}});
+  window.BATH9=variantSelects('b9',{mirror:{ids:['bathmirror']},basin:{ids:['basin','basindrawer','basinmixer']},wc:{ids:['wc']},box:{ids:['wcbox','sock21']},light:{ids:['spot1','spot2']},mlight:{ids:['spot3']},towel:{ids:['towelrail']},tub:{ids:['tub']}});
+  window.BATH8=variantSelects('b8',{wc:{ids:['wc8']},box:{ids:['wcbox8']},light:{ids:['spot4','spot5','spot6','cove8']},towel:{ids:['towel8']},glass:{ids:['glass8']}}); // no basin or mirror in room 8 yet: those selects only offer «нет»
   // ---- colour selects (#k4kbase/#k4kupper, #m3wbase/#m3wupper): a coating over the item's own coat, no rebuild.
   // 'A' keeps what the item or its layout variant declares (so kitchen D/E keep their oak wall units); any other value overrides it until switched back.
   const DECL={}; // coat as declared before a colour override, dropped when a layout variant rebuilds the item
