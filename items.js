@@ -374,12 +374,12 @@ const PHYS={}; // id → boxes
     // ---- kids room 1 (tasks/room1-kid/README.md, marks M1–M30) ----
     // Room box: x 0.896–5.445, z 1.874–4.864. Wall-mounted boxes sit 0.02–0.03 in front of the wall so they show over the wallpaper (0.015).
     {id:'kidbed',type:'кровать-чердак с лестницей-комодом и полкой хранения',room:1,layer:'kid',pos:[2.835,1.884],rot:0,size:[2.6,2.6,2.97],coat:BED,fixed:'wall',build:kidBedBuild(2.0,mat.wdoor,mat.cushion)},
-    {id:'kiddesk',type:'стол прямой 2.14 × 0.80 вдоль южной стены, от западной стены за стойку кровати (вырез под стойку); стеллаж у окна стоит на его западном краю, столешница нависает над лежанкой на 0.20',room:1,layer:'kid',pos:[0.896,4.064],rot:0,size:[2.139,0.72,0.80],coat:CAB,fixed:'wall',
-     build(b){ [[0,1.939,0.68,0.72,0,0.80],[1.939,2.139,0.68,0.72,0,0.705],[0.02,0.04,0,0.68,0.22,0.78],[2.119,2.139,0,0.68,0.02,0.705]].forEach(q=>b.phys(...q)); // proxy = mesh AABBs; 0.80 deep since 2026-09-09
-       b.round(0,1.939,0.68,0.72,0,0.80,0.003,mat.kbody); b.round(1.939,2.139,0.68,0.72,0,0.705,0.003,mat.kbody); // worktop 0.04 with a 3 mm bevel; past the bed post (x 2.835–2.915, z 4.774–4.854) only the front 0.705
-       b(0.02,0.04,0,0.68,0.22,0.78,mat.kbody); b(2.119,2.139,0,0.68,0.02,0.705,mat.kbody);        // end panels: the west one starts behind the window seat (z 0.22), the pedestal carries the east end
-       b(0.04,2.119,0.60,0.68,0.75,0.78,mat.kbody); }},                                            // apron along the wall
-    {id:'kidped',type:'тумба с 3 ящиками под столом у самого восточного края, глубина 0.40 — не упирается в стойку кровати; фасады к комнате',room:1,layer:'kid',pos:[2.615,4.364],rot:0,size:[0.42,0.68,0.40],coat:CAB,
+    {id:'kiddesk',type:'стол прямой 1.94 × 0.80 вдоль южной стены, от западной стены до стойки кровати; стеллаж у окна стоит на его западном краю, столешница нависает над лежанкой на 0.20',room:1,layer:'kid',pos:[0.896,4.064],rot:0,size:[1.939,0.72,0.80],coat:CAB,fixed:'wall',
+     build(b){ [[0,1.939,0.68,0.72,0,0.80],[0.02,0.04,0,0.68,0.22,0.78]].forEach(q=>b.phys(...q)); // proxy = mesh AABBs; 0.80 deep since 2026-09-09
+       b.round(0,1.939,0.68,0.72,0,0.80,0.003,mat.kbody);                                          // worktop 0.04 с фаской 3 мм, одной плитой: 2026-09-12 убраны узкий выступ за стойкой кровати и торцевая щека
+       b(0.02,0.04,0,0.68,0.22,0.78,mat.kbody);                                                    // west end panel starts behind the window seat (z 0.22), the pedestal carries the east end
+       b(0.04,1.919,0.60,0.68,0.75,0.78,mat.kbody); }},                                            // apron along the wall
+    {id:'kidped',type:'тумба с 3 ящиками под столом у самого восточного края, глубина 0.40 — не упирается в стойку кровати; фасады к комнате',room:1,layer:'kid',pos:[2.415,4.364],rot:0,size:[0.42,0.68,0.40],coat:CAB,
      build(b,g){ b.phys(0.02,0.40,0,0.68,0.02,0.40); [0.06,0.26,0.46].forEach(y=>b.phys(0.02,0.40,y,y+0.18,0,0.02)); // proxy = today's AABBs
        b(0.02,0.40,0.04,0.68,0.02,0.40,mat.kbody); [[0.05,0.05],[0.35,0.05],[0.05,0.35],[0.35,0.35]].forEach(([x,z])=>{ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.02,12).rotateX(Math.PI/2).translate(x,0.02,z),mat.knob); g.add(c); }); // body on 4 casters Ø40
        [0.045,0.245,0.445].forEach(y=>{ b(0.023,0.397,y,y+0.197,0,0.02,mat.wdoor); b(0.03,0.39,y+0.16,y+0.175,0.005,0.02,mat.dark); }); }}, // fronts with 3 mm gaps, finger groove instead of a handle (the chair sits right beside, handles would leave size)
@@ -1079,33 +1079,23 @@ const PHYS={}; // id → boxes
   // east→west and local z = D is the wall, z = 0 the room side.
   const disc3=(b,g,d,x,y,z,t,m)=>{ const o=new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(d,d,d/2),{depth:t,bevelEnabled:false,curveSegments:48}),m); o.position.set(x,y,z); g.add(o); return o; }; // rrect with r = d/2 is a circle
   const roundMirror=(D,y0,frame)=>(b,g)=>{ b.phys(0,D,y0,y0+D,0,0.03); disc3(b,g,D,0,y0,0.008,0.022,frame); disc3(b,g,D-0.04,0.02,y0+0.02,0.003,0.005,mat.mirror); }; // metal backing, 5 mm glass facing the room
-  const VAN=(W,Y,D,coat,build)=>({pos:[12.72,10.227],size:[W,Y,D],coat,build});
+  const VAN=(W,Y,D,coat,build,x)=>({pos:[x||12.72,10.227],size:[W,Y,D],coat,build}); // x — восточный край, по умолчанию 12.72
+  // полукруглые зеркала (2026-09-12): a0 задаёт, куда смотрит выпуклая часть, box — габарит половины в локальных координатах
+  const halfMirror=(r,a0,X,Y,box)=>(b,g)=>{ const arc=(R,z,t,m)=>{ const sh=new THREE.Shape(); sh.absarc(X,Y,R,a0,a0+Math.PI,false);
+      const o=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:t,bevelEnabled:false,curveSegments:64}),m); o.position.z=z; g.add(o); };
+    b.phys(box[0],box[1],box[2],box[3],0,0.03); arc(r,0.008,0.022,mat.frame); arc(r-0.02,0.003,0.005,mat.mirror); }; // подложка и стекло на 2 см меньше радиусом
   const VMIR=(W,Y,cx,build)=>({pos:[cx+W/2,9.827],size:[W,Y,0.03],build}); // cx — centre of the console in world x
   const VAN_V={ // one spec set, two selects: the console and the mirror are picked independently (#m3vtable, #m3vmirror)
 
-    B:{items:{ // 17-47: slim floating console with one long drawer and a LED strip under it, round Ø0.80 mirror on two cords
+    B:{items:{ // 17-47: slim floating console with one long drawer and a LED strip under it, rounded edges; since 2026-09-12 centred like A (11.92)
       vanity:VAN(1.20,0.76,0.42,CAB,b=>{ b.phys(0,1.20,0.58,0.76,0,0.42);
-        b.round(0,1.20,0.72,0.76,0,0.42,0.003,mat.body); b.round(0.02,1.18,0.58,0.72,0.03,0.42,0.002,mat.body); b.led(0.10,1.10,0.565,0.575,0.30,0.34); }),
-      vmirror:VMIR(0.80,2.68,12.12,(b,g)=>{ roundMirror(0.80,1.05,mat.frame)(b,g);
-        [0.18,0.62].forEach(x=>{ b.phys(x-0.003,x+0.003,1.85,2.68,0.012,0.018); b(x-0.003,x+0.003,1.85,2.68,0.012,0.018,mat.frame); }); })}}, // two thin cords up to the ceiling
-    C:{items:{ // 17-46: console with three drawers standing on slim dark frames, round Ø0.85 mirror in a thin dark frame
-      vanity:VAN(1.30,0.78,0.45,CAB,b=>{ b.phys(0,1.30,0.60,0.78,0,0.45); [0.03,1.23].forEach(x=>b.phys(x,x+0.04,0,0.78,0.03,0.45));
-        b.round(0,1.30,0.74,0.78,0,0.45,0.003,mat.body);
-        [[0.02,0.44],[0.44,0.86],[0.86,1.28]].forEach(([x0,x1])=>b.round(x0+0.002,x1-0.002,0.60,0.74,0.02,0.45,0.002,mat.body));
-        [0.03,1.23].forEach(x=>{ b(x,x+0.04,0,0.74,0.03,0.07,mat.frame); b(x,x+0.04,0,0.04,0.07,0.42,mat.frame); }); }), // post at the front corner and a foot back to the wall
-      vmirror:VMIR(0.85,1.95,12.07,roundMirror(0.85,1.10,mat.dark))}},
-    D:{items:{ // 17-48: wood console with a side cheek down to the floor and two drawers, tall oval mirror in a thin dark frame
-      vanity:VAN(1.30,0.76,0.45,{table:'oakFurniture'},b=>{ b.phys(0,1.30,0.58,0.76,0,0.45); b.phys(1.20,1.30,0,0.58,0,0.45);
-        b.round(0,1.30,0.72,0.76,0,0.45,0.003,mat.table); b(1.20,1.30,0,0.72,0,0.45,mat.table);
-        [[0.02,0.60],[0.60,1.18]].forEach(([x0,x1])=>{ b.round(x0+0.002,x1-0.002,0.58,0.72,0.03,0.45,0.002,mat.table); b(x0+0.08,x1-0.08,0.685,0.70,0.024,0.032,mat.dark); }); }), // recessed grip instead of a handle
-      vmirror:VMIR(0.60,2.10,12.07,(b,g)=>{ b.phys(0,0.60,1.00,2.10,0,0.03);
-        const oval=(w,h)=>{ const sh=new THREE.Shape(); sh.absellipse(w/2,h/2,w/2,h/2,0,Math.PI*2,false,0); return sh; };
-        [[0.60,1.10,0,1.00,0.008,0.022,mat.dark],[0.56,1.06,0.02,1.02,0.003,0.005,mat.mirror]].forEach(([w,h,x,y,z,t,m])=>{
-          const o=new THREE.Mesh(new THREE.ExtrudeGeometry(oval(w,h),{depth:t,bevelEnabled:false,curveSegments:48}),m); o.position.set(x,y,z); g.add(o); }); })}},
-    E:{items:{ // 17-49: light console with two drawers under one long thin handle, round Ø0.75 mirror in a thin frame
-      vanity:VAN(1.10,0.76,0.42,CAB,b=>{ b.phys(0,1.10,0.60,0.76,0,0.42); b.round(0,1.10,0.72,0.76,0,0.42,0.003,mat.body);
-        [[0.01,0.545],[0.555,1.09]].forEach(([x0,x1])=>{ b.round(x0,x1,0.60,0.715,0.03,0.42,0.002,mat.body); b(x0+0.06,x1-0.06,0.655,0.668,0.018,0.032,mat.handle); }); }),
-      vmirror:VMIR(0.75,1.85,12.17,roundMirror(0.75,1.10,mat.frame))}}};
+        b.round(0,1.20,0.72,0.76,0,0.42,0.02,mat.body); b.round(0.02,1.18,0.58,0.72,0.03,0.42,0.03,mat.body); b.led(0.10,1.10,0.565,0.575,0.30,0.34); },12.52)}},
+    E:{items:{ // 17-49: round Ø0.75 mirror in a thin frame, over the centre of console A
+      vmirror:VMIR(0.75,1.85,11.92,roundMirror(0.75,1.10,mat.frame))}},
+    F:{items:{ // большой полукруг R1.10 прямой стороной вниз, к столику: низ 0.95 над столешницей, верх 2.05
+      vmirror:VMIR(2.20,2.05,11.92,halfMirror(1.10,0,1.10,0.95,[0,2.20,0.95,2.05]))}},
+    G:{items:{ // большой полукруг R1.10 прямой стороной к входной двери (запад), прямая часть по левому краю столика A (x 11.42), выпуклость на восток
+      vmirror:VMIR(1.10,2.55,11.97,halfMirror(1.10,Math.PI/2,1.10,1.45,[0,1.10,0.35,2.55]))}}};
   const R3={vtable:{ids:['vanity'],V:VAN_V},vmirror:{ids:['vmirror'],V:VAN_V},curtain:{ids:['mcurtain']},reveal:{ids:['reveal3']}}; // keys without V: only «нет»/A // spec() reads only its own id from items, so the same set serves both
   // a variant with its own glb reloads it after the procedural rebuild; loadItemGlb drops a model whose url is no longer userData.glb (fast switching)
   const spec=(V,it)=>V?(V.items?V.items[it.id]:V):it; // a variant is one spec for every id of the group, or items:{id:spec|null} (null = hidden)
@@ -1121,7 +1111,8 @@ const PHYS={}; // id → boxes
       if([...sel.options].some(o=>o.value===v)){ sel.value=v; API.set(key,v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} API.set(key,sel.value); }); });
     return API; }
   window.ROOM4=variantSelects('k4',R4); window.ROOM3=variantSelects('m3',R3);
-  window.KID1=variantSelects('r1',{curtain:{ids:['curtain']},reveal:{ids:['reveal1']}}); window.KID2=variantSelects('r2',{curtain:{ids:['blind2']},reveal:{ids:['reveal2']}});
+  window.KID1=variantSelects('r1',{sofa:{ids:['kidsofa']},rug:{ids:['kidrug']},curtain:{ids:['curtain']},reveal:{ids:['reveal1']}});
+  window.KID2=variantSelects('r2',{rug:{ids:['kidrug2']},curtain:{ids:['blind2']},reveal:{ids:['reveal2']}});
   window.BATH9=variantSelects('b9',{mirror:{ids:['bathmirror']},basin:{ids:['basin','basindrawer','basinmixer']},wc:{ids:['wc']},box:{ids:['wcbox','sock21']},light:{ids:['spot1','spot2']},mlight:{ids:['spot3']},towel:{ids:['towelrail']},tub:{ids:['tub']}});
   window.BATH8=variantSelects('b8',{wc:{ids:['wc8']},box:{ids:['wcbox8']},light:{ids:['spot4','spot5','spot6','cove8']},towel:{ids:['towel8']},glass:{ids:['glass8']}}); // no basin or mirror in room 8 yet: those selects only offer «нет»
   // ---- colour selects (#k4kbase/#k4kupper, #m3wbase/#m3wupper): a coating over the item's own coat, no rebuild.
@@ -1129,24 +1120,30 @@ const PHYS={}; // id → boxes
   const DECL={}; // coat as declared before a colour override, dropped when a layout variant rebuilds the item
   const setCoat=(id,key,c)=>{ const g=ITEM_GROUPS[id]; if(!g) return; if(window.VIZ&&VIZ.coat) return VIZ.coat(id,key,c); // materials.js loads after this file
     const cur=g.userData.coat=Object.assign({},(ITEMS.find(i=>i.id===id)||{}).coat,g.userData.coat); cur[key]=c; };
+  // одна палитра на все цветовые селекты: значение → покрытие COATINGS, 'A' — как объявил сам предмет; опции строит fill, в разметке селект пустой
+  const PALETTE=[['A','как в проекте'],['olive','оливковый','oliveFront'],['sage','шалфей','sageFront'],['avocado','авокадо','avocadoFront'],['pistachio','фисташковый','pistachioFront'],['jade','нефрит','jadeFront'],
+    ['mushroom','грибной','mushroomFront'],['cherry','вишня','cherryFront'],['walnut','ореховый','walnutFront'],['pine','сосна','pineFront'],['cream','кремовый','creamFront'],['white','белый','whiteFront'],['whiteoak','белёный дуб','whiteOakFront']];
+  const PAL=Object.fromEntries(PALETTE.filter(p=>p[2]).map(p=>[p[0],p[2]]));
   function colorSelects(defs){ const recs=[];
+    const fill=(sel,def)=>PALETTE.forEach(([v,name])=>{ const o=document.createElement('option'); o.value=v; o.textContent=name; o.defaultSelected=o.selected=(v===(def||'A')); sel.appendChild(o); });
     const paint=({d,sel})=>d.ids.forEach(id=>{ const g=ITEM_GROUPS[id]; if(!g) return;
       const base=DECL[id]||(DECL[id]=Object.assign({},(ITEMS.find(i=>i.id===id)||{}).coat,g.userData.coat));
-      d.keys.forEach(k=>setCoat(id,k,sel.value==='A'?base[k]:d.V[sel.value])); });
-    defs.forEach(d=>{ const sel=document.getElementById(d.sel); if(!sel) return; const KEY='pulse3d.'+d.sel;
+      d.keys.forEach(k=>setCoat(id,k,sel.value==='A'?base[k]:PAL[sel.value])); });
+    defs.forEach(d=>{ const sel=document.getElementById(d.sel); if(!sel) return; const KEY='pulse3d.'+d.sel; if(!sel.options.length) fill(sel,d.def);
       let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){} if([...sel.options].some(o=>o.value===v)) sel.value=v;
       const rec={d,sel}; recs.push(rec); paint(rec);
       sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} paint(rec); }); });
     COAT_HOOKS.push(ids=>{ const hit=recs.filter(r=>r.d.ids.some(i=>ids.indexOf(i)>=0)); if(!hit.length) return;
       hit.forEach(r=>r.d.ids.forEach(i=>{ delete DECL[i]; })); hit.forEach(paint); }); }
-  // палитра фасадов (COATINGS): зелёные — базы и корпуса, древесные — навесные; новый цвет = опция селекта плюс строка здесь
-  const WHITE={white:'whiteFront',whiteoak:'whiteOakFront'}; // in every palette
-  const GREEN=Object.assign({olive:'oliveFront',sage:'sageFront',avocado:'avocadoFront',pistachio:'pistachioFront',jade:'jadeFront'},WHITE);
-  const WOOD=Object.assign({mushroom:'mushroomFront',cherry:'cherryFront',walnut:'walnutFront',pine:'pineFront',cream:'creamFront'},WHITE);
-  const BOTH=Object.assign({},GREEN,WOOD);
-  colorSelects([{sel:'k4kbase',ids:['kitchen'],keys:['base','hdark'],V:GREEN},{sel:'k4kupper',ids:['kitchen'],keys:['upper'],V:WOOD},
-    {sel:'m3wbase',ids:['mward'],keys:['cabinetPaint'],V:GREEN},{sel:'m3wupper',ids:['mcab'],keys:['cabinetPaint'],V:BOTH},
-    {sel:'h5wbase',ids:['wardrobe'],keys:['body'],V:BOTH},{sel:'h5wdoor',ids:['wardrobe'],keys:['door'],V:BOTH}]);
+  colorSelects([{sel:'k4kbase',ids:['kitchen'],keys:['base','hdark'],def:'sage'},{sel:'k4kupper',ids:['kitchen'],keys:['upper'],def:'A'},
+    {sel:'m3wbase',ids:['mward'],keys:['cabinetPaint'],def:'sage'},{sel:'m3wupper',ids:['mcab'],keys:['cabinetPaint'],def:'mushroom'},
+    {sel:'m3vcolor',ids:['vanity'],keys:['cabinetPaint'],def:'white'},
+    {sel:'h5wbase',ids:['wardrobe'],keys:['body'],def:'whiteoak'},{sel:'h5wdoor',ids:['wardrobe'],keys:['door'],def:'whiteoak'},
+    {sel:'r1desk',ids:['kiddesk','kidped'],keys:['cabinetPaint'],def:'cream'},{sel:'r1shelfa',ids:['kidshelf2'],keys:['cabinetPaint'],def:'cream'},
+    {sel:'r1shelfb',ids:['kidshelf'],keys:['cabinetPaint'],def:'cream'},{sel:'r1shelfc',ids:['kidshelf3'],keys:['cabinetPaint'],def:'cream'},
+    {sel:'r1chest',ids:['windowseat1'],keys:['cabinetPaint'],def:'cream'},
+    {sel:'r2desk',ids:['kiddesk2','deskshelf2'],keys:['cabinetPaint'],def:'cream'},{sel:'r2shelfa',ids:['tower2n'],keys:['cabinetPaint'],def:'cream'},
+    {sel:'r2shelfb',ids:['tower2s'],keys:['cabinetPaint'],def:'cream'},{sel:'r2chest',ids:['windowseat2'],keys:['cabinetPaint'],def:'cream'}]);
   (function(){ const KEY='pulse3d.desk2', sel=document.getElementById('desk2'); if(!sel) return; let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
     if(v==='A'||v==='B'){ sel.value=v; DESK2.set(v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} DESK2.set(sel.value); }); })();
 })();
