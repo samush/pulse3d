@@ -333,7 +333,7 @@ const { launchChromium } = require('./browser');
   if (glbA.length) problems.push('glb: этап A — пуф/стиралка не загрузились чисто: ' + glbA.join(' '));
   // realism-all stage D: proxies for the room 3 items repeat the old mesh AABBs (count + union extent)
   const proxD = await page.evaluate(() => { const ext = id => { const bb = new THREE.Box3(); PHYS[id].forEach(m => bb.union(new THREE.Box3().setFromObject(m))); const s = new THREE.Vector3(); bb.getSize(s); return [s.x, s.y, s.z].map(v => Math.round(v * 1000) / 1000).join(); };
-    const want = { mbed: [6, '2.015,1.1,3.337'], mcab: [19, '2.015,0.85,0.365'], mward: [21, '1.4,2.7,0.59'], mtv: [2, '0.97,0.56,0.04'], vanity: [6, '1.3,0.37,0.42'], vmirror: [3, '0.94,0.94,0.026'], vpouf: [5, '0.4,0.45,0.4'], mrug: [1, '2,0.01,2'], mcurtain: [3, '0.06,2.66,3.017'], bra5: [3, '0.12,0.12,0.225'], bra6: [3, '0.12,0.12,0.225'] };
+    const want = { mbed: [6, '2.015,1.1,3.337'], mcab: [19, '2.015,0.85,0.365'], mward: [21, '1.4,2.7,0.59'], mtv: [2, '0.97,0.56,0.04'], vanity: [6, '1.3,0.37,0.42'], vmirror: [3, '1.14,1.14,0.026'], vpouf: [5, '0.4,0.45,0.4'], mrug: [1, '2,0.01,2'], mcurtain: [3, '0.06,2.66,3.017'], bra5: [3, '0.12,0.12,0.225'], bra6: [3, '0.12,0.12,0.225'] };
     return Object.entries(want).filter(([id, [n, e]]) => PHYS[id].length !== n || ext(id) !== e || !ITEM_GROUPS[id].userData.proxy.length).map(([id]) => id + ':' + PHYS[id].length + ':' + ext(id)); });
   if (proxD.length) problems.push('proxy: этап D — число боксов/габарит не сошлись: ' + proxD.join(' '));
   // realism-all stage D: detailed room 3 items stay inside size (+1 mm); plates and LED strips carry one proxy box equal to the item

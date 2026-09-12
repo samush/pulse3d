@@ -593,10 +593,10 @@ const PHYS={}; // id → boxes
        b.phys(0.30,1.30,0.58,0.73,0.05,0.45); b.phys(0.29,1.30,0.73,0.75,0.04,0.45); b.phys(0,0.60,0.38,0.55,0.05,0.45); b.phys(0,0.61,0.55,0.57,0.04,0.45); // proxy = mesh AABBs (realism-all D1); the fronts add theirs in flute()
        b(0.30,1.30,0.58,0.73,0.05,0.45,mat.body); b.round(0.29,1.30,0.73,0.75,0.04,0.45,0.003,mat.body); flute(0.31,1.29,0.585,0.725,0.03);   // console 1.00 on the wall, top 0.02 with 3 mm chamfer, fluted drawer front
        b(0,0.60,0.38,0.55,0.05,0.45,mat.body); b.round(0,0.61,0.55,0.57,0.04,0.45,0.003,mat.body); flute(0.01,0.59,0.385,0.545,0.03); }},     // second drawer 0.60 lower, offset 0.30 towards the bed
-    {id:'vmirror',type:'зеркало круглое Ø0.90 с LED-подсветкой сзади, над столиком; низ 0.95',room:3,layer:'master',pos:[12.39,9.827],rot:180,size:[0.94,1.87,0.03],fixed:'wall',
-     build(b,g){ b.phys(0,0.94,0.93,1.87,0.02,0.03); b.phys(0.02,0.92,0.95,1.85,0.009,0.03); b.phys(0.03,0.91,0.96,1.84,0.004,0.009); // proxy = mesh AABBs; size includes the 2 cm halo
+    {id:'vmirror',type:'зеркало круглое Ø1.10 с LED-подсветкой сзади, над столиком; низ 0.85',room:3,layer:'master',pos:[12.49,9.827],rot:180,size:[1.14,1.97,0.03],fixed:'wall',
+     build(b,g){ b.phys(0,1.14,0.83,1.97,0.02,0.03); b.phys(0.02,1.12,0.85,1.95,0.009,0.03); b.phys(0.03,1.11,0.86,1.94,0.004,0.009); // proxy = mesh AABBs; size includes the 2 cm halo
        const disc=(d,x,y,z,t,m)=>{ const mesh=new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(d,d,d/2),{depth:t,bevelEnabled:false,curveSegments:48}),m); mesh.position.set(x,y,z); g.add(mesh); }; // rrect with r = d/2 is a circle
-       disc(0.94,0,0.93,0.02,0.01,mat.led); disc(0.90,0.02,0.95,0.009,0.021,mat.frame); disc(0.88,0.03,0.96,0.004,0.005,mat.mirror); }}, // LED halo on the wall (emitter of g3.vanity via led9), metal backing, 5 mm glass facing the room
+       disc(1.14,0,0.83,0.02,0.01,mat.led); disc(1.10,0.02,0.85,0.009,0.021,mat.frame); disc(1.08,0.03,0.86,0.004,0.005,mat.mirror); }}, // 2026-09-12: радиус 55 см, центр на прежней высоте 1.40 // LED halo on the wall (emitter of g3.vanity via led9), metal backing, 5 mm glass facing the room
     {id:'vpouf',type:'пуфик у туалетного столика',room:3,layer:'master',pos:[12.02,10.681],rot:180,size:[0.40,0.45,0.40],glb:'models/vpouf.glb', // model by tools/models/vpouf.js
      build(b){ b.phys(0,0.4,0.35,0.45,0,0.4); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b.phys(x,x+0.03,0,0.35,z,z+0.03)); // proxy = pre-detail mesh AABBs (realism-all D1)
        b(0,0.4,0.35,0.45,0,0.4,mat.cushion); [[0.03,0.03],[0.34,0.03],[0.03,0.34],[0.34,0.34]].forEach(([x,z])=>b(x,x+0.03,0,0.35,z,z+0.03,mat.frame)); }},
@@ -1084,6 +1084,10 @@ const PHYS={}; // id → boxes
   const halfMirror=(r,a0,X,Y,box)=>(b,g)=>{ const arc=(R,z,t,m)=>{ const sh=new THREE.Shape(); sh.absarc(X,Y,R,a0,a0+Math.PI,false);
       const o=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:t,bevelEnabled:false,curveSegments:64}),m); o.position.z=z; g.add(o); };
     b.phys(box[0],box[1],box[2],box[3],0,0.03); arc(r,0.008,0.022,mat.frame); arc(r-0.02,0.003,0.005,mat.mirror); }; // подложка и стекло на 2 см меньше радиусом
+  // прямоугольное зеркало со скруглёнными углами: подложка и стекло на 2 см меньше по каждой стороне
+  const rectMirror=(W,H,r,y0)=>(b,g)=>{ b.phys(0,W,y0,y0+H,0,0.03);
+    const plate=(w,h,x,y,z,t,m)=>{ const o=new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(w,h,r),{depth:t,bevelEnabled:false,curveSegments:24}),m); o.position.set(x,y,z); g.add(o); };
+    plate(W,H,0,y0,0.008,0.022,mat.frame); plate(W-0.04,H-0.04,0.02,y0+0.02,0.003,0.005,mat.mirror); };
   const VMIR=(W,Y,cx,build)=>({pos:[cx+W/2,9.827],size:[W,Y,0.03],build}); // cx — centre of the console in world x
   const VAN_V={ // one spec set, two selects: the console and the mirror are picked independently (#m3vtable, #m3vmirror)
 
@@ -1092,10 +1096,10 @@ const PHYS={}; // id → boxes
         b.round(0,1.20,0.72,0.76,0,0.42,0.02,mat.body); b.round(0.02,1.18,0.58,0.72,0.03,0.42,0.03,mat.body); b.led(0.10,1.10,0.565,0.575,0.30,0.34); },12.52)}},
     E:{items:{ // 17-49: round Ø0.75 mirror in a thin frame, over the centre of console A
       vmirror:VMIR(0.75,1.85,11.92,roundMirror(0.75,1.10,mat.frame))}},
-    F:{items:{ // большой полукруг R1.10 прямой стороной вниз, к столику: низ 0.95 над столешницей, верх 2.05
-      vmirror:VMIR(2.20,2.05,11.92,halfMirror(1.10,0,1.10,0.95,[0,2.20,0.95,2.05]))}},
-    G:{items:{ // большой полукруг R1.10 прямой стороной к входной двери (запад), прямая часть по левому краю столика A (x 11.42), выпуклость на восток
-      vmirror:VMIR(1.10,2.55,11.97,halfMirror(1.10,Math.PI/2,1.10,1.45,[0,1.10,0.35,2.55]))}}};
+    F:{items:{ // прямоугольник 1.20 × 1.50 со скруглёнными углами r 0.15, низ 0.80 над столиком (.local/mirrrow.png)
+      vmirror:VMIR(1.20,2.30,11.92,rectMirror(1.20,1.50,0.15,0.80))}},
+    G:{items:{ // полукруг R0.60 прямой стороной к входной двери (запад), прямая часть по левому краю столика A (x 11.42), выпуклость на восток
+      vmirror:VMIR(0.60,2.00,11.72,halfMirror(0.60,Math.PI/2,0.60,1.40,[0,0.60,0.80,2.00]))}}};
   const R3={vtable:{ids:['vanity'],V:VAN_V},vmirror:{ids:['vmirror'],V:VAN_V},curtain:{ids:['mcurtain']},reveal:{ids:['reveal3']}}; // keys without V: only «нет»/A // spec() reads only its own id from items, so the same set serves both
   // a variant with its own glb reloads it after the procedural rebuild; loadItemGlb drops a model whose url is no longer userData.glb (fast switching)
   const spec=(V,it)=>V?(V.items?V.items[it.id]:V):it; // a variant is one spec for every id of the group, or items:{id:spec|null} (null = hidden)

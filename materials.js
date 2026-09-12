@@ -184,5 +184,5 @@ window.VIZ=VIZ; window.MATERIALS=MATERIALS; window.COATINGS=COATINGS;
   VIZ.set=function(on){ VIZ.on=!!on; try{ localStorage.setItem(KEY,VIZ.on?'1':'0'); }catch(e){} const cb=document.getElementById('mats'); if(cb) cb.checked=VIZ.on; apply(); };
   document.getElementById('mats').addEventListener('change',e=>VIZ.set(e.target.checked));
   let saved=null; try{ saved=localStorage.getItem(KEY); }catch(e){}
-  if(saved==='1') VIZ.set(true); else apply();
+  if(saved!=='0') VIZ.set(true); else apply(); // 2026-09-12: включено по умолчанию, явное «выключено» из localStorage сохраняется
 })();
