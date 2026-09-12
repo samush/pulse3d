@@ -1121,7 +1121,24 @@ const PHYS={}; // id → boxes
   window.ROOM4=variantSelects('k4',R4); window.ROOM3=variantSelects('m3',R3);
   window.KID1=variantSelects('r1',{sofa:{ids:['kidsofa']},rug:{ids:['kidrug']},curtain:{ids:['curtain']},reveal:{ids:['reveal1']}});
   window.KID2=variantSelects('r2',{rug:{ids:['kidrug2']},curtain:{ids:['blind2']},reveal:{ids:['reveal2']}});
-  window.BATH9=variantSelects('b9',{mirror:{ids:['bathmirror']},basin:{ids:['basin','basindrawer','basinmixer']},wc:{ids:['wc']},box:{ids:['wcbox','sock21']},light:{ids:['spot1','spot2']},mlight:{ids:['spot3']},towel:{ids:['towelrail']},tub:{ids:['tub']}});
+  // ванна B (.local/11.png, .local/12.png): прямоугольная 0.70 × 1.60 с плоской кромкой, внутренняя чаша — стадион, глухой экран до пола
+  const TUB_B={pos:[8.172,8.147],size:[0.70,0.58,1.60],build(b,g){
+    const W=0.70, L=1.60, Y=0.58, rim=0.045, t=0.012, bot=0.15;                       // кромка 45 мм, акрил 12 мм, дно 0.12–0.15
+    const rr=(P,x0,y0,w,h,r)=>{ const p=new P(); r=Math.min(r,w/2,h/2);               // скруглённый прямоугольник со сдвигом: b.rrect строит только от (0,0)
+      p.moveTo(x0+r,y0); p.lineTo(x0+w-r,y0); p.absarc(x0+w-r,y0+r,r,-Math.PI/2,0,false);
+      p.lineTo(x0+w,y0+h-r); p.absarc(x0+w-r,y0+h-r,r,0,Math.PI/2,false);
+      p.lineTo(x0+r,y0+h); p.absarc(x0+r,y0+h-r,r,Math.PI/2,Math.PI,false);
+      p.lineTo(x0,y0+r); p.absarc(x0+r,y0+r,r,Math.PI,Math.PI*1.5,false); return p; };
+    const rect=(i,r)=>[i,-L+i,W-2*i,L-2*i,r===undefined?(W-2*i)/2:r];                 // вписанный с отступом i; радиус по умолчанию — половина ширины, то есть стадион
+    const face=(o,hole,y0,y1,m)=>{ const sh=rr(THREE.Shape,...o); if(hole) sh.holes.push(rr(THREE.Path,...hole)); // фигура в (x,-z), как slice() у ванны A
+      const mesh=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:y1-y0,bevelEnabled:false,curveSegments:24}),m); mesh.rotation.x=-Math.PI/2; mesh.position.y=y0; g.add(mesh); };
+    b.phys(0,W,0,Y,0,L);
+    face(rect(0,0.02),rect(rim+t),0,Y-0.02,mat.body);                                 // экран до пола с вырезом под чашу
+    face(rect(rim+t),rect(rim),bot-0.03,Y,mat.kmat);                                  // стенка чаши, верх заподлицо с кромкой
+    face(rect(rim),null,bot-0.03,bot,mat.kmat);                                       // дно
+    face(rect(0,0.02),rect(rim+t),Y-0.02,Y,mat.kmat);                                 // плоская кромка по периметру
+    const d=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.005,16),mat.handle); d.position.set(W/2,bot+0.002,L-0.20); g.add(d); }}; // слив у южного торца, под смесителем
+  window.BATH9=variantSelects('b9',{mirror:{ids:['bathmirror']},basin:{ids:['basin','basindrawer','basinmixer']},wc:{ids:['wc']},box:{ids:['wcbox','sock21']},light:{ids:['spot1','spot2']},mlight:{ids:['spot3']},towel:{ids:['towelrail']},tub:{ids:['tub'],V:{B:TUB_B}}});
   window.BATH8=variantSelects('b8',{wc:{ids:['wc8']},box:{ids:['wcbox8']},light:{ids:['spot4','spot5','spot6','cove8']},towel:{ids:['towel8']},glass:{ids:['glass8']}}); // no basin or mirror in room 8 yet: those selects only offer «нет»
   // ---- colour selects (#k4kbase/#k4kupper, #m3wbase/#m3wupper): a coating over the item's own coat, no rebuild.
   // 'A' keeps what the item or its layout variant declares (so kitchen D/E keep their oak wall units); any other value overrides it until switched back.
