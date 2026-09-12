@@ -1075,7 +1075,8 @@ const PHYS={}; // id → boxes
   const roundMirror=(D,y0,frame)=>(b,g)=>{ b.phys(0,D,y0,y0+D,0,0.03); disc3(b,g,D,0,y0,0.008,0.022,frame); disc3(b,g,D-0.04,0.02,y0+0.02,0.003,0.005,mat.mirror); }; // metal backing, 5 mm glass facing the room
   const VAN=(W,Y,D,coat,build)=>({pos:[12.72,10.227],size:[W,Y,D],coat,build});
   const VMIR=(W,Y,cx,build)=>({pos:[cx+W/2,9.827],size:[W,Y,0.03],build}); // cx — centre of the console in world x
-  const R3={vanity:{ids:['vanity','vmirror'],V:{
+  const VAN_V={ // one spec set, two selects: the console and the mirror are picked independently (#m3vtable, #m3vmirror)
+
     B:{items:{ // 17-47: slim floating console with one long drawer and a LED strip under it, round Ø0.80 mirror on two cords
       vanity:VAN(1.20,0.76,0.42,CAB,b=>{ b.phys(0,1.20,0.58,0.76,0,0.42);
         b.round(0,1.20,0.72,0.76,0,0.42,0.003,mat.body); b.round(0.02,1.18,0.58,0.72,0.03,0.42,0.002,mat.body); b.led(0.10,1.10,0.565,0.575,0.30,0.34); }),
@@ -1098,7 +1099,8 @@ const PHYS={}; // id → boxes
     E:{items:{ // 17-49: light console with two drawers under one long thin handle, round Ø0.75 mirror in a thin frame
       vanity:VAN(1.10,0.76,0.42,CAB,b=>{ b.phys(0,1.10,0.60,0.76,0,0.42); b.round(0,1.10,0.72,0.76,0,0.42,0.003,mat.body);
         [[0.01,0.545],[0.555,1.09]].forEach(([x0,x1])=>{ b.round(x0,x1,0.60,0.715,0.03,0.42,0.002,mat.body); b(x0+0.06,x1-0.06,0.655,0.668,0.018,0.032,mat.handle); }); }),
-      vmirror:VMIR(0.75,1.85,12.17,roundMirror(0.75,1.10,mat.frame))}}}}};
+      vmirror:VMIR(0.75,1.85,12.17,roundMirror(0.75,1.10,mat.frame))}}};
+  const R3={vtable:{ids:['vanity'],V:VAN_V},vmirror:{ids:['vmirror'],V:VAN_V}}; // spec() reads only its own id from items, so the same set serves both
   // a variant with its own glb reloads it after the procedural rebuild; loadItemGlb drops a model whose url is no longer userData.glb (fast switching)
   const spec=(V,it)=>V?(V.items?V.items[it.id]:V):it; // a variant is one spec for every id of the group, or items:{id:spec|null} (null = hidden)
   const COAT_HOOKS=[]; // colour selects re-apply their coating after a layout variant has rebuilt the item
@@ -1129,11 +1131,12 @@ const PHYS={}; // id → boxes
     COAT_HOOKS.push(ids=>{ const hit=recs.filter(r=>r.d.ids.some(i=>ids.indexOf(i)>=0)); if(!hit.length) return;
       hit.forEach(r=>r.d.ids.forEach(i=>{ delete DECL[i]; })); hit.forEach(paint); }); }
   // палитра фасадов (COATINGS): зелёные — базы и корпуса, древесные — навесные; новый цвет = опция селекта плюс строка здесь
-  const GREEN={olive:'oliveFront',sage:'sageFront',avocado:'avocadoFront',pistachio:'pistachioFront',jade:'jadeFront'};
-  const WOOD={mushroom:'mushroomFront',cherry:'cherryFront',walnut:'walnutFront',pine:'pineFront',cream:'creamFront'};
+  const WHITE={white:'whiteFront',whiteoak:'whiteOakFront'}; // in every palette
+  const GREEN=Object.assign({olive:'oliveFront',sage:'sageFront',avocado:'avocadoFront',pistachio:'pistachioFront',jade:'jadeFront'},WHITE);
+  const WOOD=Object.assign({mushroom:'mushroomFront',cherry:'cherryFront',walnut:'walnutFront',pine:'pineFront',cream:'creamFront'},WHITE);
   const BOTH=Object.assign({},GREEN,WOOD);
   colorSelects([{sel:'k4kbase',ids:['kitchen'],keys:['base','hdark'],V:GREEN},{sel:'k4kupper',ids:['kitchen'],keys:['upper'],V:WOOD},
-    {sel:'m3wbase',ids:['mward'],keys:['cabinetPaint'],V:GREEN},{sel:'m3wupper',ids:['mcab'],keys:['cabinetPaint'],V:WOOD},
+    {sel:'m3wbase',ids:['mward'],keys:['cabinetPaint'],V:GREEN},{sel:'m3wupper',ids:['mcab'],keys:['cabinetPaint'],V:BOTH},
     {sel:'h5wbase',ids:['wardrobe'],keys:['body'],V:BOTH},{sel:'h5wdoor',ids:['wardrobe'],keys:['door'],V:BOTH}]);
   (function(){ const KEY='pulse3d.desk2', sel=document.getElementById('desk2'); if(!sel) return; let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
     if(v==='A'||v==='B'){ sel.value=v; DESK2.set(v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} DESK2.set(sel.value); }); })();

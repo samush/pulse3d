@@ -77,6 +77,8 @@ const COATINGS={
   cherryFront: {name:'фасад вишня, слабый рисунок дерева',    class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0x8a4a3c, normalScale:0.22},
   walnutFront: {name:'фасад ореховый, слабый рисунок дерева', class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0x6e523c, normalScale:0.22},
   pineFront:   {name:'фасад сосна, слабый рисунок дерева',    class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0xd8b880, normalScale:0.22},
+  whiteFront:  {name:'фасад белый, матовый пластик', class:'plastic', dir:'textures/plastic', size:[0.5,0.5], maps:['normal','rough'], normalScale:0.3, color:0xf0eeea},
+  whiteOakFront:{name:'фасад белёный дуб, матовый', class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0xefece6, normalScale:0.35}, // door-leaf white with a grain a step stronger than the tinted fronts
   creamFront:  {name:'фасад кремовый, слабый рисунок дерева', class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0xece2cf, normalScale:0.22},
   hplWhite:    {name:'HPL-плита белая, столешница и фартук', class:'facade', size:[1,1], maps:[], color:0xeae7e1, rough:0.45}, // 2026-09-11: kitchen 4 — one white panel and one tone for worktop and splashback, no texture set for HPL
   oliveFront:  {name:'HPL-плита оливковая, матовый фасад', class:'facade', size:[1,1], maps:[], color:0x8a8f70, rough:0.62}, // 2026-09-11: нижние ящики, пенал с техникой, холодильник и боковины навесных шкафов
