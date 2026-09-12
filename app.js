@@ -361,23 +361,6 @@ var facadeGroup=new THREE.Group(), facadeMats=[]; // one material per face: each
 })();
 scene.add(facadeGroup);
 
-// cubes
-const cubeGroup=new THREE.Group();
-const edgeMat=new THREE.LineBasicMaterial({color:0x2c5aa0,transparent:true,opacity:.6});
-PLAN.rooms.forEach(r=>{
-  r.cells.forEach(c=>{
-    const [x,z,w,d]=c;
-    for(let y0=0;y0<H-0.05;y0+=1){
-      const hh=Math.min(1,H-y0);
-      const g=new THREE.BoxGeometry(Math.max(w-0.01,0.05),hh,Math.max(d-0.01,0.05));
-      const e=new THREE.LineSegments(new THREE.EdgesGeometry(g),edgeMat);
-      e.position.set(x+w/2,y0+hh/2,z+d/2);
-      cubeGroup.add(e);
-    }
-  });
-});
-scene.add(cubeGroup);
-cubeGroup.visible=false;
 
 // 2D-разметка пола: квадраты 1×1 м
 const gridGroup=new THREE.Group();
@@ -465,7 +448,6 @@ function applyTheme(){
 applyTheme();
 
 // UI
-document.getElementById('cubes').addEventListener('change',e=>cubeGroup.visible=e.target.checked);
 document.getElementById('labels').addEventListener('change',e=>labelGroup.visible=e.target.checked);
 wallGroupR.visible=false; // стена коридор-кухня по умолчанию выключена, как и галочка #kwall
 document.getElementById('kwall').addEventListener('change',e=>{wallGroupR.visible=e.target.checked&&wop.value/100>0.01; if(window.kitchenFrame)window.kitchenFrame.visible=e.target.checked;}); // стена появляется только если ползунок «Стены» не на нуле
