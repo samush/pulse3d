@@ -234,6 +234,10 @@ const PHYS={}; // id → boxes
   const BED={cabinetPaint:'cabinetPaint',kmat:'curtainLinen',pillow:'curtainLinen',cushion:'curtainLinen',cover:'curtainLinen'}; // M4: beds and window seats — bedding in linen, not the sofa weave (kitchen.md rule 3)
   const KID_CHAIR={cushion:'sofaWeave',plastic:'plastic'}; // M4-1: desk chairs — seat pad as the dining chairs, plastic shell
   const PLASTIC={plastic:'plastic'}; // M4-1: lamp bodies, socket and switch frames (kitchen.md rule 6)
+  // 2026-09-12: решётка вместо ящиков лежанки — воздух от радиатора под подоконником; рамка 0.04 и вертикальные прорези 0.02 с шагом ~0.09
+  const airGrille=(b,x0,x1,y0,y1,z0,z1,m)=>{ const f=0.04, sw=0.02, L=z1-z0, n=Math.max(3,Math.round((L-0.07)/0.09)), rib=(L-n*sw)/(n+1);
+    b(x0,x1,y0,y0+f,z0,z1,m); b(x0,x1,y1-f,y1,z0,z1,m);
+    for(let i=0;i<=n;i++){ const a=z0+i*(rib+sw); b(x0,x1,y0+f,y1-f,a,a+rib,m); } };
   // ---- room 4 wall decor (.local/декор/, one picture = one variant): tv wall x 10.95–13.47 on the north wall, sofa wall x 10.96–13.47 on the south wall
   // (rot 180: local x runs east→west, so local x=0 is the viewer's left, as in the pictures). Boards 20 mm proud of the wall, LED = emissive strips on the wall
   // plane (ponytail: no light source, the glow is a visible line only); the proxy box lies inside the wall so the tv and a sofa back never clash with it
@@ -413,11 +417,11 @@ const PHYS={}; // id → boxes
     {id:'kidshelf3',type:'полка над окном между стеллажами, одна открытая ячейка 1.99; глубина 0.60 в линию со стеллажами',room:1,layer:'kid',pos:[0.896,2.374],rot:0,size:[0.60,2.70,1.99],coat:CAB,fixed:'wall',
      build(b){ b.phys(0,0.60,2.30,2.32,0,1.99); b.phys(0,0.60,2.68,2.70,0,1.99); b.phys(0,0.02,2.32,2.68,0,1.99); // proxy = today's AABBs
        b(0.006,0.60,2.30,2.318,0,1.99,mat.kbody); b(0.006,0.60,2.682,2.70,0,1.99,mat.kbody); b(0,0.006,2.30,2.70,0,1.99,mat.wpanel); b(0.58,0.60,2.318,2.34,0,1.99,mat.kbody); }}, // 18 mm shelves, 6 mm back, front lip
-    {id:'windowseat1',type:'лежанка у окна между стеллажами с 2 глубокими ящиками и матрасиком, 1.89 × 0.60 (как в комнате 2)',room:1,layer:'kid',pos:[0.896,2.374],rot:0,size:[0.60,0.65,1.89],coat:BED,fixed:'wall',glb:'models/windowseat1.glb',
+    {id:'windowseat1',type:'лежанка у окна между стеллажами с решёткой радиатора и матрасиком, 1.89 × 0.60 (как в комнате 2)',room:1,layer:'kid',pos:[0.896,2.374],rot:0,size:[0.60,0.65,1.89],coat:BED,fixed:'wall',glb:'models/windowseat1.glb',
      build(b){ const L=1.89, D=0.60;
-       [[0.02,0.55,0,0.05,0.05,L-0.05],[0,0.58,0.05,0.45,0,L],[0,0.58,0.45,0.53,0.02,L-0.02],[0.10,0.50,0.53,0.65,0.05,0.35],[0.10,0.50,0.53,0.65,L-0.35,L-0.05]].forEach(q=>b.phys(...q)); [0.01,L/2+0.005].forEach(z=>{ b.phys(0.58,0.60,0.06,0.44,z,z+L/2-0.015); b.phys(0.60,0.615,0.24,0.26,z+0.39,z+0.54); }); // proxy = today's AABBs
+       [[0.02,0.55,0,0.05,0.05,L-0.05],[0,0.58,0.05,0.45,0,L],[0,0.58,0.45,0.53,0.02,L-0.02],[0.10,0.50,0.53,0.65,0.05,0.35],[0.10,0.50,0.53,0.65,L-0.35,L-0.05],[0.58,0.60,0.06,0.44,0.01,L-0.01]].forEach(q=>b.phys(...q)); // proxy = today's AABBs
        b(0.02,0.55,0,0.05,0.05,L-0.05,mat.dark); b(0,0.58,0.05,0.45,0,L,mat.body);
-       [0.01,L/2+0.005].forEach(z=>{ b(0.58,0.60,0.06,0.44,z,z+L/2-0.015,mat.wdoor); b(0.60,0.615,0.24,0.26,z+0.39,z+0.54,mat.handle); }); // deep drawers, fronts east
+       airGrille(b,0.58,0.60,0.06,0.44,0.01,L-0.01,mat.wdoor);                                                               // front grille east: air from the radiator under the sill
        b(0,0.58,0.45,0.53,0.02,L-0.02,mat.kmat); [0.05,L-0.35].forEach(z=>b(0.10,0.50,0.53,0.65,z,z+0.30,mat.pillow)); }},   // mattress and two pillows at the shelf units // bottom, top, oak back over the window lintel
     {id:'kidsofa',type:'диванчик в нише под кроватью',room:1,layer:'kid',pos:[4.65,2.05],rot:0,size:[0.75,0.80,1.60],coat:{fabric:'sofaWeave'},glb:'models/kidsofa.glb',
      build(b){
@@ -491,10 +495,10 @@ const PHYS={}; // id → boxes
        b(0,0.6,0,t,0,D,mat.body); b(0,0.6,2.7-t,2.7,0,D,mat.body); b(0.58,0.6,t,2.7-t,0,D,mat.body); b(0.02,0.58,t,2.7-t,0,t,mat.body); b(0.02,0.58,t,2.7-t,D-t,D,mat.body);
        [0.90,1.35,1.80,2.25].forEach(y=>b(t,0.58,y-t,y,t,D-t,mat.body));                              // 4 open rows above the drawers
        [0.023,0.4515].forEach(y=>{ b.round(0,t,y,y+0.4255,0.023,D-0.023,0.001,mat.wdoor); b(0,0.003,y+0.395,y+0.415,D/2-0.10,D/2+0.10,mat.frame); }); }},
-    {id:'windowseat2',type:'лежанка у окна с 2 глубокими ящиками и матрасиком, 1.70 × 0.60',room:2,layer:'kid2',pos:[14.174,7.198],rot:0,size:[0.60,0.65,1.702],coat:BED,fixed:'wall',glb:'models/windowseat2.glb', // model by tools/models/windowseat2.js; the build below is proxy and fallback
-     build(b){ b.phys(0.05,0.58,0,0.05,0.05,1.65); b.phys(0.02,0.6,0.05,0.45,0,1.702); [0.01,0.862].forEach(z=>{ b.phys(0,0.02,0.06,0.44,z,z+0.83); b.phys(-0.015,0,0.24,0.26,z+0.34,z+0.49); }); b.phys(0.02,0.6,0.45,0.53,0.02,1.682); [0.05,1.35].forEach(z=>b.phys(0.1,0.5,0.53,0.65,z,z+0.3)); // proxy = pre-detail mesh AABBs (realism-all C1)
+    {id:'windowseat2',type:'лежанка у окна с решёткой радиатора и матрасиком, 1.70 × 0.60',room:2,layer:'kid2',pos:[14.174,7.198],rot:0,size:[0.60,0.65,1.702],coat:BED,fixed:'wall',glb:'models/windowseat2.glb', // model by tools/models/windowseat2.js; the build below is proxy and fallback
+     build(b){ b.phys(0.05,0.58,0,0.05,0.05,1.65); b.phys(0.02,0.6,0.05,0.45,0,1.702); b.phys(0,0.02,0.06,0.44,0.01,1.692); b.phys(0.02,0.6,0.45,0.53,0.02,1.682); [0.05,1.35].forEach(z=>b.phys(0.1,0.5,0.53,0.65,z,z+0.3)); // proxy = pre-detail mesh AABBs (realism-all C1)
        b(0.05,0.58,0,0.05,0.05,1.65,mat.dark); b(0.02,0.60,0.05,0.45,0,1.702,mat.body);
-       [0.01,0.862].forEach(z=>{ b(0,0.02,0.06,0.44,z,z+0.83,mat.wdoor); b(-0.015,0,0.24,0.26,z+0.34,z+0.49,mat.handle); }); // deep drawers, fronts west
+       airGrille(b,0,0.02,0.06,0.44,0.01,1.692,mat.wdoor);                                                                   // front grille west: air from the radiator under the sill
        b(0.02,0.60,0.45,0.53,0.02,1.682,mat.kmat); [0.05,1.35].forEach(z=>b(0.10,0.50,0.53,0.65,z,z+0.30,mat.pillow)); }},   // mattress and two pillows at the towers
     {id:'gymwall',type:'шведская стенка 0.80, в распор пол–потолок, 12 перекладин',room:2,layer:'kid2',pos:[12.55,6.538],rot:0,size:[0.80,2.70,0.15],coat:{table:'oakFurniture'},fixed:'wall',
      build(b,g){ b.phys(0,0.04,0,2.7,0.06,0.12); b.phys(0.76,0.8,0,2.7,0.06,0.12); for(let y=0.30;y<=2.50+1e-6;y+=0.20) b.phys(0.02,0.78,y-0.0175,y+0.0175,0.0725,0.1075); // proxy = pre-detail mesh AABBs (realism-all C1)
