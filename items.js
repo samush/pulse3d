@@ -1176,7 +1176,10 @@ const PHYS={}; // id → boxes
     face(rect(rim+t),null,bot-0.03,bot,mat.kmat);                                     // дно 0.12–0.15
     face(rect(0,0.02),rect(rim),Y-0.02,Y,mat.kmat);                                   // плоская кромка по периметру
     const d=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.005,16),mat.handle); d.position.set(W/2,bot+0.002,L-0.20); g.add(d); }}; // слив у южного торца, под смесителем
-  window.BATH9=variantSelects('b9',{mirror:{ids:['bathmirror']},basin:{ids:['basin','basindrawer','basinmixer']},wc:{ids:['wc']},box:{ids:['wcbox','sock21']},light:{ids:['spot1','spot2']},mlight:{ids:['spot3']},towel:{ids:['towelrail']},tub:{ids:['tub'],V:{B:TUB_B}}});
+  // раковина B (2026-09-13, user): тот же комплект на 0.12 выше — ящик 0.62–0.80 не задевает кромку ванны B (0.58); зеркало поднимается на 0.15, чтобы смеситель (до 1.21) не лёг на него
+  const lifted=(id,dy)=>{ const it=ITEMS.find(i=>i.id===id); return {pos:it.pos,size:[it.size[0],it.size[1]+dy,it.size[2]],coat:it.coat,build:(b,g)=>{ it.build(b,g); g.children.forEach(o=>{ if(o.isMesh) o.position.y+=dy; }); g.userData.proxy=g.userData.proxy.map(q=>[q[0],q[1],q[2]+dy,q[3]+dy,q[4],q[5]]); }}; };
+  const BASIN_B={items:{basin:lifted('basin',0.12),basindrawer:lifted('basindrawer',0.12),basinmixer:lifted('basinmixer',0.12),bathmirror:lifted('bathmirror',0.15)}};
+  window.BATH9=variantSelects('b9',{mirror:{ids:['bathmirror']},basin:{ids:['basin','basindrawer','basinmixer','bathmirror'],V:{B:BASIN_B}},wc:{ids:['wc']},box:{ids:['wcbox','sock21']},light:{ids:['spot1','spot2']},mlight:{ids:['spot3']},towel:{ids:['towelrail']},tub:{ids:['tub'],V:{B:TUB_B}}});
   window.BATH8=variantSelects('b8',{mirror:{ids:['mirror8']},wc:{ids:['wc8']},box:{ids:['wcbox8']},light:{ids:['spot4','spot5','spot6','cove8']},towel:{ids:['towel8']},glass:{ids:['glass8']}}); // no basin in room 8 yet: that select only offers «нет»
   // ---- colour selects (#k4kbase/#k4kupper, #m3wbase/#m3wupper): a coating over the item's own coat, no rebuild.
   // 'A' keeps what the item or its layout variant declares (so kitchen D/E keep their oak wall units); any other value overrides it until switched back.
