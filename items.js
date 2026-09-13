@@ -17,7 +17,7 @@ const PHYS={}; // id → boxes
     glass:M(0xc3cbd2), frame:M(0x2e2e2e), pouf:M(0x8a8683), led:new THREE.MeshBasicMaterial({color:0xfff1cf}), mirrorLed:new THREE.MeshBasicMaterial({color:0xfff1cf}), // mirrorLed: bathmirror backlight, own emitter for group g9.mirror (materials-lighting M3)
     wbody:M(0xc9c9c9), wdoor:M(0x6f6f6f), wpanel:M(0x9c9c9c),
     plastic:M(0xd8d8d8), ceramic:M(0xe6e6e6), acrylic:M(0xe9e9e9), leather:M(0x8f8f8f), mirror:M(0xc3cbd2), // realism-all §4 slots
-    kbody:M(0xdadad6), kleg:M(0xbdbdb8), kmat:M(0xf0ede6), knob:M(0x4a4a4a),
+    kbody:M(0xdadad6), kleg:M(0xbdbdb8), kmat:M(0xf0ede6), knob:M(0x4a4a4a), inox:M(0xcfd2d4), // inox: light chrome slot for bowls and mixers (handle is the dark one)
     rail:new THREE.MeshLambertMaterial({color:0xbfd7e6,transparent:true,opacity:0.35}),
     cushion:M(0x9a9a9a), screen:M(0x2a2a2a), ring:M(0x2f2f2f), pillow:M(0xf7f5ef), edge:M(0x2a2a2a),
     gloss:new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:0.16,depthWrite:false}), // slanted highlight over a mirror: not a reflection, a cue that the plane is glass
@@ -26,7 +26,7 @@ const PHYS={}; // id → boxes
     drape:new THREE.MeshLambertMaterial({color:0xb4b4b4,side:THREE.DoubleSide}), // opaque curtain fabric, both faces of a folded plane
   };
   // material slot = physical class for the visualization twin (B04); concept colours stay grey, MATERIALS[slot] gives roughness/metalness/emissive
-  const SLOTS={chrome:['handle','knob','ring'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle','drape'],emitter:['led','mirrorLed','gloss'],screen:['screen'],wood:['table'],cabinetPaint:['chair','base','upper','door','body','wbody','wdoor','wpanel','kbody','edge'],plastic:['plastic'],ceramic:['ceramic'],acrylic:['acrylic'],leather:['leather'],mirror:['mirror']};
+  const SLOTS={chrome:['handle','knob','ring','inox'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle','drape'],emitter:['led','mirrorLed','gloss'],screen:['screen'],wood:['table'],cabinetPaint:['chair','base','upper','door','body','wbody','wdoor','wpanel','kbody','edge'],plastic:['plastic'],ceramic:['ceramic'],acrylic:['acrylic'],leather:['leather'],mirror:['mirror']};
   Object.entries(SLOTS).forEach(([slot,keys])=>keys.forEach(k=>{ mat[k].userData.slot=slot; }));
   window.ITEM_MATS=mat;
   const chair=side=>(b,g)=>{ // chair 0.48×0.80×0.48 fallback and proxy (seat, back strip on side W/E/N/S, four legs); models/chair.glb replaces the meshes
@@ -188,7 +188,7 @@ const PHYS={}; // id → boxes
          doors(FX+0.02,FX+FW-0.02,KC,KD,[[0.10,0.30],[0.30,2.00],[2.00,2.69]],mat.base);
          [0.30,2.00,2.69].forEach(y=>b.grip(KD,FX+0.02,FX+FW-0.02,y-gap/2,'z')); } }
      // ---- base run: carcass, plinth, fronts
-     b(0,KC,0.1,0.71,KZ0,Z1,mat.hdark); b(0,KP,0,0.1,KZ0,Z1,mat.dark);
+     [[KZ0,SINK[0],0.71],[SINK[0],SINK[1],0.55],[SINK[1],Z1,0.71]].forEach(([z0,z1,y1])=>b(0,KC,0.1,y1,z0,z1,mat.hdark)); [[0,0.13],[0.57,KC]].forEach(([x0,x1])=>b(x0,x1,0.55,0.71,SINK[0],SINK[1],mat.hdark)); b(0,KP,0,0.1,KZ0,Z1,mat.dark); // carcass stops at 0.55 under the bowl: its top used to show inside the sink
      (I?[[KZ0,1.36,'drawers'],[1.36,2.19,'door']]:G?[[KZ0,1.20,'drawers2'],[1.20,1.46,'drawers'],[1.46,2.29,'door']]:F?[[KZ0,1.46,'door'],[1.46,1.79,'drawers'],[1.79,2.29,'drawers2']]:[[KZ0,1.46,'door'],[1.46,2.06,'drawers'],[2.06,2.56,'drawers2'],[2.56,KZ1,'door']]).forEach(([z0,z1,k])=>{
        if(k==='door'){ front(0.1,0.71,z0,z1,mat.base); b.grip(KC+0.02,z0+gap/2,z1-gap/2,0.71-gap/2,'x'); }
        else { const ys=k==='drawers'?[0.1,0.30,0.50,0.71]:[0.1,0.40,0.71]; for(let i=0;i<ys.length-1;i++){ front(ys[i],ys[i+1],z0,z1,mat.base); b.grip(KC+0.02,z0+gap/2,z1-gap/2,ys[i+1]-gap/2,'x'); } } });
@@ -199,16 +199,16 @@ const PHYS={}; // id → boxes
      sh.holes.push(rrectXZ(0.13,0.57,SINK[0],SINK[1],0.02));
      g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.036,bevelThickness:0.002,bevelSize:0.002,bevelSegments:1,curveSegments:2}).rotateX(Math.PI/2).translate(0,0.748,0),mat.top));
      edgeBand(topPts);
-     b(0.13,0.57,0.56,0.57,SINK[0],SINK[1],mat.frame); [[0.13,0.14],[0.56,0.57]].forEach(([x0,x1])=>b(x0,x1,0.56,0.745,SINK[0],SINK[1],mat.frame));
-     [[SINK[0],SINK[0]+0.01],[SINK[1]-0.01,SINK[1]]].forEach(([z0,z1])=>b(0.13,0.57,0.56,0.745,z0,z1,mat.frame)); // undermount bowl
+     b(0.13,0.57,0.56,0.57,SINK[0],SINK[1],mat.inox); [[0.13,0.14],[0.56,0.57]].forEach(([x0,x1])=>b(x0,x1,0.56,0.745,SINK[0],SINK[1],mat.inox));
+     [[SINK[0],SINK[0]+0.01],[SINK[1]-0.01,SINK[1]]].forEach(([z0,z1])=>b(0.13,0.57,0.56,0.745,z0,z1,mat.inox)); // undermount bowl, chrome (user, 2026-09-13)
      // ---- chrome mixer with a pull-down spout and a built-in soap dispenser beside it, both on the worktop strip behind the bowl
      const curve=new THREE.CatmullRomCurve3([[0.075,0.76],[0.075,1.00],[0.09,1.09],[0.19,1.12],[0.29,1.07],[0.31,0.99]].map(([x,y])=>new THREE.Vector3(x,y,mz)));
-     g.add(new THREE.Mesh(new THREE.TubeGeometry(curve,20,0.013,10),mat.handle));
-     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.02,16).translate(0.075,0.758,mz),mat.handle));           // base plate
-     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.021,0.017,0.08,12).translate(0.31,0.95,mz),mat.handle));           // pull-down spray head
-     b(0.075,0.15,0.89,0.92,mz-0.011,mz+0.011,mat.handle);                                                                // lever
-     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.021,0.021,0.06,14).translate(0.075,0.775,sd),mat.handle));       // soap dispenser head
-     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,0.05,10).rotateZ(Math.PI/2).translate(0.105,0.795,sd),mat.handle)); // its spout over the bowl, north of the mixer
+     g.add(new THREE.Mesh(new THREE.TubeGeometry(curve,20,0.013,10),mat.inox));
+     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.02,16).translate(0.075,0.758,mz),mat.inox));           // base plate
+     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.021,0.017,0.08,12).translate(0.31,0.95,mz),mat.inox));           // pull-down spray head
+     b(0.075,0.15,0.89,0.92,mz-0.011,mz+0.011,mat.inox);                                                                // lever
+     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.021,0.021,0.06,14).translate(0.075,0.775,sd),mat.inox));       // soap dispenser head
+     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,0.05,10).rotateZ(Math.PI/2).translate(0.105,0.795,sd),mat.inox)); // its spout over the bowl, north of the mixer
      // ---- splashback 20 mm: proud of the wall finish panel (15 mm off the wall face, app.js)
      b(0,0.02,0.75,1.45,corner?0:KZ0,Z1,mat.wpanel);
      // ---- hob: four burners on a 0.50 panel, hood under the wall units
@@ -603,18 +603,17 @@ const PHYS={}; // id → boxes
        [0,A0,A1,W-t].forEach(x=>b(x,x+t,Y0,T,t,0.35,mat.body)); b(H-0.01,H+0.01,Y2,T,t,0.35,mat.body);                                                     // section walls, divider of the upper row
        doors.forEach(([x0,x1,y0,y1])=>{ b.round(x0,x1,y0,y1,0.33,0.35,0.001,mat.wdoor); const c=(x0+x1)/2; b(c-0.05,c+0.05,y0,y0+0.02,0.347,0.3505,mat.frame); }); // doors with 3 mm gaps, flush pull profiles along the bottom edge
        for(let y=Y0+0.04;y<Y1-0.03;y+=0.04) g.add(new THREE.Mesh(new THREE.BoxGeometry(A1-A0-2*t,0.012,0.024).rotateX(-35*Math.PI/180).translate((A0+A1)/2,y+0.01,0.336),mat.wdoor)); }}, // louvre grille of the AC section
-    {id:'mward',type:'шкаф 1.30 на два отделения для одежды, антресоль 1.40 в линию с блоком над кроватью; ниша-полка со стороны кровати 0.65–1.00, в 0.10 от края кровати',room:3,layer:'master',pos:[12.745,13.144],rot:180,size:[1.40,2.70,0.60],coat:{cabinetPaint:'oliveFront'},fixed:'wall',
-     build(b0){ const o=0.10, b=(x0,x1,y0,y1,z0,z1,m)=>b0(x0+o,x1+o,y0,y1,z0,z1,m); b.phys=(x0,x1,y0,y1,z0,z1)=>b0.phys(x0+o,x1+o,y0,y1,z0,z1); b.round=(x0,x1,y0,y1,z0,z1,r,m)=>b0.round(x0+o,x1+o,y0,y1,z0,z1,r,m); // body sits 0.10 from the bed side; the top row runs to x=0 over the wider podium
-       const W=1.30, t=0.02, N0=0.65, N1=1.00, NW=0.30, D=0.65, Y1=2.28, Y2=2.30, T=2.7;                                      // niche: height 0.65–1.00, 0.30 deep; divider at 0.65; shelf 2.28–2.30 under the top row
-       b.phys(-o,-o+t,Y2,T,0.03,0.58); b.phys(-o,0,Y2,T,0.03,0.05); b(-o,-o+t,Y2,T,0.03,0.58,mat.body); b(-o,0,Y2,T,0.03,0.05,mat.body); // top-row extension: side panel and back
+    {id:'mward',type:'шкаф 1.40 на два отделения для одежды вплотную к подиуму, антресоль в линию с блоком над кроватью; ниша-полка со стороны кровати 0.65–1.00',room:3,layer:'master',pos:[12.745,13.144],rot:180,size:[1.40,2.70,0.60],coat:{cabinetPaint:'oliveFront',table:'oakFurniture'},fixed:'wall',
+     build(b){ const o=0; // 2026-09-13: body runs to the bed side (was a 0.10 step), o kept for the door and shelf offsets
+       const W=1.40, t=0.02, N0=0.65, N1=1.00, NW=0.30, D=0.70, Y1=2.28, Y2=2.30, T=2.7;                                      // niche: height 0.65–1.00, 0.30 deep; divider at 0.70; shelf 2.28–2.30 under the top row
        b.phys(0,t,0,N0,0.03,0.58); b.phys(0,t,N1,T,0.03,0.58); b.phys(W-t,W,0,T,0.03,0.58); b.phys(-o,W,T-t,T,0.03,0.58); b.phys(0,W,0,t,0.03,0.58); b.phys(t,W-t,t,T-t,0.03,0.05); b.phys(D-0.01,D+0.01,t,T-t,0.03,0.58); b.phys(-o+t,W-t,Y1,Y2,0.03,0.58);
        b.phys(0,NW,N0,N0+t,0.03,0.58); b.phys(0,NW,N1-t,N1,0.03,0.58); b.phys(NW-t,NW,N0,N1,0.03,0.58);
-       const doors=[[0.02,D-0.0015,0.02,Y1-0.003],[D+0.0015,W-0.02,0.02,Y1-0.003],[0.02-o,D-0.0015,Y2+0.003,T-0.02],[D+0.0015,W-0.02,Y2+0.003,T-0.02]]; // two wardrobe doors 0.63, two top-row doors (the bed-side one 0.10 wider)
+       const doors=[[0.02,D-0.0015,0.02,Y1-0.003],[D+0.0015,W-0.02,0.02,Y1-0.003],[0.02-o,D-0.0015,Y2+0.003,T-0.02],[D+0.0015,W-0.02,Y2+0.003,T-0.02]]; // two wardrobe doors 0.68, two top-row doors
        doors.forEach(([x0,x1,y0,y1])=>b.phys(x0,x1,y0,y1,0.58,0.60)); b.phys(D-0.0225,D-0.0025,1.0,1.3,0.6,0.62); b.phys(D+0.0025,D+0.0225,1.0,1.3,0.6,0.62); [0.02-o,D+0.0015].forEach(x0=>b.phys(x0+0.265,x0+0.365,Y2+0.003,Y2+0.023,0.6,0.62)); // proxy = mesh AABBs (realism-all D1)
        b(0,t,0,N0,0.03,0.58,mat.body); b(0,t,N1,T,0.03,0.58,mat.body);                                                         // bed-side panel above and below the niche
        b(W-t,W,0,T,0.03,0.58,mat.body); b(-o,W,T-t,T,0.03,0.58,mat.body); b(0,W,0,t,0.03,0.58,mat.body); b(t,W-t,t,T-t,0.03,0.05,mat.body); // body
        b(D-0.01,D+0.01,t,T-t,0.03,0.58,mat.body); b(-o+t,W-t,Y1,Y2,0.03,0.58,mat.body);                                           // divider between the two hanging compartments, shelf under the top row
-       b(0,NW,N0,N0+t,0.03,0.58,mat.body); b(0,NW,N1-t,N1,0.03,0.58,mat.body); b(NW-t,NW,N0,N1,0.03,0.58,mat.body);           // niche shelf, ceiling and back
+       b(0,NW,N0,N0+t,0.03,0.58,mat.table); b(0,NW,N1-t,N1,0.03,0.58,mat.table); b(NW-t,NW,N0,N1,0.03,0.58,mat.table);        // niche shelf, ceiling and back in the podium oak (user, 2026-09-13)
        doors.forEach(([x0,x1,y0,y1])=>b.round(x0,x1,y0,y1,0.58,0.60,0.001,mat.wdoor));                                          // doors, 3 mm gaps
        b(D-0.0225,D-0.0025,1.0,1.3,0.5975,0.6005,mat.frame); b(D+0.0025,D+0.0225,1.0,1.3,0.5975,0.6005,mat.frame);            // vertical pull profiles at the meeting edge
        [0.02-o,D+0.0015].forEach(x0=>b(x0+0.265,x0+0.365,Y2+0.003,Y2+0.023,0.5975,0.6005,mat.frame)); }},                       // top-row pulls along the bottom edge
