@@ -1065,7 +1065,7 @@ var finishGroup=new THREE.Group();
   // room 2, M10: finish block on the north wall behind the gym wall, 0.1–2.40, x 12.15–13.75; grey until the palette stage
   const accent2Mat=new THREE.MeshBasicMaterial({color:0xd6d6d3}); wallFinMats.push(accent2Mat); finishMats.accent2=accent2Mat;
   (()=>{ const g=new THREE.PlaneGeometry(1.6,2.3); const m=new THREE.Mesh(g,accent2Mat); m.position.set(12.95,1.25,6.518+0.017); wallFin.add(m); })();
-  // kids' wallpaper (2026-09-09): room 1 — light ground with sparse watercolour leaves on the north and south walls; room 2 — one space mural
+  // kids' wallpaper (2026-09-09): room 1 — light ground with sparse watercolour leaves on the north wall only; room 2 — one space mural
   // (astronaut, planets) on the south wall by the stairs. Canvas art, no image files; the selects «Обои 1/2» switch each room separately.
   const leavesTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=512; const g=c.getContext('2d'); let sd=7; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
     g.fillStyle='#f5f2ea'; g.fillRect(0,0,512,512); const greens=['rgba(120,150,110,0.55)','rgba(92,126,88,0.5)','rgba(150,170,120,0.45)','rgba(70,105,75,0.5)'];
@@ -1089,7 +1089,7 @@ var finishGroup=new THREE.Group();
     g.fillStyle='#e8934a'; g.beginPath(); g.arc(ax+u*1.5,ay-u*1.4,u*0.35,0,Math.PI*2); g.fill(); // the small planet in the hand
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; return t; })();
   const wpLeaves=new THREE.MeshBasicMaterial({map:leavesTex}), wpSpace=new THREE.MeshBasicMaterial({map:spaceTex}); wallFinMats.push(wpLeaves,wpSpace); finishMats.wpLeaves=wpLeaves; finishMats.wpSpace=wpSpace;
-  const WP_WALLS={1:['n','s'],2:['s']}, WP_MATS={none:wpMat,leaves:wpLeaves,space:wpSpace}, wpMeshes={1:[],2:[]}; // room → sides that take wallpaper; registered panels per room
+  const WP_WALLS={1:['n'],2:['s']}, WP_MATS={none:wpMat,leaves:wpLeaves,space:wpSpace}, wpMeshes={1:[],2:[]}; // room → sides that take wallpaper; registered panels per room
   window.WALLPAPER={value:{1:'none',2:'none'},options:{1:['none','leaves'],2:['none','space']},set(room,key){ if(!WP_MATS[key]) key='none'; WALLPAPER.value[room]=key;
     wpMeshes[room].forEach(m=>{ const mat=WP_MATS[key]; if(mat===wpSpace){ const t=spaceTex; t.repeat.set(1/m.userData.wp.L,1/m.userData.wp.h); t.needsUpdate=true; } m.material=mat; }); // the mural stretches over its single panel
     if(window.VIZ&&VIZ.ready) VIZ.coatFinish('wpLeaves',VIZ.finishCoat.wpLeaves); }}; // re-swap the finish twins in the visualization
