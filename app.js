@@ -1101,10 +1101,51 @@ var finishGroup=new THREE.Group();
     for(let i=0;i<26;i++){ const x=rnd()*W, h=Hc*(0.10+0.07*rnd()); fir(x,Hc*(0.90+0.06*rnd()),h,'#efe3d0'); }              // back row of firs
     for(let i=0;i<16;i++){ const x=rnd()*W, h=Hc*(0.16+0.10*rnd()); fir(x,Hc*(1.02+0.04*rnd()),h,'#e2d2ba'); }              // front row, taller and warmer
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; return t; })();
-  const wpLeaves=new THREE.MeshBasicMaterial({map:leavesTex}), wpSpace=new THREE.MeshBasicMaterial({map:spaceTex}), wpMount=new THREE.MeshBasicMaterial({map:mountTex}); wallFinMats.push(wpLeaves,wpSpace,wpMount); finishMats.wpLeaves=wpLeaves; finishMats.wpSpace=wpSpace; finishMats.wpMount=wpMount;
-  const WP_WALLS={1:['n'],2:['s']}, WP_MATS={none:wpMat,leaves:wpLeaves,space:wpSpace,mountains:wpMount}, wpMeshes={1:[],2:[]}; // room → sides that take wallpaper; registered panels per room
-  window.WALLPAPER={value:{1:'none',2:'none'},options:{1:['none','leaves'],2:['none','space','mountains']},set(room,key){ if(!WP_MATS[key]) key='none'; WALLPAPER.value[room]=key;
-    wpMeshes[room].forEach(m=>{ const mat=WP_MATS[key], t=mat===wpSpace?spaceTex:mat===wpMount?mountTex:null; if(t){ t.repeat.set(1/m.userData.wp.L,1/m.userData.wp.h); t.needsUpdate=true; } m.material=mat; }); // the mural stretches over its single panel
+  // 2026-09-13 (.local/киты.png): mural for room 1 — watercolour whales in a cloudy grey-blue sky with a moon, sparks, two tiny balloons and small fish; north wall 4.55×2.70
+  const whaleTex=(()=>{ const W=1536, Hc=900, c=document.createElement('canvas'); c.width=W; c.height=Hc; const g=c.getContext('2d'); let sd=5; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
+    const sky=g.createLinearGradient(0,0,0,Hc); sky.addColorStop(0,'#aeb8c8'); sky.addColorStop(0.55,'#cfd5de'); sky.addColorStop(1,'#e9ebee'); g.fillStyle=sky; g.fillRect(0,0,W,Hc);
+    const cloud=(x,y,r,col)=>{ g.fillStyle=col; for(let i=0;i<7;i++){ g.beginPath(); g.arc(x+(rnd()-0.5)*r*2.4,y+(rnd()-0.5)*r*0.8,r*(0.45+0.45*rnd()),0,Math.PI*2); g.fill(); } };
+    for(let i=0;i<14;i++) cloud(rnd()*W,Hc*(0.35+0.6*rnd()),Hc*(0.09+0.10*rnd()),'rgba(240,242,245,'+(0.25+0.3*rnd())+')');   // soft cloud banks, denser at the bottom
+    g.fillStyle='#f4f1e6'; g.beginPath(); g.arc(W*0.13,Hc*0.14,Hc*0.075,0,Math.PI*2); g.fill(); g.fillStyle='rgba(255,250,235,0.25)'; g.beginPath(); g.arc(W*0.13,Hc*0.14,Hc*0.11,0,Math.PI*2); g.fill(); // moon with a halo
+    for(let i=0;i<90;i++){ g.fillStyle='rgba(255,255,255,'+(0.35+0.6*rnd())+')'; g.beginPath(); g.arc(rnd()*W,rnd()*Hc*0.7,0.8+rnd()*2.2,0,Math.PI*2); g.fill(); }              // sparks
+    const whale=(x,y,L,a,col,belly)=>{ g.save(); g.translate(x,y); g.rotate(a); const h=L*0.30; g.fillStyle=col; g.beginPath();                                                 // body from the nose (-L/2) to the tail root (+L*0.38), flukes beyond
+      g.moveTo(-L*0.5,0); g.bezierCurveTo(-L*0.5,-h*0.9,-L*0.1,-h*1.05,L*0.12,-h*0.55); g.bezierCurveTo(L*0.3,-h*0.2,L*0.36,-h*0.1,L*0.42,-h*0.3);                              // back
+      g.bezierCurveTo(L*0.5,-h*0.45,L*0.55,-h*0.6,L*0.52,-h*0.62); g.bezierCurveTo(L*0.44,-h*0.4,L*0.42,-h*0.05,L*0.4,0); g.bezierCurveTo(L*0.42,h*0.05,L*0.44,h*0.4,L*0.52,h*0.62); // upper and lower fluke
+      g.bezierCurveTo(L*0.55,h*0.6,L*0.5,h*0.45,L*0.42,h*0.3); g.bezierCurveTo(L*0.36,h*0.1,L*0.3,h*0.2,L*0.12,h*0.45); g.bezierCurveTo(-L*0.1,h*0.85,-L*0.5,h*0.7,-L*0.5,0); g.closePath(); g.fill();
+      g.fillStyle=belly; g.beginPath(); g.moveTo(-L*0.48,h*0.1); g.bezierCurveTo(-L*0.2,h*0.75,L*0.05,h*0.55,L*0.2,h*0.3); g.bezierCurveTo(L*0.02,h*0.35,-L*0.25,h*0.4,-L*0.48,h*0.1); g.fill(); // pale belly
+      g.strokeStyle='rgba(255,255,255,0.35)'; g.lineWidth=L*0.006; for(let i=0;i<6;i++){ g.beginPath(); g.moveTo(-L*0.46+i*L*0.02,h*(0.12+i*0.04)); g.bezierCurveTo(-L*0.2,h*(0.45+i*0.06),L*0.0,h*(0.4+i*0.05),L*0.12,h*(0.28+i*0.03)); g.stroke(); } // throat grooves
+      g.fillStyle=col; g.beginPath(); g.moveTo(-L*0.12,h*0.45); g.bezierCurveTo(-L*0.02,h*0.7,L*0.06,h*0.95,L*0.02,h*1.05); g.bezierCurveTo(-L*0.1,h*0.9,-L*0.18,h*0.65,-L*0.12,h*0.45); g.fill(); // flipper
+      g.fillStyle='#2b3345'; g.beginPath(); g.arc(-L*0.36,-h*0.05,L*0.007,0,Math.PI*2); g.fill(); g.restore(); };
+    whale(W*0.55,Hc*0.36,W*0.42,-0.42,'#eef0f4','rgba(255,255,255,0.55)');                                                                                                     // the big white whale, nose down-left
+    whale(W*0.16,Hc*0.33,W*0.17,0.15,'#5b6b8a','rgba(200,208,222,0.45)');                                                                                                      // small dark whale by the moon
+    whale(W*0.72,Hc*0.78,W*0.14,-0.1,'#7d8aa3','rgba(200,208,222,0.35)');                                                                                                      // small whale in the low clouds
+    const balloon=(x,y,r,col)=>{ g.fillStyle=col; g.beginPath(); g.arc(x,y,r,Math.PI*0.9,Math.PI*2.1); g.lineTo(x+r*0.25,y+r*1.5); g.lineTo(x-r*0.25,y+r*1.5); g.closePath(); g.fill(); g.strokeStyle=col; g.lineWidth=1; g.beginPath(); g.moveTo(x-r*0.2,y+r*1.5); g.lineTo(x-r*0.15,y+r*2.0); g.moveTo(x+r*0.2,y+r*1.5); g.lineTo(x+r*0.15,y+r*2.0); g.stroke(); g.fillRect(x-r*0.2,y+r*2.0,r*0.4,r*0.25); };
+    balloon(W*0.24,Hc*0.46,Hc*0.03,'#8e97ab'); balloon(W*0.29,Hc*0.55,Hc*0.02,'#8e97ab');                                                                                       // two tiny balloons, as in the reference
+    const fish=(x,y,l,col)=>{ g.fillStyle=col; g.beginPath(); g.ellipse(x,y,l,l*0.4,0,0,Math.PI*2); g.fill(); g.beginPath(); g.moveTo(x+l*0.8,y); g.lineTo(x+l*1.5,y-l*0.5); g.lineTo(x+l*1.5,y+l*0.5); g.closePath(); g.fill(); };
+    [[0.50,0.68],[0.54,0.71],[0.58,0.67]].forEach(([fx,fy])=>fish(W*fx,Hc*fy,Hc*0.012,'#3a4560'));                                                                              // three small fish
+    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; return t; })();
+  // 2026-09-13 (.local/шары.png): mural for room 1 — hot-air balloons in lilac florals over a pale blue sky with clouds and birds
+  const balloonTex=(()=>{ const W=1536, Hc=900, c=document.createElement('canvas'); c.width=W; c.height=Hc; const g=c.getContext('2d'); let sd=13; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
+    const sky=g.createLinearGradient(0,0,0,Hc); sky.addColorStop(0,'#9dbde0'); sky.addColorStop(1,'#dbe8f3'); g.fillStyle=sky; g.fillRect(0,0,W,Hc);
+    const cloud=(x,y,r)=>{ g.fillStyle='rgba(255,255,255,0.75)'; for(let i=0;i<6;i++){ g.beginPath(); g.arc(x+(rnd()-0.5)*r*2.2,y+(rnd()-0.5)*r*0.6,r*(0.5+0.4*rnd()),0,Math.PI*2); g.fill(); } };
+    for(let i=0;i<9;i++) cloud(rnd()*W,Hc*(0.15+0.7*rnd()),Hc*(0.05+0.06*rnd()));
+    const balloon=(x,y,r,env,band,basket)=>{ const yb=y+r*1.55;                                                                                                                // envelope: circle with a tapered throat, floral dots, band, ropes, basket
+      g.fillStyle=env; g.beginPath(); g.arc(x,y,r,Math.PI*0.85,Math.PI*2.15); g.quadraticCurveTo(x+r*0.55,y+r*1.15,x+r*0.28,yb); g.lineTo(x-r*0.28,yb); g.quadraticCurveTo(x-r*0.55,y+r*1.15,x-r*Math.cos(Math.PI*0.15),y+r*Math.sin(Math.PI*0.15)); g.closePath(); g.fill();
+      g.save(); g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.clip(); for(let i=0;i<Math.round(r*r/220);i++){ const fx=x+(rnd()-0.5)*2*r, fy=y+(rnd()-0.5)*2*r, fr=r*(0.018+0.014*rnd()); g.fillStyle=rnd()<0.5?'#a294d0':'#c3b7e3'; for(let k=0;k<5;k++){ g.beginPath(); g.arc(fx+Math.cos(k*1.257)*fr,fy+Math.sin(k*1.257)*fr,fr*0.8,0,Math.PI*2); g.fill(); } g.fillStyle='#f3edf8'; g.beginPath(); g.arc(fx,fy,fr*0.5,0,Math.PI*2); g.fill(); } g.restore(); // five-petal flowers
+      g.fillStyle=band; g.beginPath(); g.moveTo(x-r*0.62,y+r*0.95); g.quadraticCurveTo(x,y+r*1.25,x+r*0.62,y+r*0.95); g.quadraticCurveTo(x,y+r*1.55,x-r*0.62,y+r*0.95); g.fill();               // scalloped band
+      g.strokeStyle='#5f5476'; g.lineWidth=Math.max(1,r*0.012); [-0.22,-0.08,0.08,0.22].forEach(k=>{ g.beginPath(); g.moveTo(x+k*r,yb); g.lineTo(x+k*r*0.7,yb+r*0.55); g.stroke(); });        // ropes
+      g.fillStyle=basket; g.fillRect(x-r*0.2,yb+r*0.55,r*0.4,r*0.28); };
+    balloon(W*0.63,Hc*0.30,Hc*0.22,'#f2eef6','#a692cf','#8e7bb8');                                                                                                                // the big one right of centre
+    balloon(W*0.30,Hc*0.55,Hc*0.14,'#f4f1f7','#9aa6d6','#8493c4');                                                                                                                // medium, lower left
+    balloon(W*0.14,Hc*0.14,Hc*0.08,'#e9def3','#9b86c9','#8e7bb8'); balloon(W*0.88,Hc*0.62,Hc*0.06,'#f2eef6','#a692cf','#8e7bb8');                                                 // two small ones far away
+    const bird=(x,y,s)=>{ g.strokeStyle='#4a4a66'; g.lineWidth=Math.max(1,s*0.12); g.beginPath(); g.moveTo(x-s,y); g.quadraticCurveTo(x-s*0.5,y-s*0.7,x,y); g.quadraticCurveTo(x+s*0.5,y-s*0.7,x+s,y); g.stroke(); };
+    for(let i=0;i<9;i++) bird(W*(0.05+0.9*rnd()),Hc*(0.05+0.5*rnd()),Hc*(0.012+0.012*rnd()));
+    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; return t; })();
+  const wpLeaves=new THREE.MeshBasicMaterial({map:leavesTex}), wpSpace=new THREE.MeshBasicMaterial({map:spaceTex}), wpMount=new THREE.MeshBasicMaterial({map:mountTex}), wpWhales=new THREE.MeshBasicMaterial({map:whaleTex}), wpBalloons=new THREE.MeshBasicMaterial({map:balloonTex});
+  wallFinMats.push(wpLeaves,wpSpace,wpMount,wpWhales,wpBalloons); Object.assign(finishMats,{wpLeaves,wpSpace,wpMount,wpWhales,wpBalloons});
+  const WP_WALLS={1:['n'],2:['s']}, WP_MATS={none:wpMat,leaves:wpLeaves,space:wpSpace,mountains:wpMount,whales:wpWhales,balloons:wpBalloons}, MURALS={space:spaceTex,mountains:mountTex,whales:whaleTex,balloons:balloonTex}, wpMeshes={1:[],2:[]}; // room → sides that take wallpaper; registered panels per room; MURALS stretch over one panel
+  window.WALLPAPER={value:{1:'none',2:'none'},options:{1:['none','leaves','whales','balloons'],2:['none','space','mountains']},set(room,key){ if(!WP_MATS[key]) key='none'; WALLPAPER.value[room]=key;
+    wpMeshes[room].forEach(m=>{ const mat=WP_MATS[key], t=MURALS[key]; if(t){ t.repeat.set(1/m.userData.wp.L,1/m.userData.wp.h); t.needsUpdate=true; } m.material=mat; }); // the mural stretches over its single panel
     if(window.VIZ&&VIZ.ready) VIZ.coatFinish('wpLeaves',VIZ.finishCoat.wpLeaves); }}; // re-swap the finish twins in the visualization
   PLAN.rooms.forEach(r=>{
     if(r.id===8||r.id===9) return;
