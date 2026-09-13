@@ -82,7 +82,7 @@ const PHYS={}; // id → boxes
     const PL=1.8, TOP=2.3, HF=2.2, W=R+1.2, steel=kind==='steel', ST=steel?mat.frame:mat.table, wood=mat.table, pnl=glass?wood:mat.kbody, front=mat.wdoor;
     const P=steel?0.05:0.08, po=(0.08-P)/2, RB=steel?1.65:1.60, TB=HF+0.14;                          // post/beam width inside the 80 mm zones, rail bottom, tray beam top
     if(stairs==='ladder'||stairs==='wood') b.phys(R-1.15,R,0,PL,0,0.54); else b.phys(-E,R,0,2.4,0,0.54); [[R,0],[W-0.08,0],[R,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b.phys(x,x+0.08,0,PL,z,z+0.08)); // PHYS as the original (check.js: 9 boxes); the gentle extension is inside the stairs box
-    b.phys(R+0.08,W-0.08,0.10,0.14,L-0.08,L); b.phys(R,W,PL-0.2,TOP+0.3,0,L+0.02); b.phys(R,W,HF,TOP+0.3,L,2.97); b.phys(R,R+0.08,0,HF,2.89,2.97);
+    b.phys(R+0.08,W-0.08,0.10,0.14,L-0.08,L); b.phys(R,W,PL-0.2,TOP+0.3,0,L+0.02); b.phys(R,W,HF,2.69,L,2.97); b.phys(R,R+0.08,0,HF,2.89,2.97);
     const tube=(x0,y0,z0,x1,y1,z1,r,m)=>{ const d=new THREE.Vector3(x1-x0,y1-y0,z1-z0), len=d.length(), geo=new THREE.CylinderGeometry(r,r,len,12).translate(0,len/2,0), mesh=new THREE.Mesh(geo,m);
       mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize()); mesh.position.set(x0,y0,z0); g.add(mesh); return mesh; }; // round bar between two local points
     // platform frame: four corner posts, the two bed-side posts and the far post rise to the tray beams; long rails west/east, end rails north/south
@@ -133,9 +133,10 @@ const PHYS={}; // id → boxes
     // the rear beam sits on the far post and is tied into the far wall (cover plate); floor panel and back panel
     b(R+po,R+po+P,HF,TB,L-0.08,2.97,ST); b(W-0.08+po,W-0.08+po+P,HF,TB,L-0.08,2.97,ST); b(R,W,HF,TB,L+po,L+po+P,ST); b(R,W,HF,TB,2.89+po,2.89+po+P,ST);
     b(R+0.08,W-0.08,HF,HF+0.018,L,2.89,pnl); b(R+0.08,W-0.08,TB,2.50,2.95,2.97,pnl);                 // floor and back panel; no divider inside (user: .local/stair_02.png)
-    // 2026-09-13 (.local/кровать.png): guard over the tray, same language as the platform's — 10 mm frosted glass between the beams and a 40 mm wood cap on top
-    b(R+0.035,R+0.045,TB,2.46,L+0.04,2.89,mat.rail); b(W-0.045,W-0.035,TB,2.46,L+0.04,2.89,mat.rail); b(R+0.04,W-0.04,TB,2.46,L+0.035,L+0.045,mat.rail);
-    b(R+0.02,R+0.06,2.46,2.50,L+0.02,2.89,wood); b(W-0.06,W-0.02,2.46,2.50,L+0.02,2.89,wood); b(R+0.02,W-0.02,2.46,2.50,L+0.02,L+0.06,wood);
+    // 2026-09-13 (.local/кровать.png, .local/ящик2.png): guard over the tray, same language as the platform's — 10 mm frosted glass between the beams and a 40 mm wood cap;
+    // the room side rises to the ceiling (2.69), the wall side stays at 2.50, the pillow side has no guard: only the steel beam (user)
+    b(R+0.035,R+0.045,TB,2.65,L+0.02,2.89,mat.rail); b(W-0.045,W-0.035,TB,2.46,L+0.02,2.89,mat.rail);
+    b(R+0.02,R+0.06,2.65,2.69,L+0.02,2.89,wood); b(W-0.06,W-0.02,2.46,2.50,L+0.02,2.89,wood);
     b(W-0.45,W-0.15,HF-0.02,TB,2.95,2.97,steel?ST:pnl);                                                // wall tie of the rear beam: removable cover (A) / steel plate (B)
   };
   const lathe=(g,pts,cx,cz,m,seg=32)=>{ const mesh=new THREE.Mesh(new THREE.LatheGeometry(pts.map(([r,y])=>new THREE.Vector2(r,y)),seg).translate(cx,0,cz),m); g.add(mesh); return mesh; }; // profile [[r,y]…], y rising → faces outward; a profile that comes back down inside makes a closed shell
