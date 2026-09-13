@@ -82,7 +82,6 @@ const LIGHTS=[
   {id:'spot6',item:'spot6',group:'g8.main',type:'spot',at:[9.52,2.68,11.95],k:3000,w:0.8},
   {id:'cove8a',item:'cove8',group:'g8.cove',type:'point',at:[9.04,2.62,11.60],k:3000,w:0.3,distance:1.5},
   {id:'cove8b',item:'cove8',group:'g8.cove',type:'point',at:[9.86,2.62,11.90],k:3000,w:0.3,distance:1.5},
-  {id:'niche8',item:'niche8',group:'g8.cove',type:'point',at:[8.60,1.32,13.02],k:3000,w:0.2,distance:1},
   {id:'blighta',item:'blight',group:'g10.main',type:'spot',at:[14.50,2.68,3.45],k:4000,w:0.8,angle:0.8},
   {id:'blightb',item:'blight',group:'g10.main',type:'spot',at:[14.50,2.68,4.55],k:4000,w:0.8,angle:0.8},
   {id:'led7',item:'led7',group:'g10.desk',type:'point',at:[14.50,1.98,5.45],k:4000,w:0.3,distance:1.5},

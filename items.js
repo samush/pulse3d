@@ -777,8 +777,8 @@ const PHYS={}; // id → boxes
     // of the bump has no tile (z 11.588). The passage strip x 9.10–9.872 × z 12.20–13.00 must stay empty (check.js).
     // Shower floor: the real tray is 0.02 below the finished floor, but floor layers (0.001–0.009) would hide a mesh below 0,
     // so the tray is a darker plate at 0.010 — it reads as a different surface and never flickers with the floor.
-    {id:'shower8',type:'душевая зона в уровень пола 0.81×1.54 вдоль западной стены, поддон из плитки на −0.02 с уклоном к трапу',room:8,layer:'bath2',pos:[8.235,11.588],rot:0,size:[0.813,0.01,1.536],coat:{top:'tile6060'},fixed:'wall',
-     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.813,0.007,0.01,0,1.536); b(0,0.813,0.007,0.010,0,1.536,mat.top); }},
+    {id:'shower8',type:'душевая зона в уровень пола 0.81×1.54 вдоль западной стены, поддон из той же белой плитки, что пол комнаты, с уклоном к трапу',room:8,layer:'bath2',pos:[8.235,11.588],rot:0,size:[0.813,0.01,1.536],fixed:'wall',
+     build(b){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.813,0.007,0.01,0,1.536); b(0,0.813,0.007,0.010,0,1.536,finishMats.bathFloor); }}, // 2026-09-13 (.local/дущевая8.png): room floor finish, not the marble coating
     {id:'drain8',type:'линейный трап 1.40×0.06 вдоль западной стены',room:8,layer:'bath2',pos:[8.25,11.65],rot:0,size:[0.06,0.012,1.40],fixed:'wall',
      build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.06,0.01,0.012,0,1.4);
        b(0,0.06,0.010,0.011,0,1.40,mat.frame); b(0.005,0.055,0.010,0.0112,0.005,1.395,mat.dark); for(let z=0.02;z<1.38;z+=0.07) b(0.005,0.055,0.0112,0.012,z,z+0.035,mat.handle); // frame, dark slot, grille bars
@@ -791,8 +791,10 @@ const PHYS={}; // id → boxes
      build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.01,0.05,0.07,0,0.862); b.phys(0,0.01,0.07,2.1,0,0.862);
        b(0,0.01,0.05,0.07,0,0.862,mat.frame); b(0.001,0.009,0.07,2.10,0,0.862,mat.glass); b(0,0.01,2.08,2.10,0,0.862,mat.frame); // bottom profile, 8 mm glass, top clamp profile
      }},                     // profile, glass
-    {id:'rain8',type:'верхний душ Ø0.25 заподлицо с потолком, над закрытой частью душа',room:8,layer:'bath2',pos:[8.52,11.95],rot:0,size:[0.25,2.70,0.25],fixed:'wall',
-     build(b,g){ b.phys(0,0.25,2.68,2.7,0,0.25); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.125,0.125,0.008,40).translate(0.125,2.696,0.125),mat.handle)); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.105,0.105,0.004,40).translate(0.125,2.69,0.125),mat.frame)); g.add(new THREE.Mesh(new THREE.TorusGeometry(0.115,0.004,8,40).rotateX(Math.PI/2).translate(0.125,2.69,0.125),mat.handle)); }}, // chrome plate, dark nozzle field, rim
+    {id:'rain8',type:'верхний душ Ø0.30 на кронштейне 0.40 от северной стены, h 2.20',room:8,layer:'bath2',pos:[8.49,11.588],rot:0,size:[0.30,2.25,0.45],fixed:'wall',
+     build(b,g){ b.phys(0,0.30,2.18,2.21,0.25,0.45); b.phys(0.138,0.162,2.19,2.22,0,0.30); const cyl=(r,h,x,y,z,m,rot)=>{ const c=new THREE.CylinderGeometry(r,r,h,32); if(rot==='z') c.rotateX(Math.PI/2); g.add(new THREE.Mesh(c.translate(x,y,z),m)); };
+       cyl(0.03,0.01,0.15,2.20,0.005,mat.handle,'z'); cyl(0.012,0.30,0.15,2.20,0.15,mat.handle,'z');                                                        // wall flange, Ø24 arm 0.30 out from the wall
+       cyl(0.15,0.008,0.15,2.196,0.30,mat.handle); cyl(0.13,0.004,0.15,2.19,0.30,mat.frame); g.add(new THREE.Mesh(new THREE.TorusGeometry(0.14,0.004,8,40).rotateX(Math.PI/2).translate(0.15,2.19,0.30),mat.handle)); }}, // 2026-09-13 (.local/душевая8_2.png): chrome plate, dark nozzle field, rim
     {id:'mixer8',type:'термостат душа h 1.10 и ручная лейка h 1.60 в накладном коробе 0.08 (южная стена наружная); восточнее полки',room:8,layer:'bath2',pos:[8.90,13.044],rot:0,size:[0.15,1.70,0.08],coat:{body:'tile6060'},fixed:'wall',
      build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0.035,0.115,0.9,1.7,0.02,0.08); b.phys(0,0.15,1.06,1.14,0,0.02); b.phys(0.055,0.095,1.58,1.62,0,0.02); b.phys(0.065,0.085,1.38,1.62,-0.01,0);
        const v=(x,y,z)=>new THREE.Vector3(x,y,z), cyl=(r,h,x,y,z,m,rot)=>{ const c=new THREE.CylinderGeometry(r,r,h,16); if(rot==='x') c.rotateZ(Math.PI/2); if(rot==='z') c.rotateX(Math.PI/2); g.add(new THREE.Mesh(c.translate(x,y,z),m)); };
@@ -800,14 +802,12 @@ const PHYS={}; // id → boxes
        cyl(0.02,0.15,0.075,1.10,0.025,mat.handle,'x'); [0.03,0.12].forEach(x=>cyl(0.024,0.03,x,1.10,0.025,mat.handle,'x')); // thermostat bar with two knobs
        cyl(0.012,0.02,0.075,1.60,0.01,mat.handle,'z'); cyl(0.012,0.20,0.075,1.48,0.014,mat.handle); cyl(0.03,0.012,0.075,1.615,0.02,mat.handle,'z'); // holder, handset handle and head
      }}, // pipe cover, thermostat bar, holder, handset
-    {id:'niche8',type:'накладная полка-ниша 0.60×0.10×0.30 на южной стене, открыта на север, LED по верхней кромке',room:8,layer:'bath2',pos:[8.30,13.024],rot:0,size:[0.60,1.35,0.10],coat:{body:'tile6060'},fixed:'wall',
-     build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.6,1.05,1.07,0,0.1); b.phys(0,0.6,1.33,1.35,0,0.1); b.phys(0,0.02,1.07,1.33,0,0.1); b.phys(0.58,0.6,1.07,1.33,0,0.1); b.phys(0.02,0.58,1.07,1.33,0.08,0.1);
-       [[0,0.6,1.05,1.07,0,0.10],[0,0.6,1.33,1.35,0,0.10],[0,0.02,1.07,1.33,0,0.10],[0.58,0.6,1.07,1.33,0,0.10],[0.02,0.58,1.07,1.33,0.08,0.10]].forEach(q=>b.round(...q,0.001,mat.body)); // bottom, top, sides, back
-       b.led(0.02,0.58,1.32,1.33,0.005,0.02);                                                                    // strip under the top edge (declares its own proxy)
-     }},                                                                     // LED strip under the top edge
-    {id:'wcbox8',type:'выступ северной стены зашит заподлицо (z 11.588) на всю высоту, рама инсталляции внутри; кнопка смыва на оси',room:8,layer:'bath2',pos:[9.098,11.384],rot:0,size:[0.774,2.70,0.204],coat:{body:'tile6060',plastic:'plastic'},fixed:'wall',
+    {id:'mirror8',type:'зеркало плоское прямоугольное 0.60×0.80 на южной стене душа, низ 1.20; западнее термостата',room:8,layer:'bath2',pos:[8.27,13.104],rot:0,size:[0.60,2.00,0.02],fixed:'wall',
+     build(b,g){ b.phys(0,0.60,1.20,2.00,0,0.02); const plate=(w,h,x,y,z,t,m)=>{ const o=new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(w,h,0.01),{depth:t,bevelEnabled:false,curveSegments:6}),m); o.position.set(x,y,z); g.add(o); };
+       plate(0.60,0.80,0,1.20,0.01,0.01,mat.frame); plate(0.58,0.78,0.01,1.21,0.005,0.005,mat.mirror); }}, // 2026-09-13 (.local/дущевая8.png): backing on the wall, glass faces north into the shower
+    {id:'wcbox8',type:'выступ северной стены зашит заподлицо (z 11.588) на всю высоту, рама инсталляции внутри; кнопка смыва на оси; облицовка — белая плитка стен',room:8,layer:'bath2',pos:[9.098,11.384],rot:0,size:[0.774,2.70,0.204],coat:{plastic:'plastic'},fixed:'wall',
      build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0,0.774,0,2.7,0,0.204); b.phys(0.33,0.49,0.96,1.04,0.204,0.209);
-       b.round(0,0.774,0,2.7,0,0.199,0.001,mat.body); b.round(0.33,0.49,0.96,1.04,0.199,0.203,0.001,mat.plastic); [[0.35,0.405],[0.415,0.47]].forEach(([x0,x1])=>b(x0,x1,0.98,1.02,0.2025,0.204,mat.dark)); // box, flush plate inside size, two buttons
+       b.round(0,0.774,0,2.7,0,0.199,0.001,finishMats.bathWall); // 2026-09-13 (.local/душевая8_1.png): wall finish, not the marble coating b.round(0.33,0.49,0.96,1.04,0.199,0.203,0.001,mat.plastic); [[0.35,0.405],[0.415,0.47]].forEach(([x0,x1])=>b(x0,x1,0.98,1.02,0.2025,0.204,mat.dark)); // box, flush plate inside size, two buttons
      }},                    // box, flush plate on the toilet axis (x 9.51)
     {id:'wc8',type:'унитаз подвесной компактный 0.36×0.48, сиденье 0.42, фасад на юг',room:8,layer:'bath2',pos:[9.34,11.588],rot:0,size:[0.36,0.42,0.48],coat:{plastic:'plastic'},fixed:'wall',glb:'models/wc.glb',glbRot:180,glbFacade:false,
      build(b,g){ /* proxy = pre-detail AABBs (realism-all E) */ b.phys(0.02,0.34,0.2,0.4,0,0.32); b.phys(0.02,0.34,0.2,0.4,0.16,0.48); b.phys(0.03,0.33,0.4,0.42,0.02,0.32); b.phys(0.03,0.33,0.4,0.42,0.17,0.47);
@@ -1184,7 +1184,7 @@ const PHYS={}; // id → boxes
     face(rect(0,0.02),rect(rim),Y-0.02,Y,mat.kmat);                                   // плоская кромка по периметру
     const d=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.005,16),mat.handle); d.position.set(W/2,bot+0.002,L-0.20); g.add(d); }}; // слив у южного торца, под смесителем
   window.BATH9=variantSelects('b9',{mirror:{ids:['bathmirror']},basin:{ids:['basin','basindrawer','basinmixer']},wc:{ids:['wc']},box:{ids:['wcbox','sock21']},light:{ids:['spot1','spot2']},mlight:{ids:['spot3']},towel:{ids:['towelrail']},tub:{ids:['tub'],V:{B:TUB_B}}});
-  window.BATH8=variantSelects('b8',{wc:{ids:['wc8']},box:{ids:['wcbox8']},light:{ids:['spot4','spot5','spot6','cove8']},towel:{ids:['towel8']},glass:{ids:['glass8']}}); // no basin or mirror in room 8 yet: those selects only offer «нет»
+  window.BATH8=variantSelects('b8',{mirror:{ids:['mirror8']},wc:{ids:['wc8']},box:{ids:['wcbox8']},light:{ids:['spot4','spot5','spot6','cove8']},towel:{ids:['towel8']},glass:{ids:['glass8']}}); // no basin in room 8 yet: that select only offers «нет»
   // ---- colour selects (#k4kbase/#k4kupper, #m3wbase/#m3wupper): a coating over the item's own coat, no rebuild.
   // 'A' keeps what the item or its layout variant declares (so kitchen D/E keep their oak wall units); any other value overrides it until switched back.
   const DECL={}; // coat as declared before a colour override, dropped when a layout variant rebuilds the item
