@@ -389,12 +389,14 @@ const PHYS={}; // id → boxes
     // ---- kids room 1 (tasks/room1-kid/README.md, marks M1–M30) ----
     // Room box: x 0.896–5.445, z 1.874–4.864. Wall-mounted boxes sit 0.02–0.03 in front of the wall so they show over the wallpaper (0.015).
     {id:'kidbed',type:'кровать-чердак с лестницей-комодом и полкой хранения',room:1,layer:'kid',pos:[2.835,1.884],rot:0,size:[2.6,2.6,2.97],coat:BED,fixed:'wall',build:kidBedBuild(2.0,mat.wdoor,mat.cushion)},
-    {id:'kiddesk',type:'стол прямой 1.94 × 0.80 вдоль южной стены, от западной стены до стойки кровати; стеллаж у окна стоит на его западном краю, столешница нависает над лежанкой на 0.20',room:1,layer:'kid',pos:[0.896,4.064],rot:0,size:[1.939,0.72,0.80],coat:CAB,fixed:'wall',
-     build(b){ [[0,1.939,0.68,0.72,0,0.80],[0.02,0.04,0,0.68,0.22,0.78]].forEach(q=>b.phys(...q)); // proxy = mesh AABBs; 0.80 deep since 2026-09-09
-       b.round(0,1.939,0.68,0.72,0,0.80,0.003,mat.kbody);                                          // worktop 0.04 с фаской 3 мм, одной плитой: 2026-09-12 убраны узкий выступ за стойкой кровати и торцевая щека
+    {id:'kiddesk',type:'стол прямой 2.24 × 0.80 вдоль южной стены, от западной стены на 0.30 за линию кровати; передние углы скруглены R 0.10; стеллаж у окна стоит на его западном краю, столешница нависает над лежанкой на 0.20',room:1,layer:'kid',pos:[0.896,4.064],rot:0,size:[2.239,0.72,0.80],coat:CAB,fixed:'wall',
+     build(b,g){ const W=2.239, r=0.003, R=0.10-r, w=W-2*r, d=0.80-2*r, sh=new THREE.Shape();      // proxy = mesh AABBs; 0.80 deep since 2026-09-09, +0.30 east since 2026-09-13 (user)
+       [[0,W,0.68,0.72,0,0.80],[0.02,0.04,0,0.68,0.22,0.78]].forEach(q=>b.phys(...q));
+       sh.moveTo(R,0); sh.lineTo(w-R,0); sh.absarc(w-R,R,R,-Math.PI/2,0,false); sh.lineTo(w,d); sh.lineTo(0,d); sh.lineTo(0,R); sh.absarc(R,R,R,Math.PI,Math.PI*1.5,false); // front (north) corners rounded, wall corners square
+       g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.04-2*r,bevelThickness:r,bevelSize:r,bevelSegments:1,curveSegments:8}).rotateX(Math.PI/2).translate(r,0.72-r,r),mat.kbody)); // worktop 0.04 with a 3 mm bevel, one slab
        b(0.02,0.04,0,0.68,0.22,0.78,mat.kbody);                                                    // west end panel starts behind the window seat (z 0.22), the pedestal carries the east end
-       b(0.04,1.919,0.60,0.68,0.75,0.78,mat.kbody); }},                                            // apron along the wall
-    {id:'kidped',type:'тумба с 3 ящиками под столом у самого восточного края, глубина 0.40 — не упирается в стойку кровати; фасады к комнате',room:1,layer:'kid',pos:[2.415,4.364],rot:0,size:[0.42,0.68,0.40],coat:CAB,
+       b(0.04,W-0.02,0.60,0.68,0.75,0.78,mat.kbody); }},                                           // apron along the wall
+    {id:'kidped',type:'тумба с 3 ящиками под столом у самого восточного края, глубина 0.40; фасады к комнате',room:1,layer:'kid',pos:[2.715,4.364],rot:0,size:[0.42,0.68,0.40],coat:CAB,
      build(b,g){ b.phys(0.02,0.40,0,0.68,0.02,0.40); [0.06,0.26,0.46].forEach(y=>b.phys(0.02,0.40,y,y+0.18,0,0.02)); // proxy = today's AABBs
        b(0.02,0.40,0.04,0.68,0.02,0.40,mat.kbody); [[0.05,0.05],[0.35,0.05],[0.05,0.35],[0.35,0.35]].forEach(([x,z])=>{ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.02,12).rotateX(Math.PI/2).translate(x,0.02,z),mat.knob); g.add(c); }); // body on 4 casters Ø40
        [0.045,0.245,0.445].forEach(y=>{ b(0.023,0.397,y,y+0.197,0,0.02,mat.wdoor); b(0.03,0.39,y+0.16,y+0.175,0.005,0.02,mat.dark); }); }}, // fronts with 3 mm gaps, finger groove instead of a handle (the chair sits right beside, handles would leave size)
