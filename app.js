@@ -1144,7 +1144,7 @@ var finishGroup=new THREE.Group();
   const wpLeaves=new THREE.MeshBasicMaterial({map:leavesTex}), wpSpace=new THREE.MeshBasicMaterial({map:spaceTex}), wpMount=new THREE.MeshBasicMaterial({map:mountTex}), wpWhales=new THREE.MeshBasicMaterial({map:whaleTex}), wpBalloons=new THREE.MeshBasicMaterial({map:balloonTex});
   wallFinMats.push(wpLeaves,wpSpace,wpMount,wpWhales,wpBalloons); Object.assign(finishMats,{wpLeaves,wpSpace,wpMount,wpWhales,wpBalloons});
   const WP_WALLS={1:['n'],2:['s']}, WP_MATS={none:wpMat,leaves:wpLeaves,space:wpSpace,mountains:wpMount,whales:wpWhales,balloons:wpBalloons}, MURALS={space:spaceTex,mountains:mountTex,whales:whaleTex,balloons:balloonTex}, wpMeshes={1:[],2:[]}; // room → sides that take wallpaper; registered panels per room; MURALS stretch over one panel
-  window.WALLPAPER={value:{1:'none',2:'none'},options:{1:['none','leaves','whales','balloons'],2:['none','space','mountains']},set(room,key){ if(!WP_MATS[key]) key='none'; WALLPAPER.value[room]=key;
+  window.WALLPAPER={value:{1:'none',2:'none'},options:{1:['none','leaves','whales','balloons'],2:['none','space','mountains']},def:{1:'whales',2:'mountains'},set(room,key){ if(!WP_MATS[key]) key='none'; WALLPAPER.value[room]=key;
     wpMeshes[room].forEach(m=>{ const mat=WP_MATS[key], t=MURALS[key]; if(t){ t.repeat.set(1/m.userData.wp.L,1/m.userData.wp.h); t.needsUpdate=true; } m.material=mat; }); // the mural stretches over its single panel
     if(window.VIZ&&VIZ.ready) VIZ.coatFinish('wpLeaves',VIZ.finishCoat.wpLeaves); }}; // re-swap the finish twins in the visualization
   PLAN.rooms.forEach(r=>{
@@ -1317,7 +1317,7 @@ function drawMap(){
 (function loop(t){requestAnimationFrame(loop);walkStep(t||0);controls.update();placeTip();if(window.RULER)RULER.tick();drawMap();if(window.LIGHTING)LIGHTING.tick(t||0);renderer.render(scene,camera);})(0);
 
 (function(){ // kids' wallpaper selects «Обои 1/2» (index.html), remembered per room
-  [1,2].forEach(room=>{ const KEY='pulse3d.wp'+room, sel=document.getElementById('wp'+room); if(!sel) return; let v=WALLPAPER.options[room][1]; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
-    if(!WALLPAPER.options[room].includes(v)) v=WALLPAPER.options[room][1]; sel.value=v; WALLPAPER.set(room,v);
+  [1,2].forEach(room=>{ const KEY='pulse3d.wp'+room, sel=document.getElementById('wp'+room); if(!sel) return; let v=WALLPAPER.def[room]; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
+    if(!WALLPAPER.options[room].includes(v)) v=WALLPAPER.def[room]; sel.value=v; WALLPAPER.set(room,v);
     sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} WALLPAPER.set(room,sel.value); }); });
 })();
