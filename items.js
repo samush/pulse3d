@@ -450,10 +450,10 @@ const PHYS={}; // id → boxes
        b(0.006,0.60,2.30,2.318,0,1.99,mat.kbody); b(0.006,0.60,2.682,2.70,0,1.99,mat.kbody); b(0,0.006,2.30,2.70,0,1.99,mat.wpanel); b(0.58,0.60,2.318,2.34,0,1.99,mat.kbody); }}, // 18 mm shelves, 6 mm back, front lip
     {id:'windowseat1',type:'лежанка у окна между стеллажами с решёткой радиатора и матрасиком, 1.89 × 0.75 (как в комнате 2)',room:1,layer:'kid',pos:[0.896,2.374],rot:0,size:[0.75,0.77,1.89],coat:BED,fixed:'wall',glb:'models/windowseat1.glb',
      build(b){ const L=1.89, D=0.75, C=D-0.02, px=(D-0.40)/2;                                                                // D 0.75 (user 2026-09-13, was 0.60): the sill covers 0.27 of the seat, so the free mattress grows from 0.33 to ~0.48
-       [[0.02,D-0.05,0,0.05,0.05,L-0.05],[0,C,0.05,0.57,0,L],[0,C,0.57,0.65,0.02,L-0.02],[px,px+0.40,0.65,0.77,0.05,0.35],[px,px+0.40,0.65,0.77,L-0.35,L-0.05],[C,D,0.06,0.44,0.01,L-0.01]].forEach(q=>b.phys(...q)); // proxy = today's AABBs
+       [[0.02,D-0.05,0,0.05,0.05,L-0.05],[0,C,0.05,0.57,0,L],[0,C,0.57,0.65,0.02,L-0.02],[px,px+0.40,0.65,0.77,0.05,0.35],[C,D,0.06,0.44,0.01,L-0.01]].forEach(q=>b.phys(...q)); // proxy = today's AABBs
        b(0.02,D-0.05,0,0.05,0.05,L-0.05,mat.dark); b(0,C,0.05,0.57,0,L,mat.body); // body top 0.57 over the sill (0.56): the mattress lies on the sill, not under its lip (user, 2026-09-13)
        airGrille(b,C,D,0.06,0.44,0.01,L-0.01,mat.wdoor);                                                                     // front grille east: air from the radiator under the sill
-       b(0,C,0.57,0.65,0.02,L-0.02,mat.kmat); [0.05,L-0.35].forEach(z=>b(px,px+0.40,0.65,0.77,z,z+0.30,mat.pillow)); }},     // mattress and two pillows at the shelf units
+       b(0,C,0.57,0.65,0.02,L-0.02,mat.kmat); b(px,px+0.40,0.65,0.77,0.05,0.35,mat.pillow); }},     // mattress and one pillow at the north shelf; the desk-end pillow was removed 2026-09-13 (user, .local/подушка.png)
     {id:'kidsofa',type:'диванчик в нише под кроватью',room:1,layer:'kid',pos:[4.65,2.05],rot:0,size:[0.75,0.80,1.60],coat:{fabric:'sofaWeave'},glb:'models/kidsofa.glb',
      build(b){
        [[0,0.75,0.10,0.45,0,1.60],[0.60,0.75,0.45,0.80,0,1.60],[0,0.60,0.45,0.60,0,0.15],[0,0.60,0.45,0.60,1.45,1.60]].forEach(q=>b.phys(...q)); [[0.03,0.03],[0.69,0.03],[0.03,1.54],[0.69,1.54]].forEach(([x,z])=>b.phys(x,x+0.03,0,0.10,z,z+0.03)); // proxy = today's AABBs
