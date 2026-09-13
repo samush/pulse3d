@@ -572,10 +572,10 @@ var sillGroup=new THREE.Group();
   const eMat=new THREE.LineBasicMaterial({color:0x9a978f});
   PLAN.windows.forEach(w=>{
     if(w.y0<0.2) return; // на балконе окна в пол
-    const sw=(w.z1-w.z0)+0.12;
-    const g=new THREE.BoxGeometry(0.75,0.05,sw);
+    const sw=(w.z1-w.z0)+0.12, R=w.sill==null?0.515:0.24+w.sill; // reach from the glass plane into the room: wall 0.24 + protrusion (0.275 default, PLAN.windows[].sill overrides)
+    const g=new THREE.BoxGeometry(0.235+R,0.05,sw);
     const m=new THREE.Mesh(g,sMat);
-    m.position.set(w.x-w.nx*0.14, w.y0-0.015, (w.z0+w.z1)/2); // top 1 cm above the wall block under the window: coplanar tops z-fight in the walk
+    m.position.set(w.x+w.nx*(0.235-R)/2, w.y0-0.015, (w.z0+w.z1)/2); // top 1 cm above the wall block under the window: coplanar tops z-fight in the walk
     sillGroup.add(m);
     const e=new THREE.LineSegments(new THREE.EdgesGeometry(g),eMat);
     e.position.copy(m.position);
