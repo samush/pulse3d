@@ -326,7 +326,7 @@ const { launchChromium } = require('./browser');
     const bb = new THREE.Box3().setFromObject(g), s = new THREE.Vector3(); bb.getSize(s); const mats = new Set(); g.traverse(o => { if (o.isMesh) mats.add(o.material); });
     return { loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), size: [s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join(), slots: [...new Set([...mats].map(m => m.userData.slot))].sort().join(), boxes: PHYS.windowseat2.length }; });
   if (!wsGlb.loaded) problems.push('glb: models/windowseat2.glb не загрузился: ' + JSON.stringify(wsGlb));
-  else if (wsGlb.warn || wsGlb.size !== '0.75,0.65,1.7' || wsGlb.slots !== 'cabinetPaint,fabric' || wsGlb.boxes !== 6) problems.push('glb: windowseat2 — предупреждения/габарит/слоты/proxy не сошлись: ' + JSON.stringify(wsGlb));
+  else if (wsGlb.warn || wsGlb.size !== '0.75,0.77,1.7' || wsGlb.slots !== 'cabinetPaint,fabric' || wsGlb.boxes !== 6) problems.push('glb: windowseat2 — предупреждения/габарит/слоты/proxy не сошлись: ' + JSON.stringify(wsGlb));
   // realism-all stage A: pouf and washer GLB loaded without warnings, proxies as before
   const glbA = await page.evaluate(async () => { const ids = ['pouf', 'washer']; for (let i = 0; i < 100 && !ids.every(id => ITEM_GROUPS[id].userData.glbLoaded || (VIZ.loadErrors || []).some(s => s.startsWith(id + ':'))); i++) await new Promise(r => setTimeout(r, 100));
     return ids.filter(id => !ITEM_GROUPS[id].userData.glbLoaded || (ITEM_GROUPS[id].userData.glbWarnings || []).length || PHYS[id].length !== { pouf: 5, washer: 6 }[id]).map(id => id + ':' + JSON.stringify(ITEM_GROUPS[id].userData.glbWarnings)); });

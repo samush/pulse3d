@@ -447,12 +447,12 @@ const PHYS={}; // id → boxes
     {id:'kidshelf3',type:'полка над окном между стеллажами, одна открытая ячейка 1.99; глубина 0.60 в линию со стеллажами',room:1,layer:'kid',pos:[0.896,2.374],rot:0,size:[0.60,2.70,1.99],coat:CAB,fixed:'wall',
      build(b){ b.phys(0,0.60,2.30,2.32,0,1.99); b.phys(0,0.60,2.68,2.70,0,1.99); b.phys(0,0.02,2.32,2.68,0,1.99); // proxy = today's AABBs
        b(0.006,0.60,2.30,2.318,0,1.99,mat.kbody); b(0.006,0.60,2.682,2.70,0,1.99,mat.kbody); b(0,0.006,2.30,2.70,0,1.99,mat.wpanel); b(0.58,0.60,2.318,2.34,0,1.99,mat.kbody); }}, // 18 mm shelves, 6 mm back, front lip
-    {id:'windowseat1',type:'лежанка у окна между стеллажами с решёткой радиатора и матрасиком, 1.89 × 0.75 (как в комнате 2)',room:1,layer:'kid',pos:[0.896,2.374],rot:0,size:[0.75,0.65,1.89],coat:BED,fixed:'wall',glb:'models/windowseat1.glb',
+    {id:'windowseat1',type:'лежанка у окна между стеллажами с решёткой радиатора и матрасиком, 1.89 × 0.75 (как в комнате 2)',room:1,layer:'kid',pos:[0.896,2.374],rot:0,size:[0.75,0.77,1.89],coat:BED,fixed:'wall',glb:'models/windowseat1.glb',
      build(b){ const L=1.89, D=0.75, C=D-0.02, px=(D-0.40)/2;                                                                // D 0.75 (user 2026-09-13, was 0.60): the sill covers 0.27 of the seat, so the free mattress grows from 0.33 to ~0.48
-       [[0.02,D-0.05,0,0.05,0.05,L-0.05],[0,C,0.05,0.45,0,L],[0,C,0.45,0.53,0.02,L-0.02],[px,px+0.40,0.53,0.65,0.05,0.35],[px,px+0.40,0.53,0.65,L-0.35,L-0.05],[C,D,0.06,0.44,0.01,L-0.01]].forEach(q=>b.phys(...q)); // proxy = today's AABBs
-       b(0.02,D-0.05,0,0.05,0.05,L-0.05,mat.dark); b(0,C,0.05,0.45,0,L,mat.body);
+       [[0.02,D-0.05,0,0.05,0.05,L-0.05],[0,C,0.05,0.57,0,L],[0,C,0.57,0.65,0.02,L-0.02],[px,px+0.40,0.65,0.77,0.05,0.35],[px,px+0.40,0.65,0.77,L-0.35,L-0.05],[C,D,0.06,0.44,0.01,L-0.01]].forEach(q=>b.phys(...q)); // proxy = today's AABBs
+       b(0.02,D-0.05,0,0.05,0.05,L-0.05,mat.dark); b(0,C,0.05,0.57,0,L,mat.body); // body top 0.57 over the sill (0.56): the mattress lies on the sill, not under its lip (user, 2026-09-13)
        airGrille(b,C,D,0.06,0.44,0.01,L-0.01,mat.wdoor);                                                                     // front grille east: air from the radiator under the sill
-       b(0,C,0.45,0.53,0.02,L-0.02,mat.kmat); [0.05,L-0.35].forEach(z=>b(px,px+0.40,0.53,0.65,z,z+0.30,mat.pillow)); }},     // mattress and two pillows at the shelf units
+       b(0,C,0.57,0.65,0.02,L-0.02,mat.kmat); [0.05,L-0.35].forEach(z=>b(px,px+0.40,0.65,0.77,z,z+0.30,mat.pillow)); }},     // mattress and two pillows at the shelf units
     {id:'kidsofa',type:'диванчик в нише под кроватью',room:1,layer:'kid',pos:[4.65,2.05],rot:0,size:[0.75,0.80,1.60],coat:{fabric:'sofaWeave'},glb:'models/kidsofa.glb',
      build(b){
        [[0,0.75,0.10,0.45,0,1.60],[0.60,0.75,0.45,0.80,0,1.60],[0,0.60,0.45,0.60,0,0.15],[0,0.60,0.45,0.60,1.45,1.60]].forEach(q=>b.phys(...q)); [[0.03,0.03],[0.69,0.03],[0.03,1.54],[0.69,1.54]].forEach(([x,z])=>b.phys(x,x+0.03,0,0.10,z,z+0.03)); // proxy = today's AABBs
@@ -525,12 +525,12 @@ const PHYS={}; // id → boxes
        b(0,0.6,0,t,0,D,mat.body); b(0,0.6,2.7-t,2.7,0,D,mat.body); b(0.58,0.6,t,2.7-t,0,D,mat.body); b(0.02,0.58,t,2.7-t,0,t,mat.body); b(0.02,0.58,t,2.7-t,D-t,D,mat.body);
        [0.90,1.35,1.80,2.25].forEach(y=>b(t,0.58,y-t,y,t,D-t,mat.body));                              // 4 open rows above the drawers
        [0.023,0.4515].forEach(y=>{ b.round(0,t,y,y+0.4255,0.023,D-0.023,0.001,mat.wdoor); b(0,0.003,y+0.395,y+0.415,D/2-0.10,D/2+0.10,mat.frame); }); }},
-    {id:'windowseat2',type:'лежанка у окна с решёткой радиатора и матрасиком, 1.70 × 0.75',room:2,layer:'kid2',pos:[14.024,7.198],rot:0,size:[0.75,0.65,1.702],coat:BED,fixed:'wall',glb:'models/windowseat2.glb', // model by tools/models/windowseat2.js; the build below is proxy and fallback
+    {id:'windowseat2',type:'лежанка у окна с решёткой радиатора и матрасиком, 1.70 × 0.75',room:2,layer:'kid2',pos:[14.024,7.198],rot:0,size:[0.75,0.77,1.702],coat:BED,fixed:'wall',glb:'models/windowseat2.glb', // model by tools/models/windowseat2.js; the build below is proxy and fallback
      build(b){ const D=0.75, px=(0.02+D-0.40)/2;                                                                             // D 0.75 (user 2026-09-13, was 0.60): the sill covers 0.29 of the seat, the free mattress grows to ~0.46
-       b.phys(0.05,D-0.02,0,0.05,0.05,1.65); b.phys(0.02,D,0.05,0.45,0,1.702); b.phys(0,0.02,0.06,0.44,0.01,1.692); b.phys(0.02,D,0.45,0.53,0.02,1.682); [0.05,1.35].forEach(z=>b.phys(px,px+0.4,0.53,0.65,z,z+0.3)); // proxy = pre-detail mesh AABBs (realism-all C1)
-       b(0.05,D-0.02,0,0.05,0.05,1.65,mat.dark); b(0.02,D,0.05,0.45,0,1.702,mat.body);
+       b.phys(0.05,D-0.02,0,0.05,0.05,1.65); b.phys(0.02,D,0.05,0.57,0,1.702); b.phys(0,0.02,0.06,0.44,0.01,1.692); b.phys(0.02,D,0.57,0.65,0.02,1.682); [0.05,1.35].forEach(z=>b.phys(px,px+0.4,0.65,0.77,z,z+0.3)); // proxy = pre-detail mesh AABBs (realism-all C1)
+       b(0.05,D-0.02,0,0.05,0.05,1.65,mat.dark); b(0.02,D,0.05,0.57,0,1.702,mat.body); // body top 0.57 over the sill (0.56), mattress on the sill (user, 2026-09-13)
        airGrille(b,0,0.02,0.06,0.44,0.01,1.692,mat.wdoor);                                                                   // front grille west: air from the radiator under the sill
-       b(0.02,D,0.45,0.53,0.02,1.682,mat.kmat); [0.05,1.35].forEach(z=>b(px,px+0.40,0.53,0.65,z,z+0.30,mat.pillow)); }},     // mattress and two pillows at the towers
+       b(0.02,D,0.57,0.65,0.02,1.682,mat.kmat); [0.05,1.35].forEach(z=>b(px,px+0.40,0.65,0.77,z,z+0.30,mat.pillow)); }},     // mattress and two pillows at the towers
     {id:'gymwall',type:'шведская стенка 0.80, в распор пол–потолок, 12 перекладин',room:2,layer:'kid2',pos:[12.55,6.538],rot:0,size:[0.80,2.70,0.15],coat:{table:'oakFurniture'},fixed:'wall',
      build(b,g){ b.phys(0,0.04,0,2.7,0.06,0.12); b.phys(0.76,0.8,0,2.7,0.06,0.12); for(let y=0.30;y<=2.50+1e-6;y+=0.20) b.phys(0.02,0.78,y-0.0175,y+0.0175,0.0725,0.1075); // proxy = pre-detail mesh AABBs (realism-all C1)
        [0,0.76].forEach(x=>{ b.round(x,x+0.04,0.02,2.68,0.06,0.12,0.004,mat.table); b(x-0.0,x+0.04,0,0.02,0.03,0.14,mat.frame); b(x,x+0.04,2.68,2.70,0.03,0.14,mat.frame); }); // wooden uprights 40×60 between steel pressure pads
@@ -614,6 +614,7 @@ const PHYS={}; // id → boxes
        b(W-t,W,0,T,0.03,0.58,mat.body); b(-o,W,T-t,T,0.03,0.58,mat.body); b(0,W,0,t,0.03,0.58,mat.body); b(t,W-t,t,T-t,0.03,0.05,mat.body); // body
        b(D-0.01,D+0.01,t,T-t,0.03,0.58,mat.body); b(-o+t,W-t,Y1,Y2,0.03,0.58,mat.body);                                           // divider between the two hanging compartments, shelf under the top row
        b(0,NW,N0,N0+t,0.03,0.58,mat.table); b(0,NW,N1-t,N1,0.03,0.58,mat.table); b(NW-t,NW,N0,N1,0.03,0.58,mat.table);        // niche shelf, ceiling and back in the podium oak (user, 2026-09-13)
+       b(0,NW-t,N0+t,N1-t,0.05,0.07,mat.table);                                                                             // niche back lining over the body back, so every inner face is oak
        doors.forEach(([x0,x1,y0,y1])=>b.round(x0,x1,y0,y1,0.58,0.60,0.001,mat.wdoor));                                          // doors, 3 mm gaps
        b(D-0.0225,D-0.0025,1.0,1.3,0.5975,0.6005,mat.frame); b(D+0.0025,D+0.0225,1.0,1.3,0.5975,0.6005,mat.frame);            // vertical pull profiles at the meeting edge
        [0.02-o,D+0.0015].forEach(x0=>b(x0+0.265,x0+0.365,Y2+0.003,Y2+0.023,0.5975,0.6005,mat.frame)); }},                       // top-row pulls along the bottom edge
@@ -641,6 +642,10 @@ const PHYS={}; // id → boxes
        g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(1.998,1.998,0.04),{depth:0.006,bevelThickness:0.001,bevelSize:0.001,bevelSegments:1,curveSegments:6}).rotateX(Math.PI/2).translate(0.001,0.007,0.001),mat.cushion)); }},
     {id:'reveal3',type:'откосы окна: верх и боковины проёма от рамы до плоскости стены, без подоконника',room:3,layer:'master',pos:[14.76,10.35],rot:0,size:[0.205,2.30,2.20],coat:{body:'whiteEnamel'},fixed:'wall',inWall:true, // lives in the wall thickness: room-bounds checks skip it
      build(b){ b(0,0.205,2.29,2.30,0,2.20,mat.body); b(0,0.205,0.55,2.30,0,0.012,mat.body); b(0,0.205,0.55,2.30,2.20-0.012,2.20,mat.body); }},
+    {id:'blind3',type:'кассета рулонной блэкаут-шторы в проёме окна спальни',room:3,layer:'master',pos:[14.775,10.36],rot:0,size:[0.08,2.29,2.18],coat:PLASTIC,fixed:'wall',
+     build(b,g){ const L=2.18, Y=2.21; b.phys(0,0.08,Y,Y+0.08,0,L); b.phys(0.02,0.06,Y-0.01,Y,0.03,L-0.03); // cassette under the top reveal (2.29), inside the opening
+       g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.039,0.039,L-0.04,24).rotateX(Math.PI/2).translate(0.04,Y+0.04,L/2),mat.plastic)); // cassette Ø78
+       [0,L-0.02].forEach(z=>b.round(0,0.08,Y,Y+0.08,z,z+0.02,0.006,mat.plastic)); b(0.02,0.06,Y-0.01,Y,0.03,L-0.03,mat.frame); }},
     {id:'mcurtain',type:'потолочный карниз по восточной стене, шторы собраны у краёв',room:3,layer:'master',pos:[14.7,12.794],rot:180,size:[0.10,2.68,3.017],coat:{drape:'curtainLinen'},fixed:'wall',
      build(b,g){ b.phys(0.02,0.05,2.65,2.68,0,3.017); b.phys(0.02,0.08,1.15,2.64,0,0.15); b.phys(0.02,0.08,0.02,2.64,2.867,3.017); // proxy = pre-detail mesh AABBs (realism-all D1)
        b(0.02,0.05,2.65,2.68,0,3.017,mat.frame);                                                                        // ceiling track
@@ -1142,8 +1147,8 @@ const PHYS={}; // id → boxes
   // на 3 мм больше по каждой оси, поэтому белую не видно и app.js трогать не нужно
   const REVEAL3_B={pos:[14.76,10.35],size:[0.205,2.30,2.20],coat:{body:'oakFloor'},
     build(b){ b(0,0.205,2.29,2.30,0,2.20,mat.body); b(0,0.205,0.55,2.30,0,0.012,mat.body); b(0,0.205,0.55,2.30,2.20-0.012,2.20,mat.body);
-      b(-0.278,0.478,0.507,0.563,-0.063,2.263,mat.body); }};
-  const R3={vtable:{ids:['vanity'],V:VAN_V},vmirror:{ids:['vmirror'],V:VAN_V},curtain:{ids:['mcurtain']},reveal:{ids:['reveal3'],V:{B:REVEAL3_B}}}; // keys without V: only «нет»/A // spec() reads only its own id from items, so the same set serves both
+      b(-0.11,0.478,0.507,0.563,-0.063,2.263,mat.body); }}; // slab over the sill (reach 0.10, PLAN.windows[2].sill) plus 1 cm so the white sill face stays hidden; was 0.278 before 2026-09-13
+  const R3={vtable:{ids:['vanity'],V:VAN_V},vmirror:{ids:['vmirror'],V:VAN_V},curtain:{ids:['mcurtain']},reveal:{ids:['reveal3'],V:{B:REVEAL3_B}},blind:{ids:['blind3']}}; // keys without V: only «нет»/A // spec() reads only its own id from items, so the same set serves both
   // a variant with its own glb reloads it after the procedural rebuild; loadItemGlb drops a model whose url is no longer userData.glb (fast switching)
   const spec=(V,it)=>V?(V.items?V.items[it.id]:V):it; // a variant is one spec for every id of the group, or items:{id:spec|null} (null = hidden)
   const COAT_HOOKS=[]; // colour selects re-apply their coating after a layout variant has rebuilt the item

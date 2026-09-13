@@ -16,12 +16,12 @@ UV — в метрах (как у боксов `b()` в `items.js`): `rbox` ра
 | `sofa.glb` | `sofa` 2.0×0.87×0.88; материалы `upholstery` (корпус), `cushion` (три подушки), `piping`, `metal` | ~4.6k | `tools/models/sofa.js` |
 | `sofaB…G.glb` | варианты `sofa` для `#k4sofa` (B 2.4×0.78×1.6, C/D 2.6×0.87×1.85 зеркальные, E 2.5×0.9×1.55, F 2.2×0.68×0.95, G 2.3×0.87×1.5); `upholstery`, `cushion`, `piping`, `metal`, `wood` (поднос C/D) | 6–10k | `tools/models/sofa4.js` (один скрипт на все шесть) |
 | `chair.glb` | `chair1…6` 0.48×0.80×0.48, спинка-обруч из гнутого дерева с мягкой вставкой (2026-09-10), один файл, клоны с общей geometry, поворот `glbRot` | ~2.4k | `tools/models/chair.js` |
-| `windowseat2.glb` | `windowseat2` 0.60×0.65×1.702; `kmat` (матрас), `pillow` | ~3.0k | `tools/models/windowseat2.js` |
+| `windowseat2.glb` | `windowseat2` 0.75×0.77×1.702; `kmat` (матрас), `pillow` | ~3.0k | `tools/models/windowseat2.js` |
 | `pouf.glb` | `pouf` 0.4×0.45×0.6 | ~2.9k | `tools/models/pouf.js` |
 | `washer.glb` | `washer` 0.6×1.72×0.6 | ~5.2k | `tools/models/washer.js` |
 | `kidsofa.glb` | `kidsofa` 0.75×0.80×1.60; `upholstery`, `cushion`, `piping`, `metal` | ~6.6k | `tools/models/kidsofa.js` |
 | `kidchair.glb` | `kidchair`, `kidchair2` 0.55×0.85×0.55, один файл | ~2.1k | `tools/models/kidchair.js` |
-| `windowseat1.glb` | `windowseat1` 0.60×0.65×1.89; имена материалов — ключи `ITEM_MATS` (`kmat`, `pillow`, `body`…), чтобы оттенки концепта сохранились | ~3.1k | `tools/models/windowseat1.js` |
+| `windowseat1.glb` | `windowseat1` 0.75×0.77×1.89; имена материалов — ключи `ITEM_MATS` (`kmat`, `pillow`, `body`…), чтобы оттенки концепта сохранились | ~3.1k | `tools/models/windowseat1.js` |
 | `bchair.glb` | `bchair` 0.45×0.90×0.45, спинка по −z | ~1.9k | `tools/models/bchair.js` |
 | `mbed.glb` | `mbed` 2.015×1.10×2.82, подиум `dark` до стены с вырезом под короб радиатора, два ящика; имена материалов — ключи `ITEM_MATS`, покрывало — `cover` | ~11.6k | `tools/models/mbed.js` |
 | `vpouf.glb` | `vpouf` 0.4×0.45×0.4 | ~2.3k | `tools/models/vpouf.js` |
