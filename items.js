@@ -338,6 +338,17 @@ const PHYS={}; // id → boxes
        b(t,W-t,H1,H1+t,0,D-t,mat.body); door(t,mid-gap,H1+t,H2-t); door(mid+gap,W-t,H1+t,H2-t);                       // top cabinets
        b(mid-0.02,mid-gap-0.001,H1+0.04,H2-0.04,0,0.003,mat.frame); b(mid+gap+0.001,mid+0.02,H1+0.04,H2-0.04,0,0.003,mat.frame);
      }},
+    {id:'nightled',type:'ночная LED-подсветка по плинтусу коридора: лента 8 мм на верхе плинтуса вдоль обеих стен, без дверей, ниши шкафа и съёмной стены кухни, 2700 K',room:5,layer:'hall',pos:[5.608,4.033],rot:0,size:[5.296,0.12,5.567],fixed:'wall',inWall:true, // footprint is the whole hall: layout treats it like a wall detail
+     build(b){ const P=PLAN.rooms.find(r=>r.id===5).poly, X0=5.608, Z0=4.033, OFF=[0.028,0.058], Y=[0.10,0.108];
+       const inPoly=(x,z)=>{ let c=false; for(let i=0,j=P.length-1;i<P.length;j=i++){ const [xi,zi]=P[i],[xj,zj]=P[j]; if((zi>z)!==(zj>z)&&x<(xj-xi)*(z-zi)/(zj-zi)+xi) c=!c; } return c; };
+       P.forEach((p,i)=>{ const q=P[(i+1)%P.length], vert=Math.abs(p[0]-q[0])<1e-6, fixed=vert?p[0]:p[1]; let lo=Math.min(vert?p[1]:p[0],vert?q[1]:q[0]), hi=Math.max(vert?p[1]:p[0],vert?q[1]:q[0]);
+         if(!vert&&Math.abs(fixed-6.464)<1e-3) return; if(!vert&&Math.abs(fixed-7.984)<1e-3) return;          // removable kitchen wall; wardrobe niche back
+         if(vert&&Math.abs(fixed-8.066)<1e-3) hi=Math.min(hi,5.516);                                          // the rest of x 8.066 is the removable wall too
+         const mid=(lo+hi)/2, n=vert?(inPoly(fixed+0.05,mid)?1:-1):(inPoly(mid,fixed+0.05)?1:-1);           // inward normal
+         let segs=[[lo,hi]]; PLAN.doors.forEach(([cx,cz,o,w])=>{ const on=vert?(o==='v'&&Math.abs(cx-fixed)<0.15):(o==='h'&&Math.abs(cz-fixed)<0.15), c=vert?cz:cx; if(!on||c<lo||c>hi) return;
+           segs=segs.flatMap(([a,z])=>[[a,Math.min(z,c-w/2-0.06)],[Math.max(a,c+w/2+0.06),z]]); });
+         segs.filter(([a,z])=>z-a>0.1).forEach(([a,z])=>{ const o0=fixed+n*OFF[0], o1=fixed+n*OFF[1], u0=Math.min(o0,o1), u1=Math.max(o0,o1);
+           if(vert) b.led(u0-X0,u1-X0,Y[0],Y[1],a-Z0,z-Z0); else b.led(a-X0,z-X0,Y[0],Y[1],u0-Z0,u1-Z0); }); }); }},
     {id:'entry',type:'полочка с ящиками и светильниками у входа',room:5,layer:'hall',pos:[6.346,7.03],rot:0,size:[0.325,1.85,0.4],fixed:'wall',coat:{door:'cabinetPaint',body:'cabinetPaint'},
      build(b){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.3,0.8,0.92,0,0.4); b.phys(0.3,0.315,0.81,0.91,0.01,0.195); b.phys(0.3,0.315,0.81,0.91,0.205,0.39); b.phys(0.315,0.325,0.855,0.865,0.07,0.14); b.phys(0.315,0.325,0.855,0.865,0.26,0.33);
        b.round(0,0.30,0.80,0.92,0,0.4,0.003,mat.body);                                                                  // shelf box with a 3 mm chamfer
@@ -1122,8 +1133,8 @@ const PHYS={}; // id → boxes
   window.KID1=variantSelects('r1',{sofa:{ids:['kidsofa']},rug:{ids:['kidrug']},curtain:{ids:['curtain']},reveal:{ids:['reveal1']}});
   window.KID2=variantSelects('r2',{rug:{ids:['kidrug2']},curtain:{ids:['blind2']},reveal:{ids:['reveal2']}});
   // ванна B (.local/11.png, .local/12.png): прямоугольная 0.70 × 1.60 с плоской кромкой, внутренняя чаша — стадион, глухой экран до пола
-  const TUB_B={pos:[8.172,8.122],size:[0.99,0.58,1.625],build(b,g){
-    const W=0.99, L=1.625, Y=0.58, rim=0.045, t=0.012, bot=0.15;                      // во всю нишу: от северной стены до короба инсталляции; кромка 45 мм, акрил 12 мм, дно 0.12–0.15
+  const TUB_B={pos:[8.222,8.181],size:[0.94,0.58,1.671],build(b,g){
+    const W=0.94, L=1.671, Y=0.58, rim=0.045, t=0.012, bot=0.15;                      // во всю нишу между плиткой (запад x 8.222, север z 8.181, юг z 9.852) и торцом короба x 9.162; кромка 45 мм, акрил 12 мм, дно 0.12–0.15
     const rr=(P,x0,y0,w,h,r)=>{ const p=new P(); r=Math.min(r,w/2,h/2);               // скруглённый прямоугольник со сдвигом: b.rrect строит только от (0,0)
       p.moveTo(x0+r,y0); p.lineTo(x0+w-r,y0); p.absarc(x0+w-r,y0+r,r,-Math.PI/2,0,false);
       p.lineTo(x0+w,y0+h-r); p.absarc(x0+w-r,y0+h-r,r,0,Math.PI/2,false);

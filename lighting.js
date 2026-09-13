@@ -62,6 +62,10 @@ const LIGHTS=[
   {id:'ceil5_1',item:'ceil5_1',group:'g5.entry',type:'spot',at:[7.20,2.68,7.05],k:3000,w:1.0,shadow:true},
   {id:'entrya',item:'entry',group:'g5.entry',type:'point',at:[6.36,1.50,7.15],k:3000,w:0.3,distance:1.5},
   {id:'entryb',item:'entry',group:'g5.entry',type:'point',at:[6.36,1.50,7.32],k:3000,w:0.3,distance:1.5},
+  {id:'night1',item:'nightled',group:'g5.night',type:'point',at:[6.90,0.15,4.60],k:2700,w:0.15,distance:1.6}, // night strip on the hall plinth: low warm points along the route
+  {id:'night2',item:'nightled',group:'g5.night',type:'point',at:[6.90,0.15,6.40],k:2700,w:0.15,distance:1.6},
+  {id:'night3',item:'nightled',group:'g5.night',type:'point',at:[8.90,0.15,7.20],k:2700,w:0.15,distance:1.6},
+  {id:'night4',item:'nightled',group:'g5.night',type:'point',at:[10.45,0.15,8.70],k:2700,w:0.15,distance:1.6},
   {id:'ceil5_2',item:'ceil5_2',group:'g5.north',type:'spot',at:[7.20,2.68,5.60],k:3000,w:1.0},
   {id:'ceil5_3',item:'ceil5_3',group:'g5.north',type:'spot',at:[7.20,2.68,4.40],k:3000,w:1.0},
   {id:'ceil5_4',item:'ceil5_4',group:'g5.corr',type:'spot',at:[9.30,2.68,7.00],k:3000,w:1.0},
