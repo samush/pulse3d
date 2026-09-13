@@ -1088,10 +1088,23 @@ var finishGroup=new THREE.Group();
     g.fillStyle='#f6f6f8'; g.beginPath(); g.arc(ax,ay-u*1.05,u*0.6,0,Math.PI*2); g.fill(); g.fillStyle='#232a3c'; g.beginPath(); g.ellipse(ax+u*0.08,ay-u*1.05,u*0.42,u*0.34,0,0,Math.PI*2); g.fill(); g.fillStyle='rgba(255,255,255,0.35)'; g.beginPath(); g.ellipse(ax-u*0.05,ay-u*1.18,u*0.16,u*0.08,-0.4,0,Math.PI*2); g.fill(); // helmet and visor
     g.fillStyle='#e8934a'; g.beginPath(); g.arc(ax+u*1.5,ay-u*1.4,u*0.35,0,Math.PI*2); g.fill(); // the small planet in the hand
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; return t; })();
-  const wpLeaves=new THREE.MeshBasicMaterial({map:leavesTex}), wpSpace=new THREE.MeshBasicMaterial({map:spaceTex}); wallFinMats.push(wpLeaves,wpSpace); finishMats.wpLeaves=wpLeaves; finishMats.wpSpace=wpSpace;
-  const WP_WALLS={1:['n'],2:['s']}, WP_MATS={none:wpMat,leaves:wpLeaves,space:wpSpace}, wpMeshes={1:[],2:[]}; // room → sides that take wallpaper; registered panels per room
-  window.WALLPAPER={value:{1:'none',2:'none'},options:{1:['none','leaves'],2:['none','space']},set(room,key){ if(!WP_MATS[key]) key='none'; WALLPAPER.value[room]=key;
-    wpMeshes[room].forEach(m=>{ const mat=WP_MATS[key]; if(mat===wpSpace){ const t=spaceTex; t.repeat.set(1/m.userData.wp.L,1/m.userData.wp.h); t.needsUpdate=true; } m.material=mat; }); // the mural stretches over its single panel
+  // 2026-09-13 (.local/горы.jpg): second mural for room 2 — flat layered mountains in sage blue with pale fir silhouettes
+  const mountTex=(()=>{ const W=1024, Hc=720, c=document.createElement('canvas'); c.width=W; c.height=Hc; const g=c.getContext('2d'); let sd=11; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
+    const sky=g.createLinearGradient(0,0,0,Hc); sky.addColorStop(0,'#f7f5f0'); sky.addColorStop(0.5,'#e7efec'); sky.addColorStop(1,'#d3e2e2'); g.fillStyle=sky; g.fillRect(0,0,W,Hc);
+    const ridge=(pts,col)=>{ g.fillStyle=col; g.beginPath(); g.moveTo(-20,Hc+20); pts.forEach(([x,y])=>g.lineTo(x*W,y*Hc)); g.lineTo(W+20,Hc+20); g.closePath(); g.fill(); };
+    ridge([[-0.02,0.62],[0.14,0.34],[0.30,0.55],[0.48,0.22],[0.68,0.52],[0.84,0.38],[1.02,0.58]],'#cddcdd');                 // far range
+    g.save(); g.beginPath(); g.moveTo(0.48*W,0.22*Hc); g.lineTo(0.56*W,0.36*Hc); g.lineTo(0.52*W,0.37*Hc); g.lineTo(0.47*W,0.30*Hc); g.lineTo(0.42*W,0.36*Hc); g.closePath(); g.fillStyle='#f2ece0'; g.fill(); g.restore(); // snow on the high peak
+    ridge([[-0.02,0.78],[0.10,0.52],[0.26,0.70],[0.40,0.44],[0.58,0.68],[0.76,0.50],[0.92,0.66],[1.02,0.60]],'#a8c3c6');     // middle range
+    g.save(); g.beginPath(); g.moveTo(0.40*W,0.44*Hc); g.lineTo(0.47*W,0.56*Hc); g.lineTo(0.43*W,0.575*Hc); g.lineTo(0.39*W,0.51*Hc); g.lineTo(0.35*W,0.56*Hc); g.closePath(); g.fillStyle='#e8e0d2'; g.fill(); g.restore();
+    ridge([[-0.02,0.94],[0.18,0.72],[0.36,0.88],[0.54,0.70],[0.72,0.86],[0.90,0.74],[1.02,0.88]],'#7fa3aa');                 // near range
+    const fir=(x,y,h,col)=>{ g.fillStyle=col; const w=h*0.42; for(let i=0;i<3;i++){ const t=y-h+i*h*0.30, ww=w*(0.55+0.22*i); g.beginPath(); g.moveTo(x,t); g.lineTo(x+ww,t+h*0.42); g.lineTo(x-ww,t+h*0.42); g.closePath(); g.fill(); } g.fillRect(x-h*0.035,y-h*0.10,h*0.07,h*0.12); };
+    for(let i=0;i<26;i++){ const x=rnd()*W, h=Hc*(0.10+0.07*rnd()); fir(x,Hc*(0.90+0.06*rnd()),h,'#efe3d0'); }              // back row of firs
+    for(let i=0;i<16;i++){ const x=rnd()*W, h=Hc*(0.16+0.10*rnd()); fir(x,Hc*(1.02+0.04*rnd()),h,'#e2d2ba'); }              // front row, taller and warmer
+    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; return t; })();
+  const wpLeaves=new THREE.MeshBasicMaterial({map:leavesTex}), wpSpace=new THREE.MeshBasicMaterial({map:spaceTex}), wpMount=new THREE.MeshBasicMaterial({map:mountTex}); wallFinMats.push(wpLeaves,wpSpace,wpMount); finishMats.wpLeaves=wpLeaves; finishMats.wpSpace=wpSpace; finishMats.wpMount=wpMount;
+  const WP_WALLS={1:['n'],2:['s']}, WP_MATS={none:wpMat,leaves:wpLeaves,space:wpSpace,mountains:wpMount}, wpMeshes={1:[],2:[]}; // room → sides that take wallpaper; registered panels per room
+  window.WALLPAPER={value:{1:'none',2:'none'},options:{1:['none','leaves'],2:['none','space','mountains']},set(room,key){ if(!WP_MATS[key]) key='none'; WALLPAPER.value[room]=key;
+    wpMeshes[room].forEach(m=>{ const mat=WP_MATS[key], t=mat===wpSpace?spaceTex:mat===wpMount?mountTex:null; if(t){ t.repeat.set(1/m.userData.wp.L,1/m.userData.wp.h); t.needsUpdate=true; } m.material=mat; }); // the mural stretches over its single panel
     if(window.VIZ&&VIZ.ready) VIZ.coatFinish('wpLeaves',VIZ.finishCoat.wpLeaves); }}; // re-swap the finish twins in the visualization
   PLAN.rooms.forEach(r=>{
     if(r.id===8||r.id===9) return;

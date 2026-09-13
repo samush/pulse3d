@@ -305,7 +305,7 @@ const { launchChromium } = require('./browser');
   if (proxA.length) problems.push('proxy: этап A — число боксов/габарит не сошлись: ' + proxA.join(' '));
   // realism-all stage C: proxies for the room 2 items repeat the old mesh AABBs (count + union extent)
   const proxC = await page.evaluate(() => { const ext = id => { const bb = new THREE.Box3(); PHYS[id].forEach(m => bb.union(new THREE.Box3().setFromObject(m))); const s = new THREE.Vector3(); bb.getSize(s); return [s.x, s.y, s.z].map(v => Math.round(v * 1000) / 1000).join(); };
-    const want = { kidbed2: [9, '2.4,2.6,2.97'], kiddesk2: [4, '0.75,0.72,1.65'], kidchair2: [5, '0.52,0.85,0.49'], deskshelf2: [3, '0.22,0.15,1.55'], tower2n: [10, '0.615,2.7,0.68'], tower2s: [13, '0.615,2.7,0.619'], windowseat2: [6, '0.6,0.65,1.702'], gymwall: [14, '0.8,2.7,0.06'], pullup: [3, '0.9,0.04,0.53'], kidrug2: [1, '1.6,0.02,2'], kidlight2: [1, '0.45,0.04,0.45'], desklamp2: [3, '0.16,0.48,0.16'], bra3: [3, '0.12,0.12,0.225'], bra4: [2, '0.12,0.12,0.165'], blind2: [2, '0.08,0.09,1.48'] };
+    const want = { kidbed2: [9, '2.4,2.6,2.97'], kiddesk2: [4, '0.75,0.72,1.65'], kidchair2: [5, '0.52,0.85,0.49'], deskshelf2: [3, '0.22,0.15,1.55'], tower2n: [10, '0.615,2.7,0.68'], tower2s: [13, '0.615,2.7,0.619'], windowseat2: [6, '0.75,0.65,1.702'], gymwall: [14, '0.8,2.7,0.06'], pullup: [3, '0.9,0.04,0.53'], kidrug2: [1, '1.6,0.02,2'], kidlight2: [1, '0.45,0.04,0.45'], desklamp2: [3, '0.16,0.48,0.16'], bra3: [3, '0.12,0.12,0.225'], bra4: [2, '0.12,0.12,0.165'], blind2: [2, '0.08,0.09,1.48'] };
     return Object.entries(want).filter(([id, [n, e]]) => PHYS[id].length !== n || ext(id) !== e || !ITEM_GROUPS[id].userData.proxy.length).map(([id]) => id + ':' + PHYS[id].length + ':' + ext(id)); });
   if (proxC.length) problems.push('proxy: этап C — число боксов/габарит не сошлись: ' + proxC.join(' '));
   // realism-all stage A: kitchen detailed — fronts with gaps, sink bowl under the worktop, mixer; all inside size, proxies unchanged
@@ -326,7 +326,7 @@ const { launchChromium } = require('./browser');
     const bb = new THREE.Box3().setFromObject(g), s = new THREE.Vector3(); bb.getSize(s); const mats = new Set(); g.traverse(o => { if (o.isMesh) mats.add(o.material); });
     return { loaded: !!g.userData.glbLoaded, warn: (g.userData.glbWarnings || []).join('|'), size: [s.x, s.y, s.z].map(v => Math.round(v * 100) / 100).join(), slots: [...new Set([...mats].map(m => m.userData.slot))].sort().join(), boxes: PHYS.windowseat2.length }; });
   if (!wsGlb.loaded) problems.push('glb: models/windowseat2.glb не загрузился: ' + JSON.stringify(wsGlb));
-  else if (wsGlb.warn || wsGlb.size !== '0.6,0.65,1.7' || wsGlb.slots !== 'cabinetPaint,fabric' || wsGlb.boxes !== 6) problems.push('glb: windowseat2 — предупреждения/габарит/слоты/proxy не сошлись: ' + JSON.stringify(wsGlb));
+  else if (wsGlb.warn || wsGlb.size !== '0.75,0.65,1.7' || wsGlb.slots !== 'cabinetPaint,fabric' || wsGlb.boxes !== 6) problems.push('glb: windowseat2 — предупреждения/габарит/слоты/proxy не сошлись: ' + JSON.stringify(wsGlb));
   // realism-all stage A: pouf and washer GLB loaded without warnings, proxies as before
   const glbA = await page.evaluate(async () => { const ids = ['pouf', 'washer']; for (let i = 0; i < 100 && !ids.every(id => ITEM_GROUPS[id].userData.glbLoaded || (VIZ.loadErrors || []).some(s => s.startsWith(id + ':'))); i++) await new Promise(r => setTimeout(r, 100));
     return ids.filter(id => !ITEM_GROUPS[id].userData.glbLoaded || (ITEM_GROUPS[id].userData.glbWarnings || []).length || PHYS[id].length !== { pouf: 5, washer: 6 }[id]).map(id => id + ':' + JSON.stringify(ITEM_GROUPS[id].userData.glbWarnings)); });
@@ -708,7 +708,7 @@ const { launchChromium } = require('./browser');
   if (!noShot) for (const [name, x, z, th] of [['room1-door', 4.5, 4.55, -Math.PI / 2 + 0.45], ['room1-gallery', 1.9, 3.0, Math.PI * 0.3], ['room1-bed', 4.95, 3.3, -Math.PI / 2 - 0.15], ['room2-door', 11.9, 7.35, Math.PI / 2 + 0.15], ['room2-desk', 12.0, 8.8, Math.PI * 0.75], ['room2-gym', 14.0, 8.1, -Math.PI * 0.75]]) for (const on of [true, false]) {
     await page.evaluate(([x, z, th, on]) => { VIZ.set(on); controls.setFPV(x, z, th); }, [x, z, th, on]); await page.waitForTimeout(on ? 1500 : 400); await page.screenshot({ path: path.join(outDir, 'm4-1-' + name + (on ? '-on' : '-off') + '.png') }); }
   // materials-lighting M4-3/M4-4: rooms 5, 7, 10, 8, 9 — main surfaces wear the coatings from kitchen.md rules; one on/off frame per room
-  const M4 = { hall5: { items: [['wardrobe', 'door', 'whiteOakFront'], ['wardrobe', 'body', 'whiteOakFront'], ['wardrobe', 'hdark', 'class'], ['entry', 'door', 'cabinetPaint'], ['sw5', 'plastic', 'plastic'], ['pouf', 'glb:leather', 'class']], pose: [9.1, 6.6, 9.1, 7.7] },
+  const M4 = { hall5: { items: [['wardrobe', 'door', 'whiteOakFront'], ['wardrobe', 'body', 'whiteOakFront'], ['wardrobe', 'table', 'oakFloor'], ['entry', 'door', 'cabinetPaint'], ['sw5', 'plastic', 'plastic'], ['pouf', 'glb:leather', 'class']], pose: [9.1, 6.6, 9.1, 7.7] },
     laundry7: { items: [['washer', 'glb:plastic', 'plastic'], ['washer', 'glb:paint', 'whiteEnamel'], ['washer', 'glb:chrome', 'class']], finish: [], pose: [7.6, 3.7, 7.35, 2.6] },
     balcony10: { items: [['bdesk', 'table', 'oakFurnitureX'], ['bdesk', 'frame', 'class'], ['bchair', 'glb:paint', 'oakFurniture'], ['bchair', 'glb:cushion', 'sofaWeave'], ['bshelf', 'wpanel', 'cabinetPaint'], ['bshelf', 'dark', 'class'], ['itshelf', 'body', 'cabinetPaint'], ['sock26', 'plastic', 'plastic'], ['blinds10', 'plastic', 'plastic']], pose: [14.3, 3.9, 14.6, 5.9] },
     bath9: { items: [['basindrawer', 'wdoor', 'cabinetPaint'], ['wcbox', 'body', 'tile6060'], ['wcbox', 'plastic', 'plastic'], ['basin', 'ceramic', 'class'], ['tub', 'glb:acrylic', 'class'], ['wc', 'glb:ceramic', 'class'], ['wc', 'glb:plastic', 'plastic'], ['bathmirror', 'mirror', 'class'], ['towelrail', 'handle', 'class']], pose: [9.3, 9.45, 9.27, 8.2] },
@@ -878,7 +878,7 @@ const { launchChromium } = require('./browser');
     const desk = bb(ITEM_GROUPS.kiddesk), seat = bb(ITEM_GROUPS.windowseat1), shelfN = bb(ITEM_GROUPS.kidshelf), shelfS = bb(ITEM_GROUPS.kidshelf2), win = PLAN.windows[0];
     const deskStraight = desk.max.z - desk.min.z <= 0.81 && desk.max.z > 4.86 && desk.max.x - desk.min.x > 1.9;
     const chair = bb(ITEM_GROUPS.kidchair), ped = bb(ITEM_GROUPS.kidped), chairIn = chair.max.z - desk.min.z >= 0.25, pedEnd = desk.max.x - ped.max.x < 0.025;
-    const seatOk = seat.min.z >= shelfN.max.z - 0.001 && seat.max.z <= desk.min.z + 0.201 && seat.max.x <= 1.52;
+    const seatOk = seat.min.z >= shelfN.max.z - 0.001 && seat.max.z <= desk.min.z + 0.201 && seat.max.x <= 1.66;
     const windowFree = shelfN.max.z <= win.z0 - 0.09 && shelfS.min.z >= win.z1 + 0.09;
     return { n: kids.length, inside, hitPlat, warn, tops, sofaTop, bedPos: ITEM_GROUPS.kidbed.userData.pos, colored, deskStraight, seatOk, windowFree, chairIn, pedEnd };
   });

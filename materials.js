@@ -81,6 +81,7 @@ const COATINGS={
   whiteOakFront:{name:'фасад белёный дуб, матовый', class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0xefece6, normalScale:0.35}, // door-leaf white with a grain a step stronger than the tinted fronts
   creamFront:  {name:'фасад кремовый, слабый рисунок дерева', class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0xece2cf, normalScale:0.22},
   hplWhite:    {name:'HPL-плита белая, столешница и фартук', class:'facade', size:[1,1], maps:[], color:0xeae7e1, rough:0.45}, // 2026-09-11: kitchen 4 — one white panel and one tone for worktop and splashback, no texture set for HPL
+  blackEdge:   {name:'кромка чёрная, матовая',  class:'facade', size:[1,1], maps:[], color:0x24262a, rough:0.5}, // 2026-09-13: торец столешницы кухни 4
   oliveFront:  {name:'HPL-плита оливковая, матовый фасад', class:'facade', size:[1,1], maps:[], color:0x8a8f70, rough:0.62}, // 2026-09-11: нижние ящики, пенал с техникой, холодильник и боковины навесных шкафов
 };
 const VIZ={on:false,ready:false,mode:'basic',std:new Map(),neutral:new Map(),basic:new Map(),variants:new Map(),textures:new Map(),finishCoat:{board:'oakFloor',wallPaint:'wallPaint',wood:'oakFloor',woodFloor:'oakFloor',white:'tile6060',whiteWall:'tile6060',grey:'tile6060grey'},loadErrors:[]}; // finishCoat: global coating per finish key (M2: oak boards, 60×120 stone, wall paint, oak jambs; M4: 60×60 tiles of rooms 7/8/9) // mode: basic (plan) | neutral | std (real coatings); variants: basic → Map(coating → twin)
