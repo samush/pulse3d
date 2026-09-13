@@ -95,7 +95,7 @@
     return w;
   }
   const bbox=id=>new THREE.Box3().setFromObject(ITEM_GROUPS[id]);
-  const passive=id=>{ const bb=bbox(id); return bb.min.y>=1.9||bb.max.y<=0.02; }; // hanging (above head) or flat (rug) items block nothing
+  const passive=id=>{ const def=ITEMS.find(i=>i.id===id); if(def&&def.inWall) return true; const bb=bbox(id); return bb.min.y>=1.9||bb.max.y<=0.02; }; // hanging (above head) or flat (rug) items block nothing
   const onFloor=id=>bbox(id).min.y<0.05; // passage matters only between floor-standing items
   // narrowest corridor between parts of two items of the same room (a wall separates rooms, so no corridor across them) (below head height) that face each other along one axis;
   // per part, not per item box: the loft bed's box covers the empty space under it; diagonal corners are not a corridor
