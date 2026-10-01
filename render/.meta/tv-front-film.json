@@ -1,0 +1,13 @@
+{
+ "model": "gemini-3.1-flash-image",
+ "size": "2K",
+ "aspect": "21:9",
+ "viewport": [
+  1920,
+  1080
+ ],
+ "film": true,
+ "fixes": 0,
+ "prompt": "Image 1 is a finished interior render by a designer. Re-shoot it as a real photograph of the same flat. Keep everything exactly the same: the same room, walls, openings, camera position and framing, the same furniture in the same places, the same colours and materials. Change only how the picture was shot and processed, as described below.\n\nPhotographic realism pass — the result must read as a photograph of this flat, not as an architectural render. Keep the geometry, the furniture, the layout and the materials exactly as described above; change only how the picture was shot and processed.\n\nLighting: an overcast day — soft, cool, even daylight through the windows with no hard sun patches, mixed with the warm lamps already present in the scene. Exposure is uneven: a slightly blown-out area near the window, natural falloff into darker corners, no flat studio fill.\n\nCamera: an ordinary handheld photo at eye level, framing not perfectly level, natural perspective instead of a tripod-perfect architectural angle. No fisheye, no wide-angle stretching.\n\nSurfaces: believable everyday wear — faint smudges and fingerprints on cabinet fronts, light scuffs on the floor, slightly uneven grout lines, soft glare on glossy surfaces (hood, faucet, glass), a few objects in mild disorder rather than a staged arrangement.\n\nProcessing: natural camera colour, slightly warm white balance under the lamps, visible fine grain — a bit more than a clean render, still a photograph and not noise — ordinary JPEG sharpness instead of retouched HDR.\n\nAvoid: glossy CGI look, magazine-perfect symmetry, spotless catalog surfaces, uniform studio lighting, ultra-smooth HDR tone mapping.",
+ "at": "2026-10-01T17:28:53.540Z"
+}

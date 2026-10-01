@@ -6,6 +6,7 @@
 //   node tools/render.js <ракурс> --as wp2 --from r1-door-wp1 --fix "..."   # вариант: правка чужого чистовика в новое имя
 //   node tools/render.js <ракурс> --wide                        # исходная камера пресета, широкий угол под потолком
 //   node tools/render.js <ракурс> --film                        # пасмурный свет, зерно и несовершенства съёмки (раздел «## film» в STYLE.md)
+//   node tools/render.js --photo <файл> --as <имя> [--note "..."]  # чужая картинка (рендер дизайнера) → тот же film-проход, геометрия не трогается
 //
 // Промпт — render/STYLE.md, порядок работы — .claude/skills/render/SKILL.md, приёмы — docs/render-guide.md.
 // Ключ GEMINI_API_KEY приходит из окружения (hub run claude).
@@ -15,13 +16,14 @@ const { launchChromium } = require('./browser');
 
 const root = path.dirname(__dirname);
 const args = process.argv.slice(2);
-const VALUED = ['note', 'fix', 'model', 'size', 'viewport', 'aspect', 'set', 'ref', 'as', 'from'];                       // флаги со значением: их аргумент — не имя ракурса
+const VALUED = ['note', 'fix', 'model', 'size', 'viewport', 'aspect', 'set', 'ref', 'as', 'from', 'photo'];                       // флаги со значением: их аргумент — не имя ракурса
 const flag = (name, dflt) => { const i = args.indexOf('--' + name); return i < 0 ? dflt : args[i + 1]; };
 const has = name => args.includes('--' + name);
 const cam = args.find((a, i) => !a.startsWith('--') && !(i > 0 && VALUED.includes(args[i - 1].replace(/^--/, ''))));
 
 const fix = flag('fix', '');
-const MODEL = flag('model', fix ? 'gemini-3.1-flash-image' : 'gemini-3-pro-image');          // база — дорогая модель, правки — дешевле
+const PHOTO_SRC = flag('photo', '');   // чужая картинка вместо кадра сцены: без браузера, без facts, всегда film-проход
+const MODEL = flag('model', fix || PHOTO_SRC ? 'gemini-3.1-flash-image' : 'gemini-3-pro-image');          // база — дорогая модель, правки — дешевле
 const SIZE = flag('size', '2K');                                                            // 2K при 16:9 — 2048×1152, ближайшее к 1080p
 const [W, H] = flag('viewport', '1920x1080').split('x').map(Number);
 const ASPECT = flag('aspect', '16:9');
@@ -31,12 +33,12 @@ const REF = flag('ref', '');   // готовый рендер другого р�
 const AS = flag('as', '');   // имя варианта: без него результат зовётся именем ракурса
 const FROM = flag('from', '');   // --fix поверх чужого чистовика (final/<from>.jpg) в новое имя --as: варианты одного кадра, где меняется одно
 const LABELS = has('labels');
-const FILM = has('film');   // «как снято на телефон в пасмурный день»: включается только по явной просьбе
+const FILM = has('film') || !!PHOTO_SRC;   // «как снято на телефон в пасмурный день»: включается только по явной просьбе
 const PHOTO = !has('wide');   // по умолчанию высота глаз и нормальный объектив; --wide — исходная камера пресета под потолком
 
 const DIR = { frames: path.join(root, 'render', 'frames'), final: path.join(root, 'render', 'final'), wip: path.join(root, 'render', 'wip'), meta: path.join(root, 'render', '.meta') };
-const base = cam ? cam + (AS ? '-' + AS : '') : '';
-const framePath = cam ? path.join(DIR.frames, cam + '.png') : '';
+const base = PHOTO_SRC ? (AS || path.basename(PHOTO_SRC).replace(/\.[^.]+$/, '')) + '-film' : cam ? cam + (AS ? '-' + AS : '') : '';
+const framePath = PHOTO_SRC ? PHOTO_SRC : cam ? path.join(DIR.frames, cam + '.png') : '';
 const factsPath = cam ? path.join(DIR.frames, cam + '.facts.json') : '';
 
 const rel = p => path.relative(root, p);
@@ -44,6 +46,7 @@ const readMeta = () => { try { return JSON.parse(fs.readFileSync(path.join(DIR.m
 const img = p => ({ type: 'image', mime_type: p.endsWith('.png') ? 'image/png' : 'image/jpeg', data: fs.readFileSync(p).toString('base64') });
 
 (async () => {
+  if (PHOTO_SRC) { if (!fs.existsSync(PHOTO_SRC)) { console.error('нет файла ' + PHOTO_SRC); process.exit(1); } console.log('фото: ' + PHOTO_SRC); return send(); }
   if (cam && (fix || has('reuse-frame')) && fs.existsSync(framePath)) { console.log('кадр (готовый): ' + rel(framePath)); return send(); }
   const browser = await launchChromium({ args: ['--allow-file-access-from-files'] }); // GLB грузятся по XHR и с file://
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
@@ -129,7 +132,12 @@ async function send() {
   const prev = path.join(DIR.final, base + '.jpg');
   let input, prompt, fixes = meta ? meta.fixes || 0 : 0;
 
-  if (fix) {
+  if (PHOTO_SRC) {
+    prompt = 'Image 1 is a finished interior render by a designer. Re-shoot it as a real photograph of the same flat. Keep everything exactly the same: the same room, walls, openings, camera position and framing, the same furniture in the same places, the same colours and materials. Change only how the picture was shot and processed, as described below.\n' + film
+      + (flag('note', '') ? '\n\nAlso: ' + flag('note', '') : '');
+    input = [{ type: 'text', text: prompt }, img(PHOTO_SRC)];
+    console.log('фото → film на ' + MODEL + ', ' + SIZE + ' ' + ASPECT);
+  } else if (fix) {
     const src = FROM ? path.join(DIR.final, FROM + '.jpg') : prev; if (FROM) fixes = 0;
     if (!fs.existsSync(src)) { console.error('нечего править: ' + (FROM ? 'нет ' + rel(src) : 'сначала базовый прогон без --fix')); process.exit(1); }
     if (fixes >= MAX_FIXES && !has('force')) { console.error('правок уже ' + fixes + ' из ' + MAX_FIXES + ': дальше --force или новый базовый прогон (модель уплывает от геометрии)'); process.exit(5); }
