@@ -38,7 +38,7 @@ const { launchChromium } = require('./browser');
   // an «исключение» line from the same block are its consequence. Every evaluate/click also logs its line and elapsed time, so a hang is visible.
   const SAFE = new Proxy(function () {}, { get: (t, k) => k === Symbol.toPrimitive ? () => '' : k === 'then' ? undefined : SAFE, apply: () => SAFE });
   const t0 = Date.now(), where = () => { const at = new Error().stack.split('\n').filter(s => /check\.js:\d+/.test(s))[2]; return at ? at.replace(/.*check\.js:/, '').replace(/[):].*$/, '') : '?'; }; // frames: where, the wrapper, the caller
-  const noShot = !!process.env.CHECK_NOSHOT; // CHECK_NOSHOT=1: assertions only — the screenshot is skipped and so is every loop that only aims the camera for one (`if (!noShot) for …`), which is where the minutes went
+  const noShot = !!process.env.CHECK_NOSHOT, fast = !!process.env.CHECK_FAST; // CHECK_NOSHOT=1: assertions only — the screenshot is skipped and so is every loop that only aims the camera for one (`if (!noShot) for …`), which is where the minutes went
   const guard = (obj, name) => { const raw = obj[name].bind(obj); obj[name] = async (...a) => { const line = where(); process.stderr.write('· check.js:' + line + ' ' + ((Date.now() - t0) / 1000).toFixed(0) + 's\n'); if (noShot && name === 'screenshot') return SAFE;
     try { return await raw(...a); } catch (e) { problems.push('исключение в блоке check.js:' + line + ': ' + e.message.split('\n')[0] + ' (сообщения ниже из этого блока — следствие)'); return SAFE; } }; };
   ['evaluate', 'click', 'screenshot', 'waitForTimeout'].forEach(n => guard(page, n));
@@ -241,6 +241,10 @@ const { launchChromium } = require('./browser');
   });
   if (!a05.rejected) problems.push('расстановка: вариант для другого плана применён без конфликта (A05)');
   if (!a05.ok || !a05.noted || !a05.rev) problems.push('расстановка: fingerprint геометрии не сохраняется или не сообщается (A05)');
+  // CHECK_FAST=1: skip the two slow regions below (walk, collisions, visualization, materials, lamps, scenario) — the basic
+  // assertions and the per-room checks stay, ~3 min instead of ~15 on software GL
+  let fpsPlain = '-', fpsViz = '-', walk = { moved: 0 };
+  if (!fast) {
   // A03: walk + visualization → «Разметка» button must land in plan with flat materials, whatever path led there
   await page.click('#vFP'); await page.waitForTimeout(200);
   await page.evaluate(() => VIZ.set(true)); await page.waitForTimeout(300);
@@ -262,6 +266,7 @@ const { launchChromium } = require('./browser');
     return { dg: b1.g - b0.g, dt: b1.t - b0.t, lg: c1.g - c0.g };
   });
   if (a06.dg > 0 || a06.dt > 0 || a06.lg > 0) problems.push('ресурсы: выбор метки/предмета накапливает geometries/textures (A06): ' + JSON.stringify(a06));
+  }
   // G1: one pose operation notifies dependants; explicit proxy boxes; material slots
   const g1 = await page.evaluate(() => {
     const out = {}; window.prompt = () => 'g1';
@@ -561,10 +566,11 @@ const { launchChromium } = require('./browser');
   if (plan.moved < 0.05) problems.push('план: перетаскивание не сдвинуло цель');
   if (plan.tilt > 1e-6) problems.push('план: перетаскивание наклонило камеру');
 
+  if (!fast) {
   // прогулка: переход в режим и шаг вперёд стрелкой должны сдвинуть человечка
   await page.click('text=Экскурсия').catch(() => problems.push('нет кнопки «Экскурсия»'));
   await page.waitForTimeout(300);
-  const walk = await page.evaluate(async () => {
+  walk = await page.evaluate(async () => {
     if (typeof controls === 'undefined' || !controls.fpv) return { fpv: false, moved: 0 };
     const p0 = controls.pos.clone();
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp' }));
@@ -599,7 +605,7 @@ const { launchChromium } = require('./browser');
   const fps = async () => page.evaluate(() => new Promise(r => { let n = 0; const t0 = performance.now(); const f = () => { n++; if (performance.now() - t0 < 1500) requestAnimationFrame(f); else r(Math.round(n / 1.5)); }; requestAnimationFrame(f); }));
   const planJson = await page.evaluate(() => JSON.stringify(PLAN));
   await page.evaluate(() => { controls.setFPV(10.6, 3.9, Math.PI / 2 + 0.25); });
-  const fpsPlain = await fps();
+  fpsPlain = await fps();
   await page.screenshot({ path: path.join(outDir, 'viz-off.png') });
   // the figure can be hidden in the walk without leaving it
   const av = await page.evaluate(() => { const on = () => avatar.visible; const a = on(); document.getElementById('avatarOn').click(); const b = on(); document.getElementById('avatarOn').click(); return [a, b, on(), controls.fpv]; });
@@ -615,7 +621,7 @@ const { launchChromium } = require('./browser');
       pipe: LIGHTING.lit && renderer.toneMappingExposure === LIGHTING.exposure && !renderer.physicallyCorrectLights && scene.environment === LIGHTING.environment() && !camera.children.some(o => o.isLight) && sun.target.parent === scene, // M0: one fixed pipeline, fixed neutral light, nothing follows the camera
       geom: JSON.stringify(PLAN) === pj && Math.abs(ITEM_GROUPS.sofa.userData.pos[0] - 11.455) < 1e-9 };
   }, planJson);
-  const fpsViz = await fps();
+  fpsViz = await fps();
   // review 2026-09-05: wall slider drives the PBR twins and does not hide the balcony threshold; ceiling returns after plan
   const wop = await page.evaluate(() => {
     const set = v => { const s = document.getElementById('wop'); s.value = v; s.dispatchEvent(new Event('input')); };
@@ -863,6 +869,7 @@ const { launchChromium } = require('./browser');
   if (!scen.placed) problems.push('сценарий: предмет не встал по координатам из текста метки');
   if (!scen2.kept) problems.push('сценарий: вариант или метка не восстановились после перезагрузки');
   if (!scen2.stopped) problems.push('сценарий: прогулка не упёрлась в диван на новом месте (z=' + scen2.z + ')');
+  }
   // room1-kid: all kid-layer items sit inside room 1, none intersects the loft platform (kidsofa goes under it),
   // the layout gives no warnings (overlaps, passage door→desk ≥ 0.7), the stair-chest has 5 steps of 0.30
   const kid = await page.evaluate(() => {
@@ -1016,7 +1023,7 @@ const { launchChromium } = require('./browser');
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
-  // bath8: shower along the whole west wall, glass on the toilet side, compact basin B 0.355×0.205 on the south wall; the passage strip x 9.10–9.872 × z 12.20–12.919 (door to the basin front) × 0–2.10 is free of every part box of room 8 (tolerance 1e-6),
+  // bath8: shower along the whole west wall, glass on the toilet side, compact basin B 0.50×0.205 on the south wall; the passage strip x 9.10–9.872 × z 12.20–12.919 (door to the basin front) × 0–2.10 is free of every part box of room 8 (tolerance 1e-6),
   // toilet axis ≥ 0.35 from the east wall, no layout warnings (corners inside the polygon with the bump), grey materials
   const b8 = await page.evaluate(() => {
     const its = ITEMS.filter(it => it.layer === 'bath2' && it.room === 8), bb = o => new THREE.Box3().setFromObject(o);
@@ -1030,7 +1037,7 @@ const { launchChromium } = require('./browser');
     return { n: its.length, inStrip, axisWall: 9.872 - axis, wcFront: wc.max.z, warn, colored, trayLow: tray.min.y, trayHigh: tray.max.y, curbTop, glassTop, glassEast, wcSide, showerLen, basin: ITEM_GROUPS.basin8 && !ITEM_GROUPS.basin8.userData.hidden ? bb(ITEM_GROUPS.basin8) : null };
   });
   if (b8.n < 15) problems.push('санузел 8: предметов слоя bath ' + b8.n + ' (< 15)'); // 2026-09-13: термостат душа убран со стены по просьбе пользователя
-  if (!b8.basin || Math.abs(b8.basin.max.x - b8.basin.min.x - 0.355) > 0.03 || Math.abs(b8.basin.max.z - b8.basin.min.z - 0.205) > 0.03) problems.push('санузел 8: раковина B 0.355×0.205 не найдена'); // 2026-10-03: user plan 235/355/235
+  if (!b8.basin || Math.abs(b8.basin.max.x - b8.basin.min.x - 0.50) > 0.03 || Math.abs(b8.basin.max.z - b8.basin.min.z - 0.205) > 0.03) problems.push('санузел 8: раковина B 0.50×0.205 не найдена'); // 2026-10-03: user photo
   if (b8.showerLen < 1.53) problems.push('санузел 8: душ не вдоль всей западной стены: ' + b8.showerLen.toFixed(2));
   if (!b8.wcSide) problems.push('санузел 8: стекло не закрывает душ со стороны унитаза');
   if (b8.inStrip.length) problems.push('санузел 8: в полосе прохода: ' + b8.inStrip.join(', '));
@@ -1188,6 +1195,7 @@ const { launchChromium } = require('./browser');
     await page.evaluate(([x, z, th]) => { setView('fpv'); controls.setFPV(x, z, th); }, [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
+  if (!fast) {
   // «Сброс» (кнопка 🔄): чистит сохранения pulse3d.* и открывает страницу как при первом заходе — последним, страница после него перезагружена
   await page.evaluate(() => { try { localStorage.setItem('pulse3d.layout', '{"format":1}'); localStorage.setItem('pulse3d.light', 'neutral'); localStorage.setItem('other.key', 'stay'); } catch (e) {} });
   page.once('dialog', d => d.accept());
@@ -1198,6 +1206,7 @@ const { launchChromium } = require('./browser');
   if (reset.other !== 'stay') problems.push('сброс: стёрты чужие ключи localStorage');
   if (reset.q || !reset.items) problems.push('сброс: страница не открылась заново чистым адресом');
   await page.evaluate(() => { try { localStorage.removeItem('other.key'); } catch (e) {} });
+  }
 
   console.log(`  кадров/с: план ${fpsPlain}, визуализация ${fpsViz} (viewport 1400×1000, прогулка в кухне)`);
   await browser.close();
@@ -1206,5 +1215,5 @@ const { launchChromium } = require('./browser');
     console.error('ПРОВАЛ:\n  ' + problems.join('\n  '));
     process.exit(1);
   }
-  console.log(`ОК: ${url}\n  10 комнат, площади согласованы; сверху и прогулка (${walk.moved.toFixed(2)} м) работают; скриншоты в tools/out/`);
+  console.log(`ОК: ${url}\n  10 комнат, площади согласованы; сверху и прогулка (${fast ? 'не проверялась' : walk.moved.toFixed(2) + ' м'}) работают; скриншоты в tools/out/`);
 })().catch(e => { console.error('ПРОВАЛ:', e.message); process.exit(1); });

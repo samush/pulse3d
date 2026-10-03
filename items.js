@@ -815,14 +815,14 @@ const PHYS={}; // id → boxes
        for(let y=0.55;y<2.2;y+=0.10) cyl(0.01,0.38,0.25,y+0.01,0.035,mat.handle,'x');                            // rungs Ø20 every 0.10
        [0.55,1.10,1.60,2.15].forEach(y=>[0.045,0.455].forEach(x=>cyl(0.012,0.03,x,y+0.015,0.065,mat.handle,'z'))); // wall brackets
      }},
-    {id:'basin8',type:'раковина подвесная компактная 0.355×0.205 посередине южной стены туалетной части (x 9.28–9.64), верх 0.85, настенный смеситель над ней',room:8,layer:'bath2',pos:[9.2825,12.919],rot:0,size:[0.355,1.09,0.205],fixed:'wall',hidden:true, // 2026-10-03 (user plan 235/355/235): shown only by variant B
-     build(b,g){ b.phys(0,0.355,0.73,0.85,0,0.205); b.phys(0.1275,0.2275,1.00,1.09,0.185,0.205);
-       const v=(x,y,z)=>new THREE.Vector3(x,y,z), cyl=(r,h,x,y,z,m,rot)=>{ const c=new THREE.CylinderGeometry(r,r,h,16); if(rot==='x') c.rotateZ(Math.PI/2); if(rot==='z') c.rotateX(Math.PI/2); g.add(new THREE.Mesh(c.translate(x,y,z),m)); };
-       const sh=b.rrect(0.355,0.205,0.02); sh.holes.push(new THREE.Path(b.rrect(0.275,0.135,0.05).getPoints(6).map(q=>new THREE.Vector2(q.x+0.04,q.y+0.035)))); // slab outline with the bowl cut-out
-       g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.11,bevelThickness:0.01,bevelSize:0.01,bevelOffset:-0.01,bevelSegments:2,curveSegments:4}).rotateX(Math.PI/2).translate(0,0.84,0),mat.ceramic)); // ceramic body 0.73–0.85
-       b(0.04,0.315,0.75,0.76,0.035,0.17,mat.ceramic); cyl(0.02,0.004,0.1775,0.762,0.10,mat.handle);              // bowl floor at 0.75 and the drain
-       b.round(0.1275,0.2275,1.00,1.09,0.185,0.205,0.003,mat.handle); cyl(0.006,0.05,0.2425,1.045,0.193,mat.handle,'x'); // wall mixer body and lever
-       g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([v(0.1775,1.045,0.19),v(0.1775,1.045,0.12),v(0.1775,1.04,0.09),v(0.1775,1.015,0.07)]),12,0.011,10),mat.handle)); // spout 0.12 into the bowl
+    {id:'basin8',type:'раковина подвесная компактная 0.50×0.205 посередине южной стены туалетной части (x 9.21–9.71), верх 0.85, чаша-стадион, смеситель-гусак на полке у западного края (справа от стоящего)',room:8,layer:'bath2',pos:[9.21,12.919],rot:0,size:[0.50,1.06,0.205],fixed:'wall',hidden:true, // 2026-10-03 (user photo): shown only by variant B
+     build(b,g){ b.phys(0,0.50,0.73,0.85,0,0.205); b.phys(0.04,0.10,0.85,1.06,0.07,0.13);
+       const v=(x,y,z)=>new THREE.Vector3(x,y,z), cyl=(r,h,x,y,z,m)=>{ g.add(new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,16).translate(x,y,z),m)); };
+       const sh=b.rrect(0.50,0.205,0.02); sh.holes.push(new THREE.Path(b.rrect(0.30,0.14,0.07).getPoints(8).map(q=>new THREE.Vector2(q.x+0.15,q.y+0.0325)))); // slab with a stadium cut-out; no bevel: a bevelled hole this close to the edge drops triangles
+       g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.12,bevelEnabled:false,curveSegments:6}).rotateX(Math.PI/2).translate(0,0.85,0),mat.ceramic)); // ceramic body 0.73–0.85
+       b(0.15,0.45,0.75,0.76,0.0325,0.1725,mat.ceramic); cyl(0.02,0.004,0.30,0.762,0.1025,mat.handle);          // bowl floor at 0.75 and the drain
+       cyl(0.02,0.03,0.07,0.865,0.10,mat.handle); cyl(0.012,0.02,0.045,0.89,0.10,mat.handle);                    // tap base on the deck, small lever on top
+       g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([v(0.07,0.88,0.10),v(0.07,1.00,0.10),v(0.09,1.045,0.10),v(0.14,1.05,0.10),v(0.18,1.02,0.10),v(0.19,0.98,0.10)]),16,0.009,10),mat.handle)); // gooseneck spout over the bowl
      }},
     // ceiling: three spots Ø0.08, the extractor fan Ø0.12, hidden LED cove along the north and east walls
     {id:'spot4',type:'точечный светильник над входом в душ, IP65',room:8,layer:'bath2',pos:[8.62,12.75],rot:0,size:[0.08,2.70,0.08],fixed:'wall',
@@ -1190,14 +1190,14 @@ const PHYS={}; // id → boxes
   const BASIN_B={items:{basin:lifted('basin',0.12),basindrawer:lifted('basindrawer',0.12),basinmixer:lifted('basinmixer',0.12),bathmirror:lifted('bathmirror',0.15)}};
   window.BATH9=variantSelects('b9',{mirror:{ids:['bathmirror']},basin:{ids:['basin','basindrawer','basinmixer','bathmirror'],V:{B:BASIN_B}},wc:{ids:['wc']},box:{ids:['wcbox','sock21']},light:{ids:['spot1','spot2']},mlight:{ids:['spot3']},towel:{ids:['towelrail']},tub:{ids:['tub'],V:{B:TUB_B}}});
   // санузел 8, вариант B (user 2026-10-03): зеркало меньше и посередине южной стены туалетной части, под ним компактная раковина (basin8),
-  // змеевик уходит с южной стены на восточную севернее двери, низ 1.30 — не задевает плечо сидящего на унитазе, верх 2.50 под карнизом cove8
+  // змеевик уходит с южной стены на восточную севернее двери, 0.50×0.80, низ 1.10 (user 2026-10-03)
   const MIRROR8_B={pos:[9.26,13.104],size:[0.40,1.80,0.02],build(b,g){ b.phys(0,0.40,1.20,1.80,0,0.02); const plate=(w,h,x,y,z,t,m)=>{ const o=new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(w,h,0.01),{depth:t,bevelEnabled:false,curveSegments:6}),m); o.position.set(x,y,z); g.add(o); };
     plate(0.40,0.60,0,1.20,0.01,0.01,mat.frame); plate(0.38,0.58,0.01,1.21,0.005,0.005,mat.mirror); }}; // 0.40×0.60, bottom 1.20 above the mixer (1.09), glass faces north
-  const TOWEL8_B={pos:[9.792,11.62],size:[0.08,2.50,0.50],build(b,g){ b.phys(0.02,0.05,1.30,2.50,0.03,0.06); b.phys(0.02,0.05,1.30,2.50,0.44,0.47); b.phys(0.025,0.045,1.40,2.41,0.06,0.44); // ponytail: rungs as one box, enough for passage warnings
+  const TOWEL8_B={pos:[9.792,11.62],size:[0.08,1.90,0.50],build(b,g){ b.phys(0.02,0.05,1.10,1.90,0.03,0.06); b.phys(0.02,0.05,1.10,1.90,0.44,0.47); b.phys(0.025,0.045,1.20,1.81,0.06,0.44); // ponytail: rungs as one box, enough for passage warnings
     const cyl=(r,h,x,y,z,m,rot)=>{ const c=new THREE.CylinderGeometry(r,r,h,16); if(rot==='x') c.rotateZ(Math.PI/2); if(rot==='z') c.rotateX(Math.PI/2); g.add(new THREE.Mesh(c.translate(x,y,z),m)); };
-    [0.045,0.455].forEach(z=>cyl(0.015,1.20,0.035,1.90,z,mat.handle));                                        // two vertical collectors Ø30, 1.30–2.50
-    for(let y=1.40;y<2.45;y+=0.10) cyl(0.01,0.38,0.035,y+0.01,0.25,mat.handle,'z');                           // rungs Ø20 every 0.10
-    [1.40,1.95,2.40].forEach(y=>[0.045,0.455].forEach(z=>cyl(0.012,0.04,0.06,y+0.015,z,mat.handle,'x')));      // wall brackets, 0.50×1.20 on the east wall (x 9.872, z 11.62–12.12)
+    [0.045,0.455].forEach(z=>cyl(0.015,0.80,0.035,1.50,z,mat.handle));                                        // two vertical collectors Ø30, 1.10–1.90
+    for(let y=1.20;y<1.85;y+=0.10) cyl(0.01,0.38,0.035,y+0.01,0.25,mat.handle,'z');                           // rungs Ø20 every 0.10
+    [1.20,1.80].forEach(y=>[0.045,0.455].forEach(z=>cyl(0.012,0.04,0.06,y+0.015,z,mat.handle,'x')));           // wall brackets, 0.50×0.80 on the east wall (x 9.872, z 11.62–12.12)
   }};
   const basin8=ITEMS.find(i=>i.id==='basin8'); // B is the item itself; a copy, because a hidden item stays hidden under a spec that is the item
   window.BATH8=variantSelects('b8',{mirror:{ids:['mirror8'],V:{B:MIRROR8_B}},basin:{ids:['basin8'],V:{B:Object.assign({},basin8)}},wc:{ids:['wc8']},box:{ids:['wcbox8']},light:{ids:['spot4','spot5','spot6','cove8']},towel:{ids:['towel8'],V:{B:TOWEL8_B}},glass:{ids:['glass8']}});
