@@ -1264,7 +1264,47 @@ var finishGroup=new THREE.Group();
 })();
 scene.add(finishGroup); scene.add(tileGroup); scene.add(boardGroup);
 // floor layers as room selects (#h5tile — «Коридор», #k4board — «Кухня-гостиная»): 'none' hides the layer, 'A' is the one built here
-[['h5tile',tileGroup],['k4board',boardGroup]].forEach(([id,grp])=>{ const sel=document.getElementById(id); if(!sel) return; const KEY='pulse3d.'+id;
+// LAN cable (#cable, под «Свет»): дерево от роутера над входной дверью (2.30) ко всем ethernet-розеткам. A — над натяжным потолком (2.74),
+// стены проходит сверлением, в т.ч. над дверями. B — по плинтусу (0.06); дверной проём не пересекает, а обходит по верху коробки (вверх по наличнику,
+// над дверью на 2.20, вниз — тёмно-зелёный), в проём без двери (арка лоджии) плинтус заходит по откосу; стены без двери сверлит
+var cableGroup=new THREE.Group();
+(function(){
+  const RT=[7.12,7.44,2.30], E1=[1.32,4.83,0.90], E4=[12.5,1.95,1.40], E10=[14.21,6.01,0.90], E2=[11.10,9.26,0.90], E3=[13.91,9.81,1.30]; // роутер и розетки: [x,z,y]
+  const mat=new THREE.MeshBasicMaterial({color:0x22e05a,depthTest:false}), hopMat=new THREE.MeshBasicMaterial({color:0x0b7a33,depthTest:false}); // overlay: видно сверху сквозь мебель и стены
+  const T=0.06, YA=2.74, YB=0.06, YH=2.20; // YH — обход над дверью (проёмы 2.10)
+  function line(grp,m,pts){ for(let i=1;i<pts.length;i++){ const [x0,z0,y0]=pts[i-1],[x1,z1,y1]=pts[i]; // ломаная по осям, точки [x,z,y]; +T на боксе закрывает стыки
+    const b=new THREE.Mesh(new THREE.BoxGeometry(Math.abs(x1-x0)+T,Math.abs(y1-y0)+T,Math.abs(z1-z0)+T),m); b.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); b.renderOrder=20; grp.add(b); } }
+  function end(grp,e){ const k=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.14,0.14),mat); k.position.set(e[0],e[2],e[1]); k.renderOrder=20; grp.add(k); }
+  const A=new THREE.Group(), B=new THREE.Group(); A.userData.variant='A'; B.userData.variant='B'; cableGroup.add(A,B);
+  const at=(p,y)=>[p[0],p[1],y], up=(p,y0,y1)=>[[p[0],p[1],y0],[p[0],p[1],y1]];
+  // A: над потолком, вдоль стен
+  line(A,mat,[RT,at(RT,YA),[6.37,7.43,YA],[6.37,4.45,YA],[5.40,4.45,YA],[5.40,4.83,YA],at(E1,YA),E1]);              // комната 1: через стену над дверью
+  line(A,mat,[at(RT,YA),[8.03,7.43,YA],[8.03,5.0,YA],[8.26,5.0,YA],[8.26,1.95,YA],at(E4,YA),E4]);                   // ТВ: через стену коридор-кухня, вдоль кухни
+  line(A,mat,[at(E4,YA),[13.44,1.95,YA],[13.44,3.2,YA],[13.94,3.2,YA],[13.94,6.01,YA],at(E10,YA),E10]);             // лоджия: через стену севернее арки
+  line(A,mat,[[8.03,7.43,YA],[10.85,7.43,YA],[10.85,8.0,YA],[11.10,8.0,YA],at(E2,YA),E2]);                          // комната 2: через стену южнее двери
+  line(A,mat,[[10.85,8.0,YA],[10.85,9.81,YA],at(E3,YA),E3]);                                                        // спальня: через стену над дверью, вдоль северной стены
+  // B: по плинтусу
+  line(B,mat,[RT,[6.70,7.44,RT[2]],[6.70,7.44,YB],[6.37,7.44,YB],[6.37,4.83,YB],[5.64,4.83,YB]]);                                     // от роутера по западному наличнику вниз, к двери комнаты 1
+  line(B,hopMat,[[5.64,4.83,YB],[5.64,4.83,YH],[5.42,4.83,YH],[5.42,4.83,YB]]);                                     // обход двери комнаты 1
+  line(B,mat,[[5.42,4.83,YB],at(E1,YB),E1]);
+  line(B,mat,[RT,[8.0,7.44,RT[2]],[8.0,7.44,YB],[8.13,7.44,YB],[8.13,7.95,YB],[9.98,7.95,YB],[9.98,8.52,YB]]);                       // по восточному наличнику вниз, за шкафом в нише
+  line(B,hopMat,[[9.98,8.52,YB],[9.98,8.52,YH],[9.98,9.28,YH],[9.98,9.28,YB]]);                                     // обход двери санузла 9
+  line(B,mat,[[9.98,9.28,YB],[9.98,9.57,YB],[10.02,9.57,YB]]);
+  line(B,hopMat,[[10.02,9.57,YB],[10.02,9.57,YH],[10.87,9.57,YH],[10.87,9.57,YB]]);                                 // обход двери спальни по коридорной стороне
+  line(B,hopMat,[[10.5,9.57,YH],[10.5,9.81,YH],[10.5,9.81,YB]]);                                                    // ответвление в спальню: с перемычки вниз по комнатной стороне
+  line(B,mat,[[10.5,9.81,YB],at(E3,YB),E3]);                                                                        // спальня: вдоль северной стены к медиаблоку
+  line(B,mat,[[10.87,9.57,YB],[10.87,7.68,YB]]);
+  line(B,hopMat,[[10.87,7.68,YB],[10.87,7.68,YH],[10.87,6.72,YH],[10.87,6.72,YB]]);                                 // обход двери комнаты 2
+  line(B,hopMat,[[10.87,7.2,YH],[11.10,7.2,YH],[11.10,7.2,YB]]);                                                    // ответвление в комнату 2
+  line(B,mat,[[11.10,7.2,YB],at(E2,YB),E2]);
+  line(B,mat,[[10.87,6.72,YB],[10.87,6.25,YB],[13.44,6.25,YB],[13.44,5.0,YB]]);                                     // в кухню-гостиную мимо колонны (при стене #kwall — сверление), вдоль южной стены
+  line(B,hopMat,[[13.44,5.0,YB],[13.44,5.0,YH],[13.44,3.32,YH],[13.44,3.32,YB]]);                                   // обход арки лоджии
+  line(B,mat,[[13.44,3.32,YB],[13.44,1.95,YB],at(E4,YB),E4]);                                                       // ТВ: по восточной и северной стенам
+  line(B,mat,[[13.44,5.0,YB],[13.94,5.0,YB],[13.94,6.01,YB],at(E10,YB),E10]);                                       // лоджия: по южному откосу арки, вдоль западной стены
+  [E1,E4,E10,E2,E3,RT].forEach(e=>{ end(A,e); end(B,e); });
+})();
+scene.add(cableGroup);
+[['h5tile',tileGroup],['k4board',boardGroup],['cable',cableGroup]].forEach(([id,grp])=>{ const sel=document.getElementById(id); if(!sel) return; const KEY='pulse3d.'+id;
   let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){} if([...sel.options].some(o=>o.value===v)) sel.value=v;
   const apply=()=>{ grp.visible=sel.value!=='none'; grp.children.forEach(g=>{ g.visible=g.userData.variant===sel.value; }); }; sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} apply(); }); apply(); });
 
