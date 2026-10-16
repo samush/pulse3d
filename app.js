@@ -453,6 +453,7 @@ applyTheme();
 document.getElementById('labels').addEventListener('change',e=>labelGroup.visible=e.target.checked);
 wallGroupR.visible=false; // стена коридор-кухня по умолчанию выключена, как и галочка #kwall
 document.getElementById('kwall').addEventListener('change',e=>{wallGroupR.visible=e.target.checked&&wop.value/100>0.01; if(window.kitchenFrame)window.kitchenFrame.visible=e.target.checked;}); // стена появляется только если ползунок «Стены» не на нуле
+document.getElementById('lwall').addEventListener('change',e=>loggiaWall.forEach(m=>m.visible=e.target.checked));
 document.getElementById('wgrid').addEventListener('change',e=>{wallGridGroup.visible=e.target.checked;addrGroup.visible=e.target.checked;});
 document.getElementById('finish').addEventListener('change',e=>finishGroup.visible=e.target.checked);
 const wop=document.getElementById('wop'),wov=document.getElementById('wov');
@@ -517,6 +518,7 @@ setView('top');
 // остекление и виды за окнами
 var glassGroup=new THREE.Group();
 var backdropGroup=new THREE.Group();
+var loggiaWall=[]; // loggia glazing + its backdrop: hidden by #lwall to look into the loggia from the street side
 (function(){
   const glassMat=new THREE.MeshBasicMaterial({color:0xa8c9e0,transparent:true,opacity:0.32,side:THREE.DoubleSide,depthWrite:false});
   const frameMat=new THREE.LineBasicMaterial({color:0x8b8f94});
@@ -531,16 +533,16 @@ var backdropGroup=new THREE.Group();
     pane.position.set(w.x,(w.y0+w.y1)/2,(w.z0+w.z1)/2);
     pane.renderOrder=3;
     glassGroup.add(pane);
-    if(w.y0<0.2) glassGroup.add(new THREE.LineSegments(new THREE.EdgesGeometry(wgeo),frameMat)).children.slice(-1)[0].position.copy(pane.position);
+    if(w.y0<0.2){ loggiaWall.push(pane); const e=new THREE.LineSegments(new THREE.EdgesGeometry(wgeo),frameMat); e.position.copy(pane.position); glassGroup.add(e); loggiaWall.push(e); }
     if(w.y0<0.2){ // loggia: black aluminium frame to the floor, three bays, transom at 2.05 and a railing of vertical bars — as on the real building
-      const box=(x,y0,y1,z0,z1,t)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(t,y1-y0,z1-z0),loggiaFrameMat); m.position.set(x,(y0+y1)/2,(z0+z1)/2); glassGroup.add(m); };
+      const box=(x,y0,y1,z0,z1,t)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(t,y1-y0,z1-z0),loggiaFrameMat); m.position.set(x,(y0+y1)/2,(z0+z1)/2); glassGroup.add(m); loggiaWall.push(m); };
       const T=0.06, W=w.z1-w.z0;
       [w.z0,w.z0+W*0.3-T/2,w.z0+W*0.7-T/2,w.z1-T].forEach(z=>box(w.x,w.y0,w.y1,z,z+T,0.10));
       [w.y0,2.05-T/2,w.y1-T].forEach(y=>box(w.x,y,y+T,w.z0,w.z1,0.10));
       const rx=w.x-w.nx*0.09; box(rx,1.02,1.06,w.z0+T,w.z1-T,0.04);
       for(let z=w.z0+T+0.05;z<w.z1-T;z+=0.11) box(rx,0.02,1.02,z,z+0.012,0.012);
       // frosted inserts as on the real glazing: the top row in every bay, the side bays between the railing and the transom
-      const frost=(y0,y1,z0,z1)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(0.02,y1-y0,z1-z0),loggiaFrostMat); m.position.set(w.x,(y0+y1)/2,(z0+z1)/2); glassGroup.add(m); };
+      const frost=(y0,y1,z0,z1)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(0.02,y1-y0,z1-z0),loggiaFrostMat); m.position.set(w.x,(y0+y1)/2,(z0+z1)/2); glassGroup.add(m); loggiaWall.push(m); };
       frost(2.05+T/2,w.y1-T,w.z0+T,w.z1-T);
       frost(1.06,2.05-T/2,w.z0+T,w.z0+W*0.3-T/2); frost(1.06,2.05-T/2,w.z0+W*0.7+T/2,w.z1-T);
     } else { // white PVC window as on the photos: outer frame, mullion, two sashes with their own frames; the z1-side sash opens — proud into the room, with a handle
@@ -561,6 +563,7 @@ var backdropGroup=new THREE.Group();
     const bmesh=new THREE.Mesh(bgeo,new THREE.MeshBasicMaterial({map:tex}));
     bmesh.position.set(w.x+w.nx*0.9, 1.35, (w.z0+w.z1)/2);
     backdropGroup.add(bmesh);
+    if(w.y0<0.2) loggiaWall.push(bmesh);
   });
 })();
 scene.add(glassGroup);
