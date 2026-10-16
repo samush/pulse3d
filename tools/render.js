@@ -58,7 +58,7 @@ const img = p => ({ type: 'image', mime_type: p.endsWith('.png') ? 'image/png' :
   if (!cams.some(c => c.id === cam)) { console.error('нет такого ракурса: ' + cam + ' (--list покажет все)'); await browser.close(); process.exit(1); }
 
   // чистый кадр: материалы и светильники включены, аватар и весь оверлей убраны, снимается только канвас
-  if (SET) await page.evaluate(pairs => pairs.forEach(([k, v]) => { const sel = document.getElementById(k) || document.getElementById('k4' + k); if (!sel) throw new Error('нет селекта ' + k); sel.value = v; sel.dispatchEvent(new Event('change')); }), SET.split(',').map(p => p.split('=')));   // any select by id (h5tile, k4kbase…); a bare key is room 4
+  if (SET) await page.evaluate(pairs => pairs.forEach(([k, v]) => { const sel = document.getElementById(k) || document.getElementById('k4' + k); if (!sel) throw new Error('нет селекта ' + k); if (sel.type === 'checkbox') sel.checked = v !== 'none'; else sel.value = v; sel.dispatchEvent(new Event('change')); }), SET.split(',').map(p => p.split('=')));   // any select by id (h5tile, k4kbase…); a bare key is room 4
   await page.evaluate(id => { VIZ.set(true); LIGHTING.set('lamps'); const a = document.getElementById('avatarOn'); a.checked = false; a.dispatchEvent(new Event('change')); setView(id);
     document.getElementById('ui').style.display = 'none'; document.querySelectorAll('.hint, .rl, #walkpad, #fpvhint, #camhint, #map').forEach(e => { e.style.display = 'none'; }); }, cam);
   if (PHOTO) await page.evaluate(() => { controls.pos.y = 1.55; controls.phi = Math.PI / 2 + 0.03; persp.fov = 60; persp.updateProjectionMatrix(); controls.apply(); });

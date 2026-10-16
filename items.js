@@ -901,11 +901,7 @@ const PHYS={}; // id → boxes
     // South end: cantilevered desk and the IT shelf above it; north end: the shelving unit. Nothing else stands on the floor,
     // the opening zone x 13.91–14.4 × z of the opening stays clear (check.js).
     {id:'bdesk',type:'подвесной стол 1.19×0.80 во всю ширину у южного торца, верх 0.75, консоли к южной и западной стенам, уголок у стекла; под столом пусто',room:10,layer:'balcony',pos:[13.91,5.24],rot:0,size:[1.19,0.75,0.80],coat:{table:'oakFurnitureX'}, /* M4-3: 1.19 m top along x, grain along the long side */ fixed:'wall',
-     build(b){[[0,0.05,0.66,0.71,0,0.75],[0,1.19,0.66,0.71,0.75,0.8],[0,1.19,0.71,0.75,0,0.8],[1.14,1.19,0.66,0.71,0.3,0.5]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
-       
-       b.round(0,1.19,0.71,0.75,0,0.80,0.003,mat.table);                                             // top 0.04 with a 3 mm bevel
-       b(0,1.19,0.66,0.71,0.75,0.80,mat.frame); b(0,1.19,0.70,0.71,0.70,0.75,mat.frame); b(0,0.05,0.66,0.71,0,0.75,mat.frame); b(0,0.05,0.70,0.71,0.05,0.75,mat.frame); b(1.14,1.19,0.66,0.71,0.30,0.50,mat.frame); // steel angle consoles under the top: south wall, west wall, bracket by the glass
-     }},
+     build:b=>deskBuild(b,1.19,true)}, // body in deskBuild: variant A narrows it to 1.07 and drops the west console
     {id:'bchair',type:'стул 0.45 с прямой спинкой до 0.90, задвинут под стол на 0.24',room:10,layer:'balcony',pos:[14.28,5.00],rot:0,size:[0.45,0.90,0.45],coat:CHAIR4,glb:'models/bchair.glb',
      build(b){[[0,0.45,0.42,0.46,0,0.45],[0,0.45,0.46,0.9,0,0.04],[0.02,0.05,0,0.42,0.02,0.05],[0.02,0.05,0,0.42,0.4,0.43],[0.4,0.43,0,0.42,0.02,0.05],[0.4,0.43,0,0.42,0.4,0.43]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
        
@@ -913,20 +909,9 @@ const PHYS={}; // id → boxes
        [[0.02,0.02],[0.40,0.02],[0.02,0.40],[0.40,0.40]].forEach(([x,z])=>b(x,x+0.03,0,0.42,z,z+0.03,mat.chair)); // legs
      }},
     {id:'itshelf',type:'полка-ИТ-хаб 1.19×0.60 над столом, плита 0.05 на 2.00–2.05, бортик 0.03 спереди, вырез 0.05×0.30 под кабели у южной стены; до потолка 0.65',room:10,layer:'balcony',pos:[13.91,5.44],rot:0,size:[1.19,2.08,0.60],coat:{body:'cabinetPaint'},fixed:'wall',
-     build(b){[[0,0.05,1.95,2,0,0.55],[0,1.19,1.95,2,0.55,0.6],[0,1.19,2,2.05,0,0.55],[0,0.445,2,2.05,0.55,0.6],[0,1.19,2.05,2.08,0,0.03],[0.745,1.19,2,2.05,0.55,0.6]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
-       
-       b.round(0,1.19,2.00,2.05,0,0.55,0.003,mat.body); b(0,0.445,2.00,2.05,0.55,0.60,mat.body); b(0.745,1.19,2.00,2.05,0.55,0.60,mat.body); // plate with the cable notch x 0.445–0.745 at the wall
-       b.round(0,1.19,2.05,2.08,0,0.03,0.003,mat.body);                                               // front lip
-       b(0,1.19,1.95,2.00,0.55,0.60,mat.frame); b(0,1.19,1.99,2.00,0.50,0.55,mat.frame); b(0,0.05,1.95,2.00,0,0.55,mat.frame); b(0,0.05,1.99,2.00,0.05,0.55,mat.frame); // steel angle consoles to the south and west walls
-     }},
+     build:b=>itshelfBuild(b,1.19)},
     {id:'bshelf',type:'стеллаж 1.08×0.40 у северного торца с зазорами 0.05 от стен (плинтус, поручень остекления), верх 2.05: 3 закрытых ящика по 0.25, выше 4 ряда открытых секций с перегородкой по центру; площадка 2.05–2.70 под ИТ-устройства',room:10,layer:'balcony',pos:[13.96,2.318],rot:0,size:[1.08,2.05,0.40],coat:{body:'cabinetPaint',wpanel:'cabinetPaint',door:'cabinetPaint'},fixed:'wall',
-     build(b){ const W=1.08, p=0.018, c=W/2; // 1.08 wide: 0.05 off the west skirting and the glazing railing at x 15.06 (was 1.19 flush, clipped both)
-       [[0,0.02,0,2.05,0,0.4],[0.02,W-0.02,0.005,0.245,0.38,0.4],[0.02,W-0.02,0.03,0.05,0,0.4],[0.02,W-0.02,0.255,0.495,0.38,0.4],[0.02,W-0.02,0.505,0.745,0.38,0.4],[0.02,W-0.02,0.75,0.77,0,0.4],[0.02,W-0.02,1.075,1.095,0,0.4],[0.02,W-0.02,1.4,1.42,0,0.4],[0.02,W-0.02,1.725,1.745,0,0.4],[0.02,W-0.02,2.03,2.05,0,0.4],[c-0.01,c+0.01,0.77,2.03,0,0.4],[W-0.02,W,0,2.05,0,0.4]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
-       b(0,p,0,2.05,0,0.40,mat.body); b(W-p,W,0,2.05,0,0.40,mat.body); b(p,W-p,2.05-p,2.05,0,0.40,mat.body); b(p,W-p,0.03,0.03+p,0,0.40,mat.body); b(p,W-p,0.05,2.05-p,0,0.006,mat.wpanel); // 18 mm sides, top, bottom, 6 mm back
-       for(let i=0;i<3;i++){ const y0=0.25*i; b(p,W-p,y0+0.0315,y0+0.2485,0.382,0.40,mat.door); b(c-0.095,c+0.095,y0+0.20,y0+0.215,0.396,0.4005,mat.dark); b(p,W-p,y0+0.03,y0+0.03+p,0.006,0.382,mat.body); } // drawer fronts 0.03–0.75 with 3 mm gaps and finger grooves (push-to-open), bottoms
-       [0.75,1.075,1.40,1.725].forEach(y=>b(p,W-p,y,y+p,0.006,0.40,mat.body));                     // open shelves, pitch 0.325
-       b(c-0.009,c+0.009,0.75+p,2.05-p,0.006,0.40,mat.body);                                              // centre divider
-     }},
+     build:b=>bshelfBuild(b,1.08)}, // 1.08 wide: 0.05 off the west skirting and the glazing railing at x 15.06 (was 1.19 flush, clipped both)
     {id:'cable10',type:'кабель-канал 0.06×0.04 по западной стене на 2.23–2.27, выше проёма в кухню (2.10): питание и сеть между полкой и стеллажом',room:10,layer:'balcony',pos:[13.91,2.40],rot:0,size:[0.06,2.27,3.00],coat:PLASTIC,fixed:'wall',
      build(b){ b.phys(0,0.06,2.23,2.27,0,3); b.round(0,0.06,2.23,2.27,0,3.00,0.002,mat.plastic); b(0.0595,0.0602,2.2475,2.2525,0,3.00,mat.dark); }}, // trunking with a snap-on cover, seam line on the face
     // electrics: flat boxes 0.08 × 0.08 × 0.01
@@ -935,13 +920,54 @@ const PHYS={}; // id → boxes
     {id:'sock28',type:'розеточный блок над стеллажом: 4 розетки для площадки 2.05–2.70, h 2.25',room:10,layer:'balcony',pos:[14.17,2.268],rot:0,size:[0.08,2.29,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,2.21,2.29,0,0.01,mat.plastic,{keys:2}); }},
     {id:'sock29',type:'розетка в открытой секции стеллажа 0.75–1.075 (зарядки), h 1.00',room:10,layer:'balcony',pos:[14.77,2.268],rot:0,size:[0.08,1.04,0.01],coat:PLASTIC,fixed:'wall',build(b){ b.plate(0,0.08,0.96,1.04,0,0.01); }},
     {id:'led7',type:'LED-лента под передней кромкой ИТ-полки, свет на столешницу, 4000 K; выключатель на торце полки',room:10,layer:'balcony',pos:[13.95,5.44],rot:0,size:[1.11,2.00,0.02],fixed:'wall',
-     build(b){ b.phys(0,1.11,1.98,2,0,0.02); b(0,1.11,1.98,2.00,0,0.02,mat.frame); b(0.005,1.105,1.9795,1.98,0.003,0.017,mat.led); }}, // profile with the diffuser strip
+     build:b=>ledBuild(b,1.11)}, // profile with the diffuser strip
     {id:'blight',type:'линейный потолочный светильник 2.20×0.04 по оси лоджии от проёма до стула, 4000 K',room:10,layer:'balcony',pos:[14.48,2.90],rot:0,size:[0.04,2.70,2.20],fixed:'wall',
      build(b){ b.phys(0,0.04,2.68,2.7,0,2.2); b(0,0.04,2.68,2.70,0,2.20,mat.frame); b(0.005,0.035,2.6795,2.68,0.01,2.19,mat.led); }}, // profile with the diffuser strip
     {id:'sw8',type:'выключатель потолочного света на западной стене южнее проёма (проём до 4.971), h 0.95',room:10,layer:'balcony',pos:[13.91,5.02],rot:0,size:[0.01,0.99,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.91,0.99,0,0.08); }},
     {id:'blinds10',type:'рулонные солнцезащитные шторы: кассеты по верху остекления z 2.40–5.90 (собраны)',room:10,layer:'balcony',pos:[15.02,2.40],rot:0,size:[0.08,2.30,3.50],coat:PLASTIC,fixed:'wall',
      build(b,g){ b.phys(0,0.08,2.22,2.3,0,3.5); [[0.005,1.74],[1.76,3.495]].forEach(([z0,z1])=>{ g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,z1-z0,20).rotateX(Math.PI/2).translate(0.04,2.26,(z0+z1)/2),mat.plastic)); [z0,z1-0.01].forEach(z=>b(0.01,0.07,2.22,2.30,z,z+0.01,mat.frame)); }); }}, // two roller cassettes Ø80 with end brackets
+    // ---- loggia doors to the kitchen (2026-10-16, select #l10doors): both variants close the opening z 3.353–4.971 from the loggia side; shown only by a variant ----
+    {id:'lwall',type:'фальш-стена 0.12 с пеналами по западной стене лоджии (вариант «пенал»): створки уходят в пеналы севернее и южнее проёма, щель пенала видна на откосе',room:10,layer:'balcony',pos:[13.91,2.268],rot:0,size:[0.12,2.69,3.775],fixed:'wall',inWall:true,hidden:true,build:b=>pocketWall(b)},
+    {id:'ldoors',type:'две раздвижные створки 0.83×2.08 в пеналах фальш-стены (вариант «пенал»)',room:10,layer:'balcony',pos:[13.91,2.268],rot:0,size:[0.12,2.10,3.775],fixed:'wall',inWall:true,hidden:true,build:b=>pocketDoors(b,false)},
   ];
+  // loggia 10 builds shared by the base items and the door variants (#l10doors); local x east, z south, item origin at the NW corner
+  function deskBuild(b,W,westWall){ // hung desk W×0.80, top 0.71–0.75; westWall=false: a bracket instead of the console (the false wall carries nothing)
+    [[0,0.05,0.66,0.71,0,0.75],[0,W,0.66,0.71,0.75,0.8],[0,W,0.71,0.75,0,0.8],[W-0.05,W,0.66,0.71,0.3,0.5]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
+    b.round(0,W,0.71,0.75,0,0.80,0.003,mat.table);                                                 // top 0.04 with a 3 mm bevel
+    b(0,W,0.66,0.71,0.75,0.80,mat.frame); b(0,W,0.70,0.71,0.70,0.75,mat.frame); b(W-0.05,W,0.66,0.71,0.30,0.50,mat.frame); // steel angle consoles under the top: south wall, bracket by the glass
+    if(westWall){ b(0,0.05,0.66,0.71,0,0.75,mat.frame); b(0,0.05,0.70,0.71,0.05,0.75,mat.frame); } else b(0,0.05,0.66,0.71,0.30,0.50,mat.frame); // west wall console or a free bracket
+  }
+  function itshelfBuild(b,W){ const n0=(W-0.30)/2, n1=n0+0.30; // IT shelf W×0.60 on 2.00–2.05 with the cable notch 0.30 centred at the wall
+    [[0,0.05,1.95,2,0,0.55],[0,W,1.95,2,0.55,0.6],[0,W,2,2.05,0,0.55],[0,n0,2,2.05,0.55,0.6],[0,W,2.05,2.08,0,0.03],[n1,W,2,2.05,0.55,0.6]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
+    b.round(0,W,2.00,2.05,0,0.55,0.003,mat.body); b(0,n0,2.00,2.05,0.55,0.60,mat.body); b(n1,W,2.00,2.05,0.55,0.60,mat.body); // plate with the cable notch at the wall
+    b.round(0,W,2.05,2.08,0,0.03,0.003,mat.body);                                                   // front lip
+    b(0,W,1.95,2.00,0.55,0.60,mat.frame); b(0,W,1.99,2.00,0.50,0.55,mat.frame); b(0,0.05,1.95,2.00,0,0.55,mat.frame); b(0,0.05,1.99,2.00,0.05,0.55,mat.frame); // steel angle consoles to the south and west walls
+  }
+  function bshelfBuild(b,W){ const p=0.018, c=W/2; // shelving unit W×0.40, top 2.05: 3 drawers, 4 rows of open sections with a centre divider
+    [[0,0.02,0,2.05,0,0.4],[0.02,W-0.02,0.005,0.245,0.38,0.4],[0.02,W-0.02,0.03,0.05,0,0.4],[0.02,W-0.02,0.255,0.495,0.38,0.4],[0.02,W-0.02,0.505,0.745,0.38,0.4],[0.02,W-0.02,0.75,0.77,0,0.4],[0.02,W-0.02,1.075,1.095,0,0.4],[0.02,W-0.02,1.4,1.42,0,0.4],[0.02,W-0.02,1.725,1.745,0,0.4],[0.02,W-0.02,2.03,2.05,0,0.4],[c-0.01,c+0.01,0.77,2.03,0,0.4],[W-0.02,W,0,2.05,0,0.4]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
+    b(0,p,0,2.05,0,0.40,mat.body); b(W-p,W,0,2.05,0,0.40,mat.body); b(p,W-p,2.05-p,2.05,0,0.40,mat.body); b(p,W-p,0.03,0.03+p,0,0.40,mat.body); b(p,W-p,0.05,2.05-p,0,0.006,mat.wpanel); // 18 mm sides, top, bottom, 6 mm back
+    for(let i=0;i<3;i++){ const y0=0.25*i; b(p,W-p,y0+0.0315,y0+0.2485,0.382,0.40,mat.door); b(c-0.095,c+0.095,y0+0.20,y0+0.215,0.396,0.4005,mat.dark); b(p,W-p,y0+0.03,y0+0.03+p,0.006,0.382,mat.body); } // drawer fronts 0.03–0.75 with 3 mm gaps and finger grooves (push-to-open), bottoms
+    [0.75,1.075,1.40,1.725].forEach(y=>b(p,W-p,y,y+p,0.006,0.40,mat.body));                       // open shelves, pitch 0.325
+    b(c-0.009,c+0.009,0.75+p,2.05-p,0.006,0.40,mat.body);                                           // centre divider
+  }
+  function ledBuild(b,W){ b.phys(0,W,1.98,2,0,0.02); b(0,W,1.98,2.00,0,0.02,mat.frame); b(0.005,W-0.005,1.9795,1.98,0.003,0.017,mat.led); } // profile with the diffuser strip
+  // door variants: the opening is local z 1.085–2.703 (1.618 wide, 2.10 high), the wall runs z 0–3.775
+  const LD={o0:1.085,o1:2.703,L:3.775};
+  function pocketWall(b){ const {o0,o1,L}=LD, H=2.69, T=0.12, S=0.095; // 0.12 false wall: the leaf runs in the gap x 0–0.095 behind the plasterboard skin; pockets 1.085 (north) and 1.072 (south) take a 0.83 leaf
+    [[0,o0],[o1,L]].forEach(([z0,z1])=>{ b.phys(0,T,0,H,z0,z1); b(S,T,0,H,z0,z1,mat.wbody); b(0,S,2.10,H,z0,z1,mat.wbody); b(0,0.006,0,2.10,z0,z1,mat.hdark); }); // skin, solid above the track, dark pocket back: the open slot on the jamb shows where the leaf goes
+    b.phys(0,T,2.10,H,o0,o1); b(0,T,2.10,H,o0,o1,mat.wbody);                                        // lintel over the opening
+    b(0,S,0,2.10,0,0.02,mat.wbody); b(0,S,0,2.10,L-0.02,L,mat.wbody);                               // pocket end caps at the room ends
+  }
+  function leaf(b,x0,z0,z1,y1,lead){ b.phys(x0,x0+0.04,0.01,y1,z0,z1); b(x0,x0+0.04,0.01,y1,z0,z1,mat.door); const hz=lead==='s'?z1-0.06:z0+0.03; b(x0+0.04,x0+0.044,0.90,1.20,hz,hz+0.03,mat.handle); } // 40 mm leaf with a flush pull on the leading edge
+  function pocketDoors(b,open){ const {o0,o1}=LD, W=0.83; // closed: the leaves meet at the centre and sit 0.02 inside each jamb slot; open: 0.05 stays proud of the jamb to grab
+    if(open){ leaf(b,0.035,o0+0.05-W,o0+0.05,2.09,'s'); leaf(b,0.035,o1-0.05,o1-0.05+W,2.09,'n'); }
+    else { leaf(b,0.035,o0-0.02,o0-0.02+W,2.09,'s'); leaf(b,0.035,o1+0.02-W,o1+0.02,2.09,'n'); }
+  }
+  function pelmet(b){ b.phys(0,0.14,2.12,2.25,0,2.80); b(0,0.14,2.12,2.25,0,2.80,mat.wbody); } // telescopic variant: two surface tracks under one cover from the north wall past the south jamb
+  function teleDoors(b,open){ const {o0,o1}=LD, W=0.88; // two leaves on two tracks (x 0.025 and 0.085), both park north; open: the stack stays 0.04/0.08 proud of the jamb
+    if(open){ leaf(b,0.025,o0+0.04-W,o0+0.04,2.15,'s'); leaf(b,0.085,o0+0.08-W,o0+0.08,2.15,'s'); }
+    else { leaf(b,0.025,o0-0.05,o0-0.05+W,2.15,'s'); leaf(b,0.085,o1+0.05-W,o1+0.05,2.15,'n'); }
+  }
   function makeB(g){ // detail helpers bound to a group; buildItem and the in-place variant rebuild (KIDBED) share them
     const b=(x0,x1,y0,y1,z0,z1,m)=>{ const w=x1-x0,h=y1-y0,d=z1-z0, geo=new THREE.BoxGeometry(w,h,d), uv=geo.attributes.uv, F=[[d,h],[d,h],[w,d],[w,d],[w,h],[w,h]]; // UV in metres per face (±x,±y,±z), so VIZ pattern scale holds on items too
       for(let i=0;i<uv.count;i++){ const [a,c]=F[i>>2]; uv.setXY(i,uv.getX(i)*a,uv.getY(i)*c); }
@@ -1200,6 +1226,14 @@ const PHYS={}; // id → boxes
     [1.20,1.80].forEach(y=>[0.045,0.455].forEach(z=>cyl(0.012,0.04,0.06,y+0.015,z,mat.handle,'x')));           // wall brackets, 0.50×0.80 on the east wall (x 9.872, z 11.62–12.12)
   }};
   const basin8=ITEMS.find(i=>i.id==='basin8'); // B is the item itself; a copy, because a hidden item stays hidden under a spec that is the item
+  // loggia 10 doors (#l10doors): A/B — false wall with pockets, leaves open/closed; C/D — telescopic pair parked north, open/closed. Shelf narrows to 0.96 in every variant,
+  // the false wall also narrows the desk, IT shelf and LED to 1.07 from x 14.03, hides the cable duct (inside the wall) and moves the switch onto the skin.
+  const narrowShelf={pos:[14.08,2.318],size:[0.96,2.05,0.40],coat:{body:'cabinetPaint',wpanel:'cabinetPaint',door:'cabinetPaint'},build:b=>bshelfBuild(b,0.96)};
+  const pocketSet=open=>({items:{lwall:{pos:[13.91,2.268],size:[0.12,2.69,3.775],build:b=>pocketWall(b)},ldoors:{pos:[13.91,2.268],size:[0.12,2.10,3.775],build:b=>pocketDoors(b,open)},bshelf:narrowShelf,
+    bdesk:{pos:[14.03,5.24],size:[1.07,0.75,0.80],coat:{table:'oakFurnitureX'},build:b=>deskBuild(b,1.07,false)},itshelf:{pos:[14.03,5.44],size:[1.07,2.08,0.60],coat:{body:'cabinetPaint'},build:b=>itshelfBuild(b,1.07)},
+    led7:{pos:[14.07,5.44],size:[1.03,2.00,0.02],build:b=>ledBuild(b,1.03)},cable10:null,sw8:{pos:[14.03,5.02],size:[0.01,0.99,0.08],build(b){ b.plate(0,0.01,0.91,0.99,0,0.08); }}}});
+  const teleSet=open=>({items:{lwall:{pos:[13.91,2.268],size:[0.14,2.25,2.80],build:b=>pelmet(b)},ldoors:{pos:[13.91,2.268],size:[0.14,2.15,3.775],build:b=>teleDoors(b,open)},bshelf:narrowShelf}});
+  window.LOG10=variantSelects('l10',{doors:{ids:['lwall','ldoors','bshelf','bdesk','itshelf','led7','cable10','sw8'],V:{A:pocketSet(true),B:pocketSet(false),C:teleSet(true),D:teleSet(false)}}});
   window.BATH8=variantSelects('b8',{mirror:{ids:['mirror8'],V:{B:MIRROR8_B}},basin:{ids:['basin8'],V:{B:Object.assign({},basin8)}},wc:{ids:['wc8']},box:{ids:['wcbox8']},light:{ids:['spot4','spot5','spot6','cove8']},towel:{ids:['towel8'],V:{B:TOWEL8_B}},glass:{ids:['glass8']}});
   // ---- colour selects (#k4kbase/#k4kupper, #m3wbase/#m3wupper): a coating over the item's own coat, no rebuild.
   // 'A' keeps what the item or its layout variant declares (so kitchen D/E keep their oak wall units); any other value overrides it until switched back.
