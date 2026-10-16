@@ -1226,14 +1226,14 @@ const PHYS={}; // id → boxes
     [1.20,1.80].forEach(y=>[0.045,0.455].forEach(z=>cyl(0.012,0.04,0.06,y+0.015,z,mat.handle,'x')));           // wall brackets, 0.50×0.80 on the east wall (x 9.872, z 11.62–12.12)
   }};
   const basin8=ITEMS.find(i=>i.id==='basin8'); // B is the item itself; a copy, because a hidden item stays hidden under a spec that is the item
-  // loggia 10 doors (#l10doors): A/B — false wall with pockets, leaves open/closed; C/D — telescopic pair parked north, open/closed. Shelf narrows to 0.96 in every variant,
+  // loggia 10 doors (#l10doors): B/C — false wall with pockets, leaves open/closed; D/E — telescopic pair parked north, open/closed. Shelf narrows to 0.96 in every variant,
   // the false wall also narrows the desk, IT shelf and LED to 1.07 from x 14.03, hides the cable duct (inside the wall) and moves the switch onto the skin.
   const narrowShelf={pos:[14.08,2.318],size:[0.96,2.05,0.40],coat:{body:'cabinetPaint',wpanel:'cabinetPaint',door:'cabinetPaint'},build:b=>bshelfBuild(b,0.96)};
   const pocketSet=open=>({items:{lwall:{pos:[13.91,2.268],size:[0.12,2.69,3.775],build:b=>pocketWall(b)},ldoors:{pos:[13.91,2.268],size:[0.12,2.10,3.775],build:b=>pocketDoors(b,open)},bshelf:narrowShelf,
     bdesk:{pos:[14.03,5.24],size:[1.07,0.75,0.80],coat:{table:'oakFurnitureX'},build:b=>deskBuild(b,1.07,false)},itshelf:{pos:[14.03,5.44],size:[1.07,2.08,0.60],coat:{body:'cabinetPaint'},build:b=>itshelfBuild(b,1.07)},
     led7:{pos:[14.07,5.44],size:[1.03,2.00,0.02],build:b=>ledBuild(b,1.03)},cable10:null,sw8:{pos:[14.03,5.02],size:[0.01,0.99,0.08],build(b){ b.plate(0,0.01,0.91,0.99,0,0.08); }}}});
   const teleSet=open=>({items:{lwall:{pos:[13.91,2.268],size:[0.14,2.25,2.80],build:b=>pelmet(b)},ldoors:{pos:[13.91,2.268],size:[0.14,2.15,3.775],build:b=>teleDoors(b,open)},bshelf:narrowShelf}});
-  window.LOG10=variantSelects('l10',{doors:{ids:['lwall','ldoors','bshelf','bdesk','itshelf','led7','cable10','sw8'],V:{A:pocketSet(true),B:pocketSet(false),C:teleSet(true),D:teleSet(false)}}});
+  window.LOG10=variantSelects('l10',{doors:{ids:['lwall','ldoors','bshelf','bdesk','itshelf','led7','cable10','sw8'],V:{B:pocketSet(true),C:pocketSet(false),D:teleSet(true),E:teleSet(false)}}}); // A = no doors: «нет» would hide the desk and shelf too (the whole group)
   window.BATH8=variantSelects('b8',{mirror:{ids:['mirror8'],V:{B:MIRROR8_B}},basin:{ids:['basin8'],V:{B:Object.assign({},basin8)}},wc:{ids:['wc8']},box:{ids:['wcbox8']},light:{ids:['spot4','spot5','spot6','cove8']},towel:{ids:['towel8'],V:{B:TOWEL8_B}},glass:{ids:['glass8']}});
   // ---- colour selects (#k4kbase/#k4kupper, #m3wbase/#m3wupper): a coating over the item's own coat, no rebuild.
   // 'A' keeps what the item or its layout variant declares (so kitchen D/E keep their oak wall units); any other value overrides it until switched back.

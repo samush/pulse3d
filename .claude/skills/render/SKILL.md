@@ -21,6 +21,7 @@ node tools/render.js r4-arch --frame-only    # только кадр, без API
 node tools/render.js r4-arch --fix "..."     # правка
 node tools/render.js r4-arch --note "вечер, свет только от ламп"   # разовое дополнение к базе
 node tools/render.js r4-sw --set table=none,sofa=G,k4kbase=sage,h5tile=B   # любой селект по id; ключ без префикса — комната 4
+node tools/render.js r10-street --set lwall=none,l10doors=C --as pocket-closed   # галочка тоже через --set (none = снять); лоджия с улицы без остекления, двери в кухню
 node tools/render.js r4-sw --ref r4-door                           # материалы как на готовом ракурсе
 node tools/render.js r4-sw --as bar-1 --note "..."                 # именованный вариант
 node tools/render.js r1-door --as wp2 --from r1-door-wp1 --fix "обои — ..."   # вариант одного кадра: правка чужого чистовика в новое имя
