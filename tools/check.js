@@ -379,7 +379,7 @@ const { launchChromium } = require('./browser');
     return Object.entries(want).filter(([id, n]) => PHYS[id].length !== n).map(([id, n]) => id + ' ' + PHYS[id].length + '≠' + n); });
   if (stageB.length) problems.push('proxy: детская 1 — число боксов изменилось (realism-all §8): ' + stageB.join(', '));
   // realism-all stage F: closet 6 and loggia 10 — explicit proxies, box count fixed
-  const stageF = await page.evaluate(() => { const want = {wsecA:  4,  wsecB:  3,  wsecC:  21,  wmezz:  6,  wend:  15,  wpeg:  1,  wmirror:  1,  wstep:  2,  wlight:  1,  led6:  1,  sock25:  1,  bdesk:  4,  bchair:  6,  itshelf:  6,  bshelf:  12,  cable10:  1,  sock26:  1,  sock27:  1,  sock28:  1,  sock29:  1,  led7:  1,  blight:  1,  sw8:  1,  blinds10:  1};
+  const stageF = await page.evaluate(() => { const want = {wsecA:  4,  wsecB:  3,  wsecC:  21,  wmezz:  6,  wend:  15,  wpeg:  1,  wmirror:  1,  wstep:  2,  wlight:  1,  led6:  1,  sock25:  1,  bdesk:  4,  bchair:  6,  itshelf:  6,  bshelf:  1,  cable10:  1,  sock26:  1,  sock27:  1,  sock28:  1,  sock29:  1,  led7:  1,  blight:  1,  sw8:  1,  blinds10:  1};
     return Object.entries(want).filter(([id, n]) => PHYS[id].length !== n).map(([id, n]) => id + ' ' + PHYS[id].length + '≠' + n); });
   if (stageF.length) problems.push('proxy: гардеробная 6 / лоджия 10 — число боксов изменилось (realism-all §12): ' + stageF.join(', '));
   // realism-all stage F: every item of closet 6 and loggia 10 stays inside its size (1 mm procedural, 1 cm GLB), plates carry the plastic slot
@@ -1104,7 +1104,7 @@ const { launchChromium } = require('./browser');
   if (b10.n < 13) problems.push('лоджия 10: предметов слоя balcony ' + b10.n + ' (< 13)');
   if (b10.inside.length) problems.push('лоджия 10: предметы вне помещения: ' + b10.inside.join(', '));
   if (b10.underDesk.length) problems.push('лоджия 10: под столом ниже 0.66: ' + b10.underDesk.join(', '));
-  if (Math.abs(b10.plate - 2.05) > 1e-6 || Math.abs(b10.shelfTop - 2.05) > 1e-6 || b10.lip > 2.08 + 1e-6) problems.push('лоджия 10: верх полки/стеллажа не 2.05: ' + [b10.plate, b10.shelfTop, b10.lip].map(v => v.toFixed(3)).join(', '));
+  if (Math.abs(b10.plate - 2.05) > 1e-6 || Math.abs(b10.shelfTop - 2.69) > 1e-6 || b10.lip > 2.08 + 1e-6) problems.push('лоджия 10: верх полки не 2.05 / шкафа не 2.69: ' + [b10.plate, b10.shelfTop, b10.lip].map(v => v.toFixed(3)).join(', '));
   if (b10.ductMin < 2.1 || b10.ductZ[0] > b10.op[0] || b10.ductZ[1] < b10.op[1]) problems.push('лоджия 10: кабель-канал не выше проёма: низ ' + b10.ductMin.toFixed(2) + ', z ' + b10.ductZ.map(v => v.toFixed(2)).join('–'));
   if (b10.inZone.length) problems.push('лоджия 10: в зоне проёма: ' + b10.inZone.join(', '));
   if (Math.abs(b10.op[0] - 3.353) > 1e-9 || Math.abs(b10.op[1] - 4.971) > 1e-9 || b10.swZ < b10.op[1]) problems.push('лоджия 10: проём не 3.353–4.971 по плану или выключатель sw8 в проёме: ' + b10.op.join('–') + ', sw8 z ' + b10.swZ.toFixed(3));

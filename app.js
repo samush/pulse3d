@@ -245,7 +245,7 @@ const CAMS=[ // fixed room cameras (selector «Камера»): pos [x,y,z] m, t
   {id:'r9',label:'санузел 9 (вид 1)',pos:[9.7,2.5,8.3],theta:-0.79,phi:Math.PI/2+0.45,fov:85},
   {id:'r9-sw',label:'санузел 9 (вид 2)',pos:[8.5,2.45,9.55],theta:2.46,phi:Math.PI/2+0.45,fov:85},
   {id:'r10',label:'лоджия (вид 1)',pos:[14.5,1.6,5.95],theta:Math.PI,phi:Math.PI/2+0.08,fov:80},
-  {id:'r10-shelf',label:'лоджия (вид 2)',pos:[14.5,2.4,2.55],theta:0,phi:Math.PI/2+0.3,fov:80},
+  {id:'r10-shelf',label:'лоджия (вид 2)',pos:[14.5,2.4,3.0],theta:0,phi:Math.PI/2+0.3,fov:80},
   {id:'r10-street',label:'лоджия (вид 3, с улицы)',pos:[17.2,1.6,4.16],theta:-Math.PI/2,phi:Math.PI/2+0.02,fov:70}]; // from outside the glazing (hide it with #lwall): the whole west wall with the kitchen doors in one frame
 function setView(kind){
   if(typeof resizeReady!=='undefined')resize();
