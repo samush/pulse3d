@@ -957,15 +957,18 @@ const PHYS={}; // id → boxes
     b.phys(0,T,2.10,H,o0,o1); b(0,T,2.10,H,o0,o1,mat.wbody);                                        // lintel over the opening
     b(0,S,0,2.10,0,0.02,mat.wbody); b(0,S,0,2.10,L-0.02,L,mat.wbody);                               // pocket end caps at the room ends
   }
-  function leaf(b,x0,z0,z1,y1,lead){ b.phys(x0,x0+0.04,0.01,y1,z0,z1); b(x0,x0+0.04,0.01,y1,z0,z1,mat.door); const hz=lead==='s'?z1-0.06:z0+0.03; b(x0+0.04,x0+0.044,0.90,1.20,hz,hz+0.03,mat.handle); } // 40 mm leaf with a flush pull on the leading edge
+  function leaf(b,x0,z0,z1,y1,lead,glass){ b.phys(x0,x0+0.04,0.01,y1,z0,z1); const hz=lead==='s'?z1-0.06:z0+0.03; // 40 mm leaf with a flush pull on the leading edge
+    if(glass){ const f=0.05; [[z0,z0+f],[z1-f,z1]].forEach(([a,c])=>b(x0,x0+0.04,0.01,y1,a,c,mat.frame)); [[0.01,0.01+f],[y1-f,y1]].forEach(([a,c])=>b(x0,x0+0.04,a,c,z0+f,z1-f,mat.frame)); b(x0+0.016,x0+0.024,0.01+f,y1-f,z0+f,z1-f,mat.rail); } // clear glass in a slim black frame
+    else b(x0,x0+0.04,0.01,y1,z0,z1,mat.door);
+    b(x0+0.04,x0+0.044,0.90,1.20,hz,hz+0.03,mat.handle); }
   function pocketDoors(b,open){ const {o0,o1}=LD, W=0.83; // closed: the leaves meet at the centre and sit 0.02 inside each jamb slot; open: 0.05 stays proud of the jamb to grab
     if(open){ leaf(b,0.035,o0+0.05-W,o0+0.05,2.09,'s'); leaf(b,0.035,o1-0.05,o1-0.05+W,2.09,'n'); }
     else { leaf(b,0.035,o0-0.02,o0-0.02+W,2.09,'s'); leaf(b,0.035,o1+0.02-W,o1+0.02,2.09,'n'); }
   }
   function pelmet(b){ const {o1}=LD; b.phys(0,0.15,2.12,2.25,0,2.80); b(0,0.15,2.12,2.25,0,2.80,mat.plastic); b.phys(0.015,0.125,0,2.12,o1+0.05,o1+0.07); b(0.015,0.125,0,2.12,o1+0.05,o1+0.07,mat.plastic); } // end stop at the south jamb: the closed outer leaf shuts against it and the slit between leaf and wall is covered // telescopic variant: two surface tracks under one cover over the 0.15 slot between the wall and cabinet B, north wall to past the south jamb
-  function teleDoors(b,open){ const {o0,o1}=LD, W=0.88; // two leaves on two tracks (x 0.025 and 0.085), both park north; open: the stack stays 0.04/0.08 proud of the jamb
-    if(open){ leaf(b,0.025,o0+0.04-W,o0+0.04,2.15,'s'); leaf(b,0.085,o0+0.08-W,o0+0.08,2.15,'s'); }
-    else { leaf(b,0.025,o0-0.05,o0-0.05+W,2.15,'s'); leaf(b,0.085,o1+0.05-W,o1+0.05,2.15,'n'); }
+  function teleDoors(b,open,glass){ const {o0,o1}=LD, W=0.88; // two leaves on two tracks (x 0.025 and 0.085), both park north; open: the stack stays 0.04/0.08 proud of the jamb; glass: framed clear leaves
+    if(open){ leaf(b,0.025,o0+0.04-W,o0+0.04,2.15,'s',glass); leaf(b,0.085,o0+0.08-W,o0+0.08,2.15,'s',glass); }
+    else { leaf(b,0.025,o0-0.05,o0-0.05+W,2.15,'s',glass); leaf(b,0.085,o1+0.05-W,o1+0.05,2.15,'n',glass); }
   }
   function makeB(g){ // detail helpers bound to a group; buildItem and the in-place variant rebuild (KIDBED) share them
     const b=(x0,x1,y0,y1,z0,z1,m)=>{ const w=x1-x0,h=y1-y0,d=z1-z0, geo=new THREE.BoxGeometry(w,h,d), uv=geo.attributes.uv, F=[[d,h],[d,h],[w,d],[w,d],[w,h],[w,h]]; // UV in metres per face (±x,±y,±z), so VIZ pattern scale holds on items too
@@ -1227,15 +1230,15 @@ const PHYS={}; // id → boxes
   const basin8=ITEMS.find(i=>i.id==='basin8'); // B is the item itself; a copy, because a hidden item stays hidden under a spec that is the item
   // loggia 10 (#l10shelf, #l10desk, #l10doors), three independent groups. Shelf: A — designer's cabinet 1.11 flush to the wall, B — 0.96 set 0.15 off the wall: the telescopic leaves (stack 0.125) park in that slot without a false wall,
   // room for a pocket (0.12) or telescopic (0.18) false wall. Desk: A — 1.19, B — 1.07 from x 14.03 (pocket false wall). Doors: B/C pocket open/closed,
-  // D/E telescopic open/closed; the pocket variants force desk B (V.pick), the shelf is the user's choice.
+  // D/E telescopic open/closed, F/G the same with glass leaves; the pocket variants force desk B (V.pick), the shelf is the user's choice.
   const narrowDesk={items:{bdesk:{pos:[14.03,5.24],size:[1.07,0.75,0.80],coat:{table:'oakFurnitureX'},build:b=>deskBuild(b,1.07,false)},itshelf:{pos:[14.03,5.44],size:[1.07,2.08,0.60],coat:{body:'cabinetPaint'},build:b=>itshelfBuild(b,1.07)},
     led7:{pos:[14.07,5.44],size:[1.03,2.00,0.02],build:b=>ledBuild(b,1.03)}}};
   const pocketSet=open=>({items:{lwall:{pos:[13.91,2.268],size:[0.12,2.69,3.775],build:b=>pocketWall(b)},ldoors:{pos:[13.91,2.268],size:[0.12,2.10,3.775],coat:{door:'blackFront'},build:b=>pocketDoors(b,open)},
     cable10:null,sw8:{pos:[14.03,5.02],size:[0.01,0.99,0.08],build(b){ b.plate(0,0.01,0.91,0.99,0,0.08); }}},pick:{desk:'B'}});
-  const teleSet=open=>({items:{lwall:{pos:[13.91,2.268],size:[0.15,2.25,2.80],coat:PLASTIC,build:b=>pelmet(b)},ldoors:{pos:[13.91,2.268],size:[0.14,2.15,3.775],coat:{door:'blackFront'},build:b=>teleDoors(b,open)}}});
+  const teleSet=(open,glass)=>({items:{lwall:{pos:[13.91,2.268],size:[0.15,2.25,2.80],coat:PLASTIC,build:b=>pelmet(b)},ldoors:{pos:[13.91,2.268],size:[0.14,2.15,3.775],coat:{door:'blackFront'},build:b=>teleDoors(b,open,glass)}}});
   window.LOG10=variantSelects('l10',{shelf:{ids:['bshelf'],V:{B:{pos:[14.06,2.268],size:[1.04,2.69,1.085],coat:{body:'blackFront',wpanel:'blackFront',dark:'blackFront',door:'pineFront',handle:'blackFront'},build:b=>cabinetBuild(b,1.04)}}},
     desk:{ids:['bdesk','bchair','itshelf','led7'],V:{B:narrowDesk}},
-    doors:{ids:['lwall','ldoors','cable10','sw8'],V:{B:pocketSet(true),C:pocketSet(false),D:teleSet(true),E:teleSet(false)}}}); // «нет» is A in every select: none would hide the group's base items
+    doors:{ids:['lwall','ldoors','cable10','sw8'],V:{B:pocketSet(true),C:pocketSet(false),D:teleSet(true),E:teleSet(false),F:teleSet(true,true),G:teleSet(false,true)}}}); // «нет» is A in every select: none would hide the group's base items
   window.BATH8=variantSelects('b8',{mirror:{ids:['mirror8'],V:{B:MIRROR8_B}},basin:{ids:['basin8'],V:{B:Object.assign({},basin8)}},wc:{ids:['wc8']},box:{ids:['wcbox8']},light:{ids:['spot4','spot5','spot6','cove8']},towel:{ids:['towel8'],V:{B:TOWEL8_B}},glass:{ids:['glass8']}});
   // ---- colour selects (#k4kbase/#k4kupper, #m3wbase/#m3wupper): a coating over the item's own coat, no rebuild.
   // 'A' keeps what the item or its layout variant declares (so kitchen D/E keep their oak wall units); any other value overrides it until switched back.
