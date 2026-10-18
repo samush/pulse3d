@@ -946,7 +946,10 @@ const PHYS={}; // id → boxes
     b(0,p,0,H,0,D,mat.body); b(W-p,W,0,H,0,D,mat.body); b(p,W-p,H-p,H,0,D,mat.body); b(p,W-p,low-p,low,0,D-0.02,mat.body); b(p,W-p,H-top-p,H-top,0,D-0.02,mat.body); b(p,W-p,0.05,H-p,0,0.006,mat.wpanel); // sides, top, shelves between the blocks, 6 mm back
     b(p,W-p,0,0.05,0.03,D-0.02,mat.dark); // plinth, set back 0.03
     const s=o.split||c; [[p,s-g],[s+g,W-p]].forEach(([z0,z1])=>b(z0,z1,0.05,low-0.004,D-0.02,D,mat.dark)); // lower block: two flat doors, push-to-open, as on the designer's photo
-    [[p,s-g],[s+g,W-p]].forEach(([z0,z1])=>{ b(z0,z1,low,H-top-g,D-0.02,D,mat.door); b(z0,z1,H-top+g,H-0.004,D-0.02,D,mat.door); // tall doors and the top block doors, push-to-open
+    if(o.seat){ const y0=low, y1=H-top-p, l=0.006; b(p,W-p,y0,y1,0.006,0.03,mat.door); b(p,p+l,y0,y1,0.03,D-0.02,mat.door); b(W-p-l,W-p,y0,y1,0.03,D-0.02,mat.door); b(p+l,W-p-l,y1-l,y1,0.03,D-0.02,mat.door); b(p+l,W-p-l,y0,y0+l,0.03,D-0.02,mat.door); // seat niche lined with the door pine, back liner 24 mm: the wall paint plane sits 15 mm off the wall and would show through; the 18 mm black carcass edges stay as the outline
+      b.round(p+0.02,W-p-0.02,low,low+0.06,0.05,D-0.03,0.02,mat.cushion); [[p+0.05,c-0.02],[c+0.02,W-p-0.05]].forEach(([z0,z1])=>b.round(z0,z1,low+0.06,low+0.46,0.03,0.15,0.04,mat.pillow)); } // pad on the lower block, two pillows leaning on the back
+    b(s-0.02,s+0.02,o.seat?H-top:low,H-p,D-0.03,D-0.02,mat.hdark); // dark strip behind the door gaps: the light interior showed through and the gap read as half-length
+    [[p,s-g],[s+g,W-p]].forEach(([z0,z1])=>{ if(!o.seat) b(z0,z1,low,H-top-g,D-0.02,D,mat.door); b(z0,z1,H-top+g,H-0.004,D-0.02,D,mat.door); // tall doors (not in the seat variant) and the top block doors, push-to-open
       for(let k=0;k<6;k++){ const x=z0+(z1-z0)*(k+1)/7; b(x-0.003,x+0.003,H-top+0.08,H-0.08,D-0.001,D+0.0005,mat.hdark); } }); // vent slots in the top doors: IT gear lives behind them
   }
   function ledBuild(b,W){ b.phys(0,W,1.98,2,0,0.02); b(0,W,1.98,2.00,0,0.02,mat.frame); b(0.005,W-0.005,1.9795,1.98,0.003,0.017,mat.led); } // profile with the diffuser strip
@@ -1236,7 +1239,8 @@ const PHYS={}; // id → boxes
   const pocketSet=open=>({items:{lwall:{pos:[13.91,2.268],size:[0.12,2.69,3.775],build:b=>pocketWall(b)},ldoors:{pos:[13.91,2.268],size:[0.12,2.10,3.775],coat:{door:'blackFront'},build:b=>pocketDoors(b,open)},
     cable10:null,sw8:{pos:[14.03,5.02],size:[0.01,0.99,0.08],build(b){ b.plate(0,0.01,0.91,0.99,0,0.08); }}},pick:{desk:'B'}});
   const teleSet=(open,glass)=>({items:{lwall:{pos:[13.91,2.268],size:[0.15,2.25,2.80],coat:PLASTIC,build:b=>pelmet(b)},ldoors:{pos:[13.91,2.268],size:[0.14,2.15,3.775],coat:{door:'blackFront'},build:b=>teleDoors(b,open,glass)}}});
-  window.LOG10=variantSelects('l10',{shelf:{ids:['bshelf'],V:{B:{pos:[14.06,2.268],size:[1.04,2.69,1.085],coat:{body:'blackFront',wpanel:'blackFront',dark:'blackFront',door:'pineFront',handle:'blackFront'},build:b=>cabinetBuild(b,1.04)}}},
+  window.LOG10=variantSelects('l10',{shelf:{ids:['bshelf'],V:{B:{pos:[14.06,2.268],size:[1.04,2.69,1.085],coat:{body:'blackFront',wpanel:'blackFront',dark:'blackFront',door:'pineFront',handle:'blackFront'},build:b=>cabinetBuild(b,1.04)},
+    C:{pos:[14.06,2.268],size:[1.04,2.69,1.085],coat:{body:'blackFront',wpanel:'blackFront',dark:'blackFront',door:'pineFront',handle:'blackFront',cushion:'greyFabric',pillow:'greyFabric'},build:b=>cabinetBuild(b,1.04,{low:0.70,top:0.80,seat:true})}}}, // C: B outline, lower block 0.70, top block 0.80, open seat niche between them
     desk:{ids:['bdesk','bchair','itshelf','led7'],V:{B:narrowDesk}},
     doors:{ids:['lwall','ldoors','cable10','sw8'],V:{B:pocketSet(true),C:pocketSet(false),D:teleSet(true),E:teleSet(false),F:teleSet(true,true),G:teleSet(false,true)}}}); // «нет» is A in every select: none would hide the group's base items
   window.BATH8=variantSelects('b8',{mirror:{ids:['mirror8'],V:{B:MIRROR8_B}},basin:{ids:['basin8'],V:{B:Object.assign({},basin8)}},wc:{ids:['wc8']},box:{ids:['wcbox8']},light:{ids:['spot4','spot5','spot6','cove8']},towel:{ids:['towel8'],V:{B:TOWEL8_B}},glass:{ids:['glass8']}});
