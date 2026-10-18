@@ -535,13 +535,12 @@ var loggiaWall=[]; // loggia glazing + its backdrop: hidden by #lwall to look in
     pane.renderOrder=3;
     glassGroup.add(pane);
     if(w.y0<0.2){ loggiaWall.push(pane); const e=new THREE.LineSegments(new THREE.EdgesGeometry(wgeo),frameMat); e.position.copy(pane.position); glassGroup.add(e); loggiaWall.push(e); }
-    if(w.y0<0.2){ // loggia: black aluminium frame to the floor, three bays, transom at 2.05 and a railing of vertical bars — as on the real building
+    if(w.y0<0.2){ // loggia: black aluminium frame to the floor, three bays, transom at 2.05 and the horizontal handrail; the vertical bars were removed on site (2026-10-18)
       const box=(x,y0,y1,z0,z1,t)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(t,y1-y0,z1-z0),loggiaFrameMat); m.position.set(x,(y0+y1)/2,(z0+z1)/2); glassGroup.add(m); loggiaWall.push(m); };
       const T=0.06, W=w.z1-w.z0;
       [w.z0,w.z0+W*0.3-T/2,w.z0+W*0.7-T/2,w.z1-T].forEach(z=>box(w.x,w.y0,w.y1,z,z+T,0.10));
       [w.y0,2.05-T/2,w.y1-T].forEach(y=>box(w.x,y,y+T,w.z0,w.z1,0.10));
       const rx=w.x-w.nx*0.09; box(rx,1.02,1.06,w.z0+T,w.z1-T,0.04);
-      for(let z=w.z0+T+0.05;z<w.z1-T;z+=0.11) box(rx,0.02,1.02,z,z+0.012,0.012);
       // frosted inserts as on the real glazing: the top row in every bay, the side bays between the railing and the transom
       const frost=(y0,y1,z0,z1)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(0.02,y1-y0,z1-z0),loggiaFrostMat); m.position.set(w.x,(y0+y1)/2,(z0+z1)/2); glassGroup.add(m); loggiaWall.push(m); };
       frost(2.05+T/2,w.y1-T,w.z0+T,w.z1-T);
