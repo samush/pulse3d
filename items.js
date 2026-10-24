@@ -394,7 +394,7 @@ const PHYS={}; // id → boxes
     {id:'pouf',type:'пуфик',room:5,layer:'hall',pos:[6.396,6.75],rot:0,size:[0.4,0.45,0.6],glb:'models/pouf.glb',
      build(b){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.4,0.12,0.45,0,0.6); b.phys(0.03,0.06,0,0.12,0.03,0.06); b.phys(0.34,0.37,0,0.12,0.03,0.06); b.phys(0.03,0.06,0,0.12,0.54,0.57); b.phys(0.34,0.37,0,0.12,0.54,0.57); b(0,0.4,0.12,0.45,0,0.6,mat.pouf); [[0.03,0.03],[0.34,0.03],[0.03,0.54],[0.34,0.54]].forEach(([x,z])=>b(x,x+0.03,0,0.12,z,z+0.03,mat.frame)); }},
     // ---- laundry 7 ----
-    {id:'washer',type:'стиральная и сушильная машины колонной',room:7,layer:'laundry',pos:[7.05,2.43],rot:0,size:[0.6,1.72,0.6],fixed:'wall',coat:{plastic:'plastic',paint:'whiteEnamel'}, /* M4-3: control panel and white enamel body; glass door and chrome stay class twins */glb:'models/washer.glb',
+    {id:'washer',type:'стиральная и сушильная машины колонной',room:7,layer:'laundry',pos:[7.97,3.28],rot:90,size:[0.6,1.72,0.6],fixed:'wall',coat:{plastic:'plastic',paint:'whiteEnamel'}, /* M4-3: control panel and white enamel body; glass door and chrome stay class twins */glb:'models/washer.glb',
      build(b,g){ /* proxy = pre-detail AABBs (realism-all A) */ b.phys(0,0.6,0,0.85,0,0.6); b.phys(0.06,0.54,0.135,0.615,0.6,0.62); b.phys(0.05,0.55,0.73,0.81,0.6,0.61); b.phys(0,0.6,0.87,1.72,0,0.6); b.phys(0.06,0.54,1.005,1.485,0.6,0.62); b.phys(0.05,0.55,1.6,1.68,0.6,0.61);
        [[0,0.85],[0.87,1.72]].forEach(([y0,y1])=>{
          b(0,0.6,y0,y1,0,0.6,mat.wbody);
@@ -882,10 +882,8 @@ const PHYS={}; // id → boxes
        [0.65,0.85,1.05].forEach(y=>{ const m=b(p,0.715-p,y,y+p,0.02,0.38,mat.body); m.rotation.x=0.26; b(p,0.715-p,y-0.03,y+0.005,0.362,0.378,mat.body); }); // shoe shelves tilted 15° with a heel lip at the low front edge
        b(0.03,0.685,1.25,1.60,0.38,0.398,mat.wdoor); b(0.33,0.45,1.30,1.315,0.394,0.40,mat.dark);        // medicine cabinet door 1.25–1.60, finger groove instead of a knob (size 0.40)
      }},
-    {id:'wpeg',type:'перфопанель 0.60×0.80 для ручного инструмента на восточной стене у торца, вынос крючков ≤ 0.08',room:6,layer:'wardrobe',pos:[6.865,2.30],rot:0,size:[0.02,1.80,0.60],coat:CAB,fixed:'wall',
+    {id:'wpeg',type:'перфопанель 0.60×0.80 для ручного инструмента на северной стене постирочной зоны, вынос крючков ≤ 0.08',room:7,layer:'wardrobe',pos:[7.65,2.419],rot:90,size:[0.02,1.80,0.60],coat:CAB,fixed:'wall',
      build(b,g){ b.phys(0,0.02,1,1.8,0,0.6); b.round(0.002,0.02,1.00,1.80,0,0.60,0.002,mat.wpanel); for(let i=0;i<8;i++) for(let j=0;j<6;j++) g.add(new THREE.Mesh(new THREE.CircleGeometry(0.004,6).rotateY(-Math.PI/2).translate(0.0015,1.10+i*0.085,0.08+j*0.085),mat.dark)); }}, // peg board 0.60×0.80 with a 48-hole grid (≈200 triangles)
-    {id:'wmirror',type:'зеркало ростовое 0.50×1.60 без рамы напротив длинной штанги',room:6,layer:'wardrobe',pos:[6.845,3.00],rot:0,size:[0.02,1.90,0.50],fixed:'wall',
-     build(b){ b.phys(0,0.02,0.3,1.9,0,0.5); b.round(0.004,0.02,0.30,1.90,0,0.50,0.002,mat.frame); b.round(0,0.004,0.31,1.89,0.01,0.49,0.002,mat.mirror); }}, // frameless: 4 mm mirror glass on a backing board; backing ends at the wallpaper plane x 6.865 (M3)
     // hung on a hook 0.10 above the floor: a floor-standing step inside section B reads as furniture facing section C (layout.js passage rule)
     {id:'wstep',type:'складная стремянка 2 ступени на крючке у боковины секции B, низ 0.10 (разложенная 0.40×0.30×0.45)',room:6,layer:'wardrobe',pos:[5.60,2.794],rot:0,size:[0.40,0.58,0.12],fixed:'wall',
      build(b){ [[0,0.4,0.1,0.55,0.02,0.12],[0.18,0.22,0.55,0.58,0,0.02]].forEach(q=>b.phys(...q)); // proxy = today's AABBs (realism-all F1)
@@ -895,7 +893,7 @@ const PHYS={}; // id → boxes
     {id:'led6',type:'LED-лента под передней кромкой антресоли, свет вниз на штанги; включается вместе с M9',room:6,layer:'wardrobe',pos:[6.135,1.90],rot:0,size:[0.02,2.00,1.55],fixed:'wall',
      build(b){ b.phys(0,0.02,1.98,2,0,1.55); b(0,0.02,1.98,2.00,0,1.55,mat.frame); b(0.003,0.017,1.9795,1.98,0.005,1.545,mat.led); }}, // profile with the diffuser strip
     {id:'sw7',type:'датчик движения + выключатель в коридоре у двери гардеробной: свет M9+M10 от датчика, клавиша — принудительно',room:5,layer:'wardrobe',pos:[5.76,4.033],rot:0,size:[0.08,0.99,0.01],fixed:'wall',coat:PLASTIC,build(b){ b.plate(0,0.08,0.91,0.99,0,0.01,mat.plastic); }},
-    {id:'sock25',type:'розетка у двери для пылесоса и утюга, h 0.30',room:6,layer:'wardrobe',pos:[6.875,3.55],rot:0,size:[0.01,0.34,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.26,0.34,0,0.08); }},
+    {id:'sock25',type:'розетка у двери для пылесоса и утюга, h 0.30',room:6,layer:'wardrobe',pos:[6.33,3.883],rot:90,size:[0.01,0.34,0.08],fixed:'wall',build(b){ b.plate(0,0.01,0.26,0.34,0,0.08); }},
     // ---- loggia 10 (tasks/balcony10/README.md, marks M1–M13; grey materials only) ----
     // Room box: x 13.91–15.1, z 2.268–6.043; glazing on the east wall z 2.40–5.90, opening from the kitchen on the west wall z 3.353–4.971 (top 2.10).
     // South end: cantilevered desk and the IT shelf above it; north end: the shelving unit. Nothing else stands on the floor,

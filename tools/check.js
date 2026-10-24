@@ -121,7 +121,7 @@ const { launchChromium } = require('./browser');
       edge: up(0.906, 3.0), // в 1 см от стены комнаты 1 — зазор
     };
   });
-  if (ceil.n !== 10 || !ceil.thick) problems.push('потолок: полотен ' + ceil.n + ' (нужно 10) или толщина не 2.695–2.795');
+  if (ceil.n !== 11 || !ceil.thick) problems.push('потолок: полотен ' + ceil.n + ' (нужно 11: 10 комнат + мост 6/7) или толщина не 2.695–2.795');
   if (!ceil.gap) problems.push('потолок: полотно доходит до стены, зазора нет');
   if (ceil.wall.join() !== 'полотно,перекрытие,полотно') problems.push('потолок: граница по снесённой стене кухня-коридор пропала: ' + ceil.wall.join(' / '));
   if (ceil.edge !== 'перекрытие') problems.push('потолок: у стены комнаты 1 вместо зазора ' + ceil.edge);
@@ -305,7 +305,7 @@ const { launchChromium } = require('./browser');
     if (sofaGlb.size !== '2,0.86,0.88' || sofaGlb.slots !== 'fabric,metal' || !sofaGlb.grey || sofaGlb.boxes !== 1) problems.push('glb: sofa — габарит/слоты/серый/proxy не сошлись: ' + JSON.stringify(sofaGlb)); }
   // realism-all stage A: proxies for the remaining room 4/5/7 items repeat the old mesh AABBs (count + union extent)
   const proxA = await page.evaluate(() => { const ext = id => { const bb = new THREE.Box3(); PHYS[id].forEach(m => bb.union(new THREE.Box3().setFromObject(m))); const s = new THREE.Vector3(); bb.getSize(s); return [s.x, s.y, s.z].map(v => Math.round(v * 1000) / 1000).join(); };
-    const want = { kitchen: [10, '0.73,2.69,3.59'], tv: [1, '1.3,0.75,0.04'], console: [1, '1.2,0.3,0.38'], lamp: [2, '0.26,0.2,0.63'], wardrobe: [16, '1.77,2.65,0.47'], entry: [7, '0.325,1.05,0.4'], pouf: [5, '0.4,0.45,0.6'], washer: [6, '0.6,1.72,0.62'] };
+    const want = { kitchen: [10, '0.73,2.69,3.59'], tv: [1, '1.3,0.75,0.04'], console: [1, '1.2,0.3,0.38'], lamp: [2, '0.26,0.2,0.63'], wardrobe: [16, '1.77,2.65,0.47'], entry: [7, '0.325,1.05,0.4'], pouf: [5, '0.4,0.45,0.6'], washer: [6, '0.62,1.72,0.6'] };
     return Object.entries(want).filter(([id, [n, e]]) => PHYS[id].length !== n || ext(id) !== e).map(([id]) => id + ':' + PHYS[id].length + ':' + ext(id)); });
   if (proxA.length) problems.push('proxy: этап A — число боксов/габарит не сошлись: ' + proxA.join(' '));
   // realism-all stage C: proxies for the room 2 items repeat the old mesh AABBs (count + union extent)
@@ -379,16 +379,16 @@ const { launchChromium } = require('./browser');
     return Object.entries(want).filter(([id, n]) => PHYS[id].length !== n).map(([id, n]) => id + ' ' + PHYS[id].length + '≠' + n); });
   if (stageB.length) problems.push('proxy: детская 1 — число боксов изменилось (realism-all §8): ' + stageB.join(', '));
   // realism-all stage F: closet 6 and loggia 10 — explicit proxies, box count fixed
-  const stageF = await page.evaluate(() => { const want = {wsecA:  4,  wsecB:  3,  wsecC:  21,  wmezz:  6,  wend:  15,  wpeg:  1,  wmirror:  1,  wstep:  2,  wlight:  1,  led6:  1,  sock25:  1,  bdesk:  4,  bchair:  6,  itshelf:  6,  bshelf:  1,  cable10:  1,  sock26:  1,  sock27:  1,  sock28:  1,  sock29:  1,  led7:  1,  blight:  1,  sw8:  1,};
+  const stageF = await page.evaluate(() => { const want = {wsecA:  4,  wsecB:  3,  wsecC:  21,  wmezz:  6,  wend:  15,  wpeg:  1,  wstep:  2,  wlight:  1,  led6:  1,  sock25:  1,  bdesk:  4,  bchair:  6,  itshelf:  6,  bshelf:  1,  cable10:  1,  sock26:  1,  sock27:  1,  sock28:  1,  sock29:  1,  led7:  1,  blight:  1,  sw8:  1,};
     return Object.entries(want).filter(([id, n]) => PHYS[id].length !== n).map(([id, n]) => id + ' ' + PHYS[id].length + '≠' + n); });
   if (stageF.length) problems.push('proxy: гардеробная 6 / лоджия 10 — число боксов изменилось (realism-all §12): ' + stageF.join(', '));
   // realism-all stage F: every item of closet 6 and loggia 10 stays inside its size (1 mm procedural, 1 cm GLB), plates carry the plastic slot
   const stageFFit = await page.evaluate(() => { const ids = ITEMS.filter(it => it.layer === 'wardrobe' || it.layer === 'balcony').map(it => it.id);
     const bad = ids.filter(id => { const g = ITEM_GROUPS[id], tol = g.userData.glbLoaded ? 0.011 : 0.0011, bb = new THREE.Box3().setFromObject(g).applyMatrix4(new THREE.Matrix4().copy(g.matrixWorld).invert()), s = g.userData.size; return !(bb.min.x >= -tol && bb.min.y >= -tol && bb.min.z >= -tol && bb.max.x <= s[0] + tol && bb.max.y <= s[1] + tol && bb.max.z <= s[2] + tol); });
     const slot = id => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh) set.add(o.material.userData.slot || 'furniture'); }); return [...set].sort().join(); };
-    return { n: ids.length, bad, sock25: slot('sock25') === 'furniture,plastic' && PHYS.sock25.length === 1, rods: slot('wsecA') === 'cabinetPaint,chrome', mirror: slot('wmirror') === 'metal,mirror', sw8: slot('sw8') === 'furniture,plastic' && PHYS.sw8.length === 1 }; });
-  if (stageFFit.n !== 26 || stageFFit.bad.length) problems.push('гардеробная/лоджия: предметов ' + stageFFit.n + ' (ожидалось 26) или вне size (realism-all §0): ' + stageFFit.bad.join(', '));
-  if (!stageFFit.sock25 || !stageFFit.rods || !stageFFit.mirror || !stageFFit.sw8) problems.push('гардеробная: розетка/штанги/зеркало без нужных слотов (realism-all §12): ' + JSON.stringify(stageFFit));
+    return { n: ids.length, bad, sock25: slot('sock25') === 'furniture,plastic' && PHYS.sock25.length === 1, rods: slot('wsecA') === 'cabinetPaint,chrome', sw8: slot('sw8') === 'furniture,plastic' && PHYS.sw8.length === 1 }; });
+  if (stageFFit.n !== 25 || stageFFit.bad.length) problems.push('гардеробная/лоджия: предметов ' + stageFFit.n + ' (ожидалось 25) или вне size (realism-all §0): ' + stageFFit.bad.join(', '));
+  if (!stageFFit.sock25 || !stageFFit.rods || !stageFFit.sw8) problems.push('гардеробная: розетка/штанги/зеркало без нужных слотов (realism-all §12): ' + JSON.stringify(stageFFit));
   // realism-all stage B: every detailed item of room 1 stays inside its size (1 mm procedural, 1 cm GLB), rug corners rounded, plates carry the plastic slot
   const stageBFit = await page.evaluate(() => { const ids = ITEMS.filter(it => it.room === 1 && it.layer === 'kid').map(it => it.id);
     const bad = ids.filter(id => { const g = ITEM_GROUPS[id], tol = g.userData.glbLoaded ? 0.011 : 0.0011, bb = new THREE.Box3().setFromObject(g).applyMatrix4(new THREE.Matrix4().copy(g.matrixWorld).invert()), s = g.userData.size; return !(bb.min.x >= -tol && bb.min.y >= -tol && bb.min.z >= -tol && bb.max.x <= s[0] + tol && bb.max.y <= s[1] + tol && bb.max.z <= s[2] + tol); });
@@ -749,7 +749,7 @@ const { launchChromium } = require('./browser');
       bed: ['kmat', 'pillow', 'cover'].every(n => on('mbed', glb(n)) === 'curtainLinen') && on('mbed', glb('leather')) === 'class',
       pouf: on('vpouf', glb('leather')) === 'class' && on('vpouf', glb('metal')) === 'class', rug: on('mrug', key('cushion')) === 'rugPile', drape: on('mcurtain', key('drape')) === 'curtainLinen',
       plastic: ['bra5', 'sock14', 'sw6'].every(id => on(id, key('plastic')) === 'plastic') && on('bra5', led) === 'class' && on('mward', key('frame')) === 'class',
-      mirrors: on('vmirror', key('mirror')) === 'class' && on('wmirror', key('mirror')) === 'class' && on('wstep', () => true) === 'class' };
+      mirrors: on('vmirror', key('mirror')) === 'class' && on('wstep', () => true) === 'class' };
   });
   Object.entries(m42).forEach(([k, ok]) => { if (!ok) problems.push('комнаты 3, 6: «' + k + '» не сошлось (materials-lighting M4-2)'); });
   if (!noShot) for (const [name, x, z, th] of [['room3-door', 10.9, 11.9, Math.PI / 2 + 0.25], ['room3-tv', 13.6, 12.3, Math.PI - 0.15], ['room3-south', 14.2, 10.5, -0.55], ['wardrobe6-door', 6.6, 4.5, Math.PI - 0.15], ['wardrobe6-end', 6.55, 3.2, 0.2]]) for (const on of [true, false]) {
@@ -764,9 +764,9 @@ const { launchChromium } = require('./browser');
     const box = (id, pick) => { const g = ITEM_GROUPS[id], b = new THREE.Box3(); g.updateMatrixWorld(true); g.traverse(o => { if (o.isMesh && pick(o)) b.expandByObject(o); }); return b; };
     const isM = o => o.material.userData.slot === 'mirror', near = (a, b) => Math.abs(a - b) < 2e-3;
     const ids = []; Object.values(ITEM_GROUPS).forEach(g => g.traverse(o => { if (o.isMesh && isM(o) && !ids.includes(g.userData.id)) ids.push(g.userData.id); }));
-    const gm = box('mirror', isM), gv = box('vmirror', isM), gb = box('bathmirror', isM), gw = box('wmirror', isM), hb = box('bathmirror', o => o.material === ITEM_MATS.mirrorLed), vb = box('vmirror', o => !isM(o));
+    const gm = box('mirror', isM), gv = box('vmirror', isM), gb = box('bathmirror', isM), hb = box('bathmirror', o => o.material === ITEM_MATS.mirrorLed), vb = box('vmirror', o => !isM(o));
     const geom = { mirror: near(gm.min.x, 6.366) && near(gm.max.x, 6.371), vmirror: near(gv.max.z, 9.823) && near(gv.min.z, 9.818) && near(vb.min.z, 9.797), bathmirror: near(gb.min.z, 8.195) && near(gb.max.z, 8.205) && near(hb.min.z, 8.185),
-      wmirror: near(gw.min.x, 6.845) && near(gw.max.x, 6.849), halo: ITEM_MATS.mirrorLed.userData.slot === 'emitter' && ITEM_MATS.led !== ITEM_MATS.mirrorLed };
+      halo: ITEM_MATS.mirrorLed.userData.slot === 'emitter' && ITEM_MATS.led !== ITEM_MATS.mirrorLed };
     let haloElsewhere = 0; Object.values(ITEM_GROUPS).forEach(g => { if (g.userData.id !== 'bathmirror') g.traverse(o => { if (o.isMesh && o.material === ITEM_MATS.mirrorLed) haloElsewhere++; }); });
     setView('door'); VIZ.set(true); const std = VIZ.std.get(ITEM_MATS.mirror), neu = VIZ.neutral.get(ITEM_MATS.mirror), halo = VIZ.std.get(ITEM_MATS.mirrorLed);
     const env = { own: !!std.envMap && std.envMap === VIZ.mirrorEnv() && std.envMap !== scene.environment && std.envMap !== LIGHTING.environment(), pbr: std.metalness === 1 && std.roughness >= 0.04 && std.roughness <= 0.10,
@@ -775,7 +775,7 @@ const { launchChromium } = require('./browser');
     VIZ.set(false); VIZ.set(true); setView('top'); setView('door'); LIGHTING.set('neutral'); const builds = VIZ.mirrorEnvBuilds();
     VIZ.set(false); setView('top'); return { ids: ids.sort(), geom, haloElsewhere, env, builds };
   });
-  if (mir.ids.join() !== 'bathmirror,lmirror,mirror,vmirror,wmirror') problems.push('зеркала: слот mirror у ' + mir.ids.join(',') + ' (mirrors.md: bathmirror, lmirror, mirror, vmirror, wmirror)');
+  if (mir.ids.join() !== 'bathmirror,lmirror,mirror,vmirror') problems.push('зеркала: слот mirror у ' + mir.ids.join(',') + ' (mirrors.md: bathmirror, lmirror, mirror, vmirror)');
   Object.entries(mir.geom).forEach(([k, ok]) => { if (!ok) problems.push('зеркала: ' + k + ' — стекло/подложка не по mirrors.md (materials-lighting M3)'); });
   if (mir.haloElsewhere) problems.push('зеркала: mirrorLed используется вне bathmirror (' + mir.haloElsewhere + ')');
   Object.entries(mir.env).forEach(([k, ok]) => { if (!ok) problems.push('зеркала: env-карта — ' + k + ' (materials-lighting M3 §5)'); });
@@ -1069,7 +1069,7 @@ const { launchChromium } = require('./browser');
     const colored = []; its.forEach(it => ITEM_GROUPS[it.id].traverse(o => { if (!o.isMesh) return; const bm = VIZ.basic.get(o.material) || o.material; if (bm.isMeshBasicMaterial || bm.transparent) return; const c = bm.color; if (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) > 0.08 && !colored.includes(it.id)) colored.push(it.id); }));
     return { n: its.length, inside, inStrip, secC, rods, warn, colored };
   });
-  if (w6.n < 12) problems.push('гардеробная 6: предметов слоя wardrobe ' + w6.n + ' (< 12)');
+  if (w6.n < 11) problems.push('гардеробная 6: предметов слоя wardrobe ' + w6.n + ' (< 11)');
   if (w6.inside.length) problems.push('гардеробная 6: предметы вне помещения: ' + w6.inside.join(', '));
   if (w6.inStrip.length) problems.push('гардеробная 6: в проходе: ' + w6.inStrip.join(', '));
   if (w6.secC > 6.10 + 1e-9) problems.push('гардеробная 6: секция C заходит в проём двери, x1 ' + w6.secC.toFixed(3));
@@ -1122,7 +1122,7 @@ const { launchChromium } = require('./browser');
     const meshes = []; tileGroup.traverse(o => { if (o.isMesh && o.visible && o.parent.visible) meshes.push(o); }); // по подгруппе на вариант, считаем только показанную
     const area = p => Math.abs(p.reduce((s, q, i) => { const r = p[(i + 1) % p.length]; return s + q[0] * r[1] - r[0] * q[1]; }, 0)) / 2;
     const y = meshes.length ? new THREE.Box3().setFromObject(meshes[0]).min.y : -1;
-    const d5 = PLAN.doors[5], s5 = TILE_SILLS[5], sillOk = Math.abs(Math.min(...s5.map(q => q[1])) - (d5[1] - d5[3] / 2)) < 1e-9 && Math.abs(Math.min(...s5.map(q => q[0])) - d5[0]) < 1e-9;
+    const d5 = PLAN.doors[5], s5 = TILE_SILLS[4], sillOk = Math.abs(Math.min(...s5.map(q => q[1])) - (d5[1] - d5[3] / 2)) < 1e-9 && Math.abs(Math.min(...s5.map(q => q[0])) - d5[0]) < 1e-9;
     const cb = document.getElementById('h5tile'), fin0 = finishGroup.visible; cb.value = 'none'; cb.dispatchEvent(new Event('change')); const hid = !tileGroup.visible && finishGroup.visible === fin0; // «Коридор → Плитка пол», вариант A по умолчанию
     cb.value = 'A'; cb.dispatchEvent(new Event('change')); const shown = tileGroup.visible;
     const fin = document.getElementById('finish'); fin.checked = false; fin.dispatchEvent(new Event('change')); const tileKept = tileGroup.visible && !finishGroup.visible; fin.checked = true; fin.dispatchEvent(new Event('change'));
@@ -1132,7 +1132,7 @@ const { launchChromium } = require('./browser');
   if (ft.n !== 1) problems.push('плитка: мешей в tileGroup ' + ft.n + ' (нужен 1)');
   if (Math.abs(ft.area - 22.21) > 0.05) problems.push('плитка: площадь контура ' + ft.area.toFixed(2) + ' (ожидалось 22.21)');
   if (Math.abs(ft.y - 0.0075) > 1e-6) problems.push('плитка: высота меша ' + ft.y + ' (нужно 0.0075)');
-  if (!ft.sillOk || ft.sills !== 7) problems.push('плитка: пороги не по PLAN.doors (санузел 9) или их не 7');
+  if (!ft.sillOk || ft.sills !== 6) problems.push('плитка: пороги не по PLAN.doors (санузел 9) или их не 6');
   if (!ft.toggle) problems.push('плитка: галочка «Плитка пол» не переключает слой или трогает отделку');
   if (ft.std !== 'MeshStandardMaterial') problems.push('плитка: в визуализации материал ' + ft.std);
   await page.evaluate(() => { setView('top'); controls.lookDown(); const hh = 7; controls.r = hh / TAN22; controls.target.set(8.2 - ((PANEL_W - MAP_W) / 2) * (2 * hh / innerHeight), 0, 7.4); controls.apply(); });
