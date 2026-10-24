@@ -329,9 +329,6 @@ PLAN.rooms.forEach(r=>{
   scene.add(new THREE.Mesh(g,m));
 });
 // base slab
-// след снесённой стены между 6 и 7: полы комнат по полигонам её не кроют — заплатка (черновой + винил ниже в finishGroup)
-{ const g=new THREE.PlaneGeometry(0.11,1.477); g.rotateX(-Math.PI/2); g.translate(6.94,0.001,3.1555);
-  scene.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0x9b9994,side:THREE.DoubleSide}))); }
 const baseGeo=new THREE.ExtrudeGeometry(toShape(PLAN.outer),{depth:0.12,bevelEnabled:false});
 baseGeo.rotateX(-Math.PI/2); baseGeo.translate(0,-0.12,0);
 const baseMat=new THREE.MeshLambertMaterial({color:0xcfcabf});
@@ -796,7 +793,6 @@ PLAN.rooms.map(r=>r.poly).concat(PLAN.slabsR[PLAN.slabsR.length-1].polys.map(p=>
   g.rotateX(-Math.PI/2); g.translate(0,CEIL_Y+CEIL_T,0);
   ceilGroup.add(new THREE.Mesh(g,ceilSlabMat));
 });
-{ const g=new THREE.BoxGeometry(0.17,CEIL_T,1.417); g.translate(6.94,CEIL_Y+CEIL_T/2,3.1555); ceilGroup.add(new THREE.Mesh(g,ceilMat)); } // мост полотна над снесённой стеной 6/7
 ceilGroup.visible=false;
 scene.add(ceilGroup);
 
@@ -891,15 +887,13 @@ var finishGroup=new THREE.Group();
 
   function scaleUV(g,sx,sy){const uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*sx,uv.getY(i)*sy);}
 
-  // полы: ламинат везде, кроме санузлов 8 и 9 (там белый мрамор); объединённая 6+7 — дубовая доска (материал строится ниже)
-  const oak67=[];
+  // полы: ламинат везде, кроме санузлов 8 и 9 (там белый мрамор)
   PLAN.rooms.forEach(r=>{
     const g=new THREE.ShapeGeometry(toShape(r.poly));
     g.rotateX(-Math.PI/2); g.translate(0,FLOOR,0);
-    if(r.id!==10){ const m=new THREE.Mesh(g,(r.id===8||r.id===9)?bathFloor:VINYL.has(r.id)?vinylMat:lamMat); finishGroup.add(m); if(r.id===6||r.id===7) oak67.push(m); }
+    if(r.id!==10) finishGroup.add(new THREE.Mesh(g,(r.id===7||r.id===8||r.id===9)?bathFloor:VINYL.has(r.id)?vinylMat:lamMat));
     else window.loggiaFloorGeo=g; // loggia: porcelain tile, material is built below
   });
-  { const g=new THREE.PlaneGeometry(0.11,1.477); g.rotateX(-Math.PI/2); g.translate(6.94,FLOOR,3.1555); const m=new THREE.Mesh(g,vinylMat); finishGroup.add(m); oak67.push(m); } // заплатка на месте стены 6/7
 
   // плитка второго слоя: коридор 5 + кухонная зона комнаты 4 (x 8.23–10.36, one tile row short of the wall stub 10.96) + the footprint
   // of the removable L-wall (x 8.066–8.23 × z 5.516–6.464, z 6.287–6.464 × x 8.23–10.96) so no bare floor shows when it is hidden; контур плитки, план v2
@@ -930,7 +924,6 @@ var finishGroup=new THREE.Group();
       g.strokeStyle='rgba(50,32,15,0.45)'; g.beginPath(); g.moveTo(0,y+0.5); g.lineTo(512,y+0.5); g.stroke(); }
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/2,1/2); return t; })();
   const boardMat=new THREE.MeshBasicMaterial({map:boardTex});
-  oak67.forEach(m=>m.material=boardMat); // объединённая 6+7: та же доска, что в кухне и на лоджии
   const loggiaPoly=PLAN.rooms.find(r=>r.id===10).poly;
   window.BOARD_POLYS=[[[10.36,1.915],[13.47,1.915],[13.47,6.287],[10.36,6.287]],loggiaPoly];
   window.BOARD_POLYS_B=[[[TILE_E_B,1.915],[13.47,1.915],[13.47,6.287],[TILE_E_B,6.287]],loggiaPoly]; // B: доска начинается от той же линии, что и граница плитки в варианте B (.local/пол2.png)
@@ -1325,14 +1318,13 @@ var socketsGroup=new THREE.Group(), netGroup=new THREE.Group(), ventsGroup=new T
   function mk(grp,color,box,pts){ const m=new THREE.MeshBasicMaterial({color,depthTest:false});
     let A=grp.children[0]; if(!A){ A=new THREE.Group(); A.userData.variant='A'; grp.add(A); }
     pts.forEach(p=>{ const [x,z,y,n=1,ax='x']=p; for(let i=0;i<n;i++){ const off=(i-(n-1)/2)*0.16;
-      const g=box?new THREE.BoxGeometry(0.14,0.14,0.14):new THREE.CylinderGeometry(0.08,0.08,0.035,16); // диск лежит в плоскости стены: ось цилиндра — её нормаль
-      if(!box){ if(ax==='x') g.rotateX(Math.PI/2); else g.rotateZ(Math.PI/2); }
+      const g=box?new THREE.BoxGeometry(0.14,0.14,0.14):new THREE.SphereGeometry(0.07,12,8);
       const s=new THREE.Mesh(g,m); s.position.set(x+(ax==='x'?off:0),y,z+(ax==='z'?off:0)); s.renderOrder=21; A.add(s); } }); }
   mk(socketsGroup,0x1e5cff,false,[
     // комната 1
     [3.95,1.874,0.30,2],[0.896,2.45,0.20,2,'z'],[0.896,4.30,0.20,2,'z'],[5.445,2.47,2.10,1,'z'],[1.80,4.864,0.30,2],[1.55,4.864,0.95,2],
     // гардеробная 6 и коридор 5
-    [6.25,3.894,0.30,2],[7.45,4.033,0.30,2],[6.336,7.12,0.30,1,'z'],[9.60,7.99,0.10,3],[6.90,7.468,2.30,1],
+    [6.25,3.894,0.30,2],[6.85,4.033,0.30,2],[6.336,7.12,0.30,1,'z'],[9.60,7.99,0.10,3],[6.90,7.468,2.30,1],
     // постирочная 7: стиральная и сушильная машины
     [8.025,3.00,1.00,2,'z'],
     // кухня 4: северная стена, фартук и техника на западной, восточная стена

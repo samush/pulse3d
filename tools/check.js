@@ -105,7 +105,7 @@ const { launchChromium } = require('./browser');
   if (hts.furnitureMin < -0.001) problems.push('мебель утоплена ниже пола: min y=' + hts.furnitureMin);
   if (!hts.doorTop) problems.push('дверные коробки: верх перемычки не на 2.1+0.07');
 
-  // потолок: в каждой комнате своё полотно толщиной 10 см с зазором от стен плюс мост над снесённой стеной 6/7; над снесённой стеной кухня-коридор полотна нет — граница видна
+  // потолок: в каждой комнате своё полотно толщиной 10 см с зазором от стен; над снесённой стеной кухня-коридор полотна нет — граница видна
   const ceil = await page.evaluate(() => {
     const bb = o => new THREE.Box3().setFromObject(o);
     const panels = ceilGroup.children.filter(o => o.material === ceilMat);
@@ -121,7 +121,7 @@ const { launchChromium } = require('./browser');
       edge: up(0.906, 3.0), // в 1 см от стены комнаты 1 — зазор
     };
   });
-  if (ceil.n !== 11 || !ceil.thick) problems.push('потолок: полотен ' + ceil.n + ' (нужно 11: 10 комнат + мост 6/7) или толщина не 2.695–2.795');
+  if (ceil.n !== 10 || !ceil.thick) problems.push('потолок: полотен ' + ceil.n + ' (нужно 10) или толщина не 2.695–2.795');
   if (!ceil.gap) problems.push('потолок: полотно доходит до стены, зазора нет');
   if (ceil.wall.join() !== 'полотно,перекрытие,полотно') problems.push('потолок: граница по снесённой стене кухня-коридор пропала: ' + ceil.wall.join(' / '));
   if (ceil.edge !== 'перекрытие') problems.push('потолок: у стены комнаты 1 вместо зазора ' + ceil.edge);
@@ -997,7 +997,7 @@ const { launchChromium } = require('./browser');
   // (the corridor switch inside room 5), no layout warnings, grey materials
   const b9 = await page.evaluate(() => {
     const its = ITEMS.filter(it => it.layer === 'bath'), bb = o => new THREE.Box3().setFromObject(o);
-    const door = PLAN.doors.find(d => d[2] === 'v' && Math.abs(d[0] - 9.95) < 0.01 && d[1] < 10), bath = PLAN.baths[0]; // дверь су9 по координатам: индексы съезжают при правках doors
+    const door = PLAN.doors[5], bath = PLAN.baths[0];
     const doorOk = door[2] === 'v' && Math.abs(door[3] - 0.7) < 1e-9 && Math.abs(door[1] - 0.35 - 8.55) < 1e-9 && bath.dz0 === 8.55 && bath.dz1 === 9.25;
     const inside = its.filter(it => { const r = PLAN.rooms.find(q => q.id === it.room), xs = r.poly.map(q => q[0]), zs = r.poly.map(q => q[1]); const b = bb(ITEM_GROUPS[it.id]);
       return b.min.x < Math.min(...xs) - 0.001 || b.max.x > Math.max(...xs) + 0.001 || b.min.z < Math.min(...zs) - 0.001 || b.max.z > Math.max(...zs) + 0.001; }).map(it => it.id);
