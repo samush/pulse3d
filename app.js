@@ -905,10 +905,11 @@ var finishGroup=new THREE.Group();
     const m=new THREE.Mesh(g,vinylMat); finishGroup.add(m); oakFloors.push(m);
   }
 
-  // плитка второго слоя: коридор 5 + кухонная зона комнаты 4 (x 8.23–10.36, one tile row short of the wall stub 10.96) + the footprint
-  // of the removable L-wall (x 8.066–8.23 × z 5.516–6.464, z 6.287–6.464 × x 8.23–10.96) so no bare floor shows when it is hidden; контур плитки, план v2
+  // плитка второго слоя: коридор 5 + кухонная зона комнаты 4 (x 8.23–10.008, до восточной грани санузла 8) + the footprint
+  // of the removable L-wall west of 10.008 so no bare floor shows when it is hidden; east of 10.008 the oak board takes over
+  // down to the bedroom door (пометка пользователя, 2026-10-25); контур плитки, план v2
   // (tasks/floor-tile/README.md). Numbers, not PLAN: remap does not move it — recompute by hand if the corridor changes.
-  window.TILE_POLY=[[5.608,4.033],[5.608,4.861],[6.336,4.861],[6.336,7.468],[8.161,7.468],[8.161,7.984],[10.008,7.984],[10.008,9.6],[10.904,9.6],[10.904,6.464],[10.96,6.464],[10.96,6.287],[10.36,6.287],[10.36,1.915],[8.23,1.915],[8.23,5.516],[8.066,5.516],[8.066,4.033]];
+  window.TILE_POLY=[[5.608,4.033],[5.608,4.861],[6.336,4.861],[6.336,7.468],[8.161,7.468],[8.161,7.984],[10.008,7.984],[10.008,1.915],[8.23,1.915],[8.23,5.516],[8.066,5.516],[8.066,4.033]];
   const TILE_E_B=10.904; // B: восточная грань коридора — плитка идёт от двери спальни до северной стены кухни без уступа (.local/пол.png)
   window.TILE_POLY_B=[[5.608,4.033],[5.608,4.861],[6.336,4.861],[6.336,7.468],[8.161,7.468],[8.161,7.984],[10.008,7.984],[10.008,9.6],[10.904,9.6],[10.904,6.464],[10.96,6.464],[10.96,6.287],[TILE_E_B,6.287],[TILE_E_B,1.915],[8.23,1.915],[8.23,5.516],[8.066,5.516],[8.066,4.033]];
   // door thresholds: tile runs into the wall from the corridor face to the leaf axis (PLAN.doors), the entrance door to the outer face
@@ -924,7 +925,7 @@ var finishGroup=new THREE.Group();
   const tileWhiteM=tileTex('#dcdad5','#f4f3f0'); // entry zone: the flat's 60×120 tile in the laundry white; floor and walls share the texture but not the material — the wall slider fades only the walls
   const tileWhiteMat=new THREE.MeshBasicMaterial({map:tileWhiteM}), tileWhiteWall=new THREE.MeshBasicMaterial({map:tileWhiteM});
   finishGroup.add(new THREE.Mesh(window.loggiaFloorGeo,tileMat)); // loggia 10 floor: dark grey porcelain tile as on the photos
-  // layer 3 (BOARD_POLYS): engineered oak board to try floor coverings — the living zone of room 4 east of the tile (x 10.36–13.47) and the loggia 10
+  // layer 3 (BOARD_POLYS): engineered oak board to try floor coverings — east of the tile line 10.008 (room 4 living zone + corridor strip to the bedroom door) and the loggia 10
   const boardTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=512; const g=c.getContext('2d'); let sd=7; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; }; // canvas = 2.0 × 2.0 m
     const tones=['#b6925d','#c09a66','#ab8752','#c9a672','#a37f4c','#bd9760']; const rowH=51.2; // plank 0.20 m
     for(let r=0;r<10;r++){ const y=r*rowH; g.fillStyle=tones[(r*5)%tones.length]; g.fillRect(0,y,512,rowH);
@@ -936,7 +937,8 @@ var finishGroup=new THREE.Group();
   const boardMat=new THREE.MeshBasicMaterial({map:boardTex});
   oakFloors.forEach(m=>m.material=boardMat); // rooms 1,2,3 and merged 6+7 wear the same oak as the kitchen board layer
   const loggiaPoly=PLAN.rooms.find(r=>r.id===10).poly;
-  window.BOARD_POLYS=[[[10.36,1.915],[13.47,1.915],[13.47,6.287],[10.36,6.287]],loggiaPoly];
+  // board A: living zone of room 4 east of the tile line 10.008 plus the corridor strip to the bedroom door (z 9.6) and the kwall footprint step
+  window.BOARD_POLYS=[[[10.008,1.915],[13.47,1.915],[13.47,6.287],[10.96,6.287],[10.96,6.464],[10.904,6.464],[10.904,9.6],[10.008,9.6]],loggiaPoly];
   window.BOARD_POLYS_B=[[[TILE_E_B,1.915],[13.47,1.915],[13.47,6.287],[TILE_E_B,6.287]],loggiaPoly]; // B: доска начинается от той же линии, что и граница плитки в варианте B (.local/пол2.png)
   // оба слоя пола держат по подгруппе на вариант: селект показывает одну, остальные гасит
   const sub=(group,key,build)=>{ const g=new THREE.Group(); g.userData.variant=key; build(g); group.add(g); return g; };
@@ -1327,63 +1329,72 @@ scene.add(cableGroup);
 // оверлей-маркеры как у кабеля (depthTest:false, видно сверху и в POV сквозь мебель): тёмно-синие кольца — розетки 220В
 // (включая влагостойкие), зелёные — интернет/ТВ, оранжевые кубики — выводы кабеля, розовые — датчики протечки.
 // Точка: [x,z,y,число гнёзд,ось стены]; гнёзда раскладываются вдоль стены с шагом 0.16.
+// Точки сгруппированы по номерам комнат БТИ — каждая комната включается своим чипом в панели.
 var socketsGroup=new THREE.Group(), netGroup=new THREE.Group(), ventsGroup=new THREE.Group();
 (function(){
-  function mk(grp,color,box,pts){ const m=new THREE.MeshBasicMaterial({color,depthTest:false,side:THREE.DoubleSide});
-    let A=grp.children[0]; if(!A){ A=new THREE.Group(); A.userData.variant='A'; grp.add(A); }
-    pts.forEach(p=>{ const [x,z,y,n=1,ax='x']=p; for(let i=0;i<n;i++){ const off=(i-(n-1)/2)*0.16;
-      const g=box?new THREE.BoxGeometry(0.14,0.14,0.14):new THREE.RingGeometry(0.044,0.07,24); // socket = unfilled ring flat on the wall, normal = wall normal
-      if(!box&&ax==='z') g.rotateY(Math.PI/2);
-      const s=new THREE.Mesh(g,m); s.position.set(x+(ax==='x'?off:0),y,z+(ax==='z'?off:0)); s.renderOrder=21; A.add(s); } }); }
-  mk(socketsGroup,0x1b3a8f,false,[
-    // комната 1
-    [3.95,1.874,0.30,2],[0.896,2.45,0.20,2,'z'],[0.896,4.30,0.20,2,'z'],[5.445,2.47,2.10,1,'z'],[1.80,4.864,0.30,2],[1.55,4.864,0.95,2],
-    // гардеробная 6 и коридор 5
-    [6.25,3.894,0.30,2],[7.45,4.033,0.30,2],[6.336,7.12,0.30,1,'z'],[9.60,7.99,0.10,3],[6.90,7.468,2.30,1],
+  function mk(grp,color,box,rooms){ const m=new THREE.MeshBasicMaterial({color,depthTest:false,side:THREE.DoubleSide});
+    Object.keys(rooms).forEach(room=>{ let R=grp.children.find(g=>g.userData.room===+room); if(!R){ R=new THREE.Group(); R.userData.room=+room; grp.add(R); }
+      rooms[room].forEach(p=>{ const [x,z,y,n=1,ax='x']=p; for(let i=0;i<n;i++){ const off=(i-(n-1)/2)*0.16;
+        const g=box?new THREE.BoxGeometry(0.14,0.14,0.14):new THREE.RingGeometry(0.044,0.07,24); // socket = unfilled ring flat on the wall, normal = wall normal
+        if(!box&&ax==='z') g.rotateY(Math.PI/2);
+        const s=new THREE.Mesh(g,m); s.position.set(x+(ax==='x'?off:0),y,z+(ax==='z'?off:0)); s.renderOrder=21; R.add(s);
+        if(!box){ const h=new THREE.RingGeometry(0.044,0.07,24); h.rotateX(Math.PI/2); // horizontal twin: the wall ring is edge-on in the top view
+          const t=new THREE.Mesh(h,m); t.position.copy(s.position); t.renderOrder=21; R.add(t); } } }); }); }
+  mk(socketsGroup,0x1b3a8f,false,{
+    1:[[3.95,1.874,0.30,2],[0.896,2.45,0.20,2,'z'],[0.896,4.30,0.20,2,'z'],[5.445,2.47,2.10,1,'z'],[1.80,4.864,0.30,2],[1.55,4.864,0.95,2]],
+    6:[[6.25,3.894,0.30,2]],
+    5:[[7.45,4.033,0.30,2],[6.336,7.12,0.30,1,'z'],[9.60,7.99,0.10,3],[6.90,7.468,2.30,1]],
     // постирочная 7: стиральная и сушильная машины
-    [8.025,3.45,1.00,2,'z'],
+    7:[[8.025,3.45,1.00,2,'z']],
     // кухня 4: северная стена, фартук и техника на западной, восточная стена
-    [8.53,1.915,1.05,2],[9.63,1.915,2.10,1],[10.36,1.915,1.05,4],[12.20,1.915,1.30,3],
-    [8.23,3.40,1.05,3,'z'],[8.23,3.90,0.30,1,'z'],[8.23,4.55,1.65,2,'z'],[8.23,4.95,0.06,1,'z'],[8.23,5.60,0.06,1,'z'],
-    [13.47,2.30,0.30,2,'z'],[13.47,5.17,0.30,2,'z'],
+    4:[[8.53,1.915,1.05,2],[9.63,1.915,2.10,1],[10.36,1.915,1.05,4],[12.20,1.915,1.30,3],
+       [8.23,3.40,1.05,3,'z'],[8.23,3.90,0.30,1,'z'],[8.23,4.55,1.65,2,'z'],[8.23,4.95,0.06,1,'z'],[8.23,5.60,0.06,1,'z'],
+       [13.47,2.30,0.30,2,'z'],[13.47,5.17,0.30,2,'z']],
     // лоджия 10: ИТ-отсек шкафа и рабочее место
-    [14.55,2.268,2.50,2],[14.50,6.043,2.50,3],[14.70,6.043,0.30,3],
-    // детская 2
-    [11.67,6.518,0.30,2],[11.067,8.46,2.10,2,'z'],[11.067,9.01,0.30,2,'z'],[11.067,9.31,0.95,2,'z'],[13.87,9.614,0.30,2],[14.774,7.35,0.20,1,'z'],[14.774,8.75,0.20,1,'z'],
-    // спальня 3
-    [10.94,9.777,0.30,2],[11.40,9.777,0.95,2],[13.55,9.777,1.30,3],[14.76,12.45,0.20,2,'z'],
-    [12.32,13.144,0.70,2],[12.92,13.144,1.20,2],[14.32,13.144,1.20,2],
+    10:[[14.55,2.268,2.50,2],[14.50,6.043,2.50,3],[14.70,6.043,0.30,3]],
+    2:[[11.67,6.518,0.30,2],[11.067,8.46,2.10,2,'z'],[11.067,9.01,0.30,2,'z'],[11.067,9.31,0.95,2,'z'],[13.87,9.614,0.30,2],[14.774,7.35,0.20,1,'z'],[14.774,8.75,0.20,1,'z']],
+    3:[[10.94,9.777,0.30,2],[11.40,9.777,0.95,2],[13.55,9.777,1.30,3],[14.76,12.45,0.20,2,'z'],
+       [12.32,13.144,0.70,2],[12.92,13.144,1.20,2],[14.32,13.144,1.20,2]],
     // санузлы 9 и 8: влагостойкие у раковин
-    [9.872,8.32,1.05,2,'z'],[9.872,13.00,1.05,2,'z']]);
-  mk(netGroup,0x10c060,false,[
-    [1.32,4.864,0.95,2],              // комната 1: стол, 2×Int
-    [7.12,7.468,2.30,1],              // роутер над входной дверью
-    [12.45,1.915,1.30,2],             // кухня: ТВ-зона, Tv+Int
-    [14.35,2.268,2.50,1],             // лоджия: ИТ-отсек шкафа
-    [14.15,6.043,2.50,1],             // лоджия: рабочее место
-    [11.067,9.45,0.95,1,'z'],         // детская 2: стол
-    [13.85,9.777,1.30,2]]);           // спальня: ТВ-зона, Tv+Int
-  mk(ventsGroup,0xff8c1a,true,[
-    [1.10,1.874,2.20],                // бризер, комната 1
-    [5.53,4.10,2.20],                 // кондиционер, комната 1 (у двери)
-    [9.43,1.915,0.70],                // вывод эл. плиты
-    [10.43,1.915,2.20],               // кондиционер, кухня
-    [9.872,8.55,1.20],                // полотенцесушитель, санузел 9
-    [11.067,7.12,2.20,1,'z'],         // кондиционер, детская 2
-    [14.10,6.518,2.20],               // бризер, детская 2
-    [10.45,9.777,2.20],               // кондиционер, спальня
-    [11.80,9.777,1.10],               // подсветка зеркала, спальня
-    [14.76,10.15,2.20,1,'z'],         // бризер, спальня
-    [10.47,13.144,1.20]]);            // подсветка зеркала у шкафа, спальня
-  mk(ventsGroup,0xff3df0,true,[
-    [8.23,3.75,0.30,1,'z'],           // датчик протечки, кухня
-    [9.40,9.30,0.05],                 // датчик протечки, санузел 9
-    [9.35,11.60,0.05]]);              // датчик протечки, санузел 8
+    9:[[9.872,8.32,1.05,2,'z']],
+    8:[[9.872,13.00,1.05,2,'z']]});
+  mk(netGroup,0x10c060,false,{
+    1:[[1.32,4.864,0.95,2]],          // стол, 2×Int
+    5:[[7.12,7.468,2.30,1]],          // роутер над входной дверью
+    4:[[12.45,1.915,1.30,2]],         // ТВ-зона, Tv+Int
+    10:[[14.35,2.268,2.50,1],[14.15,6.043,2.50,1]], // ИТ-отсек шкафа и рабочее место
+    2:[[11.067,9.45,0.95,1,'z']],     // стол
+    3:[[13.85,9.777,1.30,2]]});       // ТВ-зона, Tv+Int
+  mk(ventsGroup,0xff8c1a,true,{
+    1:[[1.10,1.874,2.20],             // бризер
+       [5.53,4.10,2.20]],             // кондиционер (у двери)
+    4:[[9.43,1.915,0.70],             // вывод эл. плиты
+       [10.43,1.915,2.20]],           // кондиционер
+    9:[[9.872,8.55,1.20]],            // полотенцесушитель
+    2:[[11.067,7.12,2.20,1,'z'],      // кондиционер
+       [14.10,6.518,2.20]],           // бризер
+    3:[[10.45,9.777,2.20],            // кондиционер
+       [11.80,9.777,1.10],            // подсветка зеркала
+       [14.76,10.15,2.20,1,'z'],      // бризер
+       [10.47,13.144,1.20]]});        // подсветка зеркала у шкафа
+  mk(ventsGroup,0xff3df0,true,{      // датчики протечки
+    4:[[8.23,3.75,0.30,1,'z']],
+    9:[[9.40,9.30,0.05]],
+    8:[[9.35,11.60,0.05]]});
 })();
 scene.add(socketsGroup); scene.add(netGroup); scene.add(ventsGroup);
-[['h5tile',tileGroup],['k4board',boardGroup],['cable',cableGroup],['sockets',socketsGroup],['net',netGroup],['vents',ventsGroup]].forEach(([id,grp])=>{ const sel=document.getElementById(id); if(!sel) return; const KEY='pulse3d.'+id;
+[['h5tile',tileGroup],['k4board',boardGroup],['cable',cableGroup]].forEach(([id,grp])=>{ const sel=document.getElementById(id); if(!sel) return; const KEY='pulse3d.'+id;
   let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){} if([...sel.options].some(o=>o.value===v)) sel.value=v;
   const apply=()=>{ grp.visible=sel.value!=='none'; grp.children.forEach(g=>{ g.visible=g.userData.variant===sel.value; }); }; sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} apply(); }); apply(); });
+// чипы комнат у инженерных слоёв: мультивыбор, в localStorage — список номеров через запятую
+[['sockets',socketsGroup],['net',netGroup],['vents',ventsGroup]].forEach(([id,grp])=>{ const box=document.getElementById(id); if(!box) return; const KEY='pulse3d.'+id;
+  const rooms=grp.children.map(g=>g.userData.room).sort((a,b)=>a-b);
+  let on=new Set(); try{ const v=localStorage.getItem(KEY); if(v) on=new Set(v.split(',').map(Number).filter(n=>rooms.includes(n))); }catch(e){}
+  const apply=()=>{ grp.visible=on.size>0; grp.children.forEach(g=>{ g.visible=on.has(g.userData.room); });
+    box.querySelectorAll('button').forEach(b=>b.classList.toggle('on',on.has(+b.textContent))); };
+  rooms.forEach(r=>{ const b=document.createElement('button'); b.type='button'; b.textContent=r; b.title='Помещение '+r;
+    b.addEventListener('click',()=>{ on.has(r)?on.delete(r):on.add(r); try{ localStorage.setItem(KEY,[...on].join(',')); }catch(e){} apply(); }); box.appendChild(b); });
+  apply(); });
 
 // мебель — в items.js (предметы с id, локальными координатами и слоями)
 

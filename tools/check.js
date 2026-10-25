@@ -1116,7 +1116,7 @@ const { launchChromium } = require('./browser');
     await page.evaluate(([x, z, th]) => controls.setFPV(x, z, th), [x, z, th]); await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(outDir, name + '.png') });
   }
-  // floor-tile: one mesh in tileGroup at TILE=0.0075, contour area 22.21 (Gauss, without sills; includes the removable wall footprint), sills come from PLAN.doors
+  // floor-tile: one mesh in tileGroup at TILE=0.0075, contour area 17.69 (Gauss, without sills; includes the removable wall footprint west of 10.008), sills come from PLAN.doors
   // (bath 9 sill follows doors[5]), the checkbox toggles tileGroup only, visualization gives the tile a MeshStandardMaterial
   const ft = await page.evaluate(() => {
     const meshes = []; tileGroup.traverse(o => { if (o.isMesh && o.visible && o.parent.visible) meshes.push(o); }); // по подгруппе на вариант, считаем только показанную
@@ -1130,7 +1130,7 @@ const { launchChromium } = require('./browser');
     return { n: meshes.length, area: area(TILE_POLY), y, sillOk, toggle: hid && shown && tileKept, std, sills: TILE_SILLS.length };
   });
   if (ft.n !== 1) problems.push('плитка: мешей в tileGroup ' + ft.n + ' (нужен 1)');
-  if (Math.abs(ft.area - 22.21) > 0.05) problems.push('плитка: площадь контура ' + ft.area.toFixed(2) + ' (ожидалось 22.21)');
+  if (Math.abs(ft.area - 17.69) > 0.05) problems.push('плитка: площадь контура ' + ft.area.toFixed(2) + ' (ожидалось 17.69)');
   if (Math.abs(ft.y - 0.0075) > 1e-6) problems.push('плитка: высота меша ' + ft.y + ' (нужно 0.0075)');
   if (!ft.sillOk || ft.sills !== 6) problems.push('плитка: пороги не по PLAN.doors (санузел 9) или их не 6');
   if (!ft.toggle) problems.push('плитка: галочка «Плитка пол» не переключает слой или трогает отделку');
@@ -1153,7 +1153,7 @@ const { launchChromium } = require('./browser');
   if (lg.walls < 3) problems.push('лоджия 10: крашеных стеновых панелей ' + lg.walls + ' (< 3)');
   await page.evaluate(() => { setView('fpv'); controls.setFPV(14.45, 4.7, Math.PI / 2 + 0.3); }); await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(outDir, 'balcony10-glazing.png') });
-  // floor layer 3: oak board over the living zone of room 4 (x 10.36–13.47) and the loggia, select «Покрытие», PBR twin in visualization
+  // floor layer 3: oak board east of the tile line 10.008 (room 4 living zone + corridor strip to the bedroom door) and the loggia, select «Покрытие», PBR twin in visualization
   const bd = await page.evaluate(() => {
     const meshes = []; boardGroup.traverse(o => { if (o.isMesh && o.visible && o.parent.visible) meshes.push(o); });
     const b = new THREE.Box3().setFromObject(boardGroup);
@@ -1163,7 +1163,7 @@ const { launchChromium } = require('./browser');
     return { n: meshes.length, box: [b.min.x, b.max.x, b.min.z, b.max.z, b.min.y], hid, shown: boardGroup.visible, std, frost: frost.length };
   });
   if (bd.n !== 2) problems.push('покрытие: мешей ' + bd.n + ' (нужно 2)');
-  if (Math.abs(bd.box[0] - 10.36) > 1e-6 || Math.abs(bd.box[1] - 15.1) > 1e-6 || Math.abs(bd.box[2] - 1.915) > 1e-6 || Math.abs(bd.box[3] - 6.287) > 1e-6) problems.push('покрытие: контур ' + bd.box.slice(0, 4).map(v => v.toFixed(3)).join(' '));
+  if (Math.abs(bd.box[0] - 10.008) > 1e-6 || Math.abs(bd.box[1] - 15.1) > 1e-6 || Math.abs(bd.box[2] - 1.915) > 1e-6 || Math.abs(bd.box[3] - 9.6) > 1e-6) problems.push('покрытие: контур ' + bd.box.slice(0, 4).map(v => v.toFixed(3)).join(' '));
   if (Math.abs(bd.box[4] - 0.009) > 1e-6) problems.push('покрытие: высота ' + bd.box[4]);
   if (!bd.hid || !bd.shown) problems.push('покрытие: галочка не переключает слой или трогает плитку');
   const varB = await page.evaluate(() => { const E = 10.904, vis = g => g.children.filter(c => c.visible).map(c => c.userData.variant).join();
