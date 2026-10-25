@@ -28,6 +28,8 @@ body{margin:0;background:var(--bg);color:var(--ink);
 #rulerBtn,#snapBtn,#resetBtn{position:absolute;right:12px;top:11px;width:24px;height:24px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;font-size:14px;line-height:1;cursor:pointer}
 #snapBtn{right:40px}
 #resetBtn{top:41px}
+/* fold handle: a slim dash centered above the title */
+#foldBtn{position:absolute;top:1px;left:50%;transform:translateX(-50%);width:44px;height:12px;padding:0;border:none;background:none;color:var(--muted);font-size:12px;line-height:10px;cursor:pointer}
 #rulerBtn.on,#snapBtn.on{background:var(--accent-soft);border-color:var(--accent)}
 .panel h1::after{content:' \25BE';color:var(--muted);font-size:12px}
 /* свёрнутая панель — только маленький краешек с заголовком */
@@ -126,6 +128,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <button id="rulerBtn" title="Линейка: два клика по любой поверхности, отрезок по горизонтали или вертикали, длина в см" aria-label="Линейка">📏</button>
   <button id="snapBtn" hidden title="Прилипание к углам и рёбрам предмета (в 5 см от них); выключено — точка ставится свободно" aria-label="Прилипание линейки к углам и рёбрам">🧲</button>
   <button id="resetBtn" title="Сброс: расстановка, разметка, варианты и настройки — как при первом открытии; модели и текстуры скачиваются заново" aria-label="Сброс сцены">🔄</button>
+  <button id="foldBtn" onclick="this.closest('.panel').classList.toggle('collapsed')" title="Свернуть/развернуть панель" aria-label="Свернуть панель">—</button>
   <p class="sub">потолок 2,7 м</p>
   <div class="views three" style="margin:8px 0 12px">
     <button id="vTop">Сверху</button>
