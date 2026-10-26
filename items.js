@@ -24,9 +24,12 @@ const PHYS={}; // id → boxes
     oak:M(0xc9a97a), hpl:M(0xe7e2d8), terra:M(0xc2704e), fabric:M(0xb8ab9a), rug:M(0xd9cfc0), ochre:M(0xd08a5a),
     tulle:new THREE.MeshLambertMaterial({color:0xffffff,transparent:true,opacity:0.3,side:THREE.DoubleSide}),
     drape:new THREE.MeshLambertMaterial({color:0xb4b4b4,side:THREE.DoubleSide}), // opaque curtain fabric, both faces of a folded plane
+    net:(()=>{ const c=document.createElement('canvas'); c.width=c.height=64; const g=c.getContext('2d'); g.strokeStyle='#f4f2ec'; g.lineWidth=5; // safety net: white grid on alpha, cell ≈ 60 mm
+      for(let i=0;i<=4;i++){ g.beginPath(); g.moveTo(i*16,0); g.lineTo(i*16,64); g.stroke(); g.beginPath(); g.moveTo(0,i*16); g.lineTo(64,i*16); g.stroke(); }
+      const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/0.24,1/0.24); return new THREE.MeshLambertMaterial({map:t,transparent:true,side:THREE.DoubleSide}); })(),
   };
   // material slot = physical class for the visualization twin (B04); concept colours stay grey, MATERIALS[slot] gives roughness/metalness/emissive
-  const SLOTS={chrome:['handle','knob','ring','inox'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle','drape'],emitter:['led','mirrorLed','gloss'],screen:['screen'],wood:['table'],cabinetPaint:['chair','base','upper','door','body','wbody','wdoor','wpanel','kbody','edge'],plastic:['plastic'],ceramic:['ceramic'],acrylic:['acrylic'],leather:['leather'],mirror:['mirror']};
+  const SLOTS={chrome:['handle','knob','ring','inox'],metal:['frame','kleg'],glass:['glass','rail'],fabric:['sofa','cushion','pouf','pillow','kmat','fabric','rug','tulle','drape','net'],emitter:['led','mirrorLed','gloss'],screen:['screen'],wood:['table'],cabinetPaint:['chair','base','upper','door','body','wbody','wdoor','wpanel','kbody','edge'],plastic:['plastic'],ceramic:['ceramic'],acrylic:['acrylic'],leather:['leather'],mirror:['mirror']};
   Object.entries(SLOTS).forEach(([slot,keys])=>keys.forEach(k=>{ mat[k].userData.slot=slot; }));
   window.ITEM_MATS=mat;
   const chair=side=>(b,g)=>{ // chair 0.48×0.80×0.48 fallback and proxy (seat, back strip on side W/E/N/S, four legs); models/chair.glb replaces the meshes
@@ -79,7 +82,7 @@ const PHYS={}; // id → boxes
   // steep timber ladder (22° off vertical) whose stringers continue as a handrail loop above the platform; bedding, over-door tray and PHYS as before
   const kidLoftBuild=(kind,L,R,o={})=>(b,g)=>{
     const stairs=o.stairs||'S1', E=stairs==='gentle'?o.E||0:0, N=stairs==='gentle'?o.n||8:7, JOG=o.jog||0, glass=o.guard==='glass';
-    const PL=1.8, TOP=2.3, HF=2.2, W=R+1.2, steel=kind==='steel', ST=steel?mat.frame:mat.table, wood=mat.table, pnl=glass?wood:mat.kbody, front=mat.wdoor;
+    const PL=1.8, TOP=2.3, HF=2.2, W=R+1.2, steel=kind==='steel', ST=steel?mat.frame:mat.table, wood=mat.table, pnl=glass?wood:(o.net?ST:mat.kbody), front=mat.wdoor; // net concept: panels follow the steel colour
     const P=steel?0.05:0.08, po=(0.08-P)/2, RB=steel?1.65:1.60, TB=HF+0.14;                          // post/beam width inside the 80 mm zones, rail bottom, tray beam top
     if(stairs==='ladder'||stairs==='wood') b.phys(R-1.15,R,0,PL,0,0.54); else b.phys(-E,R,0,2.4,0,0.54); [[R,0],[W-0.08,0],[R,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b.phys(x,x+0.08,0,PL,z,z+0.08)); // PHYS as the original (check.js: 9 boxes); the gentle extension is inside the stairs box
     b.phys(R+0.08,W-0.08,0.10,0.14,L-0.08,L); b.phys(R,W,PL-0.2,TOP+0.3,0,L+0.02); b.phys(R,W,HF,2.69,L,2.97); b.phys(R,R+0.08,0,HF,2.89,2.97);
@@ -100,6 +103,7 @@ const PHYS={}; // id → boxes
       cap(R,R+0.04,0.5,L); cap(R,W,L-0.04,L); [[R,0.5],[R,L-0.04],[W-0.04,L-0.04]].forEach(([x,z])=>b(x,x+0.04,BX,TOP-0.04,z,z+0.04,wood));
       b(R+0.015,R+0.025,BX,TOP-0.04,0.54,L-0.04,mat.rail); b(R+0.04,W-0.04,BX,TOP-0.04,L-0.025,L-0.015,mat.rail);
     } else { cap(R,R+0.04,0.5,L); for(let z=0.55;z<L-0.03;z+=0.1) bal(R+0.02,z); cap(R,W,L-0.04,L); for(let x=R+0.1;x<W-0.03;x+=0.1) bal(x,L-0.02); }
+    if(o.net){ b(R+0.015,R+0.025,TOP,2.64,0.06,L-0.03,mat.net); b(R+0.05,W-0.03,TOP,2.64,L-0.025,L-0.015,mat.net); } // white safety net above the guards on both open sides (концепт 2026-10-26)
     b(R+0.08,W-0.08,PL,PL+0.30,0,0.02,pnl); b(W-0.02,W,PL,PL+0.30,0.02,L-0.08,pnl);
     if(stairs==='wood'){ // F: two 40×100 oak stringers 30° off vertical (as D) against the wall, six 30 mm treads 140 deep recessed between them, nothing above the platform (user);
       // handrail = Ø32 oak staple on the room side: a bar parallel to the stringer 100 mm above its outer edge, legs down into the stringer at both ends (.local/детский_лестиница.png)
@@ -455,13 +459,36 @@ const PHYS={}; // id → boxes
        b(0.02,D-0.05,0,0.05,0.05,L-0.05,mat.dark); b(0,C,0.05,0.57,0,L,mat.body); // body top 0.57 over the sill (0.56): the mattress lies on the sill, not under its lip (user, 2026-09-13)
        airGrille(b,C,D,0.06,0.44,0.01,L-0.01,mat.wdoor);                                                                     // front grille east: air from the radiator under the sill
        b(0,C,0.57,0.65,0.02,L-0.02,mat.kmat); b(px,px+0.40,0.65,0.77,0.05,0.35,mat.pillow); }},     // mattress and one pillow at the north shelf; the desk-end pillow was removed 2026-09-13 (user, .local/подушка.png)
-    {id:'kidsofa',type:'диванчик в нише под кроватью',room:1,layer:'kid',pos:[4.65,2.05],rot:0,size:[0.75,0.80,1.60],coat:{fabric:'sofaWeave'},glb:'models/kidsofa.glb',
+    {id:'kidsofa',type:'диванчик в нише под кроватью, шалфейный вельвет',room:1,layer:'kid',pos:[4.65,2.05],rot:0,size:[0.75,0.80,1.60],coat:{fabric:'sageCord'},glb:'models/kidsofa.glb',
      build(b){
        [[0,0.75,0.10,0.45,0,1.60],[0.60,0.75,0.45,0.80,0,1.60],[0,0.60,0.45,0.60,0,0.15],[0,0.60,0.45,0.60,1.45,1.60]].forEach(q=>b.phys(...q)); [[0.03,0.03],[0.69,0.03],[0.03,1.54],[0.69,1.54]].forEach(([x,z])=>b.phys(x,x+0.03,0,0.10,z,z+0.03)); // proxy = today's AABBs
        b(0,0.75,0.10,0.45,0,1.60,mat.sofa); b(0.60,0.75,0.45,0.80,0,1.60,mat.sofa);            // seat and back to the east wall
        b(0,0.60,0.45,0.60,0,0.15,mat.sofa); b(0,0.60,0.45,0.60,1.45,1.60,mat.sofa);              // armrests
        [[0.03,0.03],[0.69,0.03],[0.03,1.54],[0.69,1.54]].forEach(([x,z])=>b(x,x+0.03,0,0.10,z,z+0.03,mat.knob)); // legs
      }},
+    {id:'kidward',type:'шкаф для одежды неглубокий 0.80 × 0.45 у северной стены, две двери и антресоль, шалфейные щели фасадов',room:1,layer:'kid',pos:[1.52,1.884],rot:0,size:[0.80,2.65,0.45],fixed:'wall',coat:Object.assign({frame:'sagePaint'},CAB),
+     build(b){ const W=0.80, D=0.45, p=0.018, F=D-0.02, mid=W/2;
+       b.phys(0,W,0,2.65,0,D);
+       b(0,p,0,2.65,0,F,mat.kbody); b(W-p,W,0,2.65,0,F,mat.kbody); b(0,W,0,0.03,0,F,mat.kbody); b(0,W,2.63,2.65,0,F,mat.kbody); b(0,W,0,2.65,0,0.006,mat.kbody); // carcass and back
+       b(p,W-p,0.03,2.63,F-0.012,F-0.01,mat.frame);                                                   // sage reveal panel behind the front gaps
+       [[0.035,1.925],[1.945,2.625]].forEach(([y0,y1])=>[[p+0.002,mid-0.002],[mid+0.002,W-p-0.002]].forEach(([x0,x1])=>b(x0,x1,y0,y1,F,D,mat.wdoor))); // two tall doors + attic pair, 4 mm gaps
+     }},
+    {id:'kidwshelf',type:'полка над столом 12 ячеек, 1.10 × 0.82, глубина 0.21, южная стена',room:1,layer:'kid',pos:[1.50,4.594],rot:0,size:[1.10,2.17,0.24],fixed:'wall',coat:CAB,
+     build(b){ const W=1.10, p=0.016, Y0=1.35, Y1=2.17, Z0=0.03, D=0.24; // 0.03 off the wall like the other wall boxes
+       b.phys(0,W,Y0,Y1,Z0,D);
+       b(0,W,Y0,Y0+p,Z0,D,mat.kbody); b(0,W,Y1-p,Y1,Z0,D,mat.kbody); b(0,p,Y0+p,Y1-p,Z0,D,mat.kbody); b(W-p,W,Y0+p,Y1-p,Z0,D,mat.kbody); // frame
+       [1,2,3].forEach(i=>b(i*W/4-p/2,i*W/4+p/2,Y0+p,Y1-p,Z0,D,mat.kbody));                           // 3 uprights → 4 columns
+       [1,2].forEach(j=>b(p,W-p,Y0+j*(Y1-Y0)/3-p/2,Y0+j*(Y1-Y0)/3+p/2,Z0,D,mat.kbody));               // 2 shelves → 3 rows
+     }},
+    {id:'kidbag',type:'кресло-мешок Ø0.49 между шкафом и кроватью',room:1,layer:'kid',pos:[2.32,1.884],rot:0,size:[0.52,0.50,0.50],coat:{pillow:'creamBoucle'},
+     build(b,g){ b.phys(0,0.518,0,0.45,0,0.488); // fills the wardrobe→bed slot so the gap reads as one block; z stops short of the window-seat line (no facing pair)
+       const pr=[[0,0],[0.17,0.02],[0.235,0.10],[0.245,0.22],[0.205,0.33],[0.12,0.42],[0.045,0.47],[0,0.48]].map(([r,y])=>new THREE.Vector2(r,y));
+       g.add(new THREE.Mesh(new THREE.LatheGeometry(pr,24).translate(0.26,0,0.25),mat.pillow)); }},
+    {id:'kidboard',type:'маркерная доска 0.49 × 0.80 над креслом-мешком, северная стена',room:1,layer:'kid',pos:[2.33,1.884],rot:0,size:[0.49,1.75,0.07],fixed:'wall',coat:CAB,
+     build(b){ const W=0.49, Y0=0.95, Y1=1.75;
+       b.phys(0,W,Y0,Y1,0,0.045);
+       b(0,W,Y0,Y1,0.02,0.03,mat.kbody); b(0.012,W-0.012,Y0+0.012,Y1-0.012,0.03,0.032,mat.plastic); // frame + glossy white writing face
+       b(0.06,W-0.06,Y0+0.005,Y0+0.025,0.03,0.07,mat.kbody); }},                                      // marker tray
     {id:'kidrug',type:'ковёр моющийся',room:1,layer:'kid',pos:[2.15,2.60],rot:0,size:[1.60,0.01,1.70],coat:{wpanel:'rugPile'},
      build(b,g){ b.phys(0,1.6,0,0.01,0,1.7); g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(b.rrect(1.598,1.698,0.029),{depth:0.006,bevelThickness:0.001,bevelSize:0.001,bevelSegments:1,curveSegments:6}).rotateX(Math.PI/2).translate(0.001,0.007,0.001),mat.wpanel)); }}, // 8 mm rug, corners r 30, 1 mm bound edge
     {id:'projector',type:'проектор короткофокусный на потолке (throw ≈0.57, экран M13)',room:1,layer:'kid',pos:[2.15,3.235],rot:0,size:[0.30,2.70,0.25],coat:PLASTIC,fixed:'wall',
@@ -1086,7 +1113,8 @@ const PHYS={}; // id → boxes
   // group's LED clone stay, materials are shared so only geometry is disposed. Wood details of A/B wear the oak coating; the rest follows BED.
   const KID_LOFT={kidbed:{L:2.0,R:1.4,tread:0.28,E:0.8,n:8},kidbed2:{L:1.85,R:1.2,tread:0.24,E:0.35,n:7}}; // gentle (D): room 1 run +0.80 with 8 rises; room 2 only +0.35 (socket sock12 at x 13.83) with 7 rises
   const KIDBED_VARIANTS={original:p=>kidBedBuild(p.L,mat.wdoor,mat.cushion,p.tread),timber:p=>kidLoftBuild('timber',p.L,p.R),steel:p=>kidLoftBuild('steel',p.L,p.R),
-    ladder:p=>kidLoftBuild('steel',p.L,p.R,{stairs:'ladder'}),gentle:p=>kidLoftBuild('timber',p.L,p.R,{stairs:'gentle',E:p.E,n:p.n,jog:p.jog}),loft:p=>kidLoftBuild('steel',p.L,p.R,{stairs:'wood',guard:'glass'})};
+    ladder:p=>kidLoftBuild('steel',p.L,p.R,{stairs:'ladder'}),gentle:p=>kidLoftBuild('timber',p.L,p.R,{stairs:'gentle',E:p.E,n:p.n,jog:p.jog}),loft:p=>kidLoftBuild('steel',p.L,p.R,{stairs:'wood',guard:'glass'}),
+    mint:p=>kidLoftBuild('steel',p.L,p.R,{stairs:'ladder',net:true})}; // G: концепт 2026-10-26 — шалфейная сталь, сетка над ограждением, приставная лестница
   function rebuildItem(id,build,coat){ const g=ITEM_GROUPS[id]; let led=null;
     g.children.slice().forEach(o=>{ if(o.isGroup){ g.remove(o); g.userData.glbLoaded=null; return; } if(!o.isMesh) return; if(o.material.name&&o.material.name.startsWith('led:')) led=o.material; g.remove(o); o.geometry.dispose(); }); // GLB clones share geometry with their siblings: removed, not disposed
     g.userData.proxy=[]; g.userData.coat=coat; build(makeB(g),g); if(led) g.traverse(o=>{ if(o.isMesh&&o.material===mat.led) o.material=led; });
@@ -1094,7 +1122,7 @@ const PHYS={}; // id → boxes
   // one select per room (#bed1 → kidbed, #bed2 → kidbed2, default F); KIDBED.set(v) without id rebuilds both (check.js), KIDBED.variant is 'mixed' when the rooms differ
   window.KIDBED={value:{kidbed:'original',kidbed2:'original'},variants:Object.keys(KIDBED_VARIANTS),get variant(){ const v=KIDBED.value; return v.kidbed===v.kidbed2?v.kidbed:'mixed'; },
     set(v,id){ if(!KIDBED_VARIANTS[v]) return; (id?[id]:Object.keys(KID_LOFT)).forEach(id=>{ if(KIDBED.value[id]===v) return; KIDBED.value[id]=v;
-      rebuildItem(id,KIDBED_VARIANTS[v](KID_LOFT[id]),v==='original'?undefined:Object.assign({table:'oakFurniture'},BED)); }); }};
+      rebuildItem(id,KIDBED_VARIANTS[v](KID_LOFT[id]),v==='original'?undefined:Object.assign({table:'oakFurniture'},BED,v==='mint'?{frame:'sagePaint'}:{})); }); }};
   [['bed1','kidbed'],['bed2','kidbed2']].forEach(([sid,id])=>{ const KEY='pulse3d.'+sid, sel=document.getElementById(sid); if(!sel) return; let v=sel.value; try{ v=localStorage.getItem(KEY)||v; }catch(e){}
     if(KIDBED_VARIANTS[v]){ sel.value=v; KIDBED.set(v,id); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} KIDBED.set(sel.value,id); }); });
   // ---- room 2 desk + chair variants (select #desk2): A — the original items (desk-pedestal, GLB chair); B (default, .local/детская_лев.png) — oak top on a black steel frame
@@ -1196,7 +1224,7 @@ const PHYS={}; // id → boxes
       if([...sel.options].some(o=>o.value===v)){ sel.value=v; API.set(key,v); } sel.addEventListener('change',()=>{ try{ localStorage.setItem(KEY,sel.value); }catch(e){} API.set(key,sel.value); }); });
     return API; }
   window.ROOM4=variantSelects('k4',R4); window.ROOM3=variantSelects('m3',R3);
-  window.KID1=variantSelects('r1',{sofa:{ids:['kidsofa']},rug:{ids:['kidrug']},curtain:{ids:['curtain']},reveal:{ids:['reveal1']}});
+  window.KID1=variantSelects('r1',{sofa:{ids:['kidsofa']},rug:{ids:['kidrug']},curtain:{ids:['curtain']},reveal:{ids:['reveal1']},ward:{ids:['kidward']},wshelf:{ids:['kidwshelf']},bag:{ids:['kidbag']},board:{ids:['kidboard']}});
   window.KID2=variantSelects('r2',{rug:{ids:['kidrug2']},curtain:{ids:['blind2']},reveal:{ids:['reveal2']}});
   // ванна B (.local/11.png, .local/12.png): прямоугольная 0.70 × 1.60 с плоской кромкой, внутренняя чаша — стадион, глухой экран до пола
   const TUB_B={pos:[8.222,8.181],size:[0.94,0.58,1.671],build(b,g){

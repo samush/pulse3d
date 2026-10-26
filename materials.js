@@ -83,6 +83,9 @@ const COATINGS={
   hplWhite:    {name:'HPL-плита белая, столешница и фартук', class:'facade', size:[1,1], maps:[], color:0xeae7e1, rough:0.45}, // 2026-09-11: kitchen 4 — one white panel and one tone for worktop and splashback, no texture set for HPL
   blackEdge:   {name:'кромка чёрная, матовая',  class:'facade', size:[1,1], maps:[], color:0x24262a, rough:0.5}, // 2026-09-13: торец столешницы кухни 4
   greyFabric:  {name:'ткань светло-серая', class:'fabric', size:[0.4,0.4], maps:[], color:0xc4c6c8, rough:0.95},
+  sagePaint:   {name:'эмаль шалфейная (каркас кровати детской 1)', class:'cabinetPaint', size:[1,1], maps:[], color:0xb2c1a5, rough:0.42},
+  sageCord:    {name:'вельвет шалфейный (диванчик детской 1)', class:'fabric', size:[0.4,0.4], maps:[], color:0xa9bc97, rough:0.95},
+  creamBoucle: {name:'ткань кремовая (кресло-мешок)', class:'fabric', size:[0.4,0.4], maps:[], color:0xe6e0d2, rough:0.95},
   blackFront:  {name:'чёрный матовый МДФ, фасады', class:'cabinetPaint', size:[1,1], maps:[], color:0x26282b, rough:0.55}, // loggia cabinet carcass and lower block, sliding leaves (designer's render 2026-10-17)
   oliveFront:  {name:'HPL-плита оливковая, матовый фасад', class:'facade', size:[1,1], maps:[], color:0x8a8f70, rough:0.62}, // 2026-09-11: нижние ящики, пенал с техникой, холодильник и боковины навесных шкафов
 };

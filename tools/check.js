@@ -394,7 +394,7 @@ const { launchChromium } = require('./browser');
     const bad = ids.filter(id => { const g = ITEM_GROUPS[id], tol = g.userData.glbLoaded ? 0.011 : 0.0011, bb = new THREE.Box3().setFromObject(g).applyMatrix4(new THREE.Matrix4().copy(g.matrixWorld).invert()), s = g.userData.size; return !(bb.min.x >= -tol && bb.min.y >= -tol && bb.min.z >= -tol && bb.max.x <= s[0] + tol && bb.max.y <= s[1] + tol && bb.max.z <= s[2] + tol); });
     const slot = id => { const set = new Set(); ITEM_GROUPS[id].traverse(o => { if (o.isMesh) set.add(o.material.userData.slot || 'furniture'); }); return [...set].sort().join(); };
     return { n: ids.length, bad, rug: ITEM_GROUPS.kidrug.children[0].geometry.type === 'ExtrudeGeometry', sw1: slot('sw1') === 'furniture,plastic' && PHYS.sw1.length === 1, curtain: slot('curtain') === 'fabric,metal', bed: ITEM_GROUPS.kidbed.children.length > 50 }; });
-  if (stageBFit.n !== 27 || stageBFit.bad.length) problems.push('детская 1: предметы вне size (realism-all §0): ' + stageBFit.bad.join(', '));
+  if (stageBFit.n !== 31 || stageBFit.bad.length) problems.push('детская 1: предметы вне size (realism-all §0): ' + stageBFit.bad.join(', ')); // 31: + kidward, kidwshelf, kidbag, kidboard (2026-10-26)
   if (!stageBFit.rug || !stageBFit.sw1 || !stageBFit.curtain || !stageBFit.bed) problems.push('детская 1: ковёр/выключатель/тюль/кровать не детализированы (realism-all §8): ' + JSON.stringify(stageBFit));
   // realism-all stage B: kidsofa/kidchair/windowseat1 GLBs replaced the procedural builds — no validation warnings, grey materials, proxies untouched
   const stageBGlb = await page.evaluate(async () => { const ids = ['kidsofa', 'kidchair', 'kidchair2', 'windowseat1', 'bchair']; for (let i = 0; i < 100 && !ids.every(id => ITEM_GROUPS[id].userData.glbLoaded || (VIZ.loadErrors || []).some(s => s.startsWith(id + ':'))); i++) await new Promise(r => setTimeout(r, 100));
@@ -706,7 +706,7 @@ const { launchChromium } = require('./browser');
       casework: ['kidbed', 'kidbed2'].every(id => on(id, cab) === 'cabinetPaint') && ['kiddesk', 'kidped', 'kidshelf', 'tower2n', 'deskshelf2'].every(id => on(id, cab) === 'creamFront') && on('windowseat1', glb('wdoor')) === 'creamFront' && on('windowseat2', glb('paint')) === 'creamFront', // столы, стеллажи и комоды красит палитра комнаты, по умолчанию кремовый
       bedding: ['kmat', 'pillow', 'cushion'].every(k => on('kidbed', key(k)) === 'curtainLinen') && on('kidbed2', key('kmat')) === 'curtainLinen' && on('windowseat2', glb('kmat')) === 'curtainLinen' && on('windowseat1', glb('pillow')) === 'curtainLinen',
       chairs: ['kidchair', 'kidchair2'].every(id => on(id, glb('cushion')) === 'sofaWeave' && on(id, glb('plastic')) === 'plastic' && on(id, glb('chrome')) === 'class'),
-      sofa: ['upholstery', 'piping', 'cushion'].every(n => on('kidsofa', glb(n)) === 'sofaWeave'), rug: on('kidrug', key('wpanel')) === 'rugPile',
+      sofa: ['upholstery', 'piping', 'cushion'].every(n => on('kidsofa', glb(n)) === 'sageCord'), rug: on('kidrug', key('wpanel')) === 'rugPile',
       tulle: on('curtain', key('tulle')) === 'curtainLinen' && !!tulle && tulle.transparent && tulle.opacity < 0.5, gym: on('gymwall', key('table')) === 'oakFurniture' && on('gymwall', key('frame')) === 'class',
       plastic: ['bra1', 'kidlight2', 'sock1', 'sock9'].every(id => on(id, key('plastic')) === 'plastic') && on('bra1', led) === 'class' && on('kidbed', key('kleg')) === 'class' };
   });
