@@ -1070,15 +1070,15 @@ var finishGroup=new THREE.Group();
     if(spec&&spec[4]!=='entry'&&spec[5]){ const oS=spec[5], oF=spec[6], t=dep/2-oF+0.03, off=oS*(dep/2+0.001-t/2), iw=w+2*jw; // over-door walnut box from the jamb face back into the wall, on the outer side only (из комнаты её нет); outS=0 — no panel at all (bath 8)
       const gI=o==='v'?new THREE.BoxGeometry(t,0.595,iw):new THREE.BoxGeometry(iw,0.595,t);
       const mI=new THREE.Mesh(gI,doorWoodMat); mI.position.set(o==='v'?cx+off:cx,2.3975,o==='v'?cz:cz+off); parent.add(mI); }
-    const je=0.004; // jamb legs/head sink 4 mm into the opening reveal: coplanar faces z-fight now that the jamb is walnut, not white
+    const je=0.004; // jamb legs/head step 4 mm into the clear opening: their inner faces sat exactly on the wall cut planes (z-fight once the jamb turned walnut)
     if(o==='v'){
-      bx(dep,hD,jw+je, cx,hD/2, cz-w/2-jw/2-je/2);
-      bx(dep,hD,jw+je, cx,hD/2, cz+w/2+jw/2+je/2);
-      bx(dep,jw+je,w+2*jw, cx,hD+jw/2+je/2, cz);
+      bx(dep,hD,jw+je, cx,hD/2, cz-w/2-jw/2+je/2);
+      bx(dep,hD,jw+je, cx,hD/2, cz+w/2+jw/2-je/2);
+      bx(dep,jw+je,w+2*jw, cx,hD+jw/2-je/2, cz);
     } else {
-      bx(jw+je,hD,dep, cx-w/2-jw/2-je/2,hD/2, cz);
-      bx(jw+je,hD,dep, cx+w/2+jw/2+je/2,hD/2, cz);
-      bx(w+2*jw,jw+je,dep, cx,hD+jw/2+je/2, cz);
+      bx(jw+je,hD,dep, cx-w/2-jw/2+je/2,hD/2, cz);
+      bx(jw+je,hD,dep, cx+w/2+jw/2-je/2,hD/2, cz);
+      bx(w+2*jw,jw+je,dep, cx,hD+jw/2-je/2, cz);
     }
   });
   // прихожая: walnut cladding on the inner north wall — one wood plane over the wall flanks and the band above the entry door,
