@@ -889,6 +889,17 @@ var finishGroup=new THREE.Group();
   });
   wpTex.repeat.set(1/1.2,1/1.2);
   const wpMat=new THREE.MeshBasicMaterial({map:wpTex});
+  // детские 1 и 2: тот же точечный рисунок, но базовый тон — серо-бежевая краска коридора (user 2026-10-26)
+  const wpKidsTex=canvasTex(g=>{
+    g.fillStyle='#c3b8a9'; g.fillRect(0,0,256,256);
+    for(let i=0;i<1500;i++){
+      g.fillStyle=rnd()<0.55?'rgba(120,105,90,0.35)':'rgba(255,250,240,0.55)';
+      const s=1+rnd()*1.4;
+      g.fillRect(rnd()*256,rnd()*256,s,s);
+    }
+  });
+  wpKidsTex.repeat.set(1/1.2,1/1.2);
+  const wpKidsMat=new THREE.MeshBasicMaterial({map:wpKidsTex});
 
   function scaleUV(g,sx,sy){const uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*sx,uv.getY(i)*sy);}
 
@@ -1094,8 +1105,8 @@ var finishGroup=new THREE.Group();
   // matte greige paint (kitchen-living 4, master 3, corridor 5, loggia 10): flat colour with faint roller texture, canvas = 1 × 1 m
   const paintTex=canvasTex(g=>{ g.fillStyle='#c3b8a9'; g.fillRect(0,0,256,256); for(let i=0;i<2500;i++){ g.fillStyle='rgba('+(Math.random()<0.5?'255,250,240':'120,105,90')+','+(0.03+0.05*Math.random())+')'; g.fillRect(Math.random()*256,Math.random()*256,1+Math.random()*2,1+Math.random()*2); } });
   const paintMat=new THREE.MeshBasicMaterial({map:paintTex}); const PAINTED=new Set([3,4,5,10]);
-  window.wallFinMats=[wpMat,whiteWall,tileWhiteWall,bathWall,greyWall,plasterMat,greyMat,woodMat,frameMat2,plinthMat,paintMat,chromeFin,doorWoodMat,doorFlatMat,handleDark]; // гасятся ползунком «Стены»
-  window.finishMats={lam:lamMat,vinyl:vinylMat,white:whiteMat,whiteWall,bathWall,bathFloor,greyWall,plaster:plasterMat,grey:greyMat,wp:wpMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,chrome:chromeFin,tile:tileMat,tileLight:tileLightMat,tileWhite:tileWhiteMat,tileWhiteWall,wallPaint:paintMat,board:boardMat,doorWood:doorWoodMat,doorFlat:doorFlatMat}; // для PBR-двойников (materials.js)
+  window.wallFinMats=[wpMat,wpKidsMat,whiteWall,tileWhiteWall,bathWall,greyWall,plasterMat,greyMat,woodMat,frameMat2,plinthMat,paintMat,chromeFin,doorWoodMat,doorFlatMat,handleDark]; // гасятся ползунком «Стены»
+  window.finishMats={lam:lamMat,vinyl:vinylMat,white:whiteMat,whiteWall,bathWall,bathFloor,greyWall,plaster:plasterMat,grey:greyMat,wp:wpMat,wpKids:wpKidsMat,wood:woodMat,woodFloor,plinth:plinthMat,frame:frameMat2,chrome:chromeFin,tile:tileMat,tileLight:tileLightMat,tileWhite:tileWhiteMat,tileWhiteWall,wallPaint:paintMat,board:boardMat,doorWood:doorWoodMat,doorFlat:doorFlatMat}; // для PBR-двойников (materials.js)
   const DOORS2=DOORS;
   // room 2, M10: finish block on the north wall behind the gym wall, 0.1–2.40, x 12.15–13.75; grey until the palette stage
   const accent2Mat=new THREE.MeshBasicMaterial({color:0xd6d6d3}); wallFinMats.push(accent2Mat); finishMats.accent2=accent2Mat;
@@ -1187,10 +1198,10 @@ var finishGroup=new THREE.Group();
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; return t; })();
   const wpLeaves=new THREE.MeshBasicMaterial({map:leavesTex}), wpSpace=new THREE.MeshBasicMaterial({map:spaceTex}), wpGraff=new THREE.MeshBasicMaterial({map:graffTex}), wpWhales=new THREE.MeshBasicMaterial({map:whaleTex}), wpBalloons=new THREE.MeshBasicMaterial({map:balloonTex});
   wallFinMats.push(wpLeaves,wpSpace,wpGraff,wpWhales,wpBalloons); Object.assign(finishMats,{wpLeaves,wpSpace,wpGraff,wpWhales,wpBalloons});
-  const WP_WALLS={1:['n'],2:['s']}, WP_MATS={none:wpMat,leaves:wpLeaves,space:wpSpace,graffiti:wpGraff,whales:wpWhales,balloons:wpBalloons}, MURALS={space:spaceTex,graffiti:graffTex,whales:whaleTex,balloons:balloonTex}, wpMeshes={1:[],2:[]}; // room → sides that take wallpaper; registered panels per room; MURALS stretch over one panel
+  const WP_WALLS={1:['n'],2:['s']}, WP_MATS={none:wpKidsMat,leaves:wpLeaves,space:wpSpace,graffiti:wpGraff,whales:wpWhales,balloons:wpBalloons}, MURALS={space:spaceTex,graffiti:graffTex,whales:whaleTex,balloons:balloonTex}, wpMeshes={1:[],2:[]}; // room → sides that take wallpaper; registered panels per room; MURALS stretch over one panel
   window.WALLPAPER={value:{1:'none',2:'none'},options:{1:['none','leaves','whales','balloons'],2:['none','space','graffiti']},def:{1:'whales',2:'graffiti'},set(room,key){ if(!WP_MATS[key]) key='none'; WALLPAPER.value[room]=key;
     const main=wpMeshes[room].reduce((a,m)=>!a||m.userData.wp.L>a.userData.wp.L?m:a,null);
-    wpMeshes[room].forEach(m=>{ const t=MURALS[key]; if(t&&m===main){ t.repeat.set(1/m.userData.wp.L,1/m.userData.wp.h); t.needsUpdate=true; } m.material=t&&m!==main?wpMat:WP_MATS[key]; }); // the mural lives on the widest panel only; a shared texture cannot fit two panel sizes
+    wpMeshes[room].forEach(m=>{ const t=MURALS[key]; if(t&&m===main){ t.repeat.set(1/m.userData.wp.L,1/m.userData.wp.h); t.needsUpdate=true; } m.material=t&&m!==main?wpKidsMat:WP_MATS[key]; }); // the mural lives on the widest panel only; a shared texture cannot fit two panel sizes
     if(window.VIZ&&VIZ.ready) VIZ.coatFinish('wpLeaves',VIZ.finishCoat.wpLeaves); }}; // re-swap the finish twins in the visualization
   PLAN.rooms.forEach(r=>{
     if(r.id===8||r.id===9) return;
@@ -1295,7 +1306,7 @@ var finishGroup=new THREE.Group();
           g.rotateY(Math.atan2(nx,nz));
           // в постирочной 7 вместо обоев белая плитка, как в санузлах
           const box7=r.id===7&&((!horiz&&Math.abs(fixed-7.713)<0.01)||(horiz&&Math.abs(fixed-3.028)<0.01)); // the duct box in the corner of the laundry: its two faces are plasterboard
-          const m=new THREE.Mesh(g,r.id===7?(box7?plasterMat:bathWall):PAINTED.has(r.id)?paintMat:wpMat); // laundry 7: bath tile, box plasterboard; PAINTED rooms: greige paint
+          const m=new THREE.Mesh(g,r.id===7?(box7?plasterMat:bathWall):PAINTED.has(r.id)?paintMat:(r.id===1||r.id===2)?wpKidsMat:wpMat); // laundry 7: bath tile, box plasterboard; PAINTED rooms: greige paint
           m.position.set((p0[0]+p1[0])/2,(y0+y1)/2,(p0[1]+p1[1])/2);
           if(WP_WALLS[r.id]&&WP_WALLS[r.id].includes(side)){ m.userData.wp={room:r.id,L,h:y1-y0}; wpMeshes[r.id].push(m); }
           grpFor((s0+s1)/2).add(m);
