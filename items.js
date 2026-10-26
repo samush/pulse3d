@@ -140,13 +140,14 @@ const PHYS={}; // id → boxes
     }
     // over-door tray: beams HF..TB on all four edges are the borders; west beam post to post, east beam along the door wall is not fixed into it,
     // the rear beam sits on the far post and is tied into the far wall (cover plate); floor panel and back panel
-    if(o.net){ // closed cupboard over the passage: a plain box, solid wall toward the sleeper, two full hinged fronts to the west (user 2026-10-26)
-      b(R,W,HF,HF+0.02,L+0.02,2.97,pnl);                                                              // bottom
-      b(R,W,2.48,2.50,L+0.02,2.97,pnl);                                                               // top
-      b(R,W,HF+0.02,2.48,L+0.02,L+0.04,pnl);                                                          // north wall, toward the bed
-      b(R,W,HF+0.02,2.48,2.95,2.97,pnl);                                                              // south wall at the room wall
+    if(o.net){ // closed cupboard over the passage: a plain box, solid wall toward the sleeper, two full hinged fronts to the west (user 2026-10-26);
+      const XC=R+0.42; // shallow: starts at the door-side ladder upright, so a climber has free headroom over the ladder (user 2026-10-27)
+      b(XC,W,HF,HF+0.02,L+0.02,2.97,pnl);                                                             // bottom
+      b(XC,W,2.48,2.50,L+0.02,2.97,pnl);                                                              // top
+      b(XC,W,HF+0.02,2.48,L+0.02,L+0.04,pnl);                                                         // north wall, toward the bed
+      b(XC,W,HF+0.02,2.48,2.95,2.97,pnl);                                                             // south wall at the room wall
       b(W-0.02,W,HF+0.02,2.48,L+0.04,2.95,pnl);                                                       // east side over the door
-      const zm=(L+0.02+2.97)/2; [[L+0.05,zm-0.002],[zm+0.002,2.94]].forEach(([za,zb])=>b(R+0.002,R+0.02,HF+0.04,2.46,za,zb,front)); // two full fronts west, 4 mm gaps
+      const zm=(L+0.02+2.97)/2; [[L+0.05,zm-0.002],[zm+0.002,2.94]].forEach(([za,zb])=>b(XC+0.002,XC+0.02,HF+0.04,2.46,za,zb,front)); // two full fronts west, 4 mm gaps
     } else {
     // over-door tray: beams HF..TB on all four edges are the borders; west beam post to post, east beam along the door wall is not fixed into it,
     // the rear beam sits on the far post and is tied into the far wall (cover plate); floor panel and back panel
