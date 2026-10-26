@@ -1033,16 +1033,16 @@ var finishGroup=new THREE.Group();
   // at 90° the leaf would lie inside the side wall. Default state: open, except the wardrobe and laundry pair (user, 2026-09-09).
   // walnut veneer for the room-door leaves, jambs, over-door panels and the entry wall cladding (пометка пользователя 2026-10-25, фото рендера)
   const doorWoodTex=(()=>{ const c=document.createElement('canvas'); c.width=256; c.height=512; const g=c.getContext('2d'); let sd=5; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
-    const tones=['#8a6a4e','#947257','#7e5f45','#8f6e52','#83654a','#99775b'], colW=25.6;
+    const tones=['#b38e6a','#bd9a77','#a88263','#b79272','#ac8768','#c29f7e'], colW=25.6; // latte, not chocolate (user 2026-10-26)
     for(let i=0;i<10;i++){ const x=i*colW; g.fillStyle=tones[(i*7)%tones.length]; g.fillRect(x,0,colW,512);
-      for(let k=0;k<12;k++){ g.strokeStyle='rgba(60,40,22,'+(0.08+0.12*rnd())+')'; g.lineWidth=0.6+rnd()*1.4; const gx=x+2+rnd()*(colW-4); g.beginPath(); g.moveTo(gx,0); g.bezierCurveTo(gx+(rnd()-0.5)*6,170,gx+(rnd()-0.5)*6,340,gx+(rnd()-0.5)*4,512); g.stroke(); } }
+      for(let k=0;k<12;k++){ g.strokeStyle='rgba(120,88,58,'+(0.08+0.12*rnd())+')'; g.lineWidth=0.6+rnd()*1.4; const gx=x+2+rnd()*(colW-4); g.beginPath(); g.moveTo(gx,0); g.bezierCurveTo(gx+(rnd()-0.5)*6,170,gx+(rnd()-0.5)*6,340,gx+(rnd()-0.5)*4,512); g.stroke(); } }
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t; })();
   const doorWoodMat=new THREE.MeshBasicMaterial({map:doorWoodTex});
   // leaf: same walnut tone, no grain (user 2026-10-25); a 1-color canvas map keeps the sRGB decode identical to the textured jambs
-  const doorFlatMat=new THREE.MeshBasicMaterial({map:(()=>{ const c=document.createElement('canvas'); c.width=c.height=2; const g=c.getContext('2d'); g.fillStyle='#8a6a4e'; g.fillRect(0,0,2,2); return new THREE.CanvasTexture(c); })()});
+  const doorFlatMat=new THREE.MeshBasicMaterial({map:(()=>{ const c=document.createElement('canvas'); c.width=c.height=2; const g=c.getContext('2d'); g.fillStyle='#b38e6a'; g.fillRect(0,0,2,2); return new THREE.CanvasTexture(c); })()});
   const handleDark=new THREE.MeshBasicMaterial({color:0x2b2b2b});
   // spec tail: side across the wall that gets the over-door panel (наружная сторона — откуда входят) and the axis→plaster distance there
-  const DOOR_SPEC={0:['детская 1',1,-1,0.075,null,1,0.088],1:['гардеробная',-1,1,0.093,'closed',1,0.093],3:['детская 2',-1,1,0.077,null,-1,0.086],4:['мастер спальня',-1,1,0.087,null,-1,0.09],5:['санузел 1',1,1,0.058,'closed',1,0.058],6:['санузел 2',1,1,0.071,'closed',1,0.071],7:['входная дверь',-1,1,0.144,'entry',-1,0.142]};
+  const DOOR_SPEC={0:['детская 1',1,-1,0.075,null,1,0.088],1:['гардеробная',-1,1,0.093,'closed',1,0.093],3:['детская 2',-1,1,0.077,null,-1,0.086],4:['мастер спальня',-1,1,0.087,null,-1,0.09],5:['санузел 1',1,1,0.058,'closed',1,0.058],6:['санузел 2',1,1,0.071,'closed',0,0.071],7:['входная дверь',-1,1,0.144,'entry',-1,0.142]};
   const DOOR_ORDER=[1,0,3,5,6,4,7]; // button layout, two per row
   const chromeFin=new THREE.MeshBasicMaterial({color:0xb4b4b4}), grooveMat=new THREE.LineBasicMaterial({color:0x9a9791});
   window.DOOR_LEAVES=[]; // {id,label,pivot,closed,open} — toggled by the «Двери» buttons
@@ -1067,17 +1067,18 @@ var finishGroup=new THREE.Group();
       const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),jambM);
       m.position.set(px,py,pz); parent.add(m);
     }
-    if(spec&&spec[4]!=='entry'){ const oS=spec[5], oF=spec[6], t=dep/2-oF+0.03, off=oS*(dep/2+0.001-t/2), iw=w+2*jw; // over-door walnut box from the jamb face back into the wall, on the outer side only (из комнаты её нет)
+    if(spec&&spec[4]!=='entry'&&spec[5]){ const oS=spec[5], oF=spec[6], t=dep/2-oF+0.03, off=oS*(dep/2+0.001-t/2), iw=w+2*jw; // over-door walnut box from the jamb face back into the wall, on the outer side only (из комнаты её нет); outS=0 — no panel at all (bath 8)
       const gI=o==='v'?new THREE.BoxGeometry(t,0.595,iw):new THREE.BoxGeometry(iw,0.595,t);
       const mI=new THREE.Mesh(gI,doorWoodMat); mI.position.set(o==='v'?cx+off:cx,2.3975,o==='v'?cz:cz+off); parent.add(mI); }
+    const je=0.004; // jamb legs/head sink 4 mm into the opening reveal: coplanar faces z-fight now that the jamb is walnut, not white
     if(o==='v'){
-      bx(dep,hD,jw, cx,hD/2, cz-w/2-jw/2);
-      bx(dep,hD,jw, cx,hD/2, cz+w/2+jw/2);
-      bx(dep,jw,w+2*jw, cx,hD+jw/2, cz);
+      bx(dep,hD,jw+je, cx,hD/2, cz-w/2-jw/2-je/2);
+      bx(dep,hD,jw+je, cx,hD/2, cz+w/2+jw/2+je/2);
+      bx(dep,jw+je,w+2*jw, cx,hD+jw/2+je/2, cz);
     } else {
-      bx(jw,hD,dep, cx-w/2-jw/2,hD/2, cz);
-      bx(jw,hD,dep, cx+w/2+jw/2,hD/2, cz);
-      bx(w+2*jw,jw,dep, cx,hD+jw/2, cz);
+      bx(jw+je,hD,dep, cx-w/2-jw/2-je/2,hD/2, cz);
+      bx(jw+je,hD,dep, cx+w/2+jw/2+je/2,hD/2, cz);
+      bx(w+2*jw,jw+je,dep, cx,hD+jw/2+je/2, cz);
     }
   });
   // прихожая: walnut cladding on the inner north wall — one wood plane over the wall flanks and the band above the entry door,

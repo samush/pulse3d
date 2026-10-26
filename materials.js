@@ -75,7 +75,7 @@ const COATINGS={
   jadeFront:   {name:'фасад нефрит, матовый',    class:'facade', size:[1,1], maps:[], color:0x5f7d6e, rough:0.62},
   mushroomFront:{name:'фасад грибной, слабый рисунок дерева', class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0xb5a89a, normalScale:0.22},
   cherryFront: {name:'фасад вишня, слабый рисунок дерева',    class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0x8a4a3c, normalScale:0.22},
-  walnutFront: {name:'фасад ореховый, слабый рисунок дерева', class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0x6e523c, normalScale:0.22},
+  walnutFront: {name:'фасад ореховый, слабый рисунок дерева', class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0x9c7d5e, normalScale:0.22}, // latte to match the door walnut (user 2026-10-26)
   pineFront:   {name:'фасад сосна, слабый рисунок дерева',    class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0xd8b880, normalScale:0.22},
   whiteFront:  {name:'фасад белый, матовый пластик', class:'plastic', dir:'textures/plastic', size:[0.5,0.5], maps:['normal','rough'], normalScale:0.3, color:0xf0eeea},
   whiteOakFront:{name:'фасад белёный дуб, матовый', class:'wood', dir:'textures/oakFurniture', size:[1.83,1.83], maps:['normal','rough'], color:0xefece6, normalScale:0.35}, // door-leaf white with a grain a step stronger than the tinted fronts
