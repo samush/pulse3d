@@ -85,11 +85,11 @@ const PHYS={}; // id → boxes
     const PL=1.8, TOP=2.3, HF=2.2, W=R+1.2, steel=kind==='steel', ST=steel?mat.frame:mat.table, wood=o.net?ST:mat.table, pnl=glass?mat.table:(o.net?ST:mat.kbody), front=mat.wdoor; // net concept: caps and panels follow the steel colour (один цвет, user 2026-10-26)
     const P=steel?0.05:0.08, po=(0.08-P)/2, RB=steel?1.65:1.60, TB=HF+0.14;                          // post/beam width inside the 80 mm zones, rail bottom, tray beam top
     if(stairs==='vert') b.phys(R+0.02,R+0.40,0,PL+0.1,L,L+0.06); else if(stairs==='ladder'||stairs==='wood') b.phys(R-1.15,R,0,PL,0,0.54); else b.phys(-E,R,0,2.4,0,0.54); [[R,0],[W-0.08,0],[R,L-0.08],[W-0.08,L-0.08]].forEach(([x,z])=>b.phys(x,x+0.08,0,PL,z,z+0.08)); // PHYS as the original (check.js: 9 boxes); the gentle extension is inside the stairs box
-    b.phys(R+0.08,W-0.08,0.10,0.14,L-0.08,L); b.phys(R,W,PL-0.2,TOP+0.3,0,L+0.02); b.phys(R,W,HF,2.69,L,2.97); b.phys(R,R+0.08,0,HF,2.89,2.97);
+    b.phys(R+0.08,W-0.08,0.10,0.14,L-0.08,L); b.phys(R,W,PL-0.2,TOP+0.3,0,L+0.02); b.phys(R,W,HF,2.69,L,2.97); if(!o.net) b.phys(R,R+0.08,0,HF,2.89,2.97);
     const tube=(x0,y0,z0,x1,y1,z1,r,m)=>{ const d=new THREE.Vector3(x1-x0,y1-y0,z1-z0), len=d.length(), geo=new THREE.CylinderGeometry(r,r,len,12).translate(0,len/2,0), mesh=new THREE.Mesh(geo,m);
       mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize()); mesh.position.set(x0,y0,z0); g.add(mesh); return mesh; }; // round bar between two local points
     // platform frame: four corner posts, the two bed-side posts and the far post rise to the tray beams; long rails west/east, end rails north/south
-    [[R,0,PL],[W-0.08,0,PL],[R,L-0.08,TB],[W-0.08,L-0.08,TB],[R,2.89,TB]].forEach(([x,z,h])=>b(x+po,x+po+P,0,h,z+po,z+po+P,ST));
+    [[R,0,PL],[W-0.08,0,PL],[R,L-0.08,TB],[W-0.08,L-0.08,TB]].concat(o.net?[]:[[R,2.89,TB]]).forEach(([x,z,h])=>b(x+po,x+po+P,0,h,z+po,z+po+P,ST)); // net: no free-standing far post, the cupboard is a wall box (user 2026-10-26)
     const BX=glass?PL+0.06:PL, RM=glass?wood:ST, ro=glass?0:po, rw=glass?0.08:P;                       // F: the rails are a 210 mm wood band (1.65 to 60 mm over the platform), glass above it (user: .local/11.png)
     b(R+ro,R+ro+rw,RB,BX,0,L,RM); b(W-0.08+ro,W-0.08+ro+rw,RB,BX,0,L,RM); b(R,W,RB,BX,ro,ro+rw,RM); b(R,W,RB,BX,L-0.08+ro,L-0.08+ro+rw,RM);
     b(R+0.08,W-0.08,0.10,0.14,L-0.08,L,ST);                                                           // lower rail between the south posts
@@ -114,9 +114,9 @@ const PHYS={}; // id → boxes
       const nx=-0.10*Math.cos(th), ny=0.10*Math.sin(th), y0=0.45, y1=PL-0.12, zc=0.44;                   // staple 100 mm above the stringer's outer edge, normal to the ladder plane (user: points up, not sideways)
       tube(sx(y0)+nx,y0+ny,zc,sx(y1)+nx,y1+ny,zc,0.016,wood); [y0,y1].forEach(y=>tube(sx(y)+0.02,y,zc,sx(y)+nx,y+ny,zc,0.016,wood));
     } else if(stairs==='vert'){ // concept 2026-10-26: vertical ladder on the door-side end of the platform, west of the sofa niche
-      const x0=R+0.04, x1=R+0.38;
-      [x0,x1].forEach(x=>b(x,x+0.04,0,PL+0.1,L+0.01,L+0.05,ST));                                      // two 40 mm uprights
-      for(let y=0.26;y<=PL;y+=0.255) b(x0+0.04,x1,y,y+0.03,L+0.015,L+0.045,ST);                       // flat rungs between them
+      const x1=R+0.38;
+      b(x1,x1+0.04,0,PL+0.1,L+0.01,L+0.05,ST);                                                        // one own 40 mm upright; the west side hangs off the bed's corner post (user 2026-10-26)
+      for(let y=0.26;y<=PL;y+=0.255) b(R+0.02,x1,y,y+0.03,L-0.02,L+0.045,ST);                         // flat rungs reaching into the bed post
     } else if(stairs==='ladder'){ // C: straight painted ladder to the platform level only, leaning 30°; wide flat stringers 40×240 with six treads 200×30 every 0.257 recessed between them,
       // so the stringer edges stand proud of each tread as a low kerb for a crawling child; neutral panel colour, not oak; floor under the platform edge stays free
       const th=30*Math.PI/180, xb=R-0.06-PL*Math.tan(th), len=PL/Math.cos(th), sx=y=>xb+Math.tan(th)*y;
@@ -143,11 +143,11 @@ const PHYS={}; // id → boxes
     if(o.net){ // closed cupboard over the passage: a plain box, solid wall toward the sleeper, two full hinged fronts to the west (user 2026-10-26);
       const XC=R+0.42; // shallow: starts at the door-side ladder upright, so a climber has free headroom over the ladder (user 2026-10-27)
       b(XC,W,HF,HF+0.02,L+0.02,2.97,pnl);                                                             // bottom
-      b(XC,W,2.48,2.50,L+0.02,2.97,pnl);                                                              // top
-      b(XC,W,HF+0.02,2.48,L+0.02,L+0.04,pnl);                                                         // north wall, toward the bed
-      b(XC,W,HF+0.02,2.48,2.95,2.97,pnl);                                                             // south wall at the room wall
-      b(W-0.02,W,HF+0.02,2.48,L+0.04,2.95,pnl);                                                       // east side over the door
-      const zm=(L+0.02+2.97)/2; [[L+0.05,zm-0.002],[zm+0.002,2.94]].forEach(([za,zb])=>b(XC+0.002,XC+0.02,HF+0.04,2.46,za,zb,front)); // two full fronts west, 4 mm gaps
+      b(XC,W,2.67,2.69,L+0.02,2.97,pnl);                                                              // top at the ceiling (user 2026-10-26)
+      b(XC,W,HF+0.02,2.67,L+0.02,L+0.04,pnl);                                                         // north wall, toward the bed
+      b(XC,W,HF+0.02,2.67,2.95,2.97,pnl);                                                             // south wall at the room wall
+      b(W-0.02,W,HF+0.02,2.67,L+0.04,2.95,pnl);                                                       // east side over the door
+      const zm=(L+0.02+2.97)/2; [[L+0.05,zm-0.002],[zm+0.002,2.94]].forEach(([za,zb])=>b(XC+0.002,XC+0.02,HF+0.04,2.65,za,zb,front)); // two full fronts west, 4 mm gaps
     } else {
     // over-door tray: beams HF..TB on all four edges are the borders; west beam post to post, east beam along the door wall is not fixed into it,
     // the rear beam sits on the far post and is tied into the far wall (cover plate); floor panel and back panel
