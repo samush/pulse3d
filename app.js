@@ -1123,18 +1123,27 @@ var finishGroup=new THREE.Group();
     g.fillStyle='#f6f6f8'; g.beginPath(); g.arc(ax,ay-u*1.05,u*0.6,0,Math.PI*2); g.fill(); g.fillStyle='#232a3c'; g.beginPath(); g.ellipse(ax+u*0.08,ay-u*1.05,u*0.42,u*0.34,0,0,Math.PI*2); g.fill(); g.fillStyle='rgba(255,255,255,0.35)'; g.beginPath(); g.ellipse(ax-u*0.05,ay-u*1.18,u*0.16,u*0.08,-0.4,0,Math.PI*2); g.fill(); // helmet and visor
     g.fillStyle='#e8934a'; g.beginPath(); g.arc(ax+u*1.5,ay-u*1.4,u*0.35,0,Math.PI*2); g.fill(); // the small planet in the hand
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; return t; })();
-  // 2026-09-13 (.local/горы.jpg): second mural for room 2 — flat layered mountains in sage blue with pale fir silhouettes
-  const mountTex=(()=>{ const W=1024, Hc=720, c=document.createElement('canvas'); c.width=W; c.height=Hc; const g=c.getContext('2d'); let sd=11; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
-    const sky=g.createLinearGradient(0,0,0,Hc); sky.addColorStop(0,'#f7f5f0'); sky.addColorStop(0.5,'#e7efec'); sky.addColorStop(1,'#d3e2e2'); g.fillStyle=sky; g.fillRect(0,0,W,Hc);
-    const ridge=(pts,col)=>{ g.fillStyle=col; g.beginPath(); g.moveTo(-20,Hc+20); pts.forEach(([x,y])=>g.lineTo(x*W,y*Hc)); g.lineTo(W+20,Hc+20); g.closePath(); g.fill(); };
-    ridge([[-0.02,0.62],[0.14,0.34],[0.30,0.55],[0.48,0.22],[0.68,0.52],[0.84,0.38],[1.02,0.58]],'#cddcdd');                 // far range
-    g.save(); g.beginPath(); g.moveTo(0.48*W,0.22*Hc); g.lineTo(0.56*W,0.36*Hc); g.lineTo(0.52*W,0.37*Hc); g.lineTo(0.47*W,0.30*Hc); g.lineTo(0.42*W,0.36*Hc); g.closePath(); g.fillStyle='#f2ece0'; g.fill(); g.restore(); // snow on the high peak
-    ridge([[-0.02,0.78],[0.10,0.52],[0.26,0.70],[0.40,0.44],[0.58,0.68],[0.76,0.50],[0.92,0.66],[1.02,0.60]],'#a8c3c6');     // middle range
-    g.save(); g.beginPath(); g.moveTo(0.40*W,0.44*Hc); g.lineTo(0.47*W,0.56*Hc); g.lineTo(0.43*W,0.575*Hc); g.lineTo(0.39*W,0.51*Hc); g.lineTo(0.35*W,0.56*Hc); g.closePath(); g.fillStyle='#e8e0d2'; g.fill(); g.restore();
-    ridge([[-0.02,0.94],[0.18,0.72],[0.36,0.88],[0.54,0.70],[0.72,0.86],[0.90,0.74],[1.02,0.88]],'#7fa3aa');                 // near range
-    const fir=(x,y,h,col)=>{ g.fillStyle=col; const w=h*0.42; for(let i=0;i<3;i++){ const t=y-h+i*h*0.30, ww=w*(0.55+0.22*i); g.beginPath(); g.moveTo(x,t); g.lineTo(x+ww,t+h*0.42); g.lineTo(x-ww,t+h*0.42); g.closePath(); g.fill(); } g.fillRect(x-h*0.035,y-h*0.10,h*0.07,h*0.12); };
-    for(let i=0;i<26;i++){ const x=rnd()*W, h=Hc*(0.10+0.07*rnd()); fir(x,Hc*(0.90+0.06*rnd()),h,'#efe3d0'); }              // back row of firs
-    for(let i=0;i<16;i++){ const x=rnd()*W, h=Hc*(0.16+0.10*rnd()); fir(x,Hc*(1.02+0.04*rnd()),h,'#e2d2ba'); }              // front row, taller and warmer
+  // 2026-10-26 (концепт пользователя): mural for room 2 — graffiti collage, bubble letters with dark outlines, drips, arrows and tag scribbles
+  const graffTex=(()=>{ const W=1024, Hc=720, c=document.createElement('canvas'); c.width=W; c.height=Hc; const g=c.getContext('2d'); let sd=23; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
+    g.fillStyle='#e9e5dc'; g.fillRect(0,0,W,Hc);
+    const cols=['#e94f64','#f2a23c','#f5d94e','#4fb3a1','#4f7fe9','#9b59c9','#ef8fb5','#64c05a'];
+    for(let i=0;i<7;i++){ g.globalAlpha=0.30; g.fillStyle=cols[Math.floor(rnd()*cols.length)]; g.beginPath(); g.ellipse(rnd()*W,rnd()*Hc,W*(0.10+0.10*rnd()),Hc*(0.08+0.10*rnd()),rnd()*3,0,Math.PI*2); g.fill(); } g.globalAlpha=1; // background colour patches
+    const rr=(x,y,w,h,r)=>{ g.beginPath(); if(g.roundRect) g.roundRect(x,y,w,h,r); else g.rect(x,y,w,h); };
+    const bubble=(x,y,w,h,a,col)=>{ g.save(); g.translate(x,y); g.rotate(a); g.lineWidth=h*0.14; g.strokeStyle='#23242a'; g.fillStyle=col;
+      rr(-w/2,-h/2,w,h,h*0.22); g.fill(); g.stroke();
+      g.lineWidth=h*0.05; g.strokeStyle='rgba(255,255,255,0.75)'; rr(-w*0.36,-h*0.36,w*0.72,h*0.72,h*0.16); g.stroke();                 // inner keyline
+      g.fillStyle='rgba(255,255,255,0.5)'; g.beginPath(); g.ellipse(-w*0.16,-h*0.2,w*0.18,h*0.11,-0.3,0,Math.PI*2); g.fill(); g.restore(); }; // shine
+    const drip=(x,y,l,col)=>{ g.fillStyle=col; rr(x-5,y,10,l,5); g.fill(); g.beginPath(); g.arc(x,y+l,7,0,Math.PI*2); g.fill(); };
+    const word=(cx,cy,n,sc,a0)=>{ for(let i=0;i<n;i++){ const col=cols[(i+Math.floor(rnd()*3))%cols.length], w=sc*(0.7+0.7*rnd()), h=sc*(1.0+0.9*rnd());
+      bubble(cx+(i-(n-1)/2)*sc*0.92,cy+(rnd()-0.5)*sc*0.3,w,h,a0+(rnd()-0.5)*0.3,col); if(rnd()<0.5) drip(cx+(i-(n-1)/2)*sc*0.92+(rnd()-0.5)*w*0.5,cy+h*0.45,sc*(0.2+0.4*rnd()),col); } };
+    word(W*0.30,Hc*0.28,4,Hc*0.17,-0.06); word(W*0.70,Hc*0.55,5,Hc*0.19,0.05); word(W*0.28,Hc*0.78,3,Hc*0.14,0.08);                     // three bubble words
+    const arrow=(x,y,l,a,col)=>{ g.save(); g.translate(x,y); g.rotate(a); g.lineWidth=9; g.strokeStyle=col; g.lineCap='round';
+      g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(l*0.5,-l*0.25,l,0); g.stroke(); g.fillStyle=col; g.beginPath(); g.moveTo(l+14,0); g.lineTo(l-10,-14); g.lineTo(l-6,10); g.closePath(); g.fill(); g.restore(); };
+    arrow(W*0.55,Hc*0.16,W*0.14,0.3,'#23242a'); arrow(W*0.12,Hc*0.52,W*0.10,-0.5,'#e94f64'); arrow(W*0.82,Hc*0.86,W*0.10,-2.6,'#4f7fe9');
+    g.strokeStyle='#2c2d33'; g.lineWidth=4; g.lineCap='round';                                                                           // tag scribbles
+    for(let i=0;i<5;i++){ const x=rnd()*W*0.8+W*0.05, y=Hc*(0.1+0.8*rnd()); g.beginPath(); g.moveTo(x,y);
+      for(let k=1;k<5;k++) g.quadraticCurveTo(x+k*22-11+(rnd()-0.5)*18,y+(rnd()-0.5)*26,x+k*22,y+(rnd()-0.5)*10); g.stroke(); }
+    for(let i=0;i<40;i++){ g.fillStyle=cols[Math.floor(rnd()*cols.length)]; g.beginPath(); g.arc(rnd()*W,rnd()*Hc,2+rnd()*4,0,Math.PI*2); g.fill(); } // paint specks
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; return t; })();
   // 2026-09-13 (.local/киты.png): mural for room 1 — watercolour whales in a cloudy grey-blue sky with a moon, sparks, two tiny balloons and small fish; north wall 4.55×2.70
   const whaleTex=(()=>{ const W=1536, Hc=900, c=document.createElement('canvas'); c.width=W; c.height=Hc; const g=c.getContext('2d'); let sd=5; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
@@ -1176,11 +1185,12 @@ var finishGroup=new THREE.Group();
     const bird=(x,y,s)=>{ g.strokeStyle='#4a4a66'; g.lineWidth=Math.max(1,s*0.12); g.beginPath(); g.moveTo(x-s,y); g.quadraticCurveTo(x-s*0.5,y-s*0.7,x,y); g.quadraticCurveTo(x+s*0.5,y-s*0.7,x+s,y); g.stroke(); };
     for(let i=0;i<9;i++) bird(W*(0.05+0.9*rnd()),Hc*(0.05+0.5*rnd()),Hc*(0.012+0.012*rnd()));
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; return t; })();
-  const wpLeaves=new THREE.MeshBasicMaterial({map:leavesTex}), wpSpace=new THREE.MeshBasicMaterial({map:spaceTex}), wpMount=new THREE.MeshBasicMaterial({map:mountTex}), wpWhales=new THREE.MeshBasicMaterial({map:whaleTex}), wpBalloons=new THREE.MeshBasicMaterial({map:balloonTex});
-  wallFinMats.push(wpLeaves,wpSpace,wpMount,wpWhales,wpBalloons); Object.assign(finishMats,{wpLeaves,wpSpace,wpMount,wpWhales,wpBalloons});
-  const WP_WALLS={1:['n'],2:['s']}, WP_MATS={none:wpMat,leaves:wpLeaves,space:wpSpace,mountains:wpMount,whales:wpWhales,balloons:wpBalloons}, MURALS={space:spaceTex,mountains:mountTex,whales:whaleTex,balloons:balloonTex}, wpMeshes={1:[],2:[]}; // room → sides that take wallpaper; registered panels per room; MURALS stretch over one panel
-  window.WALLPAPER={value:{1:'none',2:'none'},options:{1:['none','leaves','whales','balloons'],2:['none','space','mountains']},def:{1:'whales',2:'mountains'},set(room,key){ if(!WP_MATS[key]) key='none'; WALLPAPER.value[room]=key;
-    wpMeshes[room].forEach(m=>{ const mat=WP_MATS[key], t=MURALS[key]; if(t){ t.repeat.set(1/m.userData.wp.L,1/m.userData.wp.h); t.needsUpdate=true; } m.material=mat; }); // the mural stretches over its single panel
+  const wpLeaves=new THREE.MeshBasicMaterial({map:leavesTex}), wpSpace=new THREE.MeshBasicMaterial({map:spaceTex}), wpGraff=new THREE.MeshBasicMaterial({map:graffTex}), wpWhales=new THREE.MeshBasicMaterial({map:whaleTex}), wpBalloons=new THREE.MeshBasicMaterial({map:balloonTex});
+  wallFinMats.push(wpLeaves,wpSpace,wpGraff,wpWhales,wpBalloons); Object.assign(finishMats,{wpLeaves,wpSpace,wpGraff,wpWhales,wpBalloons});
+  const WP_WALLS={1:['n'],2:['s']}, WP_MATS={none:wpMat,leaves:wpLeaves,space:wpSpace,graffiti:wpGraff,whales:wpWhales,balloons:wpBalloons}, MURALS={space:spaceTex,graffiti:graffTex,whales:whaleTex,balloons:balloonTex}, wpMeshes={1:[],2:[]}; // room → sides that take wallpaper; registered panels per room; MURALS stretch over one panel
+  window.WALLPAPER={value:{1:'none',2:'none'},options:{1:['none','leaves','whales','balloons'],2:['none','space','graffiti']},def:{1:'whales',2:'graffiti'},set(room,key){ if(!WP_MATS[key]) key='none'; WALLPAPER.value[room]=key;
+    const main=wpMeshes[room].reduce((a,m)=>!a||m.userData.wp.L>a.userData.wp.L?m:a,null);
+    wpMeshes[room].forEach(m=>{ const t=MURALS[key]; if(t&&m===main){ t.repeat.set(1/m.userData.wp.L,1/m.userData.wp.h); t.needsUpdate=true; } m.material=t&&m!==main?wpMat:WP_MATS[key]; }); // the mural lives on the widest panel only; a shared texture cannot fit two panel sizes
     if(window.VIZ&&VIZ.ready) VIZ.coatFinish('wpLeaves',VIZ.finishCoat.wpLeaves); }}; // re-swap the finish twins in the visualization
   PLAN.rooms.forEach(r=>{
     if(r.id===8||r.id===9) return;

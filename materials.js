@@ -85,6 +85,7 @@ const COATINGS={
   greyFabric:  {name:'ткань светло-серая', class:'fabric', size:[0.4,0.4], maps:[], color:0xc4c6c8, rough:0.95},
   sagePaint:   {name:'эмаль шалфейная (каркас кровати детской 1)', class:'cabinetPaint', size:[1,1], maps:[], color:0xb2c1a5, rough:0.42},
   sageCord:    {name:'вельвет шалфейный (диванчик детской 1), темнее каркаса кровати', class:'fabric', size:[0.4,0.4], maps:[], color:0x93a681, rough:0.95},
+  tealPaint:   {name:'эмаль приглушённая зелёно-синяя (каркас кровати детской 2)', class:'cabinetPaint', size:[1,1], maps:[], color:0x8fb0ab, rough:0.42},
   creamBoucle: {name:'ткань кремовая (кресло-мешок)', class:'fabric', size:[0.4,0.4], maps:[], color:0xe6e0d2, rough:0.95},
   blackFront:  {name:'чёрный матовый МДФ, фасады', class:'cabinetPaint', size:[1,1], maps:[], color:0x26282b, rough:0.55}, // loggia cabinet carcass and lower block, sliding leaves (designer's render 2026-10-17)
   oliveFront:  {name:'HPL-плита оливковая, матовый фасад', class:'facade', size:[1,1], maps:[], color:0x8a8f70, rough:0.62}, // 2026-09-11: нижние ящики, пенал с техникой, холодильник и боковины навесных шкафов
